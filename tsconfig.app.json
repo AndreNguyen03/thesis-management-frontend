@@ -35,6 +35,7 @@
 			"@/features/shared/ai-assistant/*": ["features/shared/ai-assistant/*"],
 			"@/features/shared/dashboard/*": ["features/shared/dashboard/*"],
 			"@/features/shared/workspace/*": ["features/shared/workspace/*"],
+			"@/features/shared/auth/*": ["features/shared/auth/*"],
 			"@/features/student/*": ["features/student/*"],
 			"@/features/student/topic_list/*": ["features/student/topic_list/*"],
 			"@/features/teacher/*": ["features/teacher/*"],

@@ -1,12 +1,7 @@
 export default {
-	darkMode: ["class"],
-	content: [
-		"./pages/**/*.{ts,tsx}",
-		"./components/**/*.{ts,tsx}",
-		"./app/**/*.{ts,tsx}",
-		"./src/**/*.{ts,tsx}",
-	],
-	prefix: "",
+	darkMode: ['class'],
+	content: ['./index.html', './src/**/*.{ts,tsx}'],
+	prefix: '',
 	theme: {
 		container: {
 			center: true,
@@ -69,10 +64,10 @@ export default {
 				'gradient-background': 'var(--gradient-background)'
 			},
 			boxShadow: {
-				'sm': 'var(--shadow-sm)',
-				'md': 'var(--shadow-md)',
-				'lg': 'var(--shadow-lg)',
-				'xl': 'var(--shadow-xl)'
+				sm: 'var(--shadow-sm)',
+				md: 'var(--shadow-md)',
+				lg: 'var(--shadow-lg)',
+				xl: 'var(--shadow-xl)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -80,8 +75,8 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			transitionDuration: {
-				'fast': 'var(--transition-fast)',
-				'smooth': 'var(--transition-smooth)'
+				fast: 'var(--transition-fast)',
+				smooth: 'var(--transition-smooth)'
 			},
 			keyframes: {
 				'accordion-down': {
@@ -107,5 +102,5 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [require('tailwindcss-animate')]
 }

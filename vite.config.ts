@@ -15,6 +15,7 @@ export default defineConfig({
       '@/features/shared/ai-assistant': path.resolve(__dirname, './src/features/shared/ai-assistant'),
       '@/features/shared/dashboard': path.resolve(__dirname, './src/features/shared/dashboard'),
       '@/features/shared/workspace': path.resolve(__dirname, './src/features/shared/workspace'),
+      '@/features/shared/auth': path.resolve(__dirname, './src/features/shared/auth'),
       '@/features/student': path.resolve(__dirname, './src/features/student'),
       '@/features/student/topic_list': path.resolve(__dirname, './src/features/student/topic_list'),
       '@/features/teacher': path.resolve(__dirname, './src/features/teacher'),

@@ -1,21 +1,28 @@
-import { useState } from 'react'
-import { Button, Input } from '@/components/ui'
-import { Assistant } from '@/features/shared/ai-assistant'
-import { useTest } from '@/hooks/useTest'
+import { Outlet } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+import { Layout } from './components/layout/Layout'
+import { useAppSelector } from './store'
 
-function App() {
-	const [count, setCount] = useState(0)
-	const { message } = useTest()
+const App = () => {
+
+    const user = useAppSelector(state => state.auth.user)
 
 	return (
-		<div className='p-4'>
-			<h1 className='text-2xl font-bold'>Vite + React + TS Test</h1>
-			<p>Count: {count}</p>
-			<Button onClick={() => setCount((c) => c + 1)} />
-			<Input />
-			<Assistant />
-			<p>{message}</p>
-		</div>
+		<Layout user={user}>
+			<Outlet />
+			<ToastContainer
+				position='top-right'
+				autoClose={3000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme='light'
+			/>
+		</Layout>
 	)
 }
 
