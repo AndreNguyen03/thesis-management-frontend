@@ -1,37 +1,33 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { User } from 'models'
+import type { AppUser } from 'models'
 
 type AuthState = {
-	user: User | null
-	accessToken: string | null
+	user: AppUser | null
 	status: 'idle' | 'loading' | 'succeeded' | 'failed'
 	error: string | null
 }
 
-const inititalState: AuthState = {
+const initialState: AuthState = {
 	user: null,
-	accessToken: null,
 	status: 'idle',
 	error: null
 }
 
 export const authSlice = createSlice({
 	name: 'auth',
-	initialState: inititalState,
+	initialState,
 	reducers: {
-		setCredentials: (state, action: PayloadAction<{ accessToken: string }>) => {
-			state.accessToken = action.payload.accessToken
+		setUser: (state, action: PayloadAction<AppUser>) => {
+			state.user = action.payload
 			state.status = 'succeeded'
 			state.error = null
 		},
-		setUser: (state, action: PayloadAction<User>) => {
-			state.user = action.payload
-		},
 		logout: (state) => {
 			state.user = null
-			state.accessToken = null
 			state.status = 'idle'
 			state.error = null
+			sessionStorage.removeItem('accessToken')
+			sessionStorage.removeItem('accessTokenExpiry')
 		},
 		setLoading: (state) => {
 			state.status = 'loading'
@@ -43,4 +39,4 @@ export const authSlice = createSlice({
 	}
 })
 
-export const { setCredentials, logout, setLoading, setError, setUser } = authSlice.actions
+export const { setUser, logout, setLoading, setError } = authSlice.actions
