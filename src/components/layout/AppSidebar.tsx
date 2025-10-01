@@ -32,7 +32,7 @@ const menuItems = {
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp }
 	],
-	teacher: [
+	lecturer: [
 		{ title: 'Đăng đề tài', url: '/create-thesis', icon: PlusCircle },
 		{ title: 'Quản lý đề tài', url: '/manage-thesis', icon: FileText },
 		{ title: 'Xét duyệt đăng ký', url: '/approve-registrations', icon: UserCheck },
@@ -82,11 +82,12 @@ const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
 	)
 
 	return (
+		<div className={`border-r border-gray-200 bg-white ${isOpen ? 'w-50' : 'w-16'} transition-all duration-300`}>
 		<div
 			className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-64' : 'w-16'} transition-all duration-300`}
 		>
 			<div className='px-3 py-4'>
-				<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4'>
+				<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
 					<ChevronLeft className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
 				</Button>
 
@@ -101,7 +102,7 @@ const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
 					{isOpen && (
 						<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
 							{userRole === 'student' && 'Sinh viên'}
-							{userRole === 'teacher' && 'Giảng viên'}
+							{userRole === 'lecturer' && 'Giảng viên'}
 							{userRole === 'admin' && 'Quản trị'}
 						</div>
 					)}

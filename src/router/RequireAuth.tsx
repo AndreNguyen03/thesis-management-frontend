@@ -1,9 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAppSelector } from '../store/configureStore'
 import type { ReactNode } from 'react'
 
 function RequireAuth({ children }: { children: ReactNode }) {
-	const token = useAppSelector((state) => state.auth.accessToken)
+	const token = sessionStorage.getItem('accessToken')
 	const location = useLocation()
 
 	if (!token) {

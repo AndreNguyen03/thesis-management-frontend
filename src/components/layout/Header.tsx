@@ -1,21 +1,27 @@
-import { Bell, LogOut, MessageCircle, Search, User2 } from 'lucide-react'
+import { Bell, LogOut, MessageCircle, Search, Settings, User2 } from 'lucide-react'
 import { Button, Dropdown, DropdownItem, DropdownLabel, DropdownSeparator, Input, LoadingOverlay, Badge } from '../ui'
 import uitLogo from '../../assets/uit.png'
-import type { User, ApiError } from '../../models'
+import type { ApiError, AppUser } from '../../models'
 import { useLogoutMutation } from '../../services/authApi'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useAppDispatch } from '../../store'
+import { userApi } from '../../services/userApi'
 
 interface HeaderProps {
-	user: User | null
+	user: AppUser | null
 }
 
 const Header = ({ user }: HeaderProps) => {
 	const [logout, { isLoading }] = useLogoutMutation()
 	const navigate = useNavigate()
+	const [open, setOpen] = useState(false)
+	const dispatch = useAppDispatch()
 	const handleLogout = async () => {
 		try {
 			await logout().unwrap()
+			dispatch(userApi.util.resetApiState())
 			toast.info('Đăng xuất thành công!')
 			navigate('/login')
 		} catch (err) {
@@ -71,6 +77,8 @@ const Header = ({ user }: HeaderProps) => {
 
 					{/* User Menu */}
 					<Dropdown
+						open={open}
+						onOpenChange={setOpen}
 						trigger={
 							<Button
 								variant='ghost'
@@ -88,17 +96,30 @@ const Header = ({ user }: HeaderProps) => {
 								<p className='text-xs text-gray-500'>{user?.email || 'user@uit.edu.vn'}</p>
 								<Badge variant='secondary' className='mt-1 w-fit'>
 									{user?.role === 'student' && 'Sinh viên'}
-									{user?.role === 'teacher' && 'Giảng viên'}
+									{user?.role === 'lecturer' && 'Giảng viên'}
 									{user?.role === 'admin' && 'Quản trị viên'}
 								</Badge>
 							</div>
 						</DropdownLabel>
 						<DropdownSeparator />
-						<DropdownItem className='flex items-center'>
+						<DropdownItem
+							onClick={() => {
+								navigate('/profile')
+								setOpen(false)
+							}}
+							className='flex items-center'
+						>
 							<User2 className='mr-2 h-4 w-4' />
 							<span>Hồ sơ cá nhân</span>
 						</DropdownItem>
-						<DropdownItem>
+						<DropdownItem
+							onClick={() => {
+								navigate('/setting')
+								setOpen(false)
+							}}
+							className='flex items-center'
+						>
+							<Settings className='mr-2 h-4 w-4' />
 							<span>Cài đặt</span>
 						</DropdownItem>
 						<DropdownSeparator />
