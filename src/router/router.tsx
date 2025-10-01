@@ -15,6 +15,7 @@ import { RequireAuth } from './RequireAuth'
 import { ForgotPassword, Login, ResetPassword } from '@/features/shared/auth'
 import Dashboard from '@/features/shared/dashboard/Dashboard'
 import NotFound from '@/features/shared/NotFound'
+import { ThesisList } from '@/features/student/TopicList'
 
 // Mock user data
 
@@ -25,14 +26,14 @@ export const router = createBrowserRouter([
 	{
 		path: '/',
 		element: (
-			<RequireAuth>
-				<App />
-			</RequireAuth>
+			//<RequireAuth>
+			<App />
+			//</RequireAuth>
 		),
 		children: [
 			{ index: true, element: <Navigate to='dashboard' replace /> },
 			{ path: 'dashboard', element: <Dashboard /> },
-			//   { path: 'thesis', element: <ThesisList /> },
+			{ path: 'thesis', element: <ThesisList /> },
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },

@@ -4,8 +4,7 @@ import { Layout } from './components/layout/Layout'
 import { useAppSelector } from './store'
 
 const App = () => {
-
-    const user = useAppSelector(state => state.auth.user)
+	const user = useAppSelector((state) => state.auth.user)
 
 	return (
 		<Layout user={user}>
