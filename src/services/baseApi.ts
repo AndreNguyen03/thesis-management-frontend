@@ -5,24 +5,19 @@ import {
 	type FetchBaseQueryMeta,
 	type QueryReturnValue
 } from '@reduxjs/toolkit/query/react'
-import type { RootState } from 'store'
-import { logout, setCredentials } from '../features/shared/auth/authSlice'
-import { sleep } from '@/utils/utils'
+import { logout } from '../features/shared/auth/authSlice'
+import { decodeJwt, sleep } from '@/utils/utils'
 
 export type ApiResponse<T> = {
 	apiVersion: string
 	data: T
 }
 
-type RefreshTokenResponse = {
-	accessToken: string
-}
-
 const rawBaseQuery = fetchBaseQuery({
 	baseUrl: import.meta.env.VITE_API_BASE_URL,
-	credentials: 'include', // gửi cookie tự động
-	prepareHeaders: (headers, { getState }) => {
-		const token = (getState() as RootState).auth.accessToken
+	credentials: 'include',
+	prepareHeaders: (headers) => {
+		const token = sessionStorage.getItem('accessToken')
 		if (token) headers.set('Authorization', `Bearer ${token}`)
 		return headers
 	}
@@ -35,46 +30,71 @@ export const baseApi = createApi({
 		api: Parameters<typeof rawBaseQuery>[1],
 		extraOptions: Parameters<typeof rawBaseQuery>[2]
 	): Promise<QueryReturnValue<ApiResponse<T>, FetchBaseQueryError, FetchBaseQueryMeta>> => {
-		await sleep(1000)
+		await sleep(300)
+
+		// ✅ Check token TTL trước khi call API
+		const token = sessionStorage.getItem('accessToken')
+		const expiry = sessionStorage.getItem('accessTokenExpiry')
+
+		const isAuthEndpoint = typeof args === 'string' ? args.includes('/auth/') : args.url?.includes('/auth/')
+
+		if (token && !isAuthEndpoint) {
+			let exp = Number(expiry)
+			if (!exp) {
+				const decoded = decodeJwt<{ exp: number }>(token)
+				if (decoded?.exp) {
+					exp = decoded.exp * 1000
+					sessionStorage.setItem('accessTokenExpiry', String(exp))
+				}
+			}
+
+			if (Date.now() > exp) {
+				console.log('[baseApi] Token expired, logging out.')
+				sessionStorage.removeItem('accessToken')
+				sessionStorage.removeItem('accessTokenExpiry')
+				api.dispatch(logout())
+				return {
+					error: {
+						status: 401,
+						data: { message: 'Token expired' }
+					}
+				} as QueryReturnValue<ApiResponse<T>, FetchBaseQueryError, FetchBaseQueryMeta>
+			}
+		}
 
 		let result = await rawBaseQuery(args, api, extraOptions)
 
-		// Nếu 401 → thử refresh token từ cookie
-		if (
-			result.error?.status === 401 &&
-			!(typeof args === 'string' ? args.includes('/auth/sign-in') : args.url?.includes('/auth/sign-in')) &&
-			!(typeof args === 'string'
-				? args.includes('/auth/forgot-password')
-				: args.url?.includes('/auth/forgot-password')) &&
-			!(typeof args === 'string'
-				? args.includes('/auth/reset-password')
-				: args.url?.includes('/auth/reset-password'))
-		) {
+		// ✅ Nếu 401 thì thử refresh
+		if (result.error?.status === 401 && !isAuthEndpoint) {
 			console.log('[baseApi] Access token expired, trying to refresh token...')
+
 			const refreshResult = await rawBaseQuery(
-				{
-					url: '/auth/refresh', // nhớ sửa lại đúng endpoint refresh
-					method: 'POST',
-					body: {} // cookie sẽ tự gửi nhờ `credentials: 'include'`
-				},
+				{ url: '/auth/refresh', method: 'POST', body: {} },
 				api,
 				extraOptions
 			)
 
 			if (refreshResult.data) {
-				const data = refreshResult.data as RefreshTokenResponse
-				api.dispatch(setCredentials({ accessToken: data.accessToken }))
-				console.log('[baseApi] New access token:', data.accessToken)
+				const data = refreshResult.data as { accessToken: string }
+				sessionStorage.setItem('accessToken', data.accessToken)
 
-				// Retry request cũ
+				const decoded = decodeJwt<{ exp: number }>(data.accessToken)
+				if (decoded?.exp) {
+					sessionStorage.setItem('accessTokenExpiry', String(decoded.exp * 1000))
+				}
+
+				console.log('[baseApi] New access token issued, retrying request...')
 				result = await rawBaseQuery(args, api, extraOptions)
 			} else {
 				console.log('[baseApi] Refresh token failed, logging out.')
+				sessionStorage.removeItem('accessToken')
+				sessionStorage.removeItem('accessTokenExpiry')
 				api.dispatch(logout())
 			}
 		}
 
 		return result as QueryReturnValue<ApiResponse<T>, FetchBaseQueryError, FetchBaseQueryMeta>
 	},
+    tagTypes: ['UserProfile'],
 	endpoints: () => ({})
 })

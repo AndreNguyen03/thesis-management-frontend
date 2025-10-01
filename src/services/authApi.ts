@@ -1,3 +1,4 @@
+import { decodeJwt } from '@/utils/utils'
 import { baseApi, type ApiResponse } from './baseApi'
 
 export interface LoginRequest {
@@ -8,12 +9,27 @@ export interface LoginRequest {
 
 export const authApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
-		login: builder.mutation<ApiResponse<{ accessToken: string }>, LoginRequest>({
+		login: builder.mutation<ApiResponse<{ accessToken: string; exp: number }>, LoginRequest>({
 			query: (body) => ({
 				url: '/auth/sign-in',
 				method: 'POST',
 				body
-			})
+			}),
+			async onQueryStarted(_, { queryFulfilled }) {
+				try {
+					const { data } = await queryFulfilled
+					if (data.data?.accessToken) {
+						sessionStorage.setItem('accessToken', data.data.accessToken)
+
+						const decoded = decodeJwt<{ exp: number }>(data.data.accessToken)
+						if (decoded?.exp) {
+							sessionStorage.setItem('accessTokenExpiry', String(decoded.exp * 1000))
+						}
+					}
+				} catch {
+					// ignore
+				}
+			}
 		}),
 		forgotPassword: builder.mutation<ApiResponse<{ message: string }>, { email: string }>({
 			query: (body) => ({
@@ -33,7 +49,15 @@ export const authApi = baseApi.injectEndpoints({
 			query: () => ({
 				url: '/auth/logout',
 				method: 'POST'
-			})
+			}),
+			async onQueryStarted(_, { queryFulfilled }) {
+				try {
+					await queryFulfilled
+				} finally {
+					sessionStorage.removeItem('accessToken')
+					sessionStorage.removeItem('accessTokenExpiry')
+				}
+			}
 		})
 	}),
 	overrideExisting: false

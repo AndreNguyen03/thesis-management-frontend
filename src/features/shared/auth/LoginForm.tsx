@@ -4,12 +4,9 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { PasswordInput } from './PasswordInput'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLoginMutation } from '../../../services/authApi'
-import { useAppDispatch } from '../../../store'
 import { getDeviceInfo } from '@/utils/utils'
-import { setCredentials, setUser } from './authSlice'
 import type { ApiError } from 'models/api'
 import { toast } from 'react-toastify'
-import { useLazyGetProfileQuery } from '../../../services/userApi'
 
 type LoginFormValues = {
 	email: string
@@ -18,8 +15,6 @@ type LoginFormValues = {
 
 function LoginForm() {
 	const [login, { isLoading }] = useLoginMutation()
-	const [getProfile] = useLazyGetProfileQuery()
-	const dispatch = useAppDispatch()
 	const deviceInfo = getDeviceInfo()
 	const navigate = useNavigate()
 
@@ -34,13 +29,7 @@ function LoginForm() {
 		try {
 			const { email, password } = data
 
-			const loginResponse = await login({ email, password, deviceInfo }).unwrap()
-
-			dispatch(setCredentials({ accessToken: loginResponse.data.accessToken }))
-
-			const getProfileResponse = await getProfile().unwrap()
-			dispatch(setUser(getProfileResponse))
-
+			await login({ email, password, deviceInfo }).unwrap()
 			toast.success('Đăng nhập thành công!')
 			navigate('/dashboard')
 		} catch (err) {
