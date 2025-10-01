@@ -83,49 +83,50 @@ const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
 
 	return (
 		<div className={`border-r border-gray-200 bg-white ${isOpen ? 'w-50' : 'w-16'} transition-all duration-300`}>
-		<div
-			className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-64' : 'w-16'} transition-all duration-300`}
-		>
-			<div className='px-3 py-4'>
-				<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
-					<ChevronLeft className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
-				</Button>
+			<div
+				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-64' : 'w-16'} transition-all duration-300`}
+			>
+				<div className='px-3 py-4'>
+					<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
+						<ChevronLeft className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
+					</Button>
 
-				{/* Main Menu */}
-				<div className='mb-6'>
-					{isOpen && <div className='mb-2 px-3 text-xs font-semibold text-gray-500'>Tổng quan</div>}
-					{renderMenuItems(menuItems.common)}
+					{/* Main Menu */}
+					<div className='mb-6'>
+						{isOpen && <div className='mb-2 px-3 text-xs font-semibold text-gray-500'>Tổng quan</div>}
+						{renderMenuItems(menuItems.common)}
+					</div>
+
+					{/* Role-specific Menu */}
+					<div className='mb-6'>
+						{isOpen && (
+							<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
+								{userRole === 'student' && 'Sinh viên'}
+								{userRole === 'lecturer' && 'Giảng viên'}
+								{userRole === 'admin' && 'Quản trị'}
+							</div>
+						)}
+						{renderMenuItems(menuItems[userRole])}
+					</div>
+
+					{/* AI Chat */}
+					<div className='mb-6'>
+						<NavLink
+							to='/ai-chat'
+							className={({ isActive }) =>
+								`flex w-full items-center gap-3 rounded-md border border-blue-200 bg-blue-500 px-3 py-2 text-white transition-colors hover:bg-blue-600 ${
+									isActive && 'bg-blue-600'
+								} ${isOpen ? '' : 'px-2'}`
+							}
+						>
+							<MessageSquare className='h-4 w-4' />
+							{isOpen && <span>Hỏi AI Assistant</span>}
+						</NavLink>
+					</div>
+
+					{/* Footer Menu */}
+					<div className='mt-auto'>{renderMenuItems(menuItems.footer)}</div>
 				</div>
-
-				{/* Role-specific Menu */}
-				<div className='mb-6'>
-					{isOpen && (
-						<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
-							{userRole === 'student' && 'Sinh viên'}
-							{userRole === 'lecturer' && 'Giảng viên'}
-							{userRole === 'admin' && 'Quản trị'}
-						</div>
-					)}
-					{renderMenuItems(menuItems[userRole])}
-				</div>
-
-				{/* AI Chat */}
-				<div className='mb-6'>
-					<NavLink
-						to='/ai-chat'
-						className={({ isActive }) =>
-							`flex w-full items-center gap-3 rounded-md border border-blue-200 bg-blue-500 px-3 py-2 text-white transition-colors hover:bg-blue-600 ${
-								isActive && 'bg-blue-600'
-							} ${isOpen ? '' : 'px-2'}`
-						}
-					>
-						<MessageSquare className='h-4 w-4' />
-						{isOpen && <span>Hỏi AI Assistant</span>}
-					</NavLink>
-				</div>
-
-				{/* Footer Menu */}
-				<div className='mt-auto'>{renderMenuItems(menuItems.footer)}</div>
 			</div>
 		</div>
 	)
