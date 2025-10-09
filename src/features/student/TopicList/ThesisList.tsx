@@ -1,16 +1,18 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from '@/components/ui'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger
-} from '@/components/ui/Dialog'
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
-import { Calendar, Eye, Filter, Search, Send, Star, Users } from 'lucide-react'
+import { Calendar, Eye, Filter, Loader2, Search, Send, Star, Users } from 'lucide-react'
 import { useState } from 'react'
-import { useGetThesesQuery } from '../../../services/thesisApi'
+import {
+	useCreateStudentRegistrationMutation,
+	useGetThesesQuery,
+	useSaveThesisMutation
+} from '../../../services/thesisApi'
+import { useAppSelector } from '../../../store/configureStore'
+import type { Thesis } from 'models/thesis.model'
+import { notifyError, notifySuccess } from '@/components/ui/Toast'
+import type { ApiError } from 'models'
+import { ThesisInformationCard } from './ThesisInformationCard'
 
 // Mock data
 // const
@@ -92,22 +94,26 @@ const fields = [
 	'Web Development',
 	'Mobile Development'
 ]
-
+import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 export const ThesisList = () => {
-	const { data: theses = [], isLoading, isError, error } = useGetThesesQuery()
-	console.log('theses:', theses)
-	console.log('isLoading:', isLoading)
-	console.log('isError:', isError)
-	console.log('error:', error)
+	const user = useAppSelector((state) => state.auth.user)
+	const { data: thesesData = [], isLoading, isError: isGetThesesError, error } = useGetThesesQuery()
+	const [saveThesis, { isLoading: isSaving, isSuccess, isError: isSaveThesisError }] = useSaveThesisMutation()
+	const [theses, setTheses] = useState<Thesis[]>(thesesData)
+	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }])
+
+	const [createStudentRegistration] = useCreateStudentRegistrationMutation()
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedField, setSelectedField] = useState('Tất cả lĩnh vực')
+
 	const [sortBy, setSortBy] = useState('newest')
-	const [selectedThesis, setSelectedThesis] = useState<any>(null)
 	const filteredTheses = theses.filter((thesis) => {
 		const matchesSearch =
 			thesis.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			thesis.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			thesis.supervisor.toLowerCase().includes(searchTerm.toLowerCase())
+			thesis.registrationIds.some(
+				(reg) => reg.role === 'student' && reg.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+			)
 		const matchesField = selectedField === 'Tất cả lĩnh vực' || thesis.field === selectedField
 		return matchesSearch && matchesField
 	})
@@ -121,16 +127,49 @@ export const ThesisList = () => {
 			case 'deadline':
 				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
 			default:
-				return b.id - a.id
+				return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
 		}
 	})
 
-	const getStatusBadge = (thesis: any) => {
-		if (thesis.status === 'full') {
-			return <Badge variant='destructive'>Đã đủ</Badge>
+	const handleRegister = async (thesis: Thesis) => {
+		try {
+			const result = await createStudentRegistration({
+				studentId: '65123456789abcdef0123456',
+				thesisId: thesis._id
+			}).unwrap()
+			notifySuccess('Đăng ký đề tài thành công!')
+			setTheses((prev) => prev.map((t) => (t._id === result.data._id ? result.data : t)))
+		} catch (error) {
+			const err = error as ApiError
+			if (err.data?.errorCode === 'STUDENT_ALREADY_REGISTER') {
+				notifyError(err.data?.message)
+			}
+			notifyError(err.data?.message || 'Đăng ký đề tài thất bại! Vui lòng thử lại.')
 		}
-		const remaining = thesis.maxStudents - thesis.registeredStudents
-		return <Badge variant='default'>{remaining} chỗ trống</Badge>
+	}
+	const handleSave = async (thesisId: string) => {
+		// Implement save functionality here
+		saveThesis({
+			userId: '65123456789abcdef0123456',
+			// user?.id ||""
+			thesisId,
+			role: user?.role || ''
+		})
+		notifySuccess('Đã lưu đề tài!')
+	}
+
+	const renderDepartmentAndLecturers = (thesis: Thesis) => {
+		return (
+			<CardDescription className='mt-1'>
+				{thesis.registrationIds.length > 0
+					? thesis.registrationIds
+							.map((registrant) => {
+								if (registrant.role === 'lecturer') return registrant.fullName
+							})
+							.join(', ')
+					: 'Chưa có giảng viên'}
+			</CardDescription>
+		)
 	}
 	return (
 		<div className='space-y-6'>
@@ -198,14 +237,16 @@ export const ThesisList = () => {
 				<CardContent>
 					<div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
 						{theses.slice(0, 2).map((thesis) => (
-							<div key={thesis.id} className='rounded-lg border border-accent/20 bg-card p-3'>
+							<div key={thesis._id} className='rounded-lg border border-accent/20 bg-card p-3'>
 								<div className='mb-2 flex items-start justify-between'>
 									<h4 className='text-sm font-medium'>{thesis.title}</h4>
 									<Badge variant='default' className='bg-accent text-xs'>
 										95% match
 									</Badge>
 								</div>
-								<p className='mb-2 text-xs text-muted-foreground'>{thesis.supervisor}</p>
+								<p className='mb-2 text-xs text-muted-foreground'>
+									{renderDepartmentAndLecturers(thesis)}
+								</p>
 								<div className='mb-2 flex gap-1'>
 									{thesis.requirements.slice(0, 3).map((req: string) => (
 										<Badge key={req} variant='secondary' className='text-xs'>
@@ -230,140 +271,15 @@ export const ThesisList = () => {
 
 				<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
 					{sortedTheses.map((thesis) => (
-						<Card key={thesis.id} className='transition-shadow hover:shadow-lg'>
-							<CardHeader>
-								<div className='flex items-start justify-between'>
-									<div className='flex-1'>
-										<CardTitle className='text-lg leading-tight'>{thesis.title}</CardTitle>
-										<CardDescription className='mt-1'>
-											{thesis.supervisor} • {thesis.department}
-										</CardDescription>
-									</div>
-									{getStatusBadge(thesis)}
-								</div>
-							</CardHeader>
-							<CardContent className='space-y-4'>
-								<p className='line-clamp-3 text-sm text-muted-foreground'>{thesis.description}</p>
-
-								<div className='space-y-2'>
-									<div className='flex items-center gap-4 text-sm text-muted-foreground'>
-										<div className='flex items-center gap-1'>
-											<Users className='h-4 w-4' />
-											{thesis.registeredStudents}/{thesis.maxStudents}
-										</div>
-										<div className='flex items-center gap-1'>
-											<Star className='h-4 w-4' />
-											{thesis.rating}
-										</div>
-										<div className='flex items-center gap-1'>
-											<Eye className='h-4 w-4' />
-											{thesis.views}
-										</div>
-									</div>
-
-									<div className='flex items-center gap-1 text-sm text-muted-foreground'>
-										<Calendar className='h-4 w-4' />
-										Hạn đăng ký: {new Date(thesis.deadline).toLocaleDateString('vi-VN')}
-									</div>
-								</div>
-
-								<div className='flex flex-wrap gap-1'>
-									{thesis.requirements.slice(0, 4).map((req: string) => (
-										<Badge key={req} variant='secondary' className='text-xs'>
-											{req}
-										</Badge>
-									))}
-									{thesis.requirements.length > 4 && (
-										<Badge variant='outline' className='text-xs'>
-											+{thesis.requirements.length - 4}
-										</Badge>
-									)}
-								</div>
-
-								<div className='flex gap-2'>
-									<Dialog>
-										<DialogTrigger asChild>
-											<Button
-												variant='outline'
-												size='sm'
-												className='flex-1'
-												onClick={() => setSelectedThesis(thesis)}
-											>
-												<Eye className='mr-2 h-4 w-4' />
-												Chi tiết
-											</Button>
-										</DialogTrigger>
-										<DialogContent className='max-h-[80vh] max-w-2xl overflow-y-auto'>
-											{selectedThesis && (
-												<>
-													<DialogHeader>
-														<DialogTitle>{selectedThesis.title}</DialogTitle>
-														<DialogDescription>
-															{selectedThesis.supervisor} • {selectedThesis.department}
-														</DialogDescription>
-													</DialogHeader>
-													<div className='space-y-4'>
-														<div>
-															<h4 className='mb-2 font-medium'>Mô tả chi tiết</h4>
-															<p className='text-sm text-muted-foreground'>
-																{selectedThesis.description}
-															</p>
-														</div>
-
-														<div>
-															<h4 className='mb-2 font-medium'>Yêu cầu kỹ năng</h4>
-															<div className='flex flex-wrap gap-2'>
-																{selectedThesis.requirements.map((req: string) => (
-																	<Badge key={req} variant='secondary'>
-																		{req}
-																	</Badge>
-																))}
-															</div>
-														</div>
-
-														<div className='grid grid-cols-2 gap-4 text-sm'>
-															<div>
-																<span className='font-medium'>Lĩnh vực:</span>
-																<p className='text-muted-foreground'>
-																	{selectedThesis.field}
-																</p>
-															</div>
-															<div>
-																<span className='font-medium'>Số lượng SV:</span>
-																<p className='text-muted-foreground'>
-																	{selectedThesis.registeredStudents}/
-																	{selectedThesis.maxStudents}
-																</p>
-															</div>
-														</div>
-
-														<div className='flex justify-end gap-2'>
-															<Button variant='outline'>Lưu đề tài</Button>
-															<Button
-																disabled={selectedThesis.status === 'full'}
-																className='bg-gradient-primary'
-															>
-																<Send className='mr-2 h-4 w-4' />
-																Đăng ký
-															</Button>
-														</div>
-													</div>
-												</>
-											)}
-										</DialogContent>
-									</Dialog>
-
-									<Button
-										size='sm'
-										className='flex-1 bg-gradient-primary'
-										disabled={thesis.status === 'full'}
-									>
-										<Send className='mr-2 h-4 w-4' />
-										Đăng ký
-									</Button>
-								</div>
-							</CardContent>
-						</Card>
+						<ThesisInformationCard
+							key={thesis._id}
+							thesis={thesis}
+							onRegister={() => handleRegister(thesis)}
+							isSaving={isSaving}
+							onSave={() => handleSave(thesis._id || '')}
+							isSuccess={isSuccess}
+							//isSaved={thesis.savedBy?.some((save) => save.userId === user?.id)}
+						/>
 					))}
 				</div>
 			</div>

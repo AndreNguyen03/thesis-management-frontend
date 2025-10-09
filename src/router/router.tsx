@@ -17,6 +17,8 @@ import Dashboard from '@/features/shared/dashboard/Dashboard'
 import NotFound from '@/features/shared/NotFound'
 import { Profile, ProfileEdit } from '@/features/shared/profile'
 import { ThesisList } from '@/features/student/TopicList'
+import { ThesisSaved } from '@/features/student/TopicList/ThesisSaved'
+import { ThesisRegistered } from '@/features/student/TopicList/Registerd/ThesisRegistered'
 
 // Mock user data
 
@@ -45,6 +47,8 @@ export const router = createBrowserRouter([
 			},
 
 			{ path: 'thesis', element: <ThesisList /> },
+			{ path: 'thesis/saved', element: <ThesisSaved /> }, // /thesis/saved
+			{ path: 'thesis/registered', element: <ThesisRegistered /> },
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },

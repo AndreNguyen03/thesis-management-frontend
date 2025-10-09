@@ -22,11 +22,38 @@ import type { Role } from 'models'
 interface AppSidebarProps {
 	userRole?: Role | undefined
 }
+type MenuItem = {
+  title: string;
+  url: string;
+  icon: React.ComponentType<any>;
+  children?: MenuItem[]; // Thêm dòng này
+};
 
-const menuItems = {
-	common: [{ title: 'Dashboard', url: '/', icon: LayoutDashboard }],
+const menuItems: {
+  common: MenuItem[];
+  student: MenuItem[];
+  lecturer: MenuItem[];
+  admin: MenuItem[];
+  footer: MenuItem[];
+} = {
+	common: [
+		{
+			title: 'Dashboard',
+			url: '/',
+			icon: LayoutDashboard
+		}
+	],
 	student: [
-		{ title: 'Danh sách đề tài', url: '/thesis', icon: BookOpen },
+		{
+			title: 'Danh sách đề tài',
+			url: '/thesis',
+			icon: BookOpen,
+			children: [
+				{ title: 'Tất cả đề tài', url: '/thesis', icon: Library },
+				{ title: 'Đề tài đã lưu', url: '/thesis/saved', icon: Library },
+				{ title: 'Đề tài đã đăng ký', url: '/thesis/registered', icon: FileText }
+			]
+		},
 		{ title: 'Gợi ý đề tài', url: '/suggestions', icon: Search },
 		{ title: 'Nhóm của tôi', url: '/my-group', icon: Users },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
@@ -63,20 +90,42 @@ const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
 	const renderMenuItems = (items: typeof menuItems.common) => (
 		<div className='space-y-1'>
 			{items.map((item) => (
-				<NavLink
-					key={item.title}
-					to={item.url}
-					className={() =>
-						`flex items-center gap-3 rounded-md px-3 py-2 transition-colors ${
-							isActive(item.url)
-								? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
-								: 'hover:bg-gray-100'
-						}`
-					}
-				>
-					<item.icon className='h-4 w-4' />
-					{isOpen && <span>{item.title}</span>}
-				</NavLink>
+				<div key={item.title}>
+					<NavLink
+						to={item.url}
+						className={() =>
+							`flex items-center gap-3 rounded-md px-3 py-2 transition-colors ${
+								isActive(item.url)
+									? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
+									: 'hover:bg-gray-100'
+							}`
+						}
+					>
+						<item.icon className='h-4 w-4' />
+						{isOpen && <span>{item.title}</span>}
+					</NavLink>
+					{/* Hiển thị submenu nếu có */}
+					{isOpen && item.children && (
+						<div className='ml-8 space-y-1'>
+							{item.children.map((sub) => (
+								<NavLink
+									key={sub.title}
+									to={sub.url}
+									className={() =>
+										`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
+											isActive(sub.url)
+												? 'bg-blue-50 font-semibold text-blue-700'
+												: 'hover:bg-gray-50'
+										}`
+									}
+								>
+									<sub.icon className='h-3 w-3' />
+									<span>{sub.title}</span>
+								</NavLink>
+							))}
+						</div>
+					)}
+				</div>
 			))}
 		</div>
 	)
