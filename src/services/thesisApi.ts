@@ -46,6 +46,11 @@ export const thesisApi = baseApi.injectEndpoints({
 				url: `/theses/cancel-registration/${thesisId}`,
 				method: 'DELETE'
 			})
+		}),
+		getCanceledRegistration: builder.query<Registration[], void>({
+			query: () => `/theses/canceled-registrations`,
+			transformResponse: (response: ApiResponse<Registration[]>) => response.data,
+			providesTags: ['Theses']
 		})
 	}),
 	overrideExisting: false
@@ -58,5 +63,6 @@ export const {
 	useGetSavedThesesQuery,
 	useGetRegisteredThesisQuery,
 	useCreateRegistrationMutation,
-	useCancelRegistrationMutation
+	useCancelRegistrationMutation,
+	useGetCanceledRegistrationQuery
 } = thesisApi

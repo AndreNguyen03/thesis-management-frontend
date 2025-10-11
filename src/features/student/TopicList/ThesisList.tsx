@@ -101,6 +101,7 @@ import { getErrorMessage } from '@/utils/catch-error'
 export const ThesisList = () => {
 	const user = useAppSelector((state) => state.auth.user)
 	const { data: thesesData = [], isLoading, isError: isGetThesesError, error } = useGetThesesQuery()
+	console.log('Theses data from API:', thesesData)
 	const [theses, setTheses] = useState<Thesis[]>(thesesData)
 	const [createRegistration, { isLoading: isRegistering, isSuccess: isSuccessRegister, isError: isRegisterError }] =
 		useCreateRegistrationMutation()
@@ -162,6 +163,7 @@ export const ThesisList = () => {
 		try {
 			const { data: updatedThesis } = await saveThesis({ thesisId }).unwrap()
 			notifySuccess('Đã lưu đề tài!')
+			console.log('Saved thesis with ID:', updatedThesis)
 			setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
@@ -171,6 +173,7 @@ export const ThesisList = () => {
 	const handleUnsave = async (thesisId: string) => {
 		try {
 			const { data: updatedThesis } = await unsaveThesis({ thesisId }).unwrap()
+			console.log('Unsave thesis with ID:', thesisId)
 			setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
