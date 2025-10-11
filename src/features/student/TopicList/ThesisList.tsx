@@ -2,11 +2,13 @@ import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitl
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
 import { Calendar, Eye, Filter, Loader2, Search, Send, Star, Users } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-	useCreateStudentRegistrationMutation,
+	useCreateRegistrationMutation,
 	useGetThesesQuery,
-	useSaveThesisMutation
+	useGetSavedThesesQuery,
+	useSaveThesisMutation,
+	useUnsaveThesisMutation
 } from '../../../services/thesisApi'
 import { useAppSelector } from '../../../store/configureStore'
 import type { Thesis } from 'models/thesis.model'
@@ -95,24 +97,36 @@ const fields = [
 	'Mobile Development'
 ]
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
+import { getErrorMessage } from '@/utils/catch-error'
 export const ThesisList = () => {
 	const user = useAppSelector((state) => state.auth.user)
 	const { data: thesesData = [], isLoading, isError: isGetThesesError, error } = useGetThesesQuery()
-	const [saveThesis, { isLoading: isSaving, isSuccess, isError: isSaveThesisError }] = useSaveThesisMutation()
 	const [theses, setTheses] = useState<Thesis[]>(thesesData)
+	const [createRegistration, { isLoading: isRegistering, isSuccess: isSuccessRegister, isError: isRegisterError }] =
+		useCreateRegistrationMutation()
+	const [saveThesis, { isLoading: isSaving, isSuccess: isSuccessSave, isError: isSaveError }] =
+		useSaveThesisMutation()
+	const [unsaveThesis, { isLoading: isUnsaving, isSuccess: isSuccessUnsave, isError: isUnsaveError }] =
+		useUnsaveThesisMutation()
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }])
 
-	const [createStudentRegistration] = useCreateStudentRegistrationMutation()
+	useEffect(() => {
+		if (JSON.stringify(theses) !== JSON.stringify(thesesData)) {
+			setTheses(thesesData)
+		}
+	}, [thesesData])
+
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedField, setSelectedField] = useState('Tất cả lĩnh vực')
-
 	const [sortBy, setSortBy] = useState('newest')
 	const filteredTheses = theses.filter((thesis) => {
 		const matchesSearch =
 			thesis.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			thesis.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			thesis.registrationIds.some(
-				(reg) => reg.role === 'student' && reg.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+				(reg) =>
+					reg.registrantId.role === 'student' &&
+					reg.registrantId.fullName.toLowerCase().includes(searchTerm.toLowerCase())
 			)
 		const matchesField = selectedField === 'Tất cả lĩnh vực' || thesis.field === selectedField
 		return matchesSearch && matchesField
@@ -132,43 +146,49 @@ export const ThesisList = () => {
 	})
 
 	const handleRegister = async (thesis: Thesis) => {
+		await new Promise((resolve) => setTimeout(resolve, 500))
 		try {
-			const result = await createStudentRegistration({
-				studentId: '65123456789abcdef0123456',
-				thesisId: thesis._id
-			}).unwrap()
+			const { data: newThesis } = await createRegistration({ thesisId: thesis._id }).unwrap()
 			notifySuccess('Đăng ký đề tài thành công!')
-			setTheses((prev) => prev.map((t) => (t._id === result.data._id ? result.data : t)))
-		} catch (error) {
-			const err = error as ApiError
-			if (err.data?.errorCode === 'STUDENT_ALREADY_REGISTER') {
-				notifyError(err.data?.message)
-			}
-			notifyError(err.data?.message || 'Đăng ký đề tài thất bại! Vui lòng thử lại.')
+			await new Promise((resolve) => setTimeout(resolve, 500))
+			setTheses((prev) => prev.map((t) => (t._id === thesis._id ? newThesis : t)))
+		} catch (err) {
+			const errorMessage = getErrorMessage(err)
+			notifyError(errorMessage)
 		}
 	}
-	const handleSave = async (thesisId: string) => {
-		// Implement save functionality here
-		saveThesis({
-			userId: '65123456789abcdef0123456',
-			// user?.id ||""
-			thesisId,
-			role: user?.role || ''
-		})
-		notifySuccess('Đã lưu đề tài!')
-	}
 
+	const handleSave = async (thesisId: string) => {
+		try {
+			const { data: updatedThesis } = await saveThesis({ thesisId }).unwrap()
+			notifySuccess('Đã lưu đề tài!')
+			setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
+		} catch (err) {
+			const errorMessage = getErrorMessage(err)
+			notifyError(errorMessage)
+		}
+	}
+	const handleUnsave = async (thesisId: string) => {
+		try {
+			const { data: updatedThesis } = await unsaveThesis({ thesisId }).unwrap()
+			setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
+		} catch (err) {
+			const errorMessage = getErrorMessage(err)
+			notifyError(errorMessage)
+		}
+	}
 	const renderDepartmentAndLecturers = (thesis: Thesis) => {
 		return (
-			<CardDescription className='mt-1'>
+			<p className='mb-2 text-xs text-muted-foreground'>
 				{thesis.registrationIds.length > 0
 					? thesis.registrationIds
 							.map((registrant) => {
-								if (registrant.role === 'lecturer') return registrant.fullName
+								if (registrant.registrantId.role === 'lecturer') return registrant.registrantId.fullName
 							})
 							.join(', ')
 					: 'Chưa có giảng viên'}
-			</CardDescription>
+				• {thesis.department}
+			</p>
 		)
 	}
 	return (
@@ -244,9 +264,8 @@ export const ThesisList = () => {
 										95% match
 									</Badge>
 								</div>
-								<p className='mb-2 text-xs text-muted-foreground'>
-									{renderDepartmentAndLecturers(thesis)}
-								</p>
+								{renderDepartmentAndLecturers(thesis)}
+
 								<div className='mb-2 flex gap-1'>
 									{thesis.requirements.slice(0, 3).map((req: string) => (
 										<Badge key={req} variant='secondary' className='text-xs'>
@@ -269,16 +288,28 @@ export const ThesisList = () => {
 					<p className='text-sm text-muted-foreground'>Tìm thấy {sortedTheses.length} đề tài</p>
 				</div>
 
-				<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+				<div className='grid gap-6 sm:grid-cols-1 md:grid-cols-2'>
 					{sortedTheses.map((thesis) => (
 						<ThesisInformationCard
 							key={thesis._id}
 							thesis={thesis}
 							onRegister={() => handleRegister(thesis)}
+							isRegistered={
+								isSuccessRegister ||
+								thesis.registrationIds.some((reg) => reg.registrantId._id === user?.id)
+							}
+							mode='all'
+							isRegistering={isRegistering} //isSaved={thesis.savedBy?.some((save) => save.userId === user?.id)}
+							onSave={() => {
+								handleSave(thesis._id)
+							}}
+							onUnsave={() => {
+								handleUnsave(thesis._id)
+							}}
+							isSaved={thesis.isSaved}
+							isSuccess={isSuccessRegister}
 							isSaving={isSaving}
-							onSave={() => handleSave(thesis._id || '')}
-							isSuccess={isSuccess}
-							//isSaved={thesis.savedBy?.some((save) => save.userId === user?.id)}
+							isUnsaving={isUnsaving}
 						/>
 					))}
 				</div>

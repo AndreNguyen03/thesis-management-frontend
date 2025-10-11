@@ -5,34 +5,46 @@ import type { Registration } from 'models'
 export const thesisApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getTheses: builder.query<Thesis[], void>({
-			query: () => `/theses/student`,
+			query: () => `/theses`,
 			transformResponse: (response: ApiResponse<Thesis[]>) => response.data,
 			providesTags: ['Theses']
 		}),
-		getSavedTheses: builder.query<Thesis[], { userId: string; role: string }>({
-			query: ({ userId, role }) => `/theses/saved-by-user?userId=${userId}&role=${role}`,
+
+		saveThesis: builder.mutation<ApiResponse<Thesis>, { thesisId: string }>({
+			query: ({ thesisId }) => ({
+				url: `/theses/save-thesis/${thesisId}`,
+				method: 'POST'
+			})
+		}),
+		getSavedTheses: builder.query<Thesis[], void>({
+			query: () => `/theses/saved-theses`,
 			transformResponse: (response: ApiResponse<Thesis[]>) => response.data,
 			providesTags: ['Theses']
 		}),
-		saveThesis: builder.mutation<ApiResponse<Thesis>, { userId: string; thesisId: string; role: string }>({
-			query: (body) => ({
-				url: `/theses/save`,
-				method: 'POST',
-				body: body
+		unsaveThesis: builder.mutation<ApiResponse<Thesis>, { thesisId: string }>({
+			query: ({ thesisId }) => ({
+				url: `/theses/unsave-thesis/${thesisId}`,
+				method: 'PATCH'
 			})
 		}),
 		// Lấy danh sách đề tài đã đăng ký của sinh viên
-		studentGetRegisteredThesis: builder.query<Registration[], void>({
+		getRegisteredThesis: builder.query<Registration[], void>({
 			query: () => `/theses/get-registered`,
 			transformResponse: (response: ApiResponse<Registration[]>) => response.data,
 			providesTags: ['Theses']
 		}),
 		// Thêm các endpoint khác nếu cần
-		createStudentRegistration: builder.mutation<ApiResponse<Thesis>, { studentId: string; thesisId: string }>({
+		createRegistration: builder.mutation<ApiResponse<Thesis>, { thesisId: string }>({
 			query: (body) => ({
-				url: `/theses/student/${body.studentId}/register/${body.thesisId}`,
-				method: 'PATCH',
+				url: `/theses/register-thesis/${body.thesisId}`,
+				method: 'POST',
 				body: body
+			})
+		}),
+		cancelRegistration: builder.mutation<ApiResponse<Registration>, { thesisId: string }>({
+			query: ({ thesisId }) => ({
+				url: `/theses/cancel-registration/${thesisId}`,
+				method: 'DELETE'
 			})
 		})
 	}),
@@ -42,7 +54,9 @@ export const thesisApi = baseApi.injectEndpoints({
 export const {
 	useGetThesesQuery,
 	useSaveThesisMutation,
+	useUnsaveThesisMutation,
 	useGetSavedThesesQuery,
-	useStudentGetRegisteredThesisQuery,
-	useCreateStudentRegistrationMutation
+	useGetRegisteredThesisQuery,
+	useCreateRegistrationMutation,
+	useCancelRegistrationMutation
 } = thesisApi

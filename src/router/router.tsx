@@ -18,7 +18,9 @@ import NotFound from '@/features/shared/NotFound'
 import { Profile, ProfileEdit } from '@/features/shared/profile'
 import { ThesisList } from '@/features/student/TopicList'
 import { ThesisSaved } from '@/features/student/TopicList/ThesisSaved'
-import { ThesisRegistered } from '@/features/student/TopicList/Registerd/ThesisRegistered'
+import { ThesisRegistered } from '@/features/student/TopicList/Registerd/ThesisRegisteredParent'
+import { ThesisRegisterdChildren } from '@/features/student/TopicList/Registerd/children/ThesisRegisterdChildren'
+import { CanceledThesisRegistration } from '@/features/student/TopicList/Registerd/children/CanceledThesisRegistration'
 
 // Mock user data
 
@@ -30,9 +32,9 @@ export const router = createBrowserRouter([
 	{
 		path: '/',
 		element: (
-			//<RequireAuth>
-			<App />
-			//</RequireAuth>
+			<RequireAuth>
+				<App />
+			</RequireAuth>
 		),
 		children: [
 			{ index: true, element: <Navigate to='dashboard' replace /> },
@@ -48,7 +50,14 @@ export const router = createBrowserRouter([
 
 			{ path: 'thesis', element: <ThesisList /> },
 			{ path: 'thesis/saved', element: <ThesisSaved /> }, // /thesis/saved
-			{ path: 'thesis/registered', element: <ThesisRegistered /> },
+			{
+				path: 'thesis/registered',
+				element: <ThesisRegistered />,
+				children: [
+					{ path: 'canceled', element: <CanceledThesisRegistration /> },
+					{ index: true, element: <ThesisRegisterdChildren /> }
+				]
+			}, // /thesis/registered
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },
