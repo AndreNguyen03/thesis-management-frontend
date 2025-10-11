@@ -34,7 +34,7 @@ function LoginForm() {
 			navigate('/dashboard')
 		} catch (err) {
 			const error = err as ApiError
-
+			console.log('Login error:', error)
 			methods.setValue('password', '')
 
 			toast.error(error?.data?.message || 'Đăng nhập thất bại')

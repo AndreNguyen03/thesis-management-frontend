@@ -1,18 +1,22 @@
 import { cn } from '@/utils/utils'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-	variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive',
-    size? : 'default' | 'sm' | 'lg' | 'icon'
+	variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive' | 'disable' | 'delete' | 'success' | 're_register'
+	size?: 'default' | 'sm' | 'lg' | 'icon'
 }
 
 export function Button({ className, size = 'default', variant = 'default', ...props }: ButtonProps) {
 	const variants = {
-		default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+		default: 'bg-primary text-primary-foreground hover:opacity-90',
 		destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
 		outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
 		secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
 		ghost: 'hover:bg-accent hover:text-accent-foreground',
-		link: 'text-primary underline-offset-4 hover:underline'
+		link: 'text-primary underline-offset-4 hover:underline',
+		disable: 'opacity-80 cursor-not-allowed text-gray-200',
+		delete: 'bg-red-600 text-white hover:bg-red-700',
+		success: 'bg-green-600 text-white hover:bg-green-700',
+		re_register: 'bg-orange-600 text-white hover:bg-orange-700'
 	}
 
 	const sizes = {
@@ -25,7 +29,7 @@ export function Button({ className, size = 'default', variant = 'default', ...pr
 	return (
 		<button
 			className={cn(
-				'w-full rounded-lg px-4 py-2 font-medium transition-colors',
+				'flex w-full items-center justify-center rounded-lg px-4 py-2 font-medium transition-colors',
 				variants[variant],
 				sizes[size],
 				className
