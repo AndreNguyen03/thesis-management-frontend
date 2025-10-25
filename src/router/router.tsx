@@ -17,10 +17,12 @@ import Dashboard from '@/features/shared/dashboard/Dashboard'
 import NotFound from '@/features/shared/NotFound'
 import { Profile, ProfileEdit } from '@/features/shared/profile'
 import { ThesisList } from '@/features/student/TopicList'
-import { ThesisSaved } from '@/features/student/TopicList/ThesisSaved'
-import { ThesisRegistered } from '@/features/student/TopicList/Registerd/ThesisRegisteredParent'
-import { ThesisRegisterdChildren } from '@/features/student/TopicList/Registerd/children/ThesisRegisterdChildren'
-import { CanceledThesisRegistration } from '@/features/student/TopicList/Registerd/children/CanceledThesisRegistration'
+import { ThesisSaved } from '@/features/student/TopicList/TopicSaved'
+import { ThesisRegistered } from '@/features/student/TopicList/registered/ThesisRegisteredParent'
+import { CanceledThesisRegistration } from '@/features/student/TopicList/registered/children/CanceledThesisRegistration'
+import { NewThesisFormContainer } from '@/features/student/TopicList/registered/NewThesisFormContainer'
+import { TopicRegisteredChildren } from '@/features/student/TopicList/registered/children/TopicRegisteredChildren'
+import {TopicDetailContainer} from '@/features/student/TopicList/TopicDetailContainer'
 
 // Mock user data
 
@@ -55,9 +57,17 @@ export const router = createBrowserRouter([
 				element: <ThesisRegistered />,
 				children: [
 					{ path: 'canceled', element: <CanceledThesisRegistration /> },
-					{ index: true, element: <ThesisRegisterdChildren /> }
+					{ index: true, element: <TopicRegisteredChildren /> }
 				]
+			},
+			{
+				path: 'thesis/new-register',
+				element: <NewThesisFormContainer />
 			}, // /thesis/registered
+			{
+				path:"thesis/:id",
+				element: <TopicDetailContainer/>
+			},
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },

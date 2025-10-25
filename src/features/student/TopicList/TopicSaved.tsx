@@ -2,17 +2,9 @@ import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitl
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import {
-	useCreateRegistrationMutation,
-	useGetSavedThesesQuery,
-	useSaveThesisMutation,
-	useUnsaveThesisMutation
-} from '../../../services/thesisApi'
+import { useGetSavedTopicsQuery, useSaveTopicMutation, useUnsaveTopicMutation } from '../../../services/topicApi'
 import { useAppSelector } from '../../../store/configureStore'
-import type { Thesis } from 'models/thesis.model'
-import { notifyError, notifySuccess } from '@/components/ui/Toast'
-import type { ApiError } from 'models'
-import { ThesisInformationCard } from './ThesisInformationCard'
+import { notifyError } from '@/components/ui/Toast'
 
 const fields = [
 	'Tất cả lĩnh vực',
@@ -26,48 +18,41 @@ const fields = [
 ]
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { getErrorMessage } from '@/utils/catch-error'
+import type { Topic } from 'models'
+import { TopicCard } from './TopicCard'
+import { useCreateRegistrationMutation } from '../../../services/registrationApi'
 export const ThesisSaved = () => {
 	const user = useAppSelector((state) => state.auth.user)
-	const [saveThesis] = useSaveThesisMutation()
-	const [unsaveThesis, { isSuccess: isSuccessUnsave }] = useUnsaveThesisMutation()
+	const [saveThesis] = useSaveTopicMutation()
+	const [unsaveThesis, { isSuccess: isSuccessUnsave }] = useUnsaveTopicMutation()
 
-	const [createRegistration, { isLoading: isRegistering, isSuccess: isSuccessRegister, isError: isRegisterError }] =
-		useCreateRegistrationMutation()
-	const { data: savedthesesData = [], isLoading: isLoadingSaved, isError: isErrorSaved } = useGetSavedThesesQuery()
-	const [theses, setTheses] = useState<Thesis[]>([])
+	const { data: savedthesesData = [], isLoading: isLoadingSaved, isError: isErrorSaved } = useGetSavedTopicsQuery()
+	const [topics, setTopics] = useState<Topic[]>([])
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Danh sách đề tài', path: '/' },
 		{ label: 'Đề tài đã lưu' }
 	])
 	useEffect(() => {
-		if (JSON.stringify(theses) !== JSON.stringify(savedthesesData)) {
-			setTheses(savedthesesData)
+		if (JSON.stringify(topics) !== JSON.stringify(savedthesesData)) {
+			setTopics(savedthesesData)
 		}
 	}, [savedthesesData])
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedField, setSelectedField] = useState('Tất cả lĩnh vực')
 
 	const [sortBy, setSortBy] = useState('newest')
-	const filteredTheses = theses.filter((thesis) => {
+	const filteredTopics = topics.filter((topic) => {
 		const matchesSearch =
-			thesis.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			thesis.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			thesis.registrationIds.some(
-				(reg) =>
-					reg.registrantId.role === 'student' &&
-					reg.registrantId.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-			)
-		const matchesField = selectedField === 'Tất cả lĩnh vực' || thesis.field === selectedField
+			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			topic.studentNames.some((name) => name.toLowerCase().includes(searchTerm.toLowerCase()))
+		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.field === selectedField
 		return matchesSearch && matchesField
 	})
 
-	const sortedTheses = [...filteredTheses].sort((a, b) => {
+	const sortedTopics = [...filteredTopics].sort((a, b) => {
 		switch (sortBy) {
-			case 'rating':
-				return b.rating - a.rating
-			case 'views':
-				return b.views - a.views
 			case 'deadline':
 				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
 			default:
@@ -75,23 +60,11 @@ export const ThesisSaved = () => {
 		}
 	})
 
-	const handleRegister = async (thesis: Thesis) => {
-		await new Promise((resolve) => setTimeout(resolve, 500))
+	const handleSave = async (topicId: string) => {
 		try {
-			await createRegistration({ thesisId: thesis._id }).unwrap()
-			notifySuccess('Đăng ký đề tài thành công!')
-			await new Promise((resolve) => setTimeout(resolve, 500))
-			setTheses((prev) => prev.map((t) => (t._id === thesis._id ? thesis : t)))
-		} catch (err) {
-			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
-		}
-	}
-	const handleSave = async (thesisId: string) => {
-		try {
-			const { data: updatedThesis } = await saveThesis({ thesisId }).unwrap()
-			notifySuccess('Đã lưu đề tài!')
-			setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
+			// const { data: updatedThesis } = await saveThesis({ topicId }).unwrap()
+			// notifySuccess('Đã lưu đề tài!')
+			// setTheses((prev) => prev.map((t) => (t._id === topicId ? updatedThesis : t)))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
 			notifyError(errorMessage)
@@ -99,9 +72,9 @@ export const ThesisSaved = () => {
 	}
 	const handleUnsave = async (thesisId: string) => {
 		try {
-			await unsaveThesis({ thesisId }).unwrap()
-			await new Promise((resolve) => setTimeout(resolve, 500))
-			setTheses((prev) => prev.filter((t) => t._id !== thesisId))
+			// await unsaveThesis({ thesisId }).unwrap()
+			// await new Promise((resolve) => setTimeout(resolve, 500))
+			// setTheses((prev) => prev.filter((t) => t._id !== thesisId))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
 			notifyError(errorMessage)
@@ -163,27 +136,21 @@ export const ThesisSaved = () => {
 			{/* Results */}
 			<div className='space-y-4'>
 				<div className='flex items-center justify-between'>
-					<p className='text-md font-bold text-muted-foreground'>Bạn đã lưu {sortedTheses.length} đề tài</p>
+					<p className='text-md font-bold text-muted-foreground'>Bạn đã lưu {sortedTopics.length} đề tài</p>
 				</div>
 
 				<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-					{sortedTheses.map((thesis) => (
-						<ThesisInformationCard
-							key={thesis._id}
-							thesis={thesis}
-							onRegister={() => handleRegister(thesis)}
-							onSave={() => handleSave(thesis._id || '')}
-							isSuccess={isSuccessRegister}
-							isRegistered={
-								isSuccessRegister ||
-								thesis.registrationIds.some((reg) => reg.registrantId._id === user?.id)
-							}
+					{sortedTopics.map((topic) => (
+						<TopicCard
+							key={topic._id}
+							topic={topic}
+							onSave={() => handleSave(topic._id || '')}
+							isRegistered={false}
 							mode='saved'
-							isRegistering={isRegistering} //isSaved={thesis.savedBy?.some((save) => save.userId === user?.id)}
 							onUnsave={() => {
-								handleUnsave(thesis._id)
+								handleUnsave(topic._id)
 							}}
-							isSaved={thesis.isSaved && !isSuccessUnsave}
+							isSaved={false}
 						/>
 					))}
 				</div>

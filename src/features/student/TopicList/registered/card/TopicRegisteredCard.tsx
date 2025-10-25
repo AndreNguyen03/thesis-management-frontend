@@ -1,19 +1,13 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger
-} from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { Calendar, ChevronDown, ChevronUp, Eye, Loader2, Send, Star, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
-import type { Registration, ThesisInsideRegistration } from 'models'
+//import type { Registration, ThesisInsideRegistration } from 'models'
 import { ConfirmCancelRegistration } from '../ConfirmCancelRegistration'
+import type { Topic } from 'models'
 
-export const ThesisRegisteredCard: React.FC<{
-	registration: Registration
+export const TopicRegisteredCard: React.FC<{
+	registration: any
 	onRegister?: () => void
 	onUnregister: () => void
 	isSaved?: boolean
@@ -24,12 +18,11 @@ export const ThesisRegisteredCard: React.FC<{
 	const { thesis } = registration
 	const isFullSlot = thesis.maxStudents === thesis.registeredStudents
 	const isDisabled = isFullSlot || isCanceling
-
+	const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
 	const [confirmOpen, setConfirmOpen] = useState(false)
-	const [selectedThesis] = useState<ThesisInsideRegistration | null>(null)
 
 	const [openDetail, setOpenDetail] = useState(false)
-	const getStatusBadge = (thesis: ThesisInsideRegistration) => {
+	const getStatusBadge = (topic: Topic) => {
 		return (
 			<div>
 				{isFullSlot ? (
@@ -63,19 +56,17 @@ export const ThesisRegisteredCard: React.FC<{
 			</div>
 		)
 	}
-	const renderDepartmentAndLecturers = (thesis: ThesisInsideRegistration) => {
+	const renderDepartmentAndLecturers = (topic: Topic) => {
 		return (
 			<CardDescription className='mt-1'>
-				{thesis.registrationIds.length > 0
-					? thesis.registrationIds
-							.map((reg) => {
-								if (reg.registrantId.role === 'lecturer') {
-									return reg.registrantId.fullName
-								}
+				{topic.lecturerNames.length > 0
+					? topic.lecturerNames
+							.map((lec) => {
+								return lec
 							})
 							.join(', ')
 					: 'Chưa có giảng viên'}
-				• {thesis.department}
+				• {topic.major}
 			</CardDescription>
 		)
 	}
@@ -141,26 +132,26 @@ export const ThesisRegisteredCard: React.FC<{
 					<div className='flex gap-2'>
 						<Dialog>
 							<DialogContent className='max-h-[80vh] max-w-2xl overflow-y-auto'>
-								{selectedThesis && (
+								{selectedTopic && (
 									<>
 										<DialogHeader>
-											<DialogTitle>{selectedThesis.title}</DialogTitle>
+											<DialogTitle>{selectedTopic.title}</DialogTitle>
 											<DialogDescription>
-												{renderDepartmentAndLecturers(selectedThesis)}
+												{renderDepartmentAndLecturers(selectedTopic)}
 											</DialogDescription>
 										</DialogHeader>
 										<div className='space-y-4'>
 											<div>
 												<h4 className='mb-2 font-medium'>Mô tả chi tiết</h4>
 												<p className='text-sm text-muted-foreground'>
-													{selectedThesis.description}
+													{selectedTopic.description}
 												</p>
 											</div>
 
 											<div>
 												<h4 className='mb-2 font-medium'>Yêu cầu kỹ năng</h4>
 												<div className='flex flex-wrap gap-2'>
-													{selectedThesis.requirements.map((req: string) => (
+													{selectedTopic.requirements.map((req: string) => (
 														<Badge key={req} variant='secondary'>
 															{req}
 														</Badge>
@@ -171,12 +162,12 @@ export const ThesisRegisteredCard: React.FC<{
 											<div className='grid grid-cols-2 gap-4 text-sm'>
 												<div>
 													<span className='font-medium'>Lĩnh vực:</span>
-													<p className='text-muted-foreground'>{selectedThesis.field}</p>
+													<p className='text-muted-foreground'>{selectedTopic.field}</p>
 												</div>
 												<div>
 													<span className='font-medium'>Số lượng SV:</span>
 													<p className='text-muted-foreground'>
-														{selectedThesis.registeredStudents}/{selectedThesis.maxStudents}
+														{selectedTopic.studentNames.length}/{selectedTopic.maxStudents}
 													</p>
 												</div>
 											</div>

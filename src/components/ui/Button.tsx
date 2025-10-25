@@ -1,7 +1,18 @@
 import { cn } from '@/utils/utils'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-	variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive' | 'disable' | 'delete' | 'success' | 're_register'
+	variant?:
+		| 'default'
+		| 'outline'
+		| 'secondary'
+		| 'register'
+		| 'ghost'
+		| 'link'
+		| 'destructive'
+		| 'disable'
+		| 'delete'
+		| 'success'
+		| 're_register'
 	size?: 'default' | 'sm' | 'lg' | 'icon'
 }
 
@@ -16,7 +27,8 @@ export function Button({ className, size = 'default', variant = 'default', ...pr
 		disable: 'opacity-80 cursor-not-allowed text-gray-200',
 		delete: 'bg-red-600 text-white hover:bg-red-700',
 		success: 'bg-green-600 text-white hover:bg-green-700',
-		re_register: 'bg-orange-600 text-white hover:bg-orange-700'
+		re_register: 'bg-orange-600 text-white hover:bg-orange-700',
+		register: 'bg-blue-600 text-white hover:bg-blue-700'
 	}
 
 	const sizes = {
@@ -29,7 +41,7 @@ export function Button({ className, size = 'default', variant = 'default', ...pr
 	return (
 		<button
 			className={cn(
-				'flex w-full items-center justify-center rounded-lg px-4 py-2 font-medium transition-colors',
+				'flex w-full items-center justify-center rounded-lg px-4 py-2 font-medium transition-colors hover:cursor-pointer',
 				variants[variant],
 				sizes[size],
 				className

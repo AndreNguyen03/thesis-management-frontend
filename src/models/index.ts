@@ -1,5 +1,5 @@
 export * from './users'
 export * from './api'
 export * from './update-users'
-export * from './thesis.model'
+export * from './topic.model'
 export * from './registration.model'
