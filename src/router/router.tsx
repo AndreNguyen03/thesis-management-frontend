@@ -16,7 +16,7 @@ import { ForgotPassword, Login, ResetPassword } from '@/features/shared/auth'
 import Dashboard from '@/features/shared/dashboard/Dashboard'
 import NotFound from '@/features/shared/NotFound'
 import { Profile, ProfileEdit } from '@/features/shared/profile'
-import { ThesisList } from '@/features/student/TopicList'
+import { TopicList } from '@/features/student/TopicList'
 import { ThesisSaved } from '@/features/student/TopicList/TopicSaved'
 import { ThesisRegistered } from '@/features/student/TopicList/registered/ThesisRegisteredParent'
 import { CanceledThesisRegistration } from '@/features/student/TopicList/registered/children/CanceledThesisRegistration'
@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
 				element: <ProfileEdit /> // tạm thời dùng mockUser
 			},
 
-			{ path: 'thesis', element: <ThesisList /> },
+			{ path: 'thesis', element: <TopicList /> },
 			{ path: 'thesis/saved', element: <ThesisSaved /> }, // /thesis/saved
 			{
 				path: 'thesis/registered',

@@ -15,18 +15,15 @@ import { useCreateRegistrationMutation } from '../../../services/registrationApi
 import { notifyError, notifySuccess } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/utils/catch-error'
 import { useNavigate } from 'react-router-dom'
-import { useLazyGetTopicByIdQuery } from '../../../services/topicApi'
+import { useLazyGetTopicByIdQuery, useSaveTopicMutation, useUnsaveTopicMutation } from '../../../services/topicApi'
+import { current } from '@reduxjs/toolkit'
 type TopicCardMode = 'all' | 'saved'
 
 export const TopicCard: React.FC<{
 	topic: Topic
 	mode?: TopicCardMode
-	onSave: () => void
-	onUnsave: () => void
-	isSaved: boolean
-	isSaving?: boolean
-	isUnsaving?: boolean
-}> = ({ topic, mode = 'all', onSave, onUnsave, isSaved, isSaving, isUnsaving }) => {
+	updateAfterAction?: (topic: Topic) => void
+}> = ({ topic, mode = 'all', updateAfterAction }) => {
 	const isFullSlot = topic.status == 'full'
 	const isDisabled = isFullSlot
 	const [confirmOpen, setConfirmOpen] = useState(false)
@@ -36,6 +33,9 @@ export const TopicCard: React.FC<{
 	const [fetchTopicById] = useLazyGetTopicByIdQuery()
 	const [createRegistration, { isLoading: isRegistering, isError: isRegisterError, isSuccess: isRegisterSuccess }] =
 		useCreateRegistrationMutation()
+	const [saveTopic, { isLoading: isSaving, isSuccess: isSuccessSave, isError: isSaveError }] = useSaveTopicMutation()
+	const [unsaveTopic, { isLoading: isUnsaving, isSuccess: isSuccessUnsave, isError: isUnsaveError }] =
+		useUnsaveTopicMutation()
 
 	const getStatusBadge = () => {
 		return (
@@ -43,35 +43,44 @@ export const TopicCard: React.FC<{
 				{isFullSlot ? (
 					<Badge variant='destructive'>Đã đủ</Badge>
 				) : (
-					<Badge variant='default'>{currentTopic.maxStudents - currentTopic.studentNames.length} chỗ trống</Badge>
+					<Badge variant='default'>
+						{currentTopic.maxStudents - currentTopic.studentNames.length} chỗ trống
+					</Badge>
 				)}
 				{currentTopic.isRegistered && <Badge variant='registered'>Đã đăng ký</Badge>}
 			</div>
 		)
 	}
-
+	const reloadTopic = async () => {
+		// trigger lazy query — trả về data khi dùng .unwrap()
+		const topicData = await fetchTopicById({ id: currentTopic._id }).unwrap()
+		setCurrentTopic(topicData)
+		await new Promise((resolve) => setTimeout(resolve, 200))
+		updateAfterAction?.(topicData)
+	}
 	const handleRegister = async () => {
 		await new Promise((resolve) => setTimeout(resolve, 500))
 		try {
-			const { data: newTopicState } = await createRegistration({ topicId: currentTopic._id }).unwrap()
+			await createRegistration({ topicId: currentTopic._id }).unwrap()
 			notifySuccess('Đăng ký đề tài thành công!')
 			setConfirmOpen(false)
-			await new Promise((resolve) => setTimeout(resolve, 200))
-			// trigger lazy query — trả về data khi dùng .unwrap()
-			const topicData = await fetchTopicById({ id: newTopicState.topicId }).unwrap()
-			setCurrentTopic(topicData)
+			await new Promise((resolve) => setTimeout(resolve, 100))
+			reloadTopic()
 		} catch (err) {
 			setConfirmOpen(false)
 			const errorMessage = getErrorMessage(err)
 			notifyError(errorMessage)
 		}
 	}
-	const handleToggleSave = () => {
+	const handleToggleSave = async () => {
 		if (isSaving || isUnsaving) return
-		if (isSaved) {
-			onUnsave?.()
+		if (currentTopic.isSaved) {
+			console.log('Unsave topic with ID:', currentTopic._id)
+			await unsaveTopic({ topicId: currentTopic._id })
+			reloadTopic()
 		} else {
-			onSave?.()
+			await saveTopic({ topicId: currentTopic._id })
+			reloadTopic()
 		}
 	}
 	const renderDialogActions = () => {
@@ -84,7 +93,7 @@ export const TopicCard: React.FC<{
 							className='flex items-center justify-center rounded-full pl-1 pr-1 hover:cursor-pointer hover:bg-slate-100'
 						>
 							<Bookmark
-								className={`h-6 w-6 border-gray-200 ${isSaved ? 'fill-yellow-400' : 'text-muted-foreground'}`}
+								className={`h-6 w-6 border-gray-200 ${currentTopic.isSaved ? 'fill-yellow-400' : 'text-muted-foreground'}`}
 							/>
 						</div>
 					</div>
@@ -119,7 +128,7 @@ export const TopicCard: React.FC<{
 								className='flex items-center justify-center rounded-full pl-1 pr-1 hover:cursor-pointer hover:bg-slate-100'
 							>
 								<Bookmark
-									className={`h-6 w-6 border-gray-200 ${isSaved ? 'fill-yellow-400' : 'text-muted-foreground'}`}
+									className={`h-6 w-6 border-gray-200 ${currentTopic.isSaved ? 'fill-yellow-400' : 'text-muted-foreground'}`}
 								/>
 							</div>
 						</>

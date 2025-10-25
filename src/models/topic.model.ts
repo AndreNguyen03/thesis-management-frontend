@@ -32,4 +32,6 @@ export interface Topic {
 	updated_at: Date
 
 	isRegistered: boolean
+
+	isSaved: boolean
 }

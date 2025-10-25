@@ -4,7 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useGetTopicsQuery, useSaveTopicMutation, useUnsaveTopicMutation } from '../../../services/topicApi'
-import { useAppSelector } from '../../../store/configureStore'
+import { useAppSelector, useAppDispatch } from '../../../store/configureStore'
+import { baseApi } from '../../../services/baseApi'
 import type { Topic } from 'models/topic.model'
 import { notifyError, notifySuccess } from '@/components/ui/Toast'
 import { TopicCard } from './TopicCard'
@@ -19,21 +20,19 @@ const fields = [
 	'Computer Vision',
 	'Web Development',
 	'Mobile Development'
-]
+] 
 
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { getErrorMessage } from '@/utils/catch-error'
 import { useNavigate } from 'react-router'
 import { useCreateRegistrationMutation } from '../../../services/registrationApi'
-export const ThesisList = () => {
+export const TopicList = () => {
 	const user = useAppSelector((state) => state.auth.user)
+	const dispatch = useAppDispatch()
 	const navigate = useNavigate()
 	const { data: topicsData = [] } = useGetTopicsQuery()
 	const [topics, setTopics] = useState<Topic[]>([])
 
-	const [saveTopic, { isLoading: isSaving, isSuccess: isSuccessSave, isError: isSaveError }] = useSaveTopicMutation()
-	const [unsaveTopic, { isLoading: isUnsaving, isSuccess: isSuccessUnsave, isError: isUnsaveError }] =
-		useUnsaveTopicMutation()
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }])
 	useEffect(() => {
 		if (JSON.stringify(topics) !== JSON.stringify(topicsData)) {
@@ -59,27 +58,11 @@ export const ThesisList = () => {
 				return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
 		}
 	})
-
-	const handleSave = async (thesisId: string) => {
-		try {
-			// const { data: updatedThesis } = await saveThesis({ thesisId }).unwrap()
-			// notifySuccess('Đã lưu đề tài!')
-			// console.log('Saved thesis with ID:', updatedThesis)
-			// setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
-		} catch (err) {
-			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
-		}
-	}
-	const handleUnsave = async (thesisId: string) => {
-		try {
-			// const { data: updatedThesis } = await unsaveThesis({ thesisId }).unwrap()
-			// console.log('Unsave thesis with ID:', thesisId)
-			// setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
-		} catch (err) {
-			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
-		}
+	console.log('render')
+	const updateStateAfterAction = (topic: Topic) => {
+		console.log('Updating topic in list:', topic.isSaved)
+		// update local state
+		setTopics((prevTopics) => prevTopics.map((t) => (t._id === topic._id ? topic : t)))
 	}
 	return (
 		<div className='space-y-6'>
@@ -146,15 +129,7 @@ export const ThesisList = () => {
 							key={topic._id}
 							topic={topic}
 							mode='all'
-							onSave={() => {
-								handleSave(topic._id)
-							}}
-							onUnsave={() => {
-								handleUnsave(topic._id)
-							}}
-							isSaved={false}
-							isSaving={isSaving}
-							isUnsaving={isUnsaving}
+							updateAfterAction={updateStateAfterAction}
 						/>
 					))}
 				</div>

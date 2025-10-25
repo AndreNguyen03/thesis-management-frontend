@@ -5,27 +5,29 @@ export const topicApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getTopics: builder.query<Topic[], void>({
 			query: () => `/topics`,
-			transformResponse: (response: ApiResponse<Topic[]>) => response.data
+			transformResponse: (response: ApiResponse<Topic[]>) => response.data,
+			providesTags: ['Topics']
 		}),
 		getTopicById: builder.query<Topic, { id: string }>({
 			query: ({ id }) => `/topics/${id}`,
 			transformResponse: (response: ApiResponse<Topic>) => response.data
 		}),
+
+		getSavedTopics: builder.query<Topic[], void>({
+			query: () => `/topics/saved-topics`,
+			transformResponse: (response: ApiResponse<Topic[]>) => response.data,
+			providesTags: ['SavedTopics']
+		}),
 		saveTopic: builder.mutation<ApiResponse<Topic>, { topicId: string }>({
 			query: ({ topicId }) => ({
-				url: `/topics/save-thesis/${topicId}`,
+				url: `/topics/save-topic/${topicId}`,
 				method: 'POST'
 			})
 		}),
-		getSavedTopics: builder.query<Topic[], void>({
-			query: () => `/theses/saved-theses`,
-			transformResponse: (response: ApiResponse<Topic[]>) => response.data,
-			providesTags: ['Theses']
-		}),
-		unsaveTopic: builder.mutation<ApiResponse<Topic>, { thesisId: string }>({
-			query: ({ thesisId }) => ({
-				url: `/theses/unsave-thesis/${thesisId}`,
-				method: 'PATCH'
+		unsaveTopic: builder.mutation<ApiResponse<Topic>, { topicId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/unsave-topic/${topicId}`,
+				method: 'DELETE'
 			})
 		})
 	}),

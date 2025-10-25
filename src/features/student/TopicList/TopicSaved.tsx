@@ -2,7 +2,7 @@ import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitl
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useGetSavedTopicsQuery, useSaveTopicMutation, useUnsaveTopicMutation } from '../../../services/topicApi'
+import { useGetSavedTopicsQuery } from '../../../services/topicApi'
 import { useAppSelector } from '../../../store/configureStore'
 import { notifyError } from '@/components/ui/Toast'
 
@@ -20,11 +20,9 @@ import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { getErrorMessage } from '@/utils/catch-error'
 import type { Topic } from 'models'
 import { TopicCard } from './TopicCard'
-import { useCreateRegistrationMutation } from '../../../services/registrationApi'
+import { set } from 'react-hook-form'
 export const ThesisSaved = () => {
 	const user = useAppSelector((state) => state.auth.user)
-	const [saveThesis] = useSaveTopicMutation()
-	const [unsaveThesis, { isSuccess: isSuccessUnsave }] = useUnsaveTopicMutation()
 
 	const { data: savedthesesData = [], isLoading: isLoadingSaved, isError: isErrorSaved } = useGetSavedTopicsQuery()
 	const [topics, setTopics] = useState<Topic[]>([])
@@ -60,25 +58,10 @@ export const ThesisSaved = () => {
 		}
 	})
 
-	const handleSave = async (topicId: string) => {
-		try {
-			// const { data: updatedThesis } = await saveThesis({ topicId }).unwrap()
-			// notifySuccess('Đã lưu đề tài!')
-			// setTheses((prev) => prev.map((t) => (t._id === topicId ? updatedThesis : t)))
-		} catch (err) {
-			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
-		}
-	}
-	const handleUnsave = async (thesisId: string) => {
-		try {
-			// await unsaveThesis({ thesisId }).unwrap()
-			// await new Promise((resolve) => setTimeout(resolve, 500))
-			// setTheses((prev) => prev.filter((t) => t._id !== thesisId))
-		} catch (err) {
-			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
-		}
+	const updateStateAfterAction = (topic: Topic) => {
+		if (topic.isSaved) {
+			setTopics((prevTopics) => prevTopics.map((t) => (t._id === topic._id ? topic : t)))
+		} else setTopics((prevTopics) => prevTopics.filter((t) => t._id !== topic._id))
 	}
 	return (
 		<div className='space-y-6'>
@@ -141,17 +124,7 @@ export const ThesisSaved = () => {
 
 				<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
 					{sortedTopics.map((topic) => (
-						<TopicCard
-							key={topic._id}
-							topic={topic}
-							onSave={() => handleSave(topic._id || '')}
-							isRegistered={false}
-							mode='saved'
-							onUnsave={() => {
-								handleUnsave(topic._id)
-							}}
-							isSaved={false}
-						/>
+						<TopicCard key={topic._id} topic={topic} mode='saved' updateAfterAction={updateStateAfterAction} />
 					))}
 				</div>
 			</div>
