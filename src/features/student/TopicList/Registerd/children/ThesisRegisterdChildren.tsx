@@ -1,4 +1,4 @@
-import type { Registration } from 'models'
+import type { Registration } from '@/models'
 import { useEffect, useState } from 'react'
 
 import {
@@ -17,8 +17,8 @@ import { ThesisRegisteredCard } from '../card/ThesisRegisteredCard'
 import { useCancelRegistrationMutation, useGetRegisteredThesisQuery } from '../../../../../services/thesisApi'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { getErrorMessage } from '@/utils/catch-error'
-import { notifyError } from '@/components/ui/Toast'
 import { Filter, Search } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 const fields = [
 	'Tất cả lĩnh vực',
 	'Trí tuệ nhân tạo',
@@ -30,6 +30,7 @@ const fields = [
 	'Mobile Development'
 ]
 export const ThesisRegisterdChildren = () => {
+    const { toast } = useToast()
 	const { data: registrationsData = [] } = useGetRegisteredThesisQuery()
 	const [cancelRegistration, { isLoading: isCancelling, isSuccess }] = useCancelRegistrationMutation()
 	const [registrations, setRegistrations] = useState<Registration[]>([])
@@ -52,7 +53,11 @@ export const ThesisRegisterdChildren = () => {
 			setRegistrations((prev) => prev.filter((reg) => reg.thesis._id !== thesisId))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
+			toast({
+				variant: 'destructive',
+				title: 'Lỗi',
+				description: errorMessage
+			})
 		}
 	}
 

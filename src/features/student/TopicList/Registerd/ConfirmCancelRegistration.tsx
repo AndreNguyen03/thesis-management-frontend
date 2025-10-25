@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Loader2 } from 'lucide-react'
 
 export const ConfirmCancelRegistration: React.FC<{
@@ -10,9 +10,7 @@ export const ConfirmCancelRegistration: React.FC<{
 	<DialogContent>
 		<DialogHeader>
 			<DialogTitle>Bạn có chắc chắn muốn hủy đăng ký đề tài này?</DialogTitle>
-			<DialogDescription>
-				Hãy chắc chắn rằng bạn đã suy nghĩ kĩ trước khi hủy.
-			</DialogDescription>
+			<DialogDescription>Hãy chắc chắn rằng bạn đã suy nghĩ kĩ trước khi hủy.</DialogDescription>
 		</DialogHeader>
 		<div className='flex justify-end gap-2'>
 			<Button variant='outline' onClick={onClose}>

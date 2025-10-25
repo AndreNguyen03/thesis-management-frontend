@@ -15,19 +15,20 @@ export function CompletedThesis({ lecturer }: { lecturer: LecturerUser }) {
 				</div>
 			</div>
 			<div className='rounded-lg bg-white p-6 shadow-md lg:col-span-4'>
-                <h2 className='mb-4 text-xl font-bold text-gray-900'>Khóa luận đã hướng dẫn nổi bật</h2>
+				<h2 className='mb-4 text-xl font-bold text-gray-900'>Khóa luận đã hướng dẫn nổi bật</h2>
 				<ul className='space-y-2'>
-					{lecturer.completedThesis.map((t, idx) => (
-						<li key={idx} className='flex justify-between rounded border p-2 hover:bg-gray-100'>
-							<div>
-								<p className='text-sm font-medium'>{t.title}</p>
-								<p className='text-xs text-gray-500'>
-									{t.student} • {t.year} • {t.field}
-								</p>
-							</div>
-							<span className='text-sm font-semibold'>{t.result}</span>
-						</li>
-					))}
+					{lecturer.completedThesis  &&
+						lecturer.completedThesis.map((t, idx) => (
+							<li key={idx} className='flex justify-between rounded border p-2 hover:bg-gray-100'>
+								<div>
+									<p className='text-sm font-medium'>{t.title}</p>
+									<p className='text-xs text-gray-500'>
+										{t.student} • {t.year} • {t.field}
+									</p>
+								</div>
+								<span className='text-sm font-semibold'>{t.result}</span>
+							</li>
+						))}
 				</ul>
 			</div>
 		</div>

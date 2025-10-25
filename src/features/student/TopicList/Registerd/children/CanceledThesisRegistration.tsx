@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useCreateRegistrationMutation, useGetCanceledRegistrationQuery } from '../../../../../services/thesisApi'
-import type { Registration } from 'models/registration.model'
+import type { Registration } from '@/models/registration.model'
 
-import { notifyError } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/utils/catch-error'
 import { CancelRegisteredCard } from '../card/CancelRegisteredCard'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { useAppSelector } from '../../../../../store/configureStore'
+import { useToast } from '@/hooks/use-toast'
 
 export const CanceledThesisRegistration = () => {
-	const user = useAppSelector((state) => state.auth.user)
+    const { toast } = useToast()
+    const user = useAppSelector((state) => state.auth.user)
 	const { data: canceledRegistrations = [] } = useGetCanceledRegistrationQuery()
 	const [createRegistration, { isLoading: isRegistering, isSuccess }] = useCreateRegistrationMutation()
 	const [registrations, setRegistrations] = useState<Registration[]>([])
@@ -27,7 +28,11 @@ export const CanceledThesisRegistration = () => {
 			setRegistrations((prev) => prev.filter((reg) => reg.thesis._id !== thesisId))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
+			toast({
+				variant: 'destructive',
+				title: 'Lỗi',
+				description: errorMessage
+			})
 		}
 	}
 	usePageBreadcrumb([

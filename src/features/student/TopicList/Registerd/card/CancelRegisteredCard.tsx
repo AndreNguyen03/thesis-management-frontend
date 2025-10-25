@@ -1,5 +1,5 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Calendar, ChevronDown, ChevronUp, Eye, Loader2, Star, Users } from 'lucide-react'
 import { useState } from 'react'
 import type { Registration, ThesisInsideRegistration } from 'models'

@@ -43,7 +43,7 @@ function LoginForm() {
 
 	return (
 		<FormProvider {...methods}>
-			<form onSubmit={methods.handleSubmit(onSubmit)} className='space-y-4'>
+			<form onSubmit={methods.handleSubmit(onSubmit)} className='space-y-4]'>
 				{/* Email Field */}
 				<div className='space-y-2'>
 					<label htmlFor='email' className='font-semibold'>

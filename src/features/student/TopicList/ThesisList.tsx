@@ -12,10 +12,9 @@ import {
 } from '../../../services/thesisApi'
 import { useAppSelector } from '../../../store/configureStore'
 import type { Thesis } from 'models/thesis.model'
-import { notifyError, notifySuccess } from '@/components/ui/Toast'
 import type { ApiError } from 'models'
 import { ThesisInformationCard } from './ThesisInformationCard'
-
+import { useToast } from '@/hooks/use-toast'
 // Mock data
 // const
 //
@@ -99,6 +98,7 @@ const fields = [
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { getErrorMessage } from '@/utils/catch-error'
 export const ThesisList = () => {
+	const { toast } = useToast()
 	const user = useAppSelector((state) => state.auth.user)
 	const { data: thesesData = [], isLoading, isError: isGetThesesError, error } = useGetThesesQuery()
 	console.log('Theses data from API:', thesesData)
@@ -150,24 +150,39 @@ export const ThesisList = () => {
 		await new Promise((resolve) => setTimeout(resolve, 500))
 		try {
 			const { data: newThesis } = await createRegistration({ thesisId: thesis._id }).unwrap()
-			notifySuccess('Đăng ký đề tài thành công!')
+			toast({
+				title: 'Thành công',
+				description: 'Đăng ký đề tài thành công!'
+			})
+
 			await new Promise((resolve) => setTimeout(resolve, 500))
 			setTheses((prev) => prev.map((t) => (t._id === thesis._id ? newThesis : t)))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
+			toast({
+				variant: 'destructive',
+				title: 'Lỗi',
+				description: errorMessage
+			})
 		}
 	}
 
 	const handleSave = async (thesisId: string) => {
 		try {
 			const { data: updatedThesis } = await saveThesis({ thesisId }).unwrap()
-			notifySuccess('Đã lưu đề tài!')
+			toast({
+				title: 'Thành công',
+				description: 'Đăng ký đề tài thành công!'
+			})
 			console.log('Saved thesis with ID:', updatedThesis)
 			setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
+			toast({
+				variant: 'destructive',
+				title: 'Lỗi',
+				description: errorMessage
+			})
 		}
 	}
 	const handleUnsave = async (thesisId: string) => {
@@ -177,7 +192,11 @@ export const ThesisList = () => {
 			setTheses((prev) => prev.map((t) => (t._id === thesisId ? updatedThesis : t)))
 		} catch (err) {
 			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
+			toast({
+				variant: 'destructive',
+				title: 'Lỗi',
+				description: errorMessage
+			})
 		}
 	}
 	const renderDepartmentAndLecturers = (thesis: Thesis) => {

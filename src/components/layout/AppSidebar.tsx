@@ -16,25 +16,25 @@ import {
 	Users
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Button } from '../ui/Button'
+import { Button } from '../ui/button'
 import type { Role } from 'models'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
 }
 type MenuItem = {
-  title: string;
-  url: string;
-  icon: React.ComponentType<any>;
-  children?: MenuItem[]; // Thêm dòng này
-};
+	title: string
+	url: string
+	icon: React.ComponentType<any>
+	children?: MenuItem[] // Thêm dòng này
+}
 
 const menuItems: {
-  common: MenuItem[];
-  student: MenuItem[];
-  lecturer: MenuItem[];
-  admin: MenuItem[];
-  footer: MenuItem[];
+	common: MenuItem[]
+	student: MenuItem[]
+	lecturer: MenuItem[]
+	admin: MenuItem[]
+	footer: MenuItem[]
 } = {
 	common: [
 		{

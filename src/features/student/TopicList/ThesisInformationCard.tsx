@@ -6,7 +6,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger
-} from '@/components/ui/Dialog'
+} from '@/components/ui/dialog'
 import { Bookmark, BookmarkCheck, BookmarkIcon, Calendar, Eye, Loader2, Send, Star, Trash2, Users } from 'lucide-react'
 import type { Thesis } from 'models/thesis.model'
 import { useState } from 'react'
@@ -36,7 +36,7 @@ export const ThesisInformationCard: React.FC<{
 	isRegistering,
 	isRegistered,
 	isSaving,
-	isUnsaving,
+	isUnsaving
 }) => {
 	const isFullSlot = thesis.maxStudents === thesis.registeredStudents
 	const isDisabled = isFullSlot || isRegistered || isRegistering

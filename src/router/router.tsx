@@ -21,6 +21,7 @@ import { ThesisSaved } from '@/features/student/TopicList/ThesisSaved'
 import { ThesisRegistered } from '@/features/student/TopicList/Registerd/ThesisRegisteredParent'
 import { ThesisRegisterdChildren } from '@/features/student/TopicList/Registerd/children/ThesisRegisterdChildren'
 import { CanceledThesisRegistration } from '@/features/student/TopicList/Registerd/children/CanceledThesisRegistration'
+import NewTopic from '@/features/teacher/new_topic/NewTopic'
 
 // Mock user data
 
@@ -58,7 +59,7 @@ export const router = createBrowserRouter([
 					{ index: true, element: <ThesisRegisterdChildren /> }
 				]
 			}, // /thesis/registered
-			//   { path: 'create-thesis', element: <CreateThesis /> },
+			{ path: 'create-thesis', element: <NewTopic /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },
 			//   { path: 'plagiarism-check', element: <PlagiarismCheck /> },

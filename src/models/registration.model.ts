@@ -1,4 +1,4 @@
-import type { Thesis } from './thesis.model'
+import type { Thesis } from './topic.model'
 
 export interface Registration {
 	_id: string

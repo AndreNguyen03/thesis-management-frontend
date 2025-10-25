@@ -6,7 +6,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger
-} from '@/components/ui/Dialog'
+} from '@/components/ui/dialog'
 import { Calendar, ChevronDown, ChevronUp, Eye, Loader2, Send, Star, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
 import type { Registration, ThesisInsideRegistration } from 'models'

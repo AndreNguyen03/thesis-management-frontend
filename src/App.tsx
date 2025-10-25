@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router-dom'
-import { ToastContainer } from 'react-toastify'
 import { Layout } from './components/layout/Layout'
 import { useAppDispatch, useAppSelector } from './store'
 import { useEffect } from 'react'
 import { useGetProfileQuery } from './services/userApi'
 import { setUser } from './features/shared/auth'
 import { LoadingOverlay } from './components/ui'
+import { Toaster } from './components/ui/toaster'
 
 const App = () => {
 	const user = useAppSelector((state) => state.auth.user)
@@ -16,7 +16,6 @@ const App = () => {
 	const dispatch = useAppDispatch()
 
 	useEffect(() => {
-        console.log(`app :: `,userData)
 		if (userData && userData !== user) {
 			dispatch(setUser(userData))
 		}
@@ -27,18 +26,7 @@ const App = () => {
 	return (
 		<Layout>
 			<Outlet />
-			<ToastContainer
-				position='top-right'
-				autoClose={3000}
-				hideProgressBar={false}
-				newestOnTop={false}
-				closeOnClick
-				rtl={false}
-				pauseOnFocusLoss
-				draggable
-				pauseOnHover
-				theme='light'
-			/>
+			<Toaster />
 		</Layout>
 	)
 }

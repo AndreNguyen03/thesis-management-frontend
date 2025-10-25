@@ -12,7 +12,7 @@ function Login() {
 				<Logo />
 
 				{/* Login Card */}
-				<Card className='border-0 shadow-xl backdrop-blur'>
+				<Card className='border-0 px-6 py-8 shadow-xl backdrop-blur'>
 					<h2 className='mb-2 text-center text-xl font-semibold'>Đăng nhập</h2>
 					<p className='mb-6 text-center text-sm text-muted-foreground'>
 						Nhập thông tin tài khoản UIT của bạn để tiếp tục
