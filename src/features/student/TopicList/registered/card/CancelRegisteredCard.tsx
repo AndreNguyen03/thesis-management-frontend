@@ -76,7 +76,7 @@ export const CancelRegisteredCard: React.FC<{
 						<Button
 							variant='outline'
 							className='max-w-[100px]'
-							onClick={() => navigate(`/topics/${topic._id}`)}
+							onClick={() => navigate(`/detail-topic/${topic._id}`)}
 						>
 							<p className='text-sm'>Xem chi tiết đề tài</p>
 						</Button>

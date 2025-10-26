@@ -20,9 +20,9 @@ import { TopicList } from '@/features/student/TopicList'
 import { ThesisSaved } from '@/features/student/TopicList/TopicSaved'
 import { NewThesisFormContainer } from '@/features/student/TopicList/registered/NewThesisFormContainer'
 import { TopicRegisteredChildren } from '@/features/student/TopicList/registered/children/TopicRegisteredChildren'
-import { TopicDetailContainer } from '@/features/student/TopicList/TopicDetailContainer'
 import { RegisteredTopicContainer } from '@/features/student/TopicList/registered/TopicRegisteredContainer'
 import { CanceledTopicsRegistration } from '@/features/student/TopicList/registered/children/CanceledTopicsRegistration'
+import { TopicDetailContainer } from '@/features/student/TopicList/detail/TopicDetailContainer'
 
 // Mock user data
 
@@ -65,7 +65,7 @@ export const router = createBrowserRouter([
 				element: <NewThesisFormContainer />
 			}, // /thesis/registered
 			{
-				path: 'topics/:id',
+				path: 'detail-topic/:id',
 				element: <TopicDetailContainer />
 			},
 			//   { path: 'create-thesis', element: <CreateThesis /> },

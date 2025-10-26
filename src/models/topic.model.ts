@@ -7,8 +7,6 @@ export interface Topic {
 
 	type: string
 
-	field: string
-
 	createBy: string
 
 	status: string
