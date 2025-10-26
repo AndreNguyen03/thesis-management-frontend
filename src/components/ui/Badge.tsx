@@ -6,7 +6,7 @@ export const Badge = ({
 	className = ''
 }: {
 	children: ReactNode
-	variant?: 'default' | 'destructive' | 'secondary' | 'outline' | 'registered'
+	variant?: 'default' | 'destructive' | 'secondary' | 'outline' | 'registered' | 'blue'
 	className?: string
 }) => {
 	const variantStyles = {
@@ -14,7 +14,8 @@ export const Badge = ({
 		destructive: 'bg-red-600 text-white',
 		secondary: 'bg-gray-200 text-gray-800',
 		outline: 'border border-gray-300 text-gray-800',
-		registered: 'bg-green-600 text-white'
+		registered: 'bg-green-600 text-white',
+		blue: 'bg-blue-600 text-white'
 	}
 
 	return (

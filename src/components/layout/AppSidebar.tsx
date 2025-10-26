@@ -2,6 +2,7 @@ import { useSidebar } from '@/hooks/useSidebar'
 import {
 	BarChart3,
 	BookOpen,
+	ChevronDown,
 	ChevronLeft,
 	FileText,
 	LayoutDashboard,
@@ -15,6 +16,7 @@ import {
 	UserCheck,
 	Users
 } from 'lucide-react'
+import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import type { Role } from 'models'
@@ -23,18 +25,18 @@ interface AppSidebarProps {
 	userRole?: Role | undefined
 }
 type MenuItem = {
-  title: string;
-  url: string;
-  icon: React.ComponentType<any>;
-  children?: MenuItem[]; // Thêm dòng này
-};
+	title: string
+	url: string
+	icon: React.ComponentType<any>
+	children?: MenuItem[] // Thêm dòng này
+}
 
 const menuItems: {
-  common: MenuItem[];
-  student: MenuItem[];
-  lecturer: MenuItem[];
-  admin: MenuItem[];
-  footer: MenuItem[];
+	common: MenuItem[]
+	student: MenuItem[]
+	lecturer: MenuItem[]
+	admin: MenuItem[]
+	footer: MenuItem[]
 } = {
 	common: [
 		{
@@ -46,12 +48,13 @@ const menuItems: {
 	student: [
 		{
 			title: 'Danh sách đề tài',
-			url: '/thesis',
+			url: '/topics',
 			icon: BookOpen,
 			children: [
-				{ title: 'Tất cả đề tài', url: '/thesis', icon: Library },
-				{ title: 'Đề tài đã lưu', url: '/thesis/saved', icon: Library },
-				{ title: 'Đề tài đã đăng ký', url: '/thesis/registered', icon: FileText }
+				{ title: 'Tất cả đề tài', url: '/topics', icon: Library },
+				{ title: 'Đề tài đã lưu', url: '/topics/saved', icon: Library },
+				{ title: 'Đề tài đã đăng ký', url: '/topics/registered', icon: FileText }
+				//{ title: 'Đăng ký đề tài mới', url: '/topics/new-register', icon: FileText }
 			]
 		},
 		{ title: 'Gợi ý đề tài', url: '/suggestions', icon: Search },
@@ -81,21 +84,80 @@ const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
 	const { isOpen, toggleSidebar } = useSidebar()
 	const location = useLocation()
 	const currentPath = location.pathname
+	const [openMenus, setOpenMenus] = useState<string[]>([])
 
 	function isActive(path: string) {
+		// Logic chính xác hơn cho active state của sub-item
 		if (path === '/' && currentPath === '/') return true
-		return path !== '/' && currentPath.startsWith(path)
+		if (path !== '/' && currentPath === path) return true
+		// Nếu path cha là '/thesis' và con là '/thesis/saved', cần so sánh chính xác
+		return path !== '/' && currentPath.startsWith(path) && currentPath !== '/topics' && path !== '/thesis'
+	}
+
+	const handleMenuClick = (title: string) => {
+		setOpenMenus((prev) => (prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]))
 	}
 
 	const renderMenuItems = (items: typeof menuItems.common) => (
 		<div className='space-y-1'>
-			{items.map((item) => (
-				<div key={item.title}>
+			{items.map((item) => {
+				const isSubMenuOpen = openMenus.includes(item.title)
+				const isParentActive = item.children ? currentPath.startsWith(item.url) : isActive(item.url)
+
+				if (item.children) {
+					return (
+						<div key={item.title}>
+							<button
+								onClick={() => handleMenuClick(item.title)}
+								className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors ${
+									isParentActive
+										? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
+										: 'hover:bg-gray-100'
+								}`}
+							>
+								<div className='flex items-center gap-3'>
+									<item.icon className='h-4 w-4' />
+									{isOpen && <span>{item.title}</span>}
+								</div>
+								{isOpen && (
+									<ChevronDown
+										className={`h-4 w-4 transform transition-transform ${isSubMenuOpen ? 'rotate-180' : ''}`}
+									/>
+								)}
+							</button>
+							{isOpen && isSubMenuOpen && (
+								<div className='ml-7 mt-1 space-y-1 border-l pl-3'>
+									{item.children.map((sub) => (
+										<NavLink
+											key={sub.title}
+											to={sub.url}
+											end={sub.url === '/topics'} // Đảm bảo "Tất cả đề tài" không active khi ở trang con
+											className={({ isActive }) =>
+												`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
+													isActive
+														? 'bg-blue-50 font-semibold text-blue-700'
+														: 'text-gray-600 hover:bg-gray-50'
+												}`
+											}
+										>
+											<sub.icon className='h-3 w-3' />
+											<span>{sub.title}</span>
+										</NavLink>
+									))}
+								</div>
+							)}
+						</div>
+					)
+				}
+
+				return (
 					<NavLink
+						key={item.title}
 						to={item.url}
-						className={() =>
+						end={item.url === '/'}
+						className={({ isActive }) =>
 							`flex items-center gap-3 rounded-md px-3 py-2 transition-colors ${
-								isActive(item.url)
+								isActive
 									? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
 									: 'hover:bg-gray-100'
 							}`
@@ -104,29 +166,8 @@ const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
 						<item.icon className='h-4 w-4' />
 						{isOpen && <span>{item.title}</span>}
 					</NavLink>
-					{/* Hiển thị submenu nếu có */}
-					{isOpen && item.children && (
-						<div className='ml-8 space-y-1'>
-							{item.children.map((sub) => (
-								<NavLink
-									key={sub.title}
-									to={sub.url}
-									className={() =>
-										`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
-											isActive(sub.url)
-												? 'bg-blue-50 font-semibold text-blue-700'
-												: 'hover:bg-gray-50'
-										}`
-									}
-								>
-									<sub.icon className='h-3 w-3' />
-									<span>{sub.title}</span>
-								</NavLink>
-							))}
-						</div>
-					)}
-				</div>
-			))}
+				)
+			})}
 		</div>
 	)
 

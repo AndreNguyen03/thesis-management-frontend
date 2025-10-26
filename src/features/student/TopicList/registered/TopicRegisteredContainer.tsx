@@ -69,19 +69,17 @@ import { Filter, Search } from 'lucide-react'
 // 	}
 // ]
 
-
 import { NavLink, Outlet } from 'react-router-dom'
-export const ThesisRegistered = () => {
+export const RegisteredTopicContainer = () => {
 	//const user = useAppSelector((state) => state.auth.user)
 
 	return (
-		<div className='space-y-6'>
+		<div className='mx-auto max-w-4xl space-y-6'>
 			{/* Header */}
 			<div className='space-y-2'>
 				<h1 className='text-3xl font-bold text-primary'>Danh sách đề tài bạn đã đăng ký</h1>
 				<p className='text-muted-foreground'>Tìm kiếm và đăng ký đề tài luận văn phù hợp với bạn</p>
 			</div>
-
 
 			{/* Results */}
 			<div className='space-y-4'>
@@ -90,7 +88,7 @@ export const ThesisRegistered = () => {
 					{/* Navigation với NavLink */}
 					<div className='mb-4 flex gap-2'>
 						<NavLink
-							to='/thesis/registered'
+							to='/topics/registered'
 							end
 							className={({ isActive }) =>
 								`rounded px-4 py-2 ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-200'}`

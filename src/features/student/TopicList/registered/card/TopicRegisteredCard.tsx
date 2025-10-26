@@ -1,96 +1,92 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger
-} from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { Calendar, ChevronDown, ChevronUp, Eye, Loader2, Send, Star, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
-import type { Registration, ThesisInsideRegistration } from 'models'
+import type { Topic } from 'models'
+import { useDeleteRegistrationMutation } from '../../../../../services/registrationApi'
 import { ConfirmCancelRegistration } from '../ConfirmCancelRegistration'
+import { useNavigate } from 'react-router-dom'
+import { notifySuccess } from '@/components/ui/Toast'
 
-export const ThesisRegisteredCard: React.FC<{
-	registration: Registration
-	onRegister?: () => void
-	onUnregister: () => void
-	isSaved?: boolean
-	isSaving?: boolean
-	isSuccess: boolean
-	isCanceling: boolean
-}> = ({ registration, onRegister, onUnregister, isSaving, isSuccess, isSaved, isCanceling }) => {
-	const { thesis } = registration
-	const isFullSlot = thesis.maxStudents === thesis.registeredStudents
-	const isDisabled = isFullSlot || isCanceling
-
+export const TopicRegisteredCard: React.FC<{
+	topic: Topic
+}> = ({ topic }) => {
+	const [deleteRegistration, { isLoading: isCanceling }] = useDeleteRegistrationMutation()
+	const isFullSlot = topic.maxStudents === topic.studentNames.length
+	const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
 	const [confirmOpen, setConfirmOpen] = useState(false)
-	const [selectedThesis] = useState<ThesisInsideRegistration | null>(null)
-
+	const navigate = useNavigate()
 	const [openDetail, setOpenDetail] = useState(false)
-	const getStatusBadge = (thesis: ThesisInsideRegistration) => {
+	const getStatusBadge = (topic: Topic) => {
 		return (
-			<div>
+			<div className='flex flex-col items-end justify-center gap-2'>
 				{isFullSlot ? (
 					<Badge variant='destructive'>Đã đủ</Badge>
 				) : (
-					<Badge variant='default'>{thesis.maxStudents - thesis.registeredStudents} chỗ trống</Badge>
+					<Badge variant='default' className='max-w-[100px]'>
+						{topic.maxStudents - topic.studentNames.length} chỗ trống
+					</Badge>
 				)}
+				<p className='text-sm font-semibold text-gray-500'>
+					{'Đăng ký lúc: '}
+					{new Date(topic.createdAt).toLocaleString('vi-VN')}
+				</p>
 			</div>
 		)
 	}
 
-	const handleUnRegister = () => {
-		onUnregister?.()
+	const handleUnRegister = async () => {
+		await deleteRegistration({ topicId: topic._id })
 		setConfirmOpen(false)
+
+		navigate('/topics/registered/canceled')
+		notifySuccess('Hủy đăng ký đề tài thành công')
 	}
+
 	const renderDialogActions = () => {
 		return (
 			<div className='flex flex-1 justify-end gap-2'>
-				<Button disabled={isDisabled} variant={isSuccess ? 'success' : 'delete'} onClick={onUnregister}>
-					{isCanceling ? (
-						<Loader2 className='mr-2 h-4 w-4 animate-spin' />
-					) : isSuccess ? (
-						'Đã xóa'
-					) : (
-						<>
-							<Trash2 className='mr-2 h-4 w-4' />
-							'Hủy đăng ký'
-						</>
-					)}
+				<Button variant='delete' onClick={() => setConfirmOpen(true)}>
+					<>
+						<Trash2 className='mr-2 h-4 w-4' />
+						Hủy đăng ký
+					</>
 				</Button>
 			</div>
 		)
 	}
-	const renderDepartmentAndLecturers = (thesis: ThesisInsideRegistration) => {
+	const renderDepartmentAndLecturers = (topic: Topic) => {
 		return (
 			<CardDescription className='mt-1'>
-				{thesis.registrationIds.length > 0
-					? thesis.registrationIds
-							.map((reg) => {
-								if (reg.registrantId.role === 'lecturer') {
-									return reg.registrantId.fullName
-								}
+				{topic.lecturerNames.length > 0
+					? topic.lecturerNames
+							.map((lec) => {
+								return lec
 							})
 							.join(', ')
 					: 'Chưa có giảng viên'}
-				• {thesis.department}
+				• {topic.major}
 			</CardDescription>
 		)
 	}
 
 	return (
-		<Card key={registration._id} className={`transition-shadow hover:cursor-pointer hover:shadow-lg`}>
+		<Card key={topic._id} className={`transition-shadow hover:cursor-pointer hover:shadow-lg`}>
 			<CardHeader onClick={() => setOpenDetail(!openDetail)}>
-				<div className='flex items-start space-x-4'>
+				<div className='flex items-start justify-between space-x-4'>
 					<div>
-						<CardTitle className='text-lg leading-tight'>{registration.thesis.title}</CardTitle>
-						{renderDepartmentAndLecturers(registration.thesis)}
+						<CardTitle className='text-lg leading-tight'>{topic.title}</CardTitle>
+						{renderDepartmentAndLecturers(topic)}
 					</div>
-					{getStatusBadge(registration.thesis)}
+					{getStatusBadge(topic)}
+				</div>
+				<div className='flex items-center gap-1 text-sm text-muted-foreground'>
 					<Badge variant='outline' className='h-fit'>
-						{new Date(registration.createdAt).toLocaleString('vi-VN')}
+						<Calendar className='mr-1 h-4 w-4' />
+						<p className='text-sm'>Hạn đăng ký:</p>
+					</Badge>
+					<Badge variant='outline' className='h-fit'>
+						<p className='text-sm'>{new Date(topic.deadline).toLocaleString('vi-VN')}</p>
 					</Badge>
 				</div>
 				<div className='justify-items-center'>
@@ -102,38 +98,34 @@ export const ThesisRegisteredCard: React.FC<{
 
 			{openDetail && (
 				<CardContent className={`space-y-4`}>
-					<p className='line-clamp-3 text-sm text-muted-foreground'>{thesis.description}</p>
+					<CardDescription className='mt-1 flex gap-1'>
+						{topic.fieldNames.map((f) => {
+							return (
+								<Badge key={f} variant='blue'>
+									{f}
+								</Badge>
+							)
+						})}
+					</CardDescription>
+					<p className='line-clamp-3 text-sm text-muted-foreground'>{topic.description}</p>
 					<div className='space-y-2'>
 						<div className='flex items-center gap-4 text-sm text-muted-foreground'>
 							<div className='flex items-center gap-1'>
 								<Users className='h-4 w-4' />
-								{thesis.registeredStudents}/{thesis.maxStudents}
+								{topic.studentNames.length}/{topic.maxStudents}
 							</div>
-							<div className='flex items-center gap-1'>
-								<Star className='h-4 w-4' />
-								{thesis.rating}
-							</div>
-							<div className='flex items-center gap-1'>
-								<Eye className='h-4 w-4' />
-								{thesis.views}
-							</div>
-						</div>
-
-						<div className='flex items-center gap-1 text-sm text-muted-foreground'>
-							<Calendar className='h-4 w-4' />
-							Hạn đăng ký: {new Date(thesis.deadline).toLocaleDateString('vi-VN')}
 						</div>
 					</div>
 
 					<div className='flex flex-wrap gap-1'>
-						{thesis.requirements.slice(0, 4).map((req: string) => (
+						{topic.requirementNames.slice(0, 4).map((req: string) => (
 							<Badge key={req} variant='secondary' className='text-xs'>
 								{req}
 							</Badge>
 						))}
-						{thesis.requirements.length > 4 && (
+						{topic.requirementNames.length > 4 && (
 							<Badge variant='outline' className='text-xs'>
-								+{thesis.requirements.length - 4}
+								+{topic.requirementNames.length - 4}
 							</Badge>
 						)}
 					</div>
@@ -141,26 +133,26 @@ export const ThesisRegisteredCard: React.FC<{
 					<div className='flex gap-2'>
 						<Dialog>
 							<DialogContent className='max-h-[80vh] max-w-2xl overflow-y-auto'>
-								{selectedThesis && (
+								{selectedTopic && (
 									<>
 										<DialogHeader>
-											<DialogTitle>{selectedThesis.title}</DialogTitle>
+											<DialogTitle>{selectedTopic.title}</DialogTitle>
 											<DialogDescription>
-												{renderDepartmentAndLecturers(selectedThesis)}
+												{renderDepartmentAndLecturers(selectedTopic)}
 											</DialogDescription>
 										</DialogHeader>
 										<div className='space-y-4'>
 											<div>
 												<h4 className='mb-2 font-medium'>Mô tả chi tiết</h4>
 												<p className='text-sm text-muted-foreground'>
-													{selectedThesis.description}
+													{selectedTopic.description}
 												</p>
 											</div>
 
 											<div>
 												<h4 className='mb-2 font-medium'>Yêu cầu kỹ năng</h4>
 												<div className='flex flex-wrap gap-2'>
-													{selectedThesis.requirements.map((req: string) => (
+													{selectedTopic.requirementNames.map((req: string) => (
 														<Badge key={req} variant='secondary'>
 															{req}
 														</Badge>
@@ -171,12 +163,12 @@ export const ThesisRegisteredCard: React.FC<{
 											<div className='grid grid-cols-2 gap-4 text-sm'>
 												<div>
 													<span className='font-medium'>Lĩnh vực:</span>
-													<p className='text-muted-foreground'>{selectedThesis.field}</p>
+													<p className='text-muted-foreground'>{selectedTopic.field}</p>
 												</div>
 												<div>
 													<span className='font-medium'>Số lượng SV:</span>
 													<p className='text-muted-foreground'>
-														{selectedThesis.registeredStudents}/{selectedThesis.maxStudents}
+														{selectedTopic.studentNames.length}/{selectedTopic.maxStudents}
 													</p>
 												</div>
 											</div>
@@ -194,7 +186,6 @@ export const ThesisRegisteredCard: React.FC<{
 								onClose={() => setConfirmOpen(false)}
 							/>
 						</Dialog>
-						{/* nút đăng ký nhanh */}
 						{renderDialogActions()}
 					</div>
 				</CardContent>

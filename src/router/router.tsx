@@ -16,11 +16,13 @@ import { ForgotPassword, Login, ResetPassword } from '@/features/shared/auth'
 import Dashboard from '@/features/shared/dashboard/Dashboard'
 import NotFound from '@/features/shared/NotFound'
 import { Profile, ProfileEdit } from '@/features/shared/profile'
-import { ThesisList } from '@/features/student/TopicList'
-import { ThesisSaved } from '@/features/student/TopicList/ThesisSaved'
-import { ThesisRegistered } from '@/features/student/TopicList/Registerd/ThesisRegisteredParent'
-import { ThesisRegisterdChildren } from '@/features/student/TopicList/Registerd/children/ThesisRegisterdChildren'
-import { CanceledThesisRegistration } from '@/features/student/TopicList/Registerd/children/CanceledThesisRegistration'
+import { TopicList } from '@/features/student/TopicList'
+import { ThesisSaved } from '@/features/student/TopicList/TopicSaved'
+import { NewThesisFormContainer } from '@/features/student/TopicList/registered/NewThesisFormContainer'
+import { TopicRegisteredChildren } from '@/features/student/TopicList/registered/children/TopicRegisteredChildren'
+import { TopicDetailContainer } from '@/features/student/TopicList/TopicDetailContainer'
+import { RegisteredTopicContainer } from '@/features/student/TopicList/registered/TopicRegisteredContainer'
+import { CanceledTopicsRegistration } from '@/features/student/TopicList/registered/children/CanceledTopicsRegistration'
 
 // Mock user data
 
@@ -48,16 +50,24 @@ export const router = createBrowserRouter([
 				element: <ProfileEdit /> // tạm thời dùng mockUser
 			},
 
-			{ path: 'thesis', element: <ThesisList /> },
-			{ path: 'thesis/saved', element: <ThesisSaved /> }, // /thesis/saved
+			{ path: 'topics', element: <TopicList /> },
+			{ path: 'topics/saved', element: <ThesisSaved /> }, // /thesis/saved
 			{
-				path: 'thesis/registered',
-				element: <ThesisRegistered />,
+				path: 'topics/registered',
+				element: <RegisteredTopicContainer />,
 				children: [
-					{ path: 'canceled', element: <CanceledThesisRegistration /> },
-					{ index: true, element: <ThesisRegisterdChildren /> }
+					{ path: 'canceled', element: <CanceledTopicsRegistration /> },
+					{ index: true, element: <TopicRegisteredChildren /> }
 				]
+			},
+			{
+				path: 'topics/new-register',
+				element: <NewThesisFormContainer />
 			}, // /thesis/registered
+			{
+				path: 'topics/:id',
+				element: <TopicDetailContainer />
+			},
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },

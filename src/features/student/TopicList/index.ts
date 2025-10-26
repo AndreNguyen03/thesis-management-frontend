@@ -1,1 +1,1 @@
-export * from './ThesisList'
+export * from './TopicList'
