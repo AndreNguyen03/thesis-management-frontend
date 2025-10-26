@@ -1,4 +1,3 @@
-import type { Topic } from '../models'
 import { baseApi, type ApiResponse } from './baseApi'
 
 export const registrationApi = baseApi.injectEndpoints({
@@ -8,8 +7,14 @@ export const registrationApi = baseApi.injectEndpoints({
 				url: `/registrations/register-topic/${body.topicId}`,
 				method: 'POST'
 			})
+		}),
+		deleteRegistration: builder.mutation<ApiResponse<any>, { topicId: string }>({
+			query: (body) => ({
+				url: `/registrations/cancel-registration/${body.topicId}`,
+				method: 'DELETE'
+			})
 		})
 	}),
 	overrideExisting: false
 })
-export const { useCreateRegistrationMutation } = registrationApi
+export const { useCreateRegistrationMutation, useDeleteRegistrationMutation } = registrationApi

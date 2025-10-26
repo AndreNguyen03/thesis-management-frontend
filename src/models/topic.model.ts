@@ -27,11 +27,16 @@ export interface Topic {
 
 	deadline: Date
 
-	created_at: Date
+	createdAt: Date
 
-	updated_at: Date
+	updatedAt: Date
 
 	isRegistered: boolean
 
 	isSaved: boolean
+	
+}
+
+export interface CanceledRegisteredTopic extends Topic {
+	lastestCanceledRegisteredAt: Date
 }

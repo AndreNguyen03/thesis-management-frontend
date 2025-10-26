@@ -18,11 +18,11 @@ import NotFound from '@/features/shared/NotFound'
 import { Profile, ProfileEdit } from '@/features/shared/profile'
 import { TopicList } from '@/features/student/TopicList'
 import { ThesisSaved } from '@/features/student/TopicList/TopicSaved'
-import { ThesisRegistered } from '@/features/student/TopicList/registered/ThesisRegisteredParent'
-import { CanceledThesisRegistration } from '@/features/student/TopicList/registered/children/CanceledThesisRegistration'
 import { NewThesisFormContainer } from '@/features/student/TopicList/registered/NewThesisFormContainer'
 import { TopicRegisteredChildren } from '@/features/student/TopicList/registered/children/TopicRegisteredChildren'
-import {TopicDetailContainer} from '@/features/student/TopicList/TopicDetailContainer'
+import { TopicDetailContainer } from '@/features/student/TopicList/TopicDetailContainer'
+import { RegisteredTopicContainer } from '@/features/student/TopicList/registered/TopicRegisteredContainer'
+import { CanceledTopicsRegistration } from '@/features/student/TopicList/registered/children/CanceledTopicsRegistration'
 
 // Mock user data
 
@@ -50,23 +50,23 @@ export const router = createBrowserRouter([
 				element: <ProfileEdit /> // tạm thời dùng mockUser
 			},
 
-			{ path: 'thesis', element: <TopicList /> },
-			{ path: 'thesis/saved', element: <ThesisSaved /> }, // /thesis/saved
+			{ path: 'topics', element: <TopicList /> },
+			{ path: 'topics/saved', element: <ThesisSaved /> }, // /thesis/saved
 			{
-				path: 'thesis/registered',
-				element: <ThesisRegistered />,
+				path: 'topics/registered',
+				element: <RegisteredTopicContainer />,
 				children: [
-					{ path: 'canceled', element: <CanceledThesisRegistration /> },
+					{ path: 'canceled', element: <CanceledTopicsRegistration /> },
 					{ index: true, element: <TopicRegisteredChildren /> }
 				]
 			},
 			{
-				path: 'thesis/new-register',
+				path: 'topics/new-register',
 				element: <NewThesisFormContainer />
 			}, // /thesis/registered
 			{
-				path:"thesis/:id",
-				element: <TopicDetailContainer/>
+				path: 'topics/:id',
+				element: <TopicDetailContainer />
 			},
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },

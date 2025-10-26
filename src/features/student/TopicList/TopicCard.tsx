@@ -29,7 +29,6 @@ export const TopicCard: React.FC<{
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const [currentTopic, setCurrentTopic] = useState<Topic>(topic)
 	const navigate = useNavigate()
-	// lazy fetch hook — gọi trigger khi cần (hook ở top-level)
 	const [fetchTopicById] = useLazyGetTopicByIdQuery()
 	const [createRegistration, { isLoading: isRegistering, isError: isRegisterError, isSuccess: isRegisterSuccess }] =
 		useCreateRegistrationMutation()
@@ -39,7 +38,7 @@ export const TopicCard: React.FC<{
 
 	const getStatusBadge = () => {
 		return (
-			<div className='flex-2 flex-col'>
+			<div className='flex min-w-[80px] flex-col gap-1'>
 				{isFullSlot ? (
 					<Badge variant='destructive'>Đã đủ</Badge>
 				) : (
@@ -52,7 +51,6 @@ export const TopicCard: React.FC<{
 		)
 	}
 	const reloadTopic = async () => {
-		// trigger lazy query — trả về data khi dùng .unwrap()
 		const topicData = await fetchTopicById({ id: currentTopic._id }).unwrap()
 		setCurrentTopic(topicData)
 		await new Promise((resolve) => setTimeout(resolve, 200))
@@ -139,7 +137,7 @@ export const TopicCard: React.FC<{
 	return (
 		<Card key={topic._id} className='transition-shadow hover:shadow-lg'>
 			<CardHeader>
-				<div className='flex items-start space-x-4'>
+				<div className='flex items-start justify-between space-x-4'>
 					<div>
 						<CardTitle className='text-lg leading-tight'>{currentTopic.title}</CardTitle>
 						<CardDescription className='mt-1'>

@@ -54,7 +54,7 @@ export const ThesisSaved = () => {
 			case 'deadline':
 				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
 			default:
-				return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
 		}
 	})
 
@@ -124,7 +124,12 @@ export const ThesisSaved = () => {
 
 				<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
 					{sortedTopics.map((topic) => (
-						<TopicCard key={topic._id} topic={topic} mode='saved' updateAfterAction={updateStateAfterAction} />
+						<TopicCard
+							key={topic._id}
+							topic={topic}
+							mode='saved'
+							updateAfterAction={updateStateAfterAction}
+						/>
 					))}
 				</div>
 			</div>

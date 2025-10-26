@@ -13,8 +13,8 @@ export const getRegistrationStatus = (status: string) => {
 	}
 }
 export const RegistrationStatus = {
-	PENDING: 'pending',
-	APPROVED: 'approved',
-	REJECTED: 'rejected',
-	CANCELED: 'canceled'
+	PENDING: 'Đang chờ duyệt',
+	APPROVED: 'Đã duyệt',
+	REJECTED: 'Đã từ chối',
+	CANCELED: 'Đã hủy'
 }

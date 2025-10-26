@@ -48,13 +48,13 @@ const menuItems: {
 	student: [
 		{
 			title: 'Danh sách đề tài',
-			url: '/thesis',
+			url: '/topics',
 			icon: BookOpen,
 			children: [
-				{ title: 'Tất cả đề tài', url: '/thesis', icon: Library },
-				{ title: 'Đề tài đã lưu', url: '/thesis/saved', icon: Library },
-				{ title: 'Đề tài đã đăng ký', url: '/thesis/registered', icon: FileText },
-				{ title: 'Đăng ký đề tài mới', url: '/thesis/new-register', icon: FileText }
+				{ title: 'Tất cả đề tài', url: '/topics', icon: Library },
+				{ title: 'Đề tài đã lưu', url: '/topics/saved', icon: Library },
+				{ title: 'Đề tài đã đăng ký', url: '/topics/registered', icon: FileText }
+				//{ title: 'Đăng ký đề tài mới', url: '/topics/new-register', icon: FileText }
 			]
 		},
 		{ title: 'Gợi ý đề tài', url: '/suggestions', icon: Search },
@@ -91,7 +91,7 @@ const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
 		if (path === '/' && currentPath === '/') return true
 		if (path !== '/' && currentPath === path) return true
 		// Nếu path cha là '/thesis' và con là '/thesis/saved', cần so sánh chính xác
-		return path !== '/' && currentPath.startsWith(path) && currentPath !== '/thesis' && path !== '/thesis'
+		return path !== '/' && currentPath.startsWith(path) && currentPath !== '/topics' && path !== '/thesis'
 	}
 
 	const handleMenuClick = (title: string) => {
@@ -131,7 +131,7 @@ const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
 										<NavLink
 											key={sub.title}
 											to={sub.url}
-											end={sub.url === '/thesis'} // Đảm bảo "Tất cả đề tài" không active khi ở trang con
+											end={sub.url === '/topics'} // Đảm bảo "Tất cả đề tài" không active khi ở trang con
 											className={({ isActive }) =>
 												`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
 													isActive

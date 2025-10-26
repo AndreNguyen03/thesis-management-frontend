@@ -1,12 +1,11 @@
 import { baseApi, type ApiResponse } from './baseApi'
-import type { Topic } from 'models'
+import type { CanceledRegisteredTopic, Topic } from 'models'
 
 export const topicApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getTopics: builder.query<Topic[], void>({
 			query: () => `/topics`,
-			transformResponse: (response: ApiResponse<Topic[]>) => response.data,
-			providesTags: ['Topics']
+			transformResponse: (response: ApiResponse<Topic[]>) => response.data
 		}),
 		getTopicById: builder.query<Topic, { id: string }>({
 			query: ({ id }) => `/topics/${id}`,
@@ -15,8 +14,7 @@ export const topicApi = baseApi.injectEndpoints({
 
 		getSavedTopics: builder.query<Topic[], void>({
 			query: () => `/topics/saved-topics`,
-			transformResponse: (response: ApiResponse<Topic[]>) => response.data,
-			providesTags: ['SavedTopics']
+			transformResponse: (response: ApiResponse<Topic[]>) => response.data
 		}),
 		saveTopic: builder.mutation<ApiResponse<Topic>, { topicId: string }>({
 			query: ({ topicId }) => ({
@@ -29,6 +27,14 @@ export const topicApi = baseApi.injectEndpoints({
 				url: `/topics/unsave-topic/${topicId}`,
 				method: 'DELETE'
 			})
+		}),
+		getRegisteredTopic: builder.query<Topic[], void>({
+			query: () => `/topics/registered-topics`,
+			transformResponse: (response: ApiResponse<Topic[]>) => response.data
+		}),
+		getCanceledRegisterTopics: builder.query<CanceledRegisteredTopic[], void>({
+			query: () => `/topics/canceled-registered-topics`,
+			transformResponse: (response: ApiResponse<CanceledRegisteredTopic[]>) => response.data
 		})
 	}),
 	overrideExisting: false
@@ -40,6 +46,7 @@ export const {
 	useSaveTopicMutation,
 	useUnsaveTopicMutation,
 	useGetSavedTopicsQuery,
-	useLazyGetTopicByIdQuery
-	//useGetRegisteredTopicQuery,
+	useLazyGetTopicByIdQuery,
+	useGetRegisteredTopicQuery,
+	useGetCanceledRegisterTopicsQuery
 } = topicApi

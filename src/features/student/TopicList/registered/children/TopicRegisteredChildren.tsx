@@ -11,12 +11,11 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '../../../../../components/ui'
-import { TopicRegisteredCard } from '../card/TopicRegisteredCard'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import { getErrorMessage } from '@/utils/catch-error'
-import { notifyError } from '@/components/ui/Toast'
 import { Filter, Search } from 'lucide-react'
 import { EmptyStateContainer } from '../EmptyStateContainer'
+import { useGetRegisteredTopicQuery } from '../../../../../services/topicApi'
+import { TopicRegisteredCard } from '../card/TopicRegisteredCard'
 const fields = [
 	'Tất cả lĩnh vực',
 	'Trí tuệ nhân tạo',
@@ -28,65 +27,48 @@ const fields = [
 	'Mobile Development'
 ]
 export const TopicRegisteredChildren = () => {
-	// const { data: registrationsData = [] } = useGetRegisteredTopicQuery()
+	const { data: topicData = [] } = useGetRegisteredTopicQuery()
+	const [registerTopics, setRegisteredTopics] = useState(topicData)
 	// // const [cancelRegistration, { isLoading: isCancelling, isSuccess }] = useCancelRegistrationMutation()
-	// useEffect(() => {
-	// 	if (JSON.stringify(registrations) !== JSON.stringify(registrationsData)) {
-	// 		setRegistrations(registrationsData)
-	// 	}
-	// }, [registrationsData])
+	useEffect(() => {
+		if (JSON.stringify(registerTopics) !== JSON.stringify(topicData)) {
+			setRegisteredTopics(topicData)
+		}
+	}, [topicData])
 
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
-		{ label: 'Danh sách đề tài', path: '/thesis' },
+		{ label: 'Danh sách đề tài', path: '/topics' },
 		{ label: 'Đề tài đã đăng ký' }
 	])
-	const handleCancelRegistration = async (thesisId: string) => {
-		await new Promise((resolve) => setTimeout(resolve, 500))
-		try {
-			// await cancelRegistration({ thesisId }).unwrap()
-			// await new Promise((resolve) => setTimeout(resolve, 500))
-			// setRegistrations((prev) => prev.filter((reg) => reg.thesis._id !== thesisId))
-		} catch (err) {
-			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
-		}
-	}
 
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedField, setSelectedField] = useState('Tất cả lĩnh vực')
 
 	const [sortBy, setSortBy] = useState('newest')
-	// const filteredRegistrations = registrations.filter((registration) => {
-	// 	const matchesSearch =
-	// 		registration.thesis.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-	// 		registration.thesis.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-	// 		registration.thesis.registrationIds.some(
-	// 			(registrant) =>
-	// 				registrant.registrantId.role === 'student' &&
-	// 				registrant.registrantId.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-	// 		)
+	const filteredTopic = registerTopics.filter((topic) => {
+		const matchesSearch =
+			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			topic.lecturerNames.some((lecturer) => lecturer.toLowerCase().includes(searchTerm.toLowerCase()))
 
-	// 	const matchesField = selectedField === 'Tất cả lĩnh vực' || registration.thesis.field === selectedField
-	// 	return matchesSearch && matchesField
-	// })
+		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.field === selectedField
+		return matchesSearch && matchesField
+	})
 
-	// const sortedRegistrations = [...filteredRegistrations].sort((a, b) => {
-	// 	switch (sortBy) {
-	// 		case 'rating':
-	// 			return b.thesis.rating - a.thesis.rating
-	// 		case 'views':
-	// 			return b.thesis.views - a.thesis.views
-	// 		case 'deadline':
-	// 			return new Date(a.thesis.deadline).getTime() - new Date(b.thesis.deadline).getTime()
-	// 		default:
-	// 			return new Date(b.thesis.updated_at).getTime() - new Date(a.thesis.updated_at).getTime()
-	// 	}
-	// })
+	const sortedRegistrations = [...filteredTopic].sort((a, b) => {
+		switch (sortBy) {
+			case 'deadline':
+				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+			default:
+				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+		}
+	})
+
 	return (
 		<>
-			{true ? (
-				<EmptyStateContainer />
+			{sortedRegistrations.length === 0 ? (
+				<EmptyStateContainer type="registered" />
 			) : (
 				<>
 					{/* Search and Filters */}
@@ -135,15 +117,9 @@ export const TopicRegisteredChildren = () => {
 						</CardContent>
 					</Card>
 					<div className='grid grid-cols-1 gap-6 lg:grid-cols-1'>
-						{/* {sortedRegistrations.map((registration) => (
-							<TopicRegisteredCard
-								key={registration.thesis._id}
-								registration={registration}
-								onUnregister={() => handleCancelRegistration(registration.thesis._id)}
-								isCanceling={false}
-								isSuccess={false}
-							/>
-						))} */}
+						{sortedRegistrations.map((topic) => (
+							<TopicRegisteredCard key={topic._id} topic={topic} />
+						))}
 					</div>
 				</>
 			)}
