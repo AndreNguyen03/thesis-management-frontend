@@ -3,36 +3,28 @@ import { Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useGetTopicsQuery, useSaveTopicMutation, useUnsaveTopicMutation } from '../../../services/topicApi'
-import { useAppSelector, useAppDispatch } from '../../../store/configureStore'
-import { baseApi } from '../../../services/baseApi'
+import { topicApi, useGetTopicsQuery } from '../../../services/topicApi'
 import type { Topic } from 'models/topic.model'
-import { notifyError, notifySuccess } from '@/components/ui/Toast'
 import { TopicCard } from './TopicCard'
 
 // Mock data
-const fields = [
-	'Tất cả lĩnh vực',
-	'Trí tuệ nhân tạo',
-	'IoT & Big Data',
-	'Blockchain',
-	'Natural Language Processing',
-	'Computer Vision',
-	'Web Development',
-	'Mobile Development'
-] 
+// const fields = [
+// 	'Tất cả lĩnh vực',
+// 	'Trí tuệ nhân tạo',
+// 	'IoT & Big Data',
+// 	'Blockchain',
+// 	'Natural Language Processing',
+// 	'Computer Vision',
+// 	'Web Development',
+// 	'Mobile Development'
+// ]
 
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import { getErrorMessage } from '@/utils/catch-error'
-import { useNavigate } from 'react-router'
-import { useCreateRegistrationMutation } from '../../../services/registrationApi'
+import { useGetFieldsQuery } from '../../../services/fieldApi'
 export const TopicList = () => {
-	const user = useAppSelector((state) => state.auth.user)
-	const dispatch = useAppDispatch()
-	const navigate = useNavigate()
 	const { data: topicsData = [] } = useGetTopicsQuery()
 	const [topics, setTopics] = useState<Topic[]>([])
-
+	const { data: fields } = useGetFieldsQuery()
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }])
 	useEffect(() => {
 		if (JSON.stringify(topics) !== JSON.stringify(topicsData)) {
@@ -46,21 +38,22 @@ export const TopicList = () => {
 		const matchesSearch =
 			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			topic.studentNames.some((name) => name.toLowerCase().includes(searchTerm.toLowerCase()))
-		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.field === selectedField
+			topic.studentNames.some((name) => name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+			topic.lecturerNames.some((name) => name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+			topic.fieldNames.some((name) => name.toLowerCase().includes(searchTerm.toLowerCase()))
+		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.fieldNames.includes(selectedField)
 		return matchesSearch && matchesField
 	})
 	const sortedTopics = [...filteredTopics].sort((a, b) => {
+		selectedField
 		switch (sortBy) {
 			case 'deadline':
 				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
 			default:
-				return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
 		}
 	})
-	console.log('render')
 	const updateStateAfterAction = (topic: Topic) => {
-		console.log('Updating topic in list:', topic.isSaved)
 		// update local state
 		setTopics((prevTopics) => prevTopics.map((t) => (t._id === topic._id ? topic : t)))
 	}
@@ -84,7 +77,7 @@ export const TopicList = () => {
 						<div className='relative flex-1'>
 							<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
 							<Input
-								placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
+								placeholder='Tìm kiếm theo tên đề tài, giảng viên, lĩnh vực, mô tả...'
 								className='pl-10'
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
@@ -95,9 +88,10 @@ export const TopicList = () => {
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								{fields.map((field) => (
-									<SelectItem key={field} value={field}>
-										{field}
+								<SelectItem value={'Tất cả lĩnh vực'}>Tất cả lĩnh vực</SelectItem>
+								{fields?.map((field) => (
+									<SelectItem key={field.slug} value={field.name}>
+										{field.name}
 									</SelectItem>
 								))}
 							</SelectContent>
@@ -108,8 +102,6 @@ export const TopicList = () => {
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value='newest'>Mới nhất</SelectItem>
-								<SelectItem value='rating'>Đánh giá cao</SelectItem>
-								<SelectItem value='views'>Xem nhiều</SelectItem>
 								<SelectItem value='deadline'>Gần deadline</SelectItem>
 							</SelectContent>
 						</Select>

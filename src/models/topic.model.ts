@@ -1,3 +1,5 @@
+import type { IRegistration } from "./registration.model"
+
 export interface Topic {
 	_id: string
 
@@ -6,8 +8,6 @@ export interface Topic {
 	description: string
 
 	type: string
-
-	field: string
 
 	createBy: string
 
@@ -34,9 +34,11 @@ export interface Topic {
 	isRegistered: boolean
 
 	isSaved: boolean
-	
 }
 
 export interface CanceledRegisteredTopic extends Topic {
 	lastestCanceledRegisteredAt: Date
+}
+export interface ITopicDetail extends Topic {
+	allUserRegistrations: IRegistration[] // mới chỉ là các đăng ký của người dùng với topic
 }

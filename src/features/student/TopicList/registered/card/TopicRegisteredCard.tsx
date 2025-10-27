@@ -78,6 +78,15 @@ export const TopicRegisteredCard: React.FC<{
 						<CardTitle className='text-lg leading-tight'>{topic.title}</CardTitle>
 						{renderDepartmentAndLecturers(topic)}
 					</div>
+					<div>
+						<Button
+							variant='outline'
+							className='max-w-[100px]'
+							onClick={() => navigate(`/detail-topic/${topic._id}`)}
+						>
+							<p className='text-sm'>Xem chi tiết đề tài</p>
+						</Button>
+					</div>
 					{getStatusBadge(topic)}
 				</div>
 				<div className='flex items-center gap-1 text-sm text-muted-foreground'>
@@ -131,53 +140,6 @@ export const TopicRegisteredCard: React.FC<{
 					</div>
 
 					<div className='flex gap-2'>
-						<Dialog>
-							<DialogContent className='max-h-[80vh] max-w-2xl overflow-y-auto'>
-								{selectedTopic && (
-									<>
-										<DialogHeader>
-											<DialogTitle>{selectedTopic.title}</DialogTitle>
-											<DialogDescription>
-												{renderDepartmentAndLecturers(selectedTopic)}
-											</DialogDescription>
-										</DialogHeader>
-										<div className='space-y-4'>
-											<div>
-												<h4 className='mb-2 font-medium'>Mô tả chi tiết</h4>
-												<p className='text-sm text-muted-foreground'>
-													{selectedTopic.description}
-												</p>
-											</div>
-
-											<div>
-												<h4 className='mb-2 font-medium'>Yêu cầu kỹ năng</h4>
-												<div className='flex flex-wrap gap-2'>
-													{selectedTopic.requirementNames.map((req: string) => (
-														<Badge key={req} variant='secondary'>
-															{req}
-														</Badge>
-													))}
-												</div>
-											</div>
-
-											<div className='grid grid-cols-2 gap-4 text-sm'>
-												<div>
-													<span className='font-medium'>Lĩnh vực:</span>
-													<p className='text-muted-foreground'>{selectedTopic.field}</p>
-												</div>
-												<div>
-													<span className='font-medium'>Số lượng SV:</span>
-													<p className='text-muted-foreground'>
-														{selectedTopic.studentNames.length}/{selectedTopic.maxStudents}
-													</p>
-												</div>
-											</div>
-										</div>
-									</>
-								)}
-							</DialogContent>
-						</Dialog>
-
 						{/* dialog xác nhận */}
 						<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
 							<ConfirmCancelRegistration

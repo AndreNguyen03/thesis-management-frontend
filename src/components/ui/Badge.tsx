@@ -1,3 +1,4 @@
+import { cn } from '@/utils/utils'
 import type { ReactNode } from 'react'
 
 export const Badge = ({
@@ -6,21 +7,25 @@ export const Badge = ({
 	className = ''
 }: {
 	children: ReactNode
-	variant?: 'default' | 'destructive' | 'secondary' | 'outline' | 'registered' | 'blue'
+	variant?: 'default' | 'destructive' | 'secondary' | 'outline' | 'registered' | 'blue' | 'gray' | 'lightBlue'
 	className?: string
 }) => {
 	const variantStyles = {
 		default: 'bg-primary text-primary-foreground',
 		destructive: 'bg-red-600 text-white',
-		secondary: 'bg-gray-200 text-gray-800',
+		secondary: 'bg-gray-200 text-gray-800 scale-100 hover:scale-105',
 		outline: 'border border-gray-300 text-gray-800',
 		registered: 'bg-green-600 text-white',
-		blue: 'bg-blue-600 text-white'
+		blue: 'bg-blue-600 text-white transition scale-100 hover:scale-105',
+		lightBlue: 'bg-blue-100 text-blue-800',
+		gray: 'border border-gray-500 text-gray-700'
 	}
 
 	return (
 		<span
-			className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-semibold ${variantStyles[variant]} ${className}`}
+			className={cn(
+				`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-semibold ${variantStyles[variant]} ${className}`
+			)}
 		>
 			{children}
 		</span>

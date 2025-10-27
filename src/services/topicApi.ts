@@ -1,5 +1,5 @@
 import { baseApi, type ApiResponse } from './baseApi'
-import type { CanceledRegisteredTopic, Topic } from 'models'
+import type { CanceledRegisteredTopic, Topic, ITopicDetail } from 'models'
 
 export const topicApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -7,9 +7,9 @@ export const topicApi = baseApi.injectEndpoints({
 			query: () => `/topics`,
 			transformResponse: (response: ApiResponse<Topic[]>) => response.data
 		}),
-		getTopicById: builder.query<Topic, { id: string }>({
+		getTopicById: builder.query<ITopicDetail, { id: string }>({
 			query: ({ id }) => `/topics/${id}`,
-			transformResponse: (response: ApiResponse<Topic>) => response.data
+			transformResponse: (response: ApiResponse<ITopicDetail>) => response.data
 		}),
 
 		getSavedTopics: builder.query<Topic[], void>({
