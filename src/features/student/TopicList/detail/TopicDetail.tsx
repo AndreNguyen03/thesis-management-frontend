@@ -1,18 +1,65 @@
 import { DialogDescription, DialogTitle } from '@radix-ui/react-dialog'
-import type { Topic } from '../../../../models/topic.model'
+import type { ITopicDetail } from '../../../../models/topic.model'
 import { Badge, Button } from '../../../../components/ui'
-const TopicDetail = ({ topic }: { topic: Topic }) => {
+import { useCreateRegistrationMutation, useDeleteRegistrationMutation } from '../../../../services/registrationApi'
+import { useSaveTopicMutation, useUnsaveTopicMutation } from '../../../../services/topicApi'
+import { notifyError, notifySuccess } from '@/components/ui/Toast'
+import { Loader2 } from 'lucide-react'
+import { getErrorMessage } from '@/utils/catch-error'
+const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () => void }) => {
+	const [createRegistration, { isLoading: isLoadingRegister }] = useCreateRegistrationMutation()
+	const [deleteRegistration, { isLoading: isLoadingUnregister }] = useDeleteRegistrationMutation()
+	const [unsaveTopic, { isLoading: isLoadingUnSave }] = useUnsaveTopicMutation()
+	const [saveTopic, { isLoading: isLoadingSave }] = useSaveTopicMutation()
+
+	const toggleRegistration = async () => {
+		if (topic.isRegistered) {
+			try {
+				await deleteRegistration({ topicId: topic._id }).unwrap()
+				notifySuccess('Hủy đăng ký đề tài thành công')
+			} catch (error) {
+				console.error('Error during cancel registration toggle:', error)
+
+				notifyError(getErrorMessage(error))
+			}
+		} else {
+			try {
+				await createRegistration({ topicId: topic._id }).unwrap()
+				notifySuccess('Đăng ký đề tài thành công')
+			} catch (error) {
+				console.error('Error during registration toggle:', error)
+				notifyError(getErrorMessage(error))
+			}
+		}
+		onUpdate()
+	}
+	const toggleSaveTopic = async () => {
+		if (topic.isSaved) {
+			try {
+				await unsaveTopic({ topicId: topic._id }).unwrap()
+				notifySuccess('Bỏ lưu đề tài thành công')
+			} catch (error) {
+				console.error('Error during unsave topic:', error)
+				notifyError(getErrorMessage(error))
+			}
+		} else {
+			try {
+				await saveTopic({ topicId: topic._id }).unwrap()
+				notifySuccess('Lưu đề tài thành công')
+			} catch (error) {
+				console.error('Error during save topic:', error)
+				notifyError(getErrorMessage(error))
+			}
+		}
+		onUpdate()
+	}
+
 	return (
-		<div className='col-span-3 grid space-y-4 p-4'>
+		<div className='col-span-5 gap-4 space-y-10 sm:col-span-3'>
 			{/* Toàn bộ nội dung chi tiết đề tài */}
-			<div className='flex flex-row justify-between'>
+			<div className='flex flex-col justify-between gap-8'>
 				<div>
-					<div className='flex flex-row gap-5'>
-						<DialogTitle className='mb-2 text-2xl font-bold text-primary'>{topic.title}</DialogTitle>
-						<Badge variant={'gray'} className='h-fit text-lg'>
-							{topic.type}
-						</Badge>
-					</div>
+					<DialogTitle className='mb-2 text-2xl font-bold text-primary'>{topic.title}</DialogTitle>
 					<DialogDescription className='mb-4 flex flex-wrap items-center gap-2 text-base text-gray-600'>
 						<span className='text-lg'>
 							{topic.lecturerNames.length > 0 ? topic.lecturerNames.join(', ') : 'Chưa có giảng viên'}
@@ -20,15 +67,18 @@ const TopicDetail = ({ topic }: { topic: Topic }) => {
 						•<span className='text-lg'>{topic.major}</span>
 					</DialogDescription>
 				</div>
-				<div>
+				<div className='flex flex-wrap space-x-1'>
+					<Badge variant='gray' className='h-fit text-sm'>
+						<p>{topic.type}</p>
+					</Badge>
 					<Badge variant='destructive' className='h-fit text-sm'>
 						<p>{topic.isRegistered ? 'Đã đăng ký' : 'Chưa đăng ký'}</p>
 					</Badge>
 				</div>
 			</div>
 
-			<div className='space-y-2'>
-				<div className='flex justify-between'>
+			<div className='space-y-6'>
+				<div className='flex flex-col justify-between gap-5 sm:flex-row'>
 					<div>
 						<h4 className='mb-2 text-lg font-semibold text-gray-800'>Lĩnh vực</h4>
 						<div className='flex flex-wrap gap-2'>
@@ -62,19 +112,48 @@ const TopicDetail = ({ topic }: { topic: Topic }) => {
 					<p className='rounded-lg bg-gray-50 p-4 text-lg text-gray-700'>{topic.description}</p>
 				</div>
 
-				<div className='grid grid-cols-2 gap-6 text-sm'>
-					<Badge variant='outline' className='h-fit w-fit'>
+				<div className='text-sm'>
+					<Badge variant='outline' className='h-fit'>
 						<p className='text-base'>Hạn đăng ký: {new Date(topic.deadline).toLocaleString('vi-VN')}</p>
 					</Badge>
 				</div>
 			</div>
 			<div className='flex'>
-				<Button variant='destructive' className='w-fit'>
+				<Button
+					disabled={isLoadingRegister || isLoadingUnregister}
+					variant='destructive'
+					className='w-fit'
+					onClick={() => {
+						toggleRegistration()
+					}}
+				>
+					{isLoadingRegister || isLoadingUnregister ? <Loader2 /> : null}
 					{topic.isRegistered ? 'Hủy đăng ký' : 'Đăng ký đề tài'}
 				</Button>
-				<Button variant={topic.isSaved ? 'yellow' : 'gray'} className='ml-4 w-fit'>
+				<Button
+					disabled={isLoadingUnSave || isLoadingSave}
+					variant={topic.isSaved ? 'yellow' : 'gray'}
+					className='ml-4 w-fit'
+					onClick={() => {
+						toggleSaveTopic()
+					}}
+				>
+					{isLoadingUnSave || isLoadingSave ? <Loader2 /> : null}
+
 					{topic.isSaved ? 'Bỏ lưu' : 'Lưu đề tài'}
 				</Button>
+			</div>
+			<div className='flex flex-col items-center space-y-5'>
+				<Badge variant='blue' className='w-fit text-base'>
+					Tài liệu liên quan
+				</Badge>
+				<div className='grid grid-cols-5 justify-center gap-4 gap-x-20 gap-y-10 rounded-sm bg-blue-50 p-5'>
+					{Array.from({ length: 10 }).map((_, idx) => (
+						<div key={idx} className='bg-black'>
+							d
+						</div>
+					))}
+				</div>
 			</div>
 		</div>
 	)

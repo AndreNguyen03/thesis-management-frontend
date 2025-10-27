@@ -46,6 +46,7 @@ export const TopicCard: React.FC<{
 						{currentTopic.maxStudents - currentTopic.studentNames.length} chỗ trống
 					</Badge>
 				)}
+				<Badge variant='outline'>{currentTopic.type}</Badge>
 				{currentTopic.isRegistered && <Badge variant='registered'>Đã đăng ký</Badge>}
 			</div>
 		)
@@ -53,7 +54,6 @@ export const TopicCard: React.FC<{
 	const reloadTopic = async () => {
 		const topicData = await fetchTopicById({ id: currentTopic._id }).unwrap()
 		setCurrentTopic(topicData)
-		await new Promise((resolve) => setTimeout(resolve, 200))
 		updateAfterAction?.(topicData)
 	}
 	const handleRegister = async () => {
@@ -140,6 +140,7 @@ export const TopicCard: React.FC<{
 				<div className='flex items-start justify-between space-x-4'>
 					<div>
 						<CardTitle className='text-lg leading-tight'>{currentTopic.title}</CardTitle>
+
 						<CardDescription className='mt-1'>
 							{currentTopic.lecturerNames.length > 0
 								? currentTopic.lecturerNames.join(', ')
@@ -194,7 +195,12 @@ export const TopicCard: React.FC<{
 				</div>
 
 				<div className='flex flex-col gap-2 sm:flex-row'>
-					<Button onClick={() => navigate(topic._id)} className='flex-1' variant='outline' size='sm'>
+					<Button
+						onClick={() => navigate(`/detail-topic/${currentTopic._id}`)}
+						className='flex-1'
+						variant='outline'
+						size='sm'
+					>
 						<Eye className='mr-2 h-4 w-4' />
 						Chi tiết
 					</Button>

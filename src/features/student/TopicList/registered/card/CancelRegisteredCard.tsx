@@ -23,11 +23,6 @@ export const CancelRegisteredCard: React.FC<{
 							<p className='text-sm'>{topic.maxStudents - topic.studentNames.length} chỗ trống</p>
 						</Badge>
 					)}
-					{topic.isRegistered && (
-						<Badge variant='registered'>
-							<p className='text-sm'>Đã đăng ký</p>
-						</Badge>
-					)}
 
 					<Badge variant='destructive' className='h-fit'>
 						<p className='text-sm'>Đã hủy</p>
@@ -40,21 +35,6 @@ export const CancelRegisteredCard: React.FC<{
 			</>
 		)
 	}
-	// const renderDialogActions = () => {
-	// 	return (
-	// 		<div className='flex flex-1 justify-end gap-2'>
-	// 			{!isFullSlot && !topic.isRegistered && (
-	// 				<Button disabled={isDisabled} variant='re_register' onClick={() => setConfirmOpen(true)}>
-	// 					{topic.isRegistered ? (
-	// 						<Loader2 className='mr-2 h-4 w-4 animate-spin' />
-	// 					) : (
-	// 						<span>Đăng ký lại</span>
-	// 					)}
-	// 				</Button>
-	// 			)}
-	// 		</div>
-	// 	)
-	// }
 	const renderDepartmentAndLecturers = (topic: Topic) => {
 		return (
 			<CardDescription className='mt-1'>
