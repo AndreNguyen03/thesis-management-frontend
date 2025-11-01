@@ -2,6 +2,7 @@ import { useSidebar } from '@/hooks/useSidebar'
 import {
 	BarChart3,
 	BookOpen,
+	BotMessageSquare,
 	ChevronDown,
 	ChevronLeft,
 	FileText,
@@ -19,11 +20,12 @@ import {
 import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
-import type { Role } from 'models'
+import type { Role } from '@/models'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
 }
+
 type MenuItem = {
 	title: string
 	url: string
@@ -73,6 +75,7 @@ const menuItems: {
 	],
 	admin: [
 		{ title: 'Quản lý tài khoản', url: '/manage-accounts', icon: Users },
+		{ title: 'Quản lý AI thông minh', url: '/manage-ai', icon: BotMessageSquare },
 		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }

@@ -1,5 +1,3 @@
-import { Badge } from '@/components/ui'
-import { ChevronDown, ChevronRight, LandPlot } from 'lucide-react'
 import type { IRegistration } from 'models'
 import RegistratorInformation from './components/RegistratorInformation'
 import RegistrationDiary from './components/RegistrationDiary'

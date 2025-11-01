@@ -3,8 +3,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useGetSavedTopicsQuery } from '../../../services/topicApi'
-import { useAppSelector } from '../../../store/configureStore'
-import { notifyError } from '@/components/ui/Toast'
 
 const fields = [
 	'Tất cả lĩnh vực',
@@ -17,13 +15,9 @@ const fields = [
 	'Mobile Development'
 ]
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import { getErrorMessage } from '@/utils/catch-error'
 import type { Topic } from 'models'
 import { TopicCard } from './TopicCard'
-import { set } from 'react-hook-form'
 export const ThesisSaved = () => {
-	const user = useAppSelector((state) => state.auth.user)
-
 	const { data: savedthesesData = [], isLoading: isLoadingSaved, isError: isErrorSaved } = useGetSavedTopicsQuery()
 	const [topics, setTopics] = useState<Topic[]>([])
 	usePageBreadcrumb([
@@ -45,7 +39,7 @@ export const ThesisSaved = () => {
 			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			topic.studentNames.some((name) => name.toLowerCase().includes(searchTerm.toLowerCase()))
-		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.field === selectedField
+		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.fieldNames.includes(selectedField)
 		return matchesSearch && matchesField
 	})
 

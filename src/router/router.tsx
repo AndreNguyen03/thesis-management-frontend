@@ -23,6 +23,9 @@ import { TopicRegisteredChildren } from '@/features/student/TopicList/registered
 import { RegisteredTopicContainer } from '@/features/student/TopicList/registered/TopicRegisteredContainer'
 import { CanceledTopicsRegistration } from '@/features/student/TopicList/registered/children/CanceledTopicsRegistration'
 import { TopicDetailContainer } from '@/features/student/TopicList/detail/TopicDetailContainer'
+import Unauthorized from '@/features/shared/authorize/Unauthorized'
+import { AdminDashboard } from '@/features/shared/dashboard'
+import ManageAI from '@/features/admin/manage_ai/ManageAI'
 
 // Mock user data
 
@@ -68,6 +71,15 @@ export const router = createBrowserRouter([
 				path: 'detail-topic/:id',
 				element: <TopicDetailContainer />
 			},
+
+			{
+				path: 'manage-ai',
+				element: (
+					<RequireAuth allowedRoles={['admin']}>
+						<ManageAI />
+					</RequireAuth>
+				)
+			},
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },
@@ -84,6 +96,10 @@ export const router = createBrowserRouter([
 						<p className='text-muted-foreground'>Tính năng đang được phát triển...</p>
 					</div>
 				)
+			},
+			{
+				path: 'unauthorized',
+				element: <Unauthorized />
 			},
 			{ path: '*', element: <NotFound /> }
 		]
