@@ -55,7 +55,7 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 	}
 
 	return (
-		<div className='col-span-5 gap-4 space-y-10 sm:col-span-3'>
+		<div className='col-span-5 gap-4 space-y-10 rounded-md bg-white p-8 sm:col-span-3'>
 			{/* Toàn bộ nội dung chi tiết đề tài */}
 			<div className='flex flex-col justify-between gap-8'>
 				<div>

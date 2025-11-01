@@ -91,6 +91,7 @@ export const AIAssistant = () => {
 							<div ref={bottomRef} />
 						</div>
 					)}
+
 					{/* Suggested Questions */}
 					<div className='border-t pt-4'>
 						<p className='mb-2 text-sm font-medium'>Câu hỏi gợi ý:</p>

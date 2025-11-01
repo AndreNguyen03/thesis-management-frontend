@@ -41,7 +41,7 @@ export const TopicDetailContainer = () => {
 			<Dialog open={true} onOpenChange={() => navigate(-1)}>
 				<DialogContent
 					hideClose={true}
-					className='flex h-full flex-col overflow-auto rounded-xl bg-white p-8 shadow-xl sm:min-w-full'
+					className='flex h-full flex-col overflow-auto rounded-xl bg-[#F2F4FF] p-8 shadow-xl sm:min-w-full sm:overflow-hidden'
 				>
 					<div className='px-4'>
 						<Button variant='back' className='w-fit' onClick={() => navigate(-1)}>
@@ -49,13 +49,12 @@ export const TopicDetailContainer = () => {
 							<p>Quay lại</p>
 						</Button>
 					</div>
-					<div className='grid space-x-5 md:grid-cols-5'>
+					<div className='grid space-x-5 px-4 md:grid-cols-5'>
 						<TopicDetail topic={topic} onUpdate={handleUpdate} />
 						<RelevantInformation
 							studentNames={topic.studentNames}
 							lecturerNames={topic.lecturerNames}
 							historyRegistrations={topic.allUserRegistrations}
-							onUpdate={handleUpdate}
 						/>
 					</div>
 				</DialogContent>
