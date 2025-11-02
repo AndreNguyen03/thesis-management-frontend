@@ -1,4 +1,4 @@
-import type { GetFieldNameReponseDto } from 'models/field.model'
+import type { GetFieldNameReponseDto } from '@/models/field.model'
 import { baseApi, type ApiResponse } from './baseApi'
 
 export const fieldApi = baseApi.injectEndpoints({

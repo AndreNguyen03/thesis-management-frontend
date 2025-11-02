@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
-import { MessageCircle, Send, Sparkles } from 'lucide-react'
+import { HeartCrack, MessageCircle, Send, Sparkles } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/Dialog'
 import { Badge, Button, Input } from '../ui'
 import { DialogDescription } from '@radix-ui/react-dialog'
@@ -7,6 +7,7 @@ import { useChat } from '@ai-sdk/react'
 import { TextStreamChatTransport } from 'ai'
 import Bubble from './Bubble'
 import LoadingBubble from './LoadingBubble'
+import { useGetChatbotVersionQuery } from '@/services/chatbotApi'
 const suggestedQuestions = [
 	'Cách đăng ký đề tài luận văn?',
 	'Tìm đề tài phù hợp với ngành AI',
@@ -19,10 +20,10 @@ export const AIAssistant = () => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [input, setInput] = useState('')
 	const bottomRef = useRef<HTMLDivElement>(null)
-
+	const { data: chatbotVersions } = useGetChatbotVersionQuery()
 	const { messages, sendMessage, status } = useChat({
 		transport: new TextStreamChatTransport({
-			api: 'http://localhost:3000/api/chatbot'
+			api: `http://localhost:3000/api/chatbot/request`
 		})
 	})
 
@@ -63,77 +64,108 @@ export const AIAssistant = () => {
 							<div className='flex h-8 w-8 items-center justify-center rounded-full bg-gradient-primary'>
 								<Sparkles className='h-4 w-4 text-primary-foreground' />
 							</div>
-							AI Assistant - UIT Thesis Management
+							{chatbotVersions ? chatbotVersions.name : 'AI Assistant - UIT Thesis Management'}
 						</DialogTitle>
 						<DialogDescription>
-							Trợ lý AI thông minh giúp bạn trong quá trình nghiên cứu và quản lý đề tài
+							{chatbotVersions
+								? chatbotVersions.description
+								: '							Trợ lý AI thông minh giúp bạn trong quá trình nghiên cứu và quản lý đề tài'}
 						</DialogDescription>
 					</DialogHeader>
-
-					{/* Chat Messages */}
-					{!noMessages && (
-						<div className='flex-1 space-y-4 overflow-y-auto py-4'>
-							{messages.map((message, index) => {
-								return message.parts.map((part, i) => {
-									switch (part.type) {
-										case 'text':
-											return (
-												<Bubble
-													key={`message-${index}-part-${i}`}
-													message={part.text}
-													role={message.role}
-												/>
-											)
-									}
-								})
-							})}
-							{status !== 'ready' && <LoadingBubble />}
-							<div ref={bottomRef} />
+					{!chatbotVersions ? (
+						<div className='flex w-full flex-col items-center py-20'>
+							<HeartCrack className='size-28 scale-100 text-[text-primary] transition-transform duration-500 hover:scale-105' />
+							<span className='font-bold'>Chatbot chưa được thiết lập, hãy gửi yêu cầu tới admin</span>
 						</div>
-					)}
-
-					{/* Suggested Questions */}
-					<div className='border-t pt-4'>
-						<p className='mb-2 text-sm font-medium'>Câu hỏi gợi ý:</p>
-						<div className='mb-4 flex flex-wrap gap-2'>
-							{suggestedQuestions.map((question, index) => (
-								<div key={index} onClick={() => handleQuestionClick(question)}>
-									<Badge variant='outline' className='cursor-pointer text-xs hover:bg-muted'>
-										{question}
-									</Badge>
+					) : (
+						//body chatbot
+						<>
+							{/* Chat Messages */}
+							{!noMessages && (
+								<div className='flex-1 space-y-4 overflow-y-auto py-4'>
+									{messages.map((message, index) => {
+										return message.parts.map((part, i) => {
+											switch (part.type) {
+												case 'text':
+													return (
+														<Bubble
+															key={`message-${index}-part-${i}`}
+															message={part.text}
+															role={message.role}
+														/>
+													)
+											}
+										})
+									})}
+									{status !== 'ready' && <LoadingBubble />}
+									<div ref={bottomRef} />
 								</div>
-							))}
-						</div>
-					</div>
+							)}
 
-					{/* Message Input */}
-					<div className='gap-2 border-t pt-4'>
-						<form
-							onSubmit={(e) => {
-								e.preventDefault()
-								handleSubmit(input)
-								setInput('')
-							}}
-						>
-							<div className='grid w-full grid-cols-5 gap-2'>
-								<Input
-									className='col-span-4'
-									onChange={(e) => setInput(e.target.value)}
-									value={input}
-									placeholder='Hãy hỏi tôi bất cứ điều gì...'
-									disabled={status !== 'ready'}
-								/>
-								<Button
-									className='col-span-1'
-									variant='outline'
-									value={status !== 'ready' ? 'Thinking...' : 'Send'}
-									disabled={status !== 'ready'}
-								>
-									<Send className='h-4 w-4' />
-								</Button>
+							{/* Suggested Questions */}
+							<div className='border-t pt-4'>
+								<p className='mb-2 text-sm font-medium'>Câu hỏi gợi ý:</p>
+								<div className='mb-4 flex flex-wrap gap-2'>
+									{chatbotVersions && chatbotVersions.query_suggestions.length > 0 ? (
+										<>
+											{chatbotVersions.query_suggestions.map((question, index) => (
+												<div key={index} onClick={() => handleQuestionClick(question.content)}>
+													<Badge
+														variant='outline'
+														className='cursor-pointer text-xs hover:bg-muted'
+													>
+														{question.content}
+													</Badge>
+												</div>
+											))}
+										</>
+									) : (
+										<>
+											{suggestedQuestions.map((question, index) => (
+												<div key={index} onClick={() => handleQuestionClick(question)}>
+													<Badge
+														variant='outline'
+														className='cursor-pointer text-xs hover:bg-muted'
+													>
+														{question}
+													</Badge>
+												</div>
+											))}
+										</>
+									)}
+								</div>
 							</div>
-						</form>
-					</div>
+
+							{/* Message Input */}
+							<div className='gap-2 border-t pt-4'>
+								<form
+									onSubmit={(e) => {
+										e.preventDefault()
+										handleSubmit(input)
+										setInput('')
+									}}
+								>
+									<div className='grid w-full grid-cols-5 gap-2'>
+										<Input
+											className='col-span-4'
+											onChange={(e) => setInput(e.target.value)}
+											value={input}
+											placeholder='Hãy hỏi tôi bất cứ điều gì...'
+											disabled={status !== 'ready'}
+										/>
+										<Button
+											className='col-span-1'
+											variant='outline'
+											value={status !== 'ready' ? 'Thinking...' : 'Send'}
+											disabled={status !== 'ready'}
+										>
+											<Send className='h-4 w-4' />
+										</Button>
+									</div>
+								</form>
+							</div>
+						</>
+					)}
 				</DialogContent>
 			</Dialog>
 		</>

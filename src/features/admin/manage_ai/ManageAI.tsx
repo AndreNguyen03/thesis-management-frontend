@@ -1,7 +1,8 @@
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { TabsList, TabsTrigger } from '@radix-ui/react-tabs'
-import { BarChart3, UserPlus } from 'lucide-react'
+import { BarChart3, UserPlus, Users } from 'lucide-react'
+import ManageChatbot from './manage_chatbot/ManageChatbot'
 
 const ManageAI = () => {
 	return (
@@ -17,9 +18,11 @@ const ManageAI = () => {
 					<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>
 						<Card className='bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60'>
 							<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-								<CardTitle className='text-sm font-medium'>Lượt truy vấn với chat bot</CardTitle>
+								<CardTitle className='text-sm font-medium'>Số lượt truy vấn với chatbot</CardTitle>
+								<Users className='h-4 w-4 text-muted-foreground' />
 							</CardHeader>
 							<CardContent>
+								<p className='text-xs text-muted-foreground'>1 triệu lượt</p>
 								<p className='text-xs text-muted-foreground'>+12% so với tháng trước</p>
 							</CardContent>
 						</Card>
@@ -27,26 +30,27 @@ const ManageAI = () => {
 						<Card className='bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60'>
 							<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
 								<CardTitle className='text-sm font-medium'>
-									Kết nối thành công tính đến {new Date().toLocaleDateString('vi-VN')}
+									Kết nối sinh viên - giảng viên thành công
 								</CardTitle>
+								<Users className='h-4 w-4 text-muted-foreground' />
 							</CardHeader>
 							<CardContent>
-								<p className='text-xs text-muted-foreground'>1200 lượt</p>
+								<div className='text-2xl font-bold'>1000 lượt</div>
+								<p className='text-xs text-muted-foreground'>+5% so với tháng trước</p>
 							</CardContent>
 						</Card>
 					</div>
 
 					{/* Recent Activities */}
-					<Card className='bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60'>
+					{/* <Card className='bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60'>
 						<CardHeader>
 							<CardTitle>Hoạt động gần đây</CardTitle>
 							<CardDescription>Các hoạt động mới nhất trong hệ thống</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<div className='h-2 w-2 rounded-full bg-primary'></div>
-							<div className='flex-1'></div>
+							<div className='space-y-4'>hello</div>
 						</CardContent>
-					</Card>
+					</Card> */}
 
 					{/* Quick Actions */}
 					<div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -77,6 +81,7 @@ const ManageAI = () => {
 						</Card>
 					</div>
 				</TabsContent>
+				<ManageChatbot />
 			</Tabs>
 		</div>
 	)

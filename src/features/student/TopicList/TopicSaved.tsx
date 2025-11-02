@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from '@/components/ui'
+import { Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -15,10 +15,10 @@ const fields = [
 	'Mobile Development'
 ]
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import type { Topic } from 'models'
 import { TopicCard } from './TopicCard'
+import type { Topic } from '@/models'
 export const ThesisSaved = () => {
-	const { data: savedthesesData = [], isLoading: isLoadingSaved, isError: isErrorSaved } = useGetSavedTopicsQuery()
+	const { data: savedthesesData = [] } = useGetSavedTopicsQuery()
 	const [topics, setTopics] = useState<Topic[]>([])
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
