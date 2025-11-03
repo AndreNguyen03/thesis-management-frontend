@@ -1,5 +1,5 @@
 import { baseApi, type ApiResponse } from './baseApi'
-import type { CanceledRegisteredTopic, Topic, ITopicDetail } from 'models'
+import type { CanceledRegisteredTopic, Topic, ITopicDetail } from '@/models'
 
 export const topicApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({

@@ -24,28 +24,9 @@
 		"noUncheckedSideEffectImports": true,
 
 		/* Alias configuration */
-		"baseUrl": "src",
+		"baseUrl": ".",
 		"paths": {
-			"@/components/*": ["components/*"],
-			"@/components/layout/*": ["components/layout/*"],
-			"@/components/ui/*": ["components/ui/*"],
-			"@/features/*": ["features/*"],
-			"@/features/admin/*": ["features/admin/*"],
-			"@/features/shared/*": ["features/shared/*"],
-			"@/features/shared/ai-assistant/*": ["features/shared/ai-assistant/*"],
-			"@/features/shared/dashboard/*": ["features/shared/dashboard/*"],
-			"@/features/shared/workspace/*": ["features/shared/workspace/*"],
-			"@/features/shared/auth/*": ["features/shared/auth/*"],
-			"@/features/student/*": ["features/student/*"],
-			"@/features/student/topic_list/*": ["features/student/topic_list/*"],
-			"@/features/teacher/*": ["features/teacher/*"],
-			"@/features/teacher/manage_topic/*": ["features/teacher/manage_topic/*"],
-			"@/features/teacher/new_topic/*": ["features/teacher/new_topic/*"],
-			"@/features/teacher/plagiarism_check/*": ["features/teacher/plagiarism_check/*"],
-			"@/features/teacher/topic_registration/*": ["features/teacher/topic_registration/*"],
-			"@/hooks/*": ["hooks/*"],
-			"@/utils/*": ["utils/*"]
+			"@/*": ["./src/*"]
 		}
-	},
-	"include": ["src"]
+	}
 }

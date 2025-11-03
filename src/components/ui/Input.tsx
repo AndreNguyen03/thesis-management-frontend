@@ -1,8 +1,8 @@
-import { cn } from '@/utils/utils'
+import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 import React from 'react'
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	icon?: ReactNode
 	error?: string
 	className?: string

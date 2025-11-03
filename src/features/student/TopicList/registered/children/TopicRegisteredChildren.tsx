@@ -10,11 +10,11 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue
-} from '../../../../../components/ui'
+} from '@/components/ui'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { Filter, Search } from 'lucide-react'
 import { EmptyStateContainer } from '../EmptyStateContainer'
-import { useGetRegisteredTopicQuery } from '../../../../../services/topicApi'
+import { useGetRegisteredTopicQuery } from '@/services/topicApi'
 import { TopicRegisteredCard } from '../card/TopicRegisteredCard'
 const fields = [
 	'Tất cả lĩnh vực',

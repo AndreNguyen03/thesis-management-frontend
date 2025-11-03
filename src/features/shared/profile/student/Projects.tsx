@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui'
 import { Briefcase } from 'lucide-react'
-import type { StudentUser } from 'models'
+import type { StudentUser } from '@/models'
 
 export const Projects = ({ student }: { student: StudentUser }) => {
 	const projects = student.projects || [] // đảm bảo luôn là mảng

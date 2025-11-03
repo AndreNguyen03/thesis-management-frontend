@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { topicApi, useGetTopicsQuery } from '../../../services/topicApi'
-import type { Topic } from 'models/topic.model'
+import { topicApi, useGetTopicsQuery } from '@/services/topicApi'
+import type { Topic } from '@/models'
 import { TopicCard } from './TopicCard'
 
 // Mock data
@@ -45,7 +45,6 @@ export const TopicList = () => {
 		return matchesSearch && matchesField
 	})
 	const sortedTopics = [...filteredTopics].sort((a, b) => {
-		selectedField
 		switch (sortBy) {
 			case 'deadline':
 				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()

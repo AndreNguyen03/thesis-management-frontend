@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface ApiError {
 	status?: number
 	data?: {
@@ -71,4 +72,9 @@ export const getCancelRegistrationErrorMessage = (error: any): string => {
 
 	// Fallback về hàm chung
 	return getErrorMessage(error) || 'Hủy đăng ký thất bại. Vui lòng thử lại.'
+}
+
+export const toErrorObject = (error: unknown): Error | null => {
+	if (!error) return null
+	return new Error(getErrorMessage(error))
 }

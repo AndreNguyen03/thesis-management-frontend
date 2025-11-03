@@ -1,5 +1,5 @@
 import { Code } from 'lucide-react'
-import type { StudentUser } from 'models'
+import type { StudentUser } from '@/models'
 
 export const Skills = ({ student }: { student: StudentUser }) => {
 	const skills = student.skills || []

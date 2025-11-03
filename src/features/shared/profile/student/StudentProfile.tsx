@@ -8,7 +8,7 @@ import { Button } from '@/components/ui'
 import { useNavigate } from 'react-router-dom'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { Skills } from './Skills'
-import type { StudentUser } from 'models'
+import type { StudentUser } from '@/models'
 
 export interface StudentProfileProps {
 	student?: StudentUser

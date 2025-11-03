@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui'
 import { LandPlot } from 'lucide-react'
-import type { IRegistration } from 'models'
+import type { IRegistration } from '@/models'
 
 const RelevantInformation = ({
 	studentNames,

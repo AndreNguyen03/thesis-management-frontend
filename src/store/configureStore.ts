@@ -1,7 +1,7 @@
 import { authSlice } from "@/features/shared/auth";
 import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, type TypedUseSelectorHook } from "react-redux";
-import { baseApi } from "../services/baseApi";
+import { baseApi } from "@/services/baseApi";
 
 export const store = configureStore({
     reducer: {

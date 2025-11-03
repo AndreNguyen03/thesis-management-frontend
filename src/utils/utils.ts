@@ -1,10 +1,4 @@
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
 import { UAParser } from 'ua-parser-js'
-
-export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs))
-}
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -33,23 +27,26 @@ export const getDifficultyColor = (level: number) => {
 }
 
 export function getInitials(name: string) {
-  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+	return name
+		.split(' ')
+		.map((n) => n[0])
+		.join('')
+		.toUpperCase()
 }
 
 export function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('vi-VN');
+	const d = new Date(dateStr)
+	return d.toLocaleDateString('vi-VN')
 }
-
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function decodeJwt<T = any>(token: string): T | null {
-    try {
-        const payload = token.split('.')[1]
-        const decoded = JSON.parse(atob(payload))
-        return decoded as T
-    } catch (err) {
-        console.error('Failed to decode JWT:', err)
-        return null
-    }
+	try {
+		const payload = token.split('.')[1]
+		const decoded = JSON.parse(atob(payload))
+		return decoded as T
+	} catch (err) {
+		console.error('Failed to decode JWT:', err)
+		return null
+	}
 }

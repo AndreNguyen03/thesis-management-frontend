@@ -4,7 +4,12 @@ import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useGetSavedTopicsQuery } from '../../../services/topicApi'
 import { useAppSelector } from '../../../store/configureStore'
-import { notifyError } from '@/components/ui/Toast'
+import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
+import { getErrorMessage } from '@/utils/catch-error'
+import type { Topic } from '@/models'
+import { TopicCard } from './TopicCard'
+import { set } from 'react-hook-form'
+import { toast } from '@/hooks/use-toast'
 
 const fields = [
 	'Tất cả lĩnh vực',
@@ -16,11 +21,7 @@ const fields = [
 	'Web Development',
 	'Mobile Development'
 ]
-import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import { getErrorMessage } from '@/utils/catch-error'
-import type { Topic } from 'models'
-import { TopicCard } from './TopicCard'
-import { set } from 'react-hook-form'
+
 export const ThesisSaved = () => {
 	const user = useAppSelector((state) => state.auth.user)
 

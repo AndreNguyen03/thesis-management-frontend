@@ -1,6 +1,6 @@
 // Interests.tsx
 import { Heart } from 'lucide-react'
-import type { StudentUser } from 'models'
+import type { StudentUser } from '@/models'
 
 export const Interests = ({ student }: { student: StudentUser }) => {
     const interests = student.interests

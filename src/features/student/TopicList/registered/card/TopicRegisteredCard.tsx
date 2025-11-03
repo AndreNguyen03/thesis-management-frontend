@@ -1,12 +1,12 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Calendar, ChevronDown, ChevronUp, Eye, Loader2, Send, Star, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
-import type { Topic } from 'models'
-import { useDeleteRegistrationMutation } from '../../../../../services/registrationApi'
+import type { Topic } from '@/models'
+import { useDeleteRegistrationMutation } from '@/services/registrationApi'
 import { ConfirmCancelRegistration } from '../ConfirmCancelRegistration'
 import { useNavigate } from 'react-router-dom'
-import { notifySuccess } from '@/components/ui/Toast'
+import { toast } from '@/hooks/use-toast'
 
 export const TopicRegisteredCard: React.FC<{
 	topic: Topic
@@ -40,7 +40,11 @@ export const TopicRegisteredCard: React.FC<{
 		setConfirmOpen(false)
 
 		navigate('/topics/registered/canceled')
-		notifySuccess('Hủy đăng ký đề tài thành công')
+
+		toast({
+			title: 'Thành công',
+			description: 'Hủy đăng ký đề tài thành công'
+		})
 	}
 
 	const renderDialogActions = () => {

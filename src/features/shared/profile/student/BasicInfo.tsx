@@ -1,5 +1,5 @@
 import { Mail, Phone, GraduationCap } from 'lucide-react'
-import type { StudentUser } from 'models'
+import type { StudentUser } from '@/models'
 
 export const BasicInfo = ({ student }: { student: StudentUser }) => {
 	return (

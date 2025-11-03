@@ -1,4 +1,4 @@
-import type { LecturerUser } from 'models'
+import type { LecturerUser } from '@/models'
 
 export function ContactInfo({ lecturer }: { lecturer: LecturerUser }) {
 	return (

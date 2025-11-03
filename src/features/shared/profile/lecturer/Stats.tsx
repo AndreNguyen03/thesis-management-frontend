@@ -1,4 +1,4 @@
-import type { ThesisStats } from 'models'
+import type { ThesisStats } from '@/models'
 
 export function Stats({ stats }: { stats: ThesisStats }) {
 	return (

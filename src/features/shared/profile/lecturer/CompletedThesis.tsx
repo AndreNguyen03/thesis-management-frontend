@@ -1,4 +1,4 @@
-import type { LecturerUser } from 'models'
+import type { LecturerUser } from '@/models'
 import { ProgressBar } from './ProgressBar'
 
 export function CompletedThesis({ lecturer }: { lecturer: LecturerUser }) {
