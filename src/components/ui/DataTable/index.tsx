@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, type ReactNode, useEffect, useRef, useMemo } from 'react'
+import { useState, type ReactNode, useEffect, useRef } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
 	Pagination,
@@ -17,7 +17,6 @@ import { Input } from '@/components/ui'
 import { EmptyState } from '../EmptyState'
 import { LoadingState } from '../LoadingState'
 import type { DataTableProps, QueryParams, SearchValue, SortOrder, TableAction } from './types'
-import debounce from 'lodash.debounce'
 
 export function DataTable<T extends Record<string, any>>({
 	data,
@@ -99,24 +98,12 @@ export function DataTable<T extends Record<string, any>>({
 		return sortOrder === 'asc' ? <ChevronUp className='ml-2 h-4 w-4' /> : <ChevronDown className='ml-2 h-4 w-4' />
 	}
 
-	const debouncedHandleSearch = useMemo(() => debounce((val: SearchValue) => handleSearch(val), 500), [])
-
-	// Cleanup khi component unmount
-	useEffect(() => {
-		return () => {
-			debouncedHandleSearch.cancel()
-		}
-	}, [debouncedHandleSearch])
-
 	const renderSearchInput = () => {
 		const currentColumn = columns.find((col) => col.key === searchField)
 		if (currentColumn?.renderSearchInput) {
 			return currentColumn.renderSearchInput({
 				value: searchValue,
-				onChange: (val: SearchValue) => {
-					setSearchValue(val)
-					debouncedHandleSearch(val)
-				},
+				onChange: handleSearch,
 				placeholder: 'Tìm kiếm...'
 			})
 		}
@@ -126,11 +113,7 @@ export function DataTable<T extends Record<string, any>>({
 				ref={searchInputRef}
 				placeholder={'Tìm kiếm...'}
 				value={searchValue.value}
-				onChange={(e) => {
-					const val = { value: e.target.value }
-					setSearchValue(val)
-					debouncedHandleSearch(val)
-				}}
+				onChange={(e) => handleSearch({ value: e.target.value })}
 				className='w-full'
 				aria-label={`Tìm kiếm trong ${searchFields?.[searchField] || 'bảng'}`}
 			/>
