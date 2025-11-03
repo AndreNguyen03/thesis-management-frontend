@@ -6,8 +6,8 @@ import { ChevronLeft } from 'lucide-react'
 import { useGetTopicByIdQuery } from '../../../../services/topicApi'
 import TopicDetail from './TopicDetail'
 import RelevantInformation from './RelevantInformation'
-import type { Topic, ITopicDetail } from 'models'
 import { useEffect, useState } from 'react'
+import type { ITopicDetail } from '@/models'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()

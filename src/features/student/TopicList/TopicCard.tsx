@@ -10,13 +10,13 @@ import {
 import { Bookmark, Calendar, Eye, Loader2, Send, Star, Users } from 'lucide-react'
 import { useState } from 'react'
 import { ConfirmRegistration } from './ConfirmRegistration'
-import type { Topic } from 'models'
 import { useCreateRegistrationMutation } from '../../../services/registrationApi'
 import { notifyError, notifySuccess } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/utils/catch-error'
 import { useNavigate } from 'react-router-dom'
 import { useLazyGetTopicByIdQuery, useSaveTopicMutation, useUnsaveTopicMutation } from '../../../services/topicApi'
-import { current } from '@reduxjs/toolkit'
+
+import type { Topic } from '@/models'
 type TopicCardMode = 'all' | 'saved'
 
 export const TopicCard: React.FC<{

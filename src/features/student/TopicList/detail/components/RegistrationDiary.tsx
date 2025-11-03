@@ -1,8 +1,8 @@
 import { Badge } from '@/components/ui'
 import { LandPlot } from 'lucide-react'
-import type { IRegistration } from 'models/registration.model'
 import TitleBox from './TitleBox'
 import { useState } from 'react'
+import type { IRegistration } from '@/models'
 
 const RegistrationDiary: React.FC<{ historyRegistrations: IRegistration[] }> = ({ historyRegistrations }) => {
 	const [isExpanded, setIsExpanded] = useState(true)

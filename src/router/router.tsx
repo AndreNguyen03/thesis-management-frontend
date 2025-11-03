@@ -1,17 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '../App'
-// import Login from './pages/Login';
-// import Dashboard from './pages/Dashboard';
-// import ThesisList from './pages/ThesisList';
-// import CreateThesis from './pages/CreateThesis';
-// import ManageThesis from './pages/ManageThesis';
-// import ApproveRegistrations from './pages/ApproveRegistrations';
-// import PlagiarismCheck from './pages/PlagiarismCheck';
-// import MyGroups from './pages/MyGroups';
-// import GroupWorkspace from './pages/GroupWorkspace';
-// import LibraryPage from './pages/LibraryPage';
-// import AIChatPage from './pages/AIChatPage';
-import { RequireAuth } from './RequireAuth'
 import { ForgotPassword, Login, ResetPassword } from '@/features/shared/auth'
 import Dashboard from '@/features/shared/dashboard/Dashboard'
 import NotFound from '@/features/shared/NotFound'
@@ -24,7 +12,6 @@ import { RegisteredTopicContainer } from '@/features/student/TopicList/registere
 import { CanceledTopicsRegistration } from '@/features/student/TopicList/registered/children/CanceledTopicsRegistration'
 import { TopicDetailContainer } from '@/features/student/TopicList/detail/TopicDetailContainer'
 import Unauthorized from '@/features/shared/authorize/Unauthorized'
-import { AdminDashboard } from '@/features/shared/dashboard'
 import ManageAI from '@/features/admin/manage_ai/ManageAI'
 
 // Mock user data
@@ -37,9 +24,9 @@ export const router = createBrowserRouter([
 	{
 		path: '/',
 		element: (
-			<RequireAuth>
-				<App />
-			</RequireAuth>
+			// <RequireAuth>
+			<App />
+			// </RequireAuth>
 		),
 		children: [
 			{ index: true, element: <Navigate to='dashboard' replace /> },
@@ -75,9 +62,9 @@ export const router = createBrowserRouter([
 			{
 				path: 'manage-ai',
 				element: (
-					<RequireAuth allowedRoles={['admin']}>
-						<ManageAI />
-					</RequireAuth>
+					//<RequireAuth allowedRoles={['admin']}>
+					<ManageAI />
+					//</RequireAuth>
 				)
 			},
 			//   { path: 'create-thesis', element: <CreateThesis /> },

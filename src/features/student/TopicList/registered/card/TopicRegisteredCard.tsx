@@ -1,12 +1,12 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
-import { Calendar, ChevronDown, ChevronUp, Eye, Loader2, Send, Star, Trash2, Users } from 'lucide-react'
+import { Dialog } from '@/components/ui/Dialog'
+import { Calendar, ChevronDown, ChevronUp, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
-import type { Topic } from 'models'
 import { useDeleteRegistrationMutation } from '../../../../../services/registrationApi'
 import { ConfirmCancelRegistration } from '../ConfirmCancelRegistration'
 import { useNavigate } from 'react-router-dom'
 import { notifySuccess } from '@/components/ui/Toast'
+import type { Topic } from '@/models'
 
 export const TopicRegisteredCard: React.FC<{
 	topic: Topic
