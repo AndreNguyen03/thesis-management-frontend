@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DialogHeader } from '@/components/ui/Dialog'
+import { DialogContent, DialogDescription, DialogTitle } from '@radix-ui/react-dialog'
 import { Loader2 } from 'lucide-react'
 
 export const ConfirmRegistration: React.FC<{

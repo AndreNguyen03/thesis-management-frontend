@@ -76,7 +76,7 @@ export const TopicRegisteredCard: React.FC<{
 	}
 
 	return (
-		<Card key={topic._id} className={`transition-shadow hover:cursor-pointer hover:shadow-lg`}>
+		<Card key={topic._id} className={`p-2 transition-shadow hover:cursor-pointer hover:shadow-lg`}>
 			<CardHeader onClick={() => setOpenDetail(!openDetail)}>
 				<div className='flex items-start justify-between space-x-4'>
 					<div>
@@ -144,17 +144,15 @@ export const TopicRegisteredCard: React.FC<{
 						)}
 					</div>
 
-					<div className='flex gap-2'>
-						{/* dialog xác nhận */}
-						<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-							<ConfirmCancelRegistration
-								isCanceling={isCanceling}
-								onUnRegister={() => handleUnRegister()}
-								onClose={() => setConfirmOpen(false)}
-							/>
-						</Dialog>
-						{renderDialogActions()}
-					</div>
+					<div className='flex gap-2'>{renderDialogActions()}</div>
+					{/* dialog xác nhận */}
+					<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+						<ConfirmCancelRegistration
+							isCanceling={isCanceling}
+							onUnRegister={() => handleUnRegister()}
+							onClose={() => setConfirmOpen(false)}
+						/>
+					</Dialog>
 				</CardContent>
 			)}
 		</Card>

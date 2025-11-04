@@ -1,12 +1,5 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger
-} from '@/components/ui/dialog'
+
 import { Bookmark, Calendar, Eye, Loader2, Send, Star, Users } from 'lucide-react'
 import { useState } from 'react'
 import { ConfirmRegistration } from './ConfirmRegistration'
@@ -17,6 +10,7 @@ import { useLazyGetTopicByIdQuery, useSaveTopicMutation, useUnsaveTopicMutation 
 
 import type { Topic } from '@/models'
 import { toast } from '@/hooks/use-toast'
+import { Dialog } from '@radix-ui/react-dialog'
 type TopicCardMode = 'all' | 'saved'
 
 export const TopicCard: React.FC<{
@@ -142,7 +136,7 @@ export const TopicCard: React.FC<{
 		}
 	}
 	return (
-		<Card key={topic._id} className='transition-shadow hover:shadow-lg'>
+		<Card key={topic._id} className='p-2 transition-shadow hover:shadow-lg'>
 			<CardHeader>
 				<div className='flex items-start justify-between space-x-4'>
 					<div>
@@ -214,6 +208,7 @@ export const TopicCard: React.FC<{
 					{/* nút đăng ký nhanh */}
 					{renderDialogActions()}
 					{/* dialog xác nhận */}
+				</div>
 					<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
 						<ConfirmRegistration
 							isRegistering={isRegistering}
@@ -221,7 +216,6 @@ export const TopicCard: React.FC<{
 							onClose={() => setConfirmOpen(false)}
 						/>
 					</Dialog>
-				</div>
 			</CardContent>
 		</Card>
 	)

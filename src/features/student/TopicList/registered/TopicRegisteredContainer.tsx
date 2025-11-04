@@ -78,7 +78,6 @@ export const RegisteredTopicContainer = () => {
 			{/* Header */}
 			<div className='space-y-2'>
 				<h1 className='text-3xl font-bold text-primary'>Danh sách đề tài bạn đã đăng ký</h1>
-				<p className='text-muted-foreground'>Tìm kiếm và đăng ký đề tài luận văn phù hợp với bạn</p>
 			</div>
 
 			{/* Results */}

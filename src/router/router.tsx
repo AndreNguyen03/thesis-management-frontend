@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		children: [
-			{ index: true, element: <Navigate to='manage-lecturers' replace /> },
+			{ index: true, element: <Navigate to='dashboard' replace /> },
 			// { index: true, element: <Navigate to='dashboard' replace /> },
 			{ path: 'dashboard', element: <Dashboard /> },
 			{
