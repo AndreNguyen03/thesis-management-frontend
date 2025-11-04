@@ -17,7 +17,7 @@ const Dashboard = () => {
 		case 'student':
 			return <StudentDashboard />
 		default:
-			return <StudentDashboard />
+			return <AdminDashboard />
 	}
 }
 

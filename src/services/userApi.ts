@@ -1,6 +1,6 @@
-import type { AppUser } from 'models'
+import type { AppUser } from '@/models'
 import { baseApi, type ApiResponse } from './baseApi'
-import type { PatchLecturerDto, PatchStudentDto } from 'models/update-users'
+import type { PatchLecturerDto, PatchStudentDto } from '@/models/update-users'
 
 export const userApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -36,14 +36,9 @@ export const userApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<AppUser>) => response.data,
 			invalidatesTags: ['UserProfile']
-		}),
+		})
 	}),
 	overrideExisting: false
 })
 
-export const {
-	useGetProfileQuery,
-	useGetUserQuery,
-	usePatchStudentMutation,
-	usePatchLecturerMutation,
-} = userApi
+export const { useGetProfileQuery, useGetUserQuery, usePatchStudentMutation, usePatchLecturerMutation } = userApi

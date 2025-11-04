@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi, type ApiResponse } from './baseApi'
 
 export const registrationApi = baseApi.injectEndpoints({

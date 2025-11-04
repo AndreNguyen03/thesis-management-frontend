@@ -1,5 +1,5 @@
 import { formatDate } from '@/utils/utils'
-import type { LecturerUser } from 'models'
+import type { LecturerUser } from '@/models'
 import { TaskCard } from './TaskCard'
 
 export function CurrentThesis({ lecturer }: { lecturer: LecturerUser }) {

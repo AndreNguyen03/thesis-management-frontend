@@ -6,17 +6,17 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger
-} from '@/components/ui/Dialog'
+} from '@/components/ui/dialog'
 import { Bookmark, Calendar, Eye, Loader2, Send, Star, Users } from 'lucide-react'
 import { useState } from 'react'
 import { ConfirmRegistration } from './ConfirmRegistration'
 import { useCreateRegistrationMutation } from '../../../services/registrationApi'
-import { notifyError, notifySuccess } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/utils/catch-error'
 import { useNavigate } from 'react-router-dom'
 import { useLazyGetTopicByIdQuery, useSaveTopicMutation, useUnsaveTopicMutation } from '../../../services/topicApi'
 
 import type { Topic } from '@/models'
+import { toast } from '@/hooks/use-toast'
 type TopicCardMode = 'all' | 'saved'
 
 export const TopicCard: React.FC<{
@@ -60,14 +60,21 @@ export const TopicCard: React.FC<{
 		await new Promise((resolve) => setTimeout(resolve, 500))
 		try {
 			await createRegistration({ topicId: currentTopic._id }).unwrap()
-			notifySuccess('Đăng ký đề tài thành công!')
+			toast({
+				title: 'Thành công',
+				description: 'Đăng ký đề tài thành công'
+			})
 			setConfirmOpen(false)
 			await new Promise((resolve) => setTimeout(resolve, 100))
 			reloadTopic()
 		} catch (err) {
 			setConfirmOpen(false)
 			const errorMessage = getErrorMessage(err)
-			notifyError(errorMessage)
+			toast({
+				title: 'Lỗi',
+				description: errorMessage,
+				variant: 'destructive'
+			})
 		}
 	}
 	const handleToggleSave = async () => {

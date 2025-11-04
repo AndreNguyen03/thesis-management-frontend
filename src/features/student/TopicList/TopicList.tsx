@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useGetTopicsQuery } from '../../../services/topicApi'
-import { TopicCard } from './TopicCard'
+import { topicApi, useGetTopicsQuery } from '@/services/topicApi'
 import type { Topic } from '@/models'
+import { TopicCard } from './TopicCard'
 
 // Mock data
 // const fields = [

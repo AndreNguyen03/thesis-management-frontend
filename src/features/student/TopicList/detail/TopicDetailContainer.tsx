@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui'
-import { Dialog, DialogContent } from '@/components/ui/Dialog'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ChevronLeft } from 'lucide-react'
@@ -8,15 +7,14 @@ import TopicDetail from './TopicDetail'
 import RelevantInformation from './RelevantInformation'
 import { useEffect, useState } from 'react'
 import type { ITopicDetail } from '@/models'
+import { Dialog, DialogContent } from '@/components/ui/Dialog'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
 
-	if (!id) {
-		return <div>Invalid topic id</div>
-	}
-	const { data: topicData, isLoading, refetch } = useGetTopicByIdQuery({ id })
+	// Call the query hook unconditionally but skip fetching when no id is present
+	const { data: topicData, isLoading, refetch } = useGetTopicByIdQuery({ id: id! }, { skip: !id })
 
 	const [topic, setTopic] = useState<ITopicDetail | undefined>(undefined)
 
@@ -25,6 +23,11 @@ export const TopicDetailContainer = () => {
 			setTopic(topicData)
 		}
 	}, [topicData])
+
+	// If no id was provided, render an error after hooks have been called
+	if (!id) {
+		return <div>Invalid topic id</div>
+	}
 
 	const handleUpdate = async () => {
 		const { data } = await refetch()

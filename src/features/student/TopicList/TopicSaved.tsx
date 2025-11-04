@@ -3,6 +3,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useGetSavedTopicsQuery } from '../../../services/topicApi'
+import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
+import type { Topic } from '@/models'
+import { TopicCard } from './TopicCard'
 
 const fields = [
 	'Tất cả lĩnh vực',
@@ -14,9 +17,7 @@ const fields = [
 	'Web Development',
 	'Mobile Development'
 ]
-import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import { TopicCard } from './TopicCard'
-import type { Topic } from '@/models'
+
 export const ThesisSaved = () => {
 	const { data: savedthesesData = [] } = useGetSavedTopicsQuery()
 	const [topics, setTopics] = useState<Topic[]>([])

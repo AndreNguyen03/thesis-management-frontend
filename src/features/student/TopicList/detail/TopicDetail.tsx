@@ -1,11 +1,11 @@
 import { DialogDescription, DialogTitle } from '@radix-ui/react-dialog'
-import type { ITopicDetail } from '../../../../models/topic.model'
-import { Badge, Button } from '../../../../components/ui'
-import { useCreateRegistrationMutation, useDeleteRegistrationMutation } from '../../../../services/registrationApi'
-import { useSaveTopicMutation, useUnsaveTopicMutation } from '../../../../services/topicApi'
-import { notifyError, notifySuccess } from '@/components/ui/Toast'
+import type { ITopicDetail } from '@/models/topic.model'
+import { Badge, Button } from '@/components/ui'
+import { useCreateRegistrationMutation, useDeleteRegistrationMutation } from '@/services/registrationApi'
+import { useSaveTopicMutation, useUnsaveTopicMutation } from '@/services/topicApi'
 import { Loader2 } from 'lucide-react'
 import { getErrorMessage } from '@/utils/catch-error'
+import { toast } from '@/hooks/use-toast'
 const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () => void }) => {
 	const [createRegistration, { isLoading: isLoadingRegister }] = useCreateRegistrationMutation()
 	const [deleteRegistration, { isLoading: isLoadingUnregister }] = useDeleteRegistrationMutation()
@@ -16,19 +16,33 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 		if (topic.isRegistered) {
 			try {
 				await deleteRegistration({ topicId: topic._id }).unwrap()
-				notifySuccess('Hủy đăng ký đề tài thành công')
+				toast({
+					title: 'Thành công',
+					description: 'Hủy đăng ký đề tài thành công'
+				})
 			} catch (error) {
 				console.error('Error during cancel registration toggle:', error)
 
-				notifyError(getErrorMessage(error))
+				toast({
+					title: 'Lỗi',
+					description: getErrorMessage(error),
+					variant: 'destructive'
+				})
 			}
 		} else {
 			try {
 				await createRegistration({ topicId: topic._id }).unwrap()
-				notifySuccess('Đăng ký đề tài thành công')
+				toast({
+					title: 'Thành công',
+					description: 'Đăng ký đề tài thành công'
+				})
 			} catch (error) {
 				console.error('Error during registration toggle:', error)
-				notifyError(getErrorMessage(error))
+				toast({
+					title: 'Lỗi',
+					description: getErrorMessage(error),
+					variant: 'destructive'
+				})
 			}
 		}
 		onUpdate()
@@ -37,18 +51,32 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 		if (topic.isSaved) {
 			try {
 				await unsaveTopic({ topicId: topic._id }).unwrap()
-				notifySuccess('Bỏ lưu đề tài thành công')
+				toast({
+					title: 'Thành công',
+					description: 'Bỏ lưu đề tài thành công'
+				})
 			} catch (error) {
 				console.error('Error during unsave topic:', error)
-				notifyError(getErrorMessage(error))
+				toast({
+					title: 'Lỗi',
+					description: getErrorMessage(error),
+					variant: 'destructive'
+				})
 			}
 		} else {
 			try {
 				await saveTopic({ topicId: topic._id }).unwrap()
-				notifySuccess('Lưu đề tài thành công')
+				toast({
+					title: 'Thành công',
+					description: 'Lưu đề tài thành công'
+				})
 			} catch (error) {
 				console.error('Error during save topic:', error)
-				notifyError(getErrorMessage(error))
+				toast({
+					title: 'Lỗi',
+					description: getErrorMessage(error),
+					variant: 'destructive'
+				})
 			}
 		}
 		onUpdate()

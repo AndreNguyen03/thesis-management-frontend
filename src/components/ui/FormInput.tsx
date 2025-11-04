@@ -1,4 +1,4 @@
-import { cn } from '@/utils/utils'
+import { cn } from '@/lib/utils'
 import { useController, type Control, type FieldValues, type Path, type RegisterOptions } from 'react-hook-form'
 
 interface InputProps<T extends FieldValues>

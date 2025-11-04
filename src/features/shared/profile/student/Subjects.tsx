@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BookOpen } from 'lucide-react'
-import type { StudentUser } from 'models'
+import type { StudentUser } from '@/models'
 
 export const Subjects = ({ student }: { student: StudentUser }) => {
 	const subjects = student.subjects || []

@@ -11,8 +11,11 @@ import { TopicRegisteredChildren } from '@/features/student/TopicList/registered
 import { RegisteredTopicContainer } from '@/features/student/TopicList/registered/TopicRegisteredContainer'
 import { CanceledTopicsRegistration } from '@/features/student/TopicList/registered/children/CanceledTopicsRegistration'
 import { TopicDetailContainer } from '@/features/student/TopicList/detail/TopicDetailContainer'
+import { ManageLecturerPage } from '@/features/admin/manage_lecturer'
+import { ManageStudentPage } from '@/features/admin/manage_student'
 import Unauthorized from '@/features/shared/authorize/Unauthorized'
 import ManageAI from '@/features/admin/manage_ai/ManageAI'
+import { RequireAuth } from './RequireAuth'
 
 // Mock user data
 
@@ -24,12 +27,13 @@ export const router = createBrowserRouter([
 	{
 		path: '/',
 		element: (
-			// <RequireAuth>
-			<App />
-			// </RequireAuth>
+			<RequireAuth>
+				<App />
+			</RequireAuth>
 		),
 		children: [
-			{ index: true, element: <Navigate to='dashboard' replace /> },
+			{ index: true, element: <Navigate to='manage-lecturers' replace /> },
+			// { index: true, element: <Navigate to='dashboard' replace /> },
 			{ path: 'dashboard', element: <Dashboard /> },
 			{
 				path: 'profile',
@@ -57,6 +61,14 @@ export const router = createBrowserRouter([
 			{
 				path: 'detail-topic/:id',
 				element: <TopicDetailContainer />
+			},
+			{
+				path: 'manage-lecturers',
+				element: <ManageLecturerPage />
+			},
+			{
+				path: 'manage-students',
+				element: <ManageStudentPage />
 			},
 
 			{

@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export const EmptyStateContainer = ({ type }: { type: string }) => {
 	const navigate = useNavigate()

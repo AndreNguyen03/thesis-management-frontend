@@ -1,9 +1,9 @@
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import { useAppSelector } from '../../../../../store/configureStore'
-import { useGetCanceledRegisterTopicsQuery } from '../../../../../services/topicApi'
+import { useAppSelector } from '@/store/configureStore'
+import { useGetCanceledRegisterTopicsQuery } from '@/services/topicApi'
 import { useEffect, useState } from 'react'
 import { CancelRegisteredCard } from '../card/CancelRegisteredCard'
-import type { CanceledRegisteredTopic } from 'models'
+import type { CanceledRegisteredTopic } from '@/models'
 import { EmptyStateContainer } from '../EmptyStateContainer'
 
 export const CanceledTopicsRegistration = () => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useSidebar } from '@/hooks/useSidebar'
 import {
 	BarChart3,
@@ -30,7 +31,7 @@ type MenuItem = {
 	title: string
 	url: string
 	icon: React.ComponentType<any>
-	children?: MenuItem[] // Thêm dòng này
+	children?: MenuItem[]
 }
 
 const menuItems: {
@@ -74,7 +75,8 @@ const menuItems: {
 		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	],
 	admin: [
-		{ title: 'Quản lý tài khoản', url: '/manage-accounts', icon: Users },
+		{ title: 'Quản lý giảng viên', url: '/manage-lecturers', icon: Users },
+		{ title: 'Quản lý sinh viên', url: '/manage-students', icon: Users },
 		{ title: 'Quản lý AI thông minh', url: '/manage-ai', icon: BotMessageSquare },
 		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
@@ -83,7 +85,7 @@ const menuItems: {
 	footer: [{ title: 'Cài đặt', url: '/settings', icon: Settings }]
 }
 
-const AppSidebar = ({ userRole = 'student' }: AppSidebarProps) => {
+const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const { isOpen, toggleSidebar } = useSidebar()
 	const location = useLocation()
 	const currentPath = location.pathname

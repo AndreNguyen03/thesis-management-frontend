@@ -1,6 +1,6 @@
 import RegistratorInformation from './components/RegistratorInformation'
 import RegistrationDiary from './components/RegistrationDiary'
-import type { IRegistration } from '@/models'
+import type { IRegistration } from '@/@/models'
 
 const RelevantInformation = ({
 	studentNames,

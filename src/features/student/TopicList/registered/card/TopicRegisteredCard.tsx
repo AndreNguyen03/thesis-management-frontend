@@ -5,8 +5,9 @@ import { useState } from 'react'
 import { useDeleteRegistrationMutation } from '../../../../../services/registrationApi'
 import { ConfirmCancelRegistration } from '../ConfirmCancelRegistration'
 import { useNavigate } from 'react-router-dom'
-import { notifySuccess } from '@/components/ui/Toast'
+
 import type { Topic } from '@/models'
+import { toast } from '@/hooks/use-toast'
 
 export const TopicRegisteredCard: React.FC<{
 	topic: Topic
@@ -40,7 +41,11 @@ export const TopicRegisteredCard: React.FC<{
 		setConfirmOpen(false)
 
 		navigate('/topics/registered/canceled')
-		notifySuccess('Hủy đăng ký đề tài thành công')
+
+		toast({
+			title: 'Thành công',
+			description: 'Hủy đăng ký đề tài thành công'
+		})
 	}
 
 	const renderDialogActions = () => {
