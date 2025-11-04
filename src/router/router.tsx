@@ -25,6 +25,7 @@ import { CanceledTopicsRegistration } from '@/features/student/TopicList/registe
 import { TopicDetailContainer } from '@/features/student/TopicList/detail/TopicDetailContainer'
 import { ManageLecturerPage } from '@/features/admin/manage_lecturer'
 import { ManageStudentPage } from '@/features/admin/manage_student'
+import { CreateTopic } from '@/features/lecturer/new_topic'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -40,8 +41,7 @@ export const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		children: [
-			{ index: true, element: <Navigate to='manage-lecturers' replace /> },
-			// { index: true, element: <Navigate to='dashboard' replace /> },
+			{ index: true, element: <Navigate to='dashboard' replace /> },
 			{ path: 'dashboard', element: <Dashboard /> },
 			{
 				path: 'profile',
@@ -78,7 +78,7 @@ export const router = createBrowserRouter([
 				path: 'manage-students',
 				element: <ManageStudentPage />
 			},
-			//   { path: 'create-thesis', element: <CreateThesis /> },
+			  { path: 'create-topic', element: <CreateTopic /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },
 			//   { path: 'plagiarism-check', element: <PlagiarismCheck /> },

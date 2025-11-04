@@ -1,3 +1,5 @@
+import type { AcademicTitle } from '@/features/admin/manage_lecturer/types'
+
 // Role
 export type Role = 'student' | 'lecturer' | 'admin'
 
@@ -65,18 +67,24 @@ export interface ThesisStats {
 }
 
 // Base user fields
-interface BaseUser {
+export interface BaseUser {
 	id: string
 	fullName: string
 	email: string
 	phone?: string
-	avatar?: string
+	avatarUrl?: string
 	role: Role
 	isActive: boolean
 }
 
 // Student user
-export interface StudentUser extends BaseUser {
+export interface StudentUser  {
+	id: string
+	fullName: string
+	email: string
+	phone?: string
+	avatarUrl?: string
+	isActive: boolean
 	role: 'student'
 	class: string
 	major: string
@@ -88,21 +96,23 @@ export interface StudentUser extends BaseUser {
 }
 
 // Lecturer user
-export interface LecturerUser extends BaseUser {
-	role: 'lecturer'
-	position: string
-	department: string
-	faculty: string
-	office: string
-	expertise: string[]
-	researchInterests: string[]
-	bio: string
-	education: Education[]
-	publications: Publication[]
-	projects: ResearchProject[]
-	thesisStats: ThesisStats
-	completedThesis: CompletedThesis[]
-	currentThesis: CurrentThesis[]
+export interface LecturerProfile {
+	userId: string
+	fullName: string
+	email: string
+	phone?: string
+	avatarUrl?: string
+	title: AcademicTitle
+	facultyId: string
+    facultyName: string
+	role: 'lecturer' 
+	isActive: boolean
+	areaInterest?: string[]
+	researchInterests?: string[]
+	publications?: Publication[]
+	supervisedThesisIds?: string[]
+	createdAt?: Date
+	updatedAt?: Date
 }
 
 // Admin user
@@ -110,5 +120,3 @@ export interface AdminUser extends BaseUser {
 	role: 'admin'
 }
 
-// Union type for all users
-export type AppUser = StudentUser | LecturerUser | AdminUser

@@ -1,12 +1,11 @@
 import { Avatar, Button } from '@/components/ui'
 import { ContactInfo } from './ContactInfo'
 import { Expertise } from './Expertise'
-import { Stats } from './Stats'
 import { About } from './About'
 import { Research } from './Research'
-import { CompletedThesis } from './CompletedThesis'
-import { CurrentThesis } from './CurrentThesis'
-import type { LecturerUser } from '@/models'
+// import { CompletedThesis } from './CompletedThesis'
+// import { CurrentThesis } from './CurrentThesis'
+import type { LecturerProfile } from '@/models'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { useNavigate } from 'react-router-dom'
 import { TabsProvider } from '../../../../contexts/TabContext'
@@ -22,8 +21,8 @@ const TabButtons: React.FC = () => {
 	const tabs: TabButtonProps[] = [
 		{ tabKey: 'about', label: 'Giới thiệu' },
 		{ tabKey: 'research', label: 'Nghiên cứu' },
-		{ tabKey: 'completed', label: 'Đã hướng dẫn' },
-		{ tabKey: 'current', label: 'Đề tài hiện tại' }
+		// { tabKey: 'completed', label: 'Đã hướng dẫn' },
+		// { tabKey: 'current', label: 'Đề tài hiện tại' }
 	]
 
 	return (
@@ -43,20 +42,20 @@ const TabButtons: React.FC = () => {
 	)
 }
 
-const TabContent: React.FC<{ lecturer: LecturerUser }> = ({ lecturer }) => {
+const TabContent: React.FC<{ lecturer: LecturerProfile }> = ({ lecturer }) => {
 	const { activeTab } = useTab()
 
 	return (
 		<>
 			{activeTab === 'about' && <About lecturer={lecturer} />}
 			{activeTab === 'research' && <Research lecturer={lecturer} />}
-			{activeTab === 'completed' && <CompletedThesis lecturer={lecturer} />}
-			{activeTab === 'current' && <CurrentThesis lecturer={lecturer} />}
+			{/* {activeTab === 'completed' && <CompletedThesis lecturer={lecturer} />} */}
+			{/* {activeTab === 'current' && <CurrentThesis lecturer={lecturer} />} */}
 		</>
 	)
 }
 
-export function LecturerProfile({ lecturer }: { lecturer: LecturerUser }) {
+export function LecturerProfilePage({ lecturer }: { lecturer: LecturerProfile }) {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Hồ sơ' }])
 	const navigate = useNavigate()
 
@@ -72,19 +71,18 @@ export function LecturerProfile({ lecturer }: { lecturer: LecturerUser }) {
 
 			<div className='flex flex-col gap-6 rounded-lg bg-white p-6 shadow lg:flex-row'>
 				<div className='flex flex-col items-center gap-4 lg:items-start'>
-					<Avatar name={lecturer.fullName || 'Nguyen Van Toan'} src={lecturer.avatar} />
+					<Avatar name={lecturer.fullName || 'Nguyen Van Toan'} src={lecturer.avatarUrl} />
 					<div className='text-center lg:text-left'>
 						<h1 className='text-2xl font-bold'>{lecturer.fullName}</h1>
-						<p className='text-lg font-semibold'>{lecturer?.position}</p>
-						<p className='leading-relaxed'>{lecturer?.department}</p>
-						<p className='leading-relaxed'>{lecturer?.faculty}</p>
+						<p className='text-lg font-semibold'>{lecturer?.title}</p>
+						<p className='leading-relaxed'>{lecturer?.facultyName}</p>
 					</div>
 				</div>
 
 				<div className='flex-1 space-y-6'>
 					<ContactInfo lecturer={lecturer} />
-					{lecturer?.expertise && <Expertise expertise={lecturer.expertise} />}
-					{lecturer?.thesisStats && <Stats stats={lecturer.thesisStats} />}
+					{lecturer?.areaInterest && <Expertise expertise={lecturer.areaInterest} />}
+					{/* {lecturer?.thesisStats && <Stats stats={lecturer.thesisStats} />} */}
 				</div>
 			</div>
 

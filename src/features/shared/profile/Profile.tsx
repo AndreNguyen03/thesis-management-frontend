@@ -1,6 +1,6 @@
 // import { TeacherProfile } from './lecturer/LecturerProfile'
 import { useAppSelector } from '../../../store'
-import { LecturerProfile } from './lecturer/LecturerProfile'
+import { LecturerProfilePage } from './lecturer/LecturerProfile'
 import { StudentProfile } from './student/StudentProfile'
 
 export function Profile() {
@@ -16,7 +16,7 @@ export function Profile() {
 		case 'student':
 			return <StudentProfile student={user}/>
 		case 'lecturer':
-			return <LecturerProfile lecturer={user}/>
+			return <LecturerProfilePage lecturer={user}/>
 		case 'admin':
 			return <div>Admin progile</div>
 		default:
