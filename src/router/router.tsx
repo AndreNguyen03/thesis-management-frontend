@@ -11,7 +11,7 @@ import App from '../App'
 // import GroupWorkspace from './pages/GroupWorkspace';
 // import LibraryPage from './pages/LibraryPage';
 // import AIChatPage from './pages/AIChatPage';
-import { RequireAuth } from './RequireAuth'
+// import { RequireAuth } from './RequireAuth'
 import { ForgotPassword, Login, ResetPassword } from '@/features/shared/auth'
 import Dashboard from '@/features/shared/dashboard/Dashboard'
 import NotFound from '@/features/shared/NotFound'
@@ -26,6 +26,10 @@ import { TopicDetailContainer } from '@/features/student/TopicList/detail/TopicD
 import { ManageLecturerPage } from '@/features/admin/manage_lecturer'
 import { ManageStudentPage } from '@/features/admin/manage_student'
 import { CreateTopic } from '@/features/lecturer/new_topic'
+import { ManagePeriodPage } from '@/features/faculty/manage_period'
+import { ManageFacultyStudentPage } from '@/features/faculty/manage_faculty_student'
+import { ManageFacultyLecturerPage } from '@/features/faculty/manage_faculty_lecturer'
+import DetailPeriodPage from '@/features/faculty/manage_period/DetailPeriod'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -36,12 +40,13 @@ export const router = createBrowserRouter([
 	{
 		path: '/',
 		element: (
-			<RequireAuth>
+			// <RequireAuth>
 			<App />
-			</RequireAuth>
+			// </RequireAuth>
 		),
 		children: [
-			{ index: true, element: <Navigate to='dashboard' replace /> },
+			// { index: true, element: <Navigate to='dashboard' replace /> },
+			{ index: true, element: <Navigate to='manage-period' replace /> },
 			{ path: 'dashboard', element: <Dashboard /> },
 			{
 				path: 'profile',
@@ -79,6 +84,10 @@ export const router = createBrowserRouter([
 				element: <ManageStudentPage />
 			},
 			  { path: 'create-topic', element: <CreateTopic /> },
+			  { path: 'manage-period', element: <ManagePeriodPage /> },
+			  { path: 'period/:id', element: <DetailPeriodPage /> },
+			  { path: 'manage-faculty-student', element: <ManageFacultyStudentPage /> },
+			  { path: 'manage-faculty-lecturer', element: <ManageFacultyLecturerPage /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },
 			//   { path: 'plagiarism-check', element: <PlagiarismCheck /> },

@@ -50,3 +50,4 @@ export function decodeJwt<T = any>(token: string): T | null {
 		return null
 	}
 }
+
