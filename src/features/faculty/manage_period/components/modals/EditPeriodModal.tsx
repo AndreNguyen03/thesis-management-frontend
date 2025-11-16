@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { Button, Input } from '@/components/ui'
+import { Calendar } from '@/components/ui/calendar'
 import {
 	Dialog,
 	DialogContent,
@@ -7,41 +8,44 @@ import {
 	DialogHeader,
 	DialogTitle
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { CalendarIcon } from 'lucide-react'
-import { format } from 'date-fns'
-import { vi } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { CalendarIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { format, parseISO } from 'date-fns'
+import { vi } from 'date-fns/locale'
+import type { Period } from '@/models/period'
 
-interface AddPeriodModalProps {
+interface EditPeriodModalProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	onSubmit: (data: { name: string; description: string; startDate: Date; endDate: Date }) => void
+	period: Period | null
+	onSubmit: (data: { id: string; name: string; startDate: Date; endDate: Date }) => void
 }
 
-export function AddPeriodModal({ open, onOpenChange, onSubmit }: AddPeriodModalProps) {
+export function EditPeriodModal({ open, onOpenChange, period, onSubmit }: EditPeriodModalProps) {
 	const [name, setName] = useState('')
-	const [description, setDescription] = useState('')
 	const [startDate, setStartDate] = useState<Date>()
 	const [endDate, setEndDate] = useState<Date>()
 
+	// Khi period thay đổi thì set state
+	useEffect(() => {
+		if (period) {
+			setName(period.name)
+			setStartDate(parseISO(period.startDate))
+			setEndDate(parseISO(period.endDate))
+		}
+	}, [period])
+
 	const handleSubmit = () => {
-		if (name && startDate && endDate) {
+		if (period && name && startDate && endDate) {
 			onSubmit({
+				id: period.id,
 				name,
-				description,
 				startDate,
 				endDate
 			})
-			// Reset form
-			setName('')
-			setDescription('')
-			setStartDate(undefined)
-			setEndDate(undefined)
 			onOpenChange(false)
 		}
 	}
@@ -50,25 +54,20 @@ export function AddPeriodModal({ open, onOpenChange, onSubmit }: AddPeriodModalP
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className='sm:max-w-[600px]'>
 				<DialogHeader>
-					<DialogTitle>Thêm đợt đăng ký mới</DialogTitle>
-					<DialogDescription>Tạo một đợt đăng ký đề tài tốt nghiệp mới</DialogDescription>
+					<DialogTitle>Chỉnh sửa đợt đăng ký</DialogTitle>
+					<DialogDescription>Chỉ chỉnh sửa được tên, mô tả và thời gian đợt đăng ký</DialogDescription>
 				</DialogHeader>
 
 				<div className='space-y-6 py-4'>
-					{/* Name */}
+					{/* Tên đợt */}
 					<div className='space-y-2'>
 						<Label htmlFor='name'>Tên đợt đăng ký *</Label>
-						<Input
-							id='name'
-							placeholder='VD: Đợt đăng ký học kỳ I năm 2024-2025'
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-						/>
+						<Input id='name' value={name} onChange={(e) => setName(e.target.value)} />
 					</div>
 
-					{/* Date Range */}
+					{/* Thời gian */}
 					<div className='grid grid-cols-2 gap-4'>
-						{/* Start Date */}
+						{/* Ngày bắt đầu */}
 						<div className='space-y-2'>
 							<Label>Ngày bắt đầu *</Label>
 							<Popover>
@@ -90,7 +89,7 @@ export function AddPeriodModal({ open, onOpenChange, onSubmit }: AddPeriodModalP
 							</Popover>
 						</div>
 
-						{/* End Date */}
+						{/* Ngày kết thúc */}
 						<div className='space-y-2'>
 							<Label>Ngày kết thúc *</Label>
 							<Popover>
@@ -125,7 +124,7 @@ export function AddPeriodModal({ open, onOpenChange, onSubmit }: AddPeriodModalP
 						Hủy
 					</Button>
 					<Button onClick={handleSubmit} disabled={!name || !startDate || !endDate}>
-						Tạo đợt mới
+						Lưu thay đổi
 					</Button>
 				</DialogFooter>
 			</DialogContent>

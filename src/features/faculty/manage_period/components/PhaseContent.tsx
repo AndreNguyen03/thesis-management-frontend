@@ -1,141 +1,89 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent} from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { StatsCards } from './StatsCards'
 import { TopicsTable } from './TopicsTable'
 import { getPhaseStats, mockTopicsPhase1, mockTopicsPhase2, mockTopicsPhase3, mockTopicsPhase4 } from '../mockData'
-import { ArrowRight, Settings, Eye } from 'lucide-react'
+import { Settings, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
-import { SaveToLibraryModal } from './modals/SaveToLibraryModal'
-
+import type { PeriodPhase, PhaseType } from '@/models/period'
 interface PhaseContentProps {
-	phase: number
+	phase: PeriodPhase
+	currentPhase: PhaseType
 	periodId: string
+	lecturers?: string[]
 }
 
-export function PhaseContent({ phase }: PhaseContentProps) {
+export function PhaseContent({ phase, currentPhase, periodId, lecturers = [] }: PhaseContentProps) {
 	const [phaseSettingsOpen, setPhaseSettingsOpen] = useState(false)
-	const [saveToLibraryOpen, setSaveToLibraryOpen] = useState(false)
-
-	// 👉 Giả lập trạng thái pha đã thiết lập hay chưa
 	const [phaseConfigured, setPhaseConfigured] = useState(false)
 
-	const stats = getPhaseStats(phase)
+	// stats theo phase.phase
+	const stats = getPhaseStats(phase.phase)
 
 	const getTopicsForPhase = () => {
-		switch (phase) {
-			case 1:
+		switch (phase.phase) {
+			case 'submit_topic':
 				return mockTopicsPhase1
-			case 2:
+			case 'open_registration':
 				return mockTopicsPhase2
-			case 3:
+			case 'execution':
 				return mockTopicsPhase3
-			case 4:
+			case 'completion':
 				return mockTopicsPhase4
 			default:
 				return []
 		}
 	}
 
-	const getPhaseActions = () => {
-		if (phase === 4 && phaseConfigured) {
-			return (
-				<div className='flex gap-3'>
-					<Button onClick={() => setSaveToLibraryOpen(true)}>
-						<ArrowRight className='mr-2 h-4 w-4' />
-						Lưu vào Thư viện số
-					</Button>
-				</div>
-			)
-		}
-
-		return (
-			<div className='flex gap-3'>
-				<Button onClick={() => setPhaseSettingsOpen(true)} variant={phaseConfigured ? 'outline' : 'default'}>
-					{phaseConfigured ? (
-						<>
-							<Eye className='mr-2 h-4 w-4' />
-							Xem / Chỉnh sửa thiết lập
-						</>
-					) : (
-						<>
-							<Settings className='mr-2 h-4 w-4' />
-							Thiết lập Pha
-						</>
-					)}
-				</Button>
-			</div>
-		)
-	}
-
 	return (
 		<motion.div
-			key={phase}
+			key={phase.phase}
 			initial={{ opacity: 0, x: 20 }}
 			animate={{ opacity: 1, x: 0 }}
 			exit={{ opacity: 0, x: -20 }}
 			transition={{ duration: 0.3 }}
 			className='space-y-6'
 		>
-			{/* Nếu chưa thiết lập thì hiển thị thông báo */}
 			{!phaseConfigured ? (
 				<Card className='border-dashed border-primary/30 bg-primary/5 p-8 text-center'>
-					<p className='mb-4 text-muted-foreground'>
-						Pha {phase} chưa được thiết lập. Vui lòng thiết lập để bắt đầu quản lý.
-					</p>
+					<div className='mb-4 text-muted-foreground'>
+						Pha {phase.phase} chưa được thiết lập. Vui lòng thiết lập để bắt đầu quản lý.
+					</div>
 					<Button onClick={() => setPhaseSettingsOpen(true)}>
 						<Settings className='mr-2 h-4 w-4' /> Thiết lập ngay
 					</Button>
 				</Card>
 			) : (
 				<>
-					{/* Statistics */}
-					<div>
-						<h3 className='mb-4 text-lg font-semibold'>Thống kê tổng quan</h3>
-						<StatsCards stats={stats} />
+					<div className='mb-4 flex items-center justify-between'>
+						<h3 className='text-lg font-semibold'>Thống kê tổng quan - {phase.phase}</h3>
+						<Button onClick={() => setPhaseSettingsOpen(true)} variant='outline' size='sm'>
+							<Eye className='mr-2 h-4 w-4' />
+							Xem / Chỉnh sửa thiết lập
+						</Button>
 					</div>
+					<StatsCards stats={stats} />
 
-					{/* Topics Table */}
 					<div>
 						<h3 className='mb-4 text-lg font-semibold'>Danh sách đề tài</h3>
-						<TopicsTable topics={getTopicsForPhase()} phase={phase} />
+						<TopicsTable topics={getTopicsForPhase()} phase={phase.phase} />
 					</div>
-
-					{/* Ví dụ nút chuyển pha */}
-					{phase === 1 && (
-						<Card className='border-primary/20 bg-primary/5'>
-							<CardContent className='pt-6'>
-								<div className='flex items-center justify-between'>
-									<div>
-										<p className='font-medium'>Đủ điều kiện chuyển pha</p>
-										<p className='text-sm text-muted-foreground'>
-											Đã có 98 đề tài được duyệt, đủ điều kiện chuyển sang Pha 2
-										</p>
-									</div>
-									<Button size='lg'>
-										Chuyển sang Pha 2
-										<ArrowRight className='ml-2 h-4 w-4' />
-									</Button>
-								</div>
-							</CardContent>
-						</Card>
-					)}
 				</>
 			)}
 
-			{/* Modals */}
 			<PhaseSettingsModal
 				open={phaseSettingsOpen}
 				onOpenChange={(open) => {
 					setPhaseSettingsOpen(open)
-					// Sau khi đóng modal, giả lập rằng đã thiết lập xong
 					if (!open) setPhaseConfigured(true)
 				}}
-				phase={phase}
+				phase={phase.phase}
+				phaseName={phase.phase}
+				status={phase.status}
+				lecturers={lecturers}
 			/>
-			<SaveToLibraryModal open={saveToLibraryOpen} onOpenChange={setSaveToLibraryOpen} />
 		</motion.div>
 	)
 }
-

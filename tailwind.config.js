@@ -63,6 +63,19 @@ export default {
 					3: 'hsl(var(--chart-3))',
 					4: 'hsl(var(--chart-4))',
 					5: 'hsl(var(--chart-5))'
+				},
+				success: {
+					DEFAULT: '#22c55e', // xanh lá chuẩn
+					50: '#ecfdf5',
+					100: '#d1fae5',
+					200: '#a7f3d0',
+					300: '#6ee7b7',
+					400: '#34d399',
+					500: '#22c55e', // dùng làm bg-success/80
+					600: '#16a34a',
+					700: '#15803d',
+					800: '#166534',
+					900: '#14532d'
 				}
 			},
 			backgroundImage: {

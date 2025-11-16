@@ -3,48 +3,30 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { PhaseStepBar } from './components/PhaseStepBar'
 import { PhaseContent } from './components/PhaseContent'
 import { Button } from '@/components/ui/button'
-import { mockPeriods } from './mockData'
-import type { Phase } from '@/models/period'
+import { mockPeriodDetail } from './mockData'
 import { usePageBreadcrumb } from '@/hooks'
+import type { PeriodPhase, PhaseType } from '@/models/period'
 
-const phases: Phase[] = [
-	{
-		id: 1,
-		name: 'Nộp đề tài',
-		description: 'Giảng viên nộp đề tài',
-		status: 'completed'
-	},
-	{
-		id: 2,
-		name: 'Mở đăng ký',
-		description: 'Sinh viên đăng ký',
-		status: 'active'
-	},
-	{
-		id: 3,
-		name: 'Thực hiện',
-		description: 'Thực hiện đề tài',
-		status: 'active'
-	},
-	{
-		id: 4,
-		name: 'Hoàn thành',
-		description: 'Kết thúc và lưu trữ',
-		status: 'active'
-	}
-]
+// import { useGetPeriodDetailQuery } from '@/services/periodApi'
 
 export default function DetailPeriodPage() {
 	const { id } = useParams()
 	const navigate = useNavigate()
-	const period = mockPeriods.find((p) => p.id === id)
-	const [currentPhase, setCurrentPhase] = useState(period?.currentPhase || 1)
+
+	// const { data: period, isLoading, error } = useGetPeriodDetailQuery(id!)
+
+	const loading = false
+	const error = null
+	const period = mockPeriodDetail
+
+	const [currentPhaseId, setCurrentPhaseId] = useState<PhaseType>(period?.currentPhase || 'submit_topic')
 
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Quản lý đợt đăng ký', path: '/manage-period' },
 		{ label: period!.name, path: '/period/:id' }
 	])
+
 	if (!period) {
 		return (
 			<div className='flex min-h-screen items-center justify-center'>
@@ -56,23 +38,33 @@ export default function DetailPeriodPage() {
 		)
 	}
 
+	// Lấy thông tin pha hiện tại
+	const currentPhase = period.phases.find((p: PeriodPhase) => p.phase === period.currentPhase)
+
 	return (
 		<div className='min-h-screen'>
-			{/* Main Layout */}
 			<div className='flex w-full'>
 				{/* Sidebar - Step Bar */}
 				<aside className='sticky top-0 h-screen w-[10%] min-w-[120px] border-r'>
 					<PhaseStepBar
-						phases={phases}
-						currentPhase={currentPhase}
-						onPhaseChange={(phase) => setCurrentPhase(phase as 1 | 2 | 3 | 4)}
+						phases={period.phases}
+						currentPhase={currentPhaseId}
+						onPhaseChange={(phaseType: PhaseType) => {
+							setCurrentPhaseId(phaseType)
+						}}
 					/>
 				</aside>
 
 				{/* Main Content */}
-				<main className='w-[90%] flex-1 '>
+				<main className='w-[90%] flex-1'>
 					<div className='container mx-auto max-w-7xl'>
-						<PhaseContent phase={currentPhase} periodId={period.id} />
+						{currentPhase && (
+							<PhaseContent
+								phase={period.phases.find((p) => p.phase === currentPhaseId)!}
+								currentPhase={period.currentPhase}
+								periodId={period.id}
+							/>
+						)}
 					</div>
 				</main>
 			</div>

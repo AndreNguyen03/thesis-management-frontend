@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { mockPeriods } from '../mockData'
 import { Button } from '@/components/ui'
+import { EditPeriodModal } from './modals/EditPeriodModal'
+import { DeletePeriodModal } from './modals/DeletePeriodModal'
+import type { Period, PeriodStatus, PhaseType } from '@/models/period'
 // import { useGetPeriodsQuery, useDeletePeriodMutation } from "@/lib/api/periods"
 const getStatusBadge = (status: PeriodStatus) => {
 	const variants = {
@@ -16,20 +19,6 @@ const getStatusBadge = (status: PeriodStatus) => {
 
 	const config = variants[status]
 	return <Badge variant={config.variant}>{config.label}</Badge>
-}
-
-// 🧩 Type definitions
-export type PeriodStatus = 'ongoing' | 'completed'
-export type PhaseType = 1 | 2 | 3 | 4
-
-export interface RegistrationPeriod {
-	id: string
-	name: string
-	startDate: string
-	endDate: string
-	status: PeriodStatus
-	currentPhase: PhaseType
-	totalTopics: number
 }
 
 // ⚙️ Query Params type
@@ -55,6 +44,13 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 		sort_order: 'desc'
 	})
 
+	// STATE CHO EDIT MODAL
+	const [editModalOpen, setEditModalOpen] = useState(false)
+	const [selectedPeriod, setSelectedPeriod] = useState<Period | null>(null)
+
+	// STATE CHO DELETE MODAL
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false) // state để mở modal xóa
+
 	// const { data, isLoading, error } = useGetPeriodsQuery(queryParams)
 	// const [deletePeriod] = useDeletePeriodMutation()
 	const data = mockPeriods
@@ -62,11 +58,11 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 	const error = null
 
 	// 📋 Định nghĩa các cột
-	const columns: TableColumn<RegistrationPeriod>[] = [
+	const columns: TableColumn<Period>[] = [
 		{
 			key: 'name',
 			title: 'Tên đợt',
-			sortable: true,
+			sortable: false,
 			searchable: true
 		},
 		{
@@ -83,7 +79,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 		{
 			key: 'status',
 			title: 'Trạng thái',
-			sortable: true,
+			sortable: false,
 			render: (value: PeriodStatus) => getStatusBadge(value),
 			renderSearchInput: ({ value, onChange }) => (
 				<select
@@ -101,7 +97,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 		{
 			key: 'currentPhase',
 			title: 'Pha hiện tại',
-			sortable: true,
+			sortable: false,
 			render: (value: PhaseType) => <Badge variant='outline'>Pha {value}</Badge>
 		},
 		{
@@ -113,7 +109,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 	]
 
 	// ⚡ Hành động cho mỗi hàng
-	const actions: TableAction<RegistrationPeriod>[] = [
+	const actions: TableAction<Period>[] = [
 		{
 			icon: <Eye className='h-4 w-4' />,
 			label: 'Xem chi tiết',
@@ -122,17 +118,18 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 		{
 			icon: <Edit className='h-4 w-4' />,
 			label: 'Chỉnh sửa',
-			onClick: (period) => navigate(`/period/edit/${period.id}`)
+			onClick: (period) => {
+				setSelectedPeriod(period)
+				setEditModalOpen(true)
+			}
 		},
 		{
 			icon: <Trash className='h-4 w-4' />,
 			label: 'Xóa',
 			variant: 'destructive',
-			onClick: async (period) => {
-				if (confirm(`Bạn có chắc muốn xóa đợt "${period.name}" không?`)) {
-					// await deletePeriod(period.id)
-					alert('Chức năng xóa chưa được triển khai.')
-				}
+			onClick: (period) => {
+				setSelectedPeriod(period)
+				setDeleteModalOpen(true)
 			}
 		}
 	]
@@ -147,7 +144,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 			</header>
 
 			<section aria-label='Bảng quản lý đợt đăng ký'>
-				<DataTable<RegistrationPeriod>
+				<DataTable<Period>
 					// data={data?.datas || []}
 					data={data || []}
 					columns={columns}
@@ -158,6 +155,9 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 					totalRecords={data?.length || 0}
 					pageSize={queryParams.page_size}
 					onQueryChange={setQueryParams}
+					searchFields={{
+						name: 'Tên đợt',
+					}}
 					emptyState={{
 						title: 'Không tìm thấy đợt đăng ký nào',
 						description: 'Hãy thử thay đổi tìm kiếm hoặc bộ lọc của bạn'
@@ -167,7 +167,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 							size='default'
 							className='flex items-center gap-2'
 							onClick={() => onOpenModal(true)}
-							aria-label='Thêm giảng viên'
+							aria-label='Thêm đợt mới'
 						>
 							<Plus className='h-4 w-4' aria-hidden='true' />
 							<span className='hidden sm:inline'>Thêm đợt mới</span>
@@ -175,6 +175,30 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 					}
 				/>
 			</section>
+
+			{/* Edit Period Modal */}
+			{selectedPeriod && (
+				<EditPeriodModal
+					open={editModalOpen}
+					onOpenChange={setEditModalOpen} // để modal tự đóng
+					period={selectedPeriod} // period cần chỉnh sửa
+					onSubmit={() => alert('edited !')}
+				/>
+			)}
+
+			{/* Delete Period Modal */}
+			{selectedPeriod && (
+				<DeletePeriodModal
+					open={deleteModalOpen}
+					onOpenChange={setDeleteModalOpen}
+					period={selectedPeriod}
+					onConfirm={(periodId) => {
+						console.log('Xóa đợt:', periodId)
+						// TODO: gọi API xóa hoặc cập nhật state
+						alert(`Đã xóa đợt ${periodId}`)
+					}}
+				/>
+			)}
 		</div>
 	)
 }
