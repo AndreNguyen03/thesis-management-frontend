@@ -7,7 +7,6 @@ import { useLoginMutation } from '../../../services/authApi'
 import { getDeviceInfo } from '@/utils/utils'
 import type { ApiError } from '@/models/api'
 import { toast } from 'react-toastify'
-import type { ApiError } from '@/models'
 
 type LoginFormValues = {
 	email: string
