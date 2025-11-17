@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog as PreviewDialog, DialogContent as PreviewContent } from '@/components/ui/dialog'
 import type { PhaseType } from '@/models/period'
+import { PhaseInfo, PhaseStatusMap } from '@/utils/utils'
 
 // Mock danh sách giảng viên có sẵn
 const allLecturersMock = [
@@ -58,12 +59,6 @@ export function PhaseSettingsModal({
 
 	const isTimeInvalid = startTime && endTime ? endTime <= startTime : false
 
-	const statusMap = {
-		not_started: { text: 'Chưa bắt đầu', variant: 'gray' as const },
-		ongoing: { text: 'Đang diễn ra', variant: 'lightBlue' as const },
-		completed: { text: 'Đã hoàn thành', variant: 'registered' as const }
-	}
-
 	const toggleTemp = (name: string) => {
 		if (tempSelected.includes(name)) {
 			setTempSelected(tempSelected.filter((l) => l !== name))
@@ -82,8 +77,8 @@ export function PhaseSettingsModal({
 					<DialogHeader>
 						<DialogTitle className='flex items-center gap-2 text-xl font-semibold'>
 							<Info className='h-5 w-5 text-primary' />
-							Thiết lập Pha {phase}: - Trạng thái:{' '}
-							<Badge variant={statusMap[status].variant}>{statusMap[status].text}</Badge>
+							Thiết lập pha '{PhaseInfo[phase].label}' : - Trạng thái:{' '}
+							<Badge variant={PhaseStatusMap[status].variant}>{PhaseStatusMap[status].text}</Badge>
 						</DialogTitle>
 					</DialogHeader>
 

@@ -8,6 +8,7 @@ import { Settings, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
 import type { PeriodPhase, PhaseType } from '@/models/period'
+import { PhaseInfo } from '@/utils/utils'
 interface PhaseContentProps {
 	phase: PeriodPhase
 	currentPhase: PhaseType
@@ -49,7 +50,7 @@ export function PhaseContent({ phase, currentPhase, periodId, lecturers = [] }: 
 			{!phaseConfigured ? (
 				<Card className='border-dashed border-primary/30 bg-primary/5 p-8 text-center'>
 					<div className='mb-4 text-muted-foreground'>
-						Pha {phase.phase} chưa được thiết lập. Vui lòng thiết lập để bắt đầu quản lý.
+						Pha '{PhaseInfo[phase.phase].label}' chưa được thiết lập. Vui lòng thiết lập để bắt đầu quản lý.
 					</div>
 					<Button onClick={() => setPhaseSettingsOpen(true)}>
 						<Settings className='mr-2 h-4 w-4' /> Thiết lập ngay
@@ -58,7 +59,7 @@ export function PhaseContent({ phase, currentPhase, periodId, lecturers = [] }: 
 			) : (
 				<>
 					<div className='mb-4 flex items-center justify-between'>
-						<h3 className='text-lg font-semibold'>Thống kê tổng quan - {phase.phase}</h3>
+						<h3 className='text-lg font-semibold'>Thống kê tổng quan - {PhaseInfo[phase.phase].label}</h3>
 						<Button onClick={() => setPhaseSettingsOpen(true)} variant='outline' size='sm'>
 							<Eye className='mr-2 h-4 w-4' />
 							Xem / Chỉnh sửa thiết lập
@@ -80,7 +81,6 @@ export function PhaseContent({ phase, currentPhase, periodId, lecturers = [] }: 
 					if (!open) setPhaseConfigured(true)
 				}}
 				phase={phase.phase}
-				phaseName={phase.phase}
 				status={phase.status}
 				lecturers={lecturers}
 			/>

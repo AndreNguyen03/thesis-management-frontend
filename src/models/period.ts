@@ -32,12 +32,19 @@ export type TopicStatus =
 export interface Period {
 	id: string
 	name: string
-	startDate: string
-	endDate: string
+	startTime: string
+	endTime: string
 	status: PeriodStatus
 	currentPhase: PhaseType
 	totalTopics: number
 }
+
+export interface CreatePeriodDto {
+    name: string,
+    startTime: Date,  
+    endTime: Date
+}
+
 
 export interface Topic {
 	id: string

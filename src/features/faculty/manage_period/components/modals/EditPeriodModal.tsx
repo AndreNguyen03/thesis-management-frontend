@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { CalendarIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import type { Period } from '@/models/period'
 
@@ -33,11 +33,13 @@ export function EditPeriodModal({ open, onOpenChange, period, onSubmit }: EditPe
 	useEffect(() => {
 		if (period) {
 			setName(period.name)
-			setStartDate(parseISO(period.startDate))
-			setEndDate(parseISO(period.endDate))
+
+			setStartDate(period.startTime ? new Date(period.startTime) : undefined)
+
+			setEndDate(period.endTime ? new Date(period.endTime) : undefined)
 		}
 	}, [period])
-
+    
 	const handleSubmit = () => {
 		if (period && name && startDate && endDate) {
 			onSubmit({

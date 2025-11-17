@@ -95,6 +95,6 @@ export const baseApi = createApi({
 
 		return result as QueryReturnValue<ApiResponse<T>, FetchBaseQueryError, FetchBaseQueryMeta>
 	},
-	tagTypes: ['UserProfile', 'Theses', 'ListLecturer', 'ListStudent', 'PeriodDetail'],
+	tagTypes: ['UserProfile', 'Theses', 'ListLecturer', 'ListStudent', 'PeriodDetail', 'Periods'],
 	endpoints: () => ({})
 })
