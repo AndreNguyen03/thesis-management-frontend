@@ -7,3 +7,21 @@ export type ApiError = {
 		[key: string]: any
 	}
 }
+
+export type PaginatedResponse<T> = {
+	data: T[]
+	meta: {
+		itemsPerPage: number
+		totalItems: number
+		currentPage: number
+		totalPages: number
+	}
+	links: {
+		first: string
+		last: string
+		current: string
+		next: string | null
+		previous: string | null
+	}
+	totalRecords: number
+}

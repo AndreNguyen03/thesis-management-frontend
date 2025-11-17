@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { CardContent } from '@/components/ui/Card'
+import { CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Download, Eye, X } from 'lucide-react'
 import CSVPreviewModal from './CSVPreviewModal'
@@ -102,7 +103,7 @@ export default function LecturerUploadForm({ onFileSelect, onProcessStart, onClo
 					{/* Hướng dẫn */}
 					<div className='rounded-lg border border-border/20 bg-muted p-3 text-sm text-foreground'>
 						<p className='text-lg'>
-							 Tải lên file CSV chứa danh sách giảng viên để tạo tài khoản hàng loạt.
+							Tải lên file CSV chứa danh sách giảng viên để tạo tài khoản hàng loạt.
 						</p>
 						<p className='mt-1 text-muted-foreground'>
 							File CSV cần có các cột:{' '}

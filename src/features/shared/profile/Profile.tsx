@@ -18,7 +18,7 @@ export function Profile() {
 		case 'lecturer':
 			return <LecturerProfilePage lecturer={user}/>
 		case 'admin':
-			return <div>Admin progile</div>
+			return <div>Admin profile</div>
 		default:
 			return <div>Role không xác định</div>
 	}

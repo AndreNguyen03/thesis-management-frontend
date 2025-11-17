@@ -1,3 +1,4 @@
+import type { PhaseType } from '@/models/period'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -49,4 +50,31 @@ export function decodeJwt<T = any>(token: string): T | null {
 		console.error('Failed to decode JWT:', err)
 		return null
 	}
+}
+export const PhaseInfo: Record<PhaseType, { order: number; label: string }> = {
+	submit_topic: {
+		order: 1,
+		label: 'Nộp đề tài'
+	},
+	open_registration: {
+		order: 2,
+		label: 'Mở đăng ký'
+	},
+	execution: {
+		order: 3,
+		label: 'Thực hiện'
+	},
+	completion: {
+		order: 4,
+		label: 'Hoàn thành'
+	}
+}
+
+export const PhaseStatusMap: Record<
+	'not_started' | 'ongoing' | 'completed',
+	{ text: string; variant: 'gray' | 'lightBlue' | 'registered' }
+> = {
+	not_started: { text: 'Chưa bắt đầu', variant: 'gray' as const },
+	ongoing: { text: 'Đang diễn ra', variant: 'lightBlue' as const },
+	completed: { text: 'Đã hoàn thành', variant: 'registered' as const }
 }

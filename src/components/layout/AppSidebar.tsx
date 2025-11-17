@@ -34,13 +34,7 @@ type MenuItem = {
 	children?: MenuItem[]
 }
 
-const menuItems: {
-	common: MenuItem[]
-	student: MenuItem[]
-	lecturer: MenuItem[]
-	admin: MenuItem[]
-	footer: MenuItem[]
-} = {
+const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
 	common: [
 		{
 			title: 'Dashboard',
@@ -78,6 +72,14 @@ const menuItems: {
 		{ title: 'Quản lý giảng viên', url: '/manage-lecturers', icon: Users },
 		{ title: 'Quản lý sinh viên', url: '/manage-students', icon: Users },
 		{ title: 'Quản lý AI thông minh', url: '/manage-ai', icon: BotMessageSquare },
+		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 },
+		{ title: 'Thư viện số', url: '/library', icon: Library },
+		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
+	],
+    'faculty-board': [
+		{ title: 'Quản lý giảng viên khoa', url: '/manage-lecturers', icon: Users },
+		{ title: 'Quản lý sinh viên khoa', url: '/manage-students', icon: Users },
+		{ title: 'Quản lý đợt đề tài', url: '/manage-period', icon: Users },
 		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
@@ -199,6 +201,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 								{userRole === 'student' && 'Sinh viên'}
 								{userRole === 'lecturer' && 'Giảng viên'}
 								{userRole === 'admin' && 'Quản trị'}
+								{userRole === 'faculty-board' && 'Ban chủ nhiệm khoa'}
 							</div>
 						)}
 						{renderMenuItems(menuItems[userRole])}
