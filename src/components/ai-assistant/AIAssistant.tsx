@@ -8,6 +8,8 @@ import { TextStreamChatTransport } from 'ai'
 import Bubble from './Bubble'
 import LoadingBubble from './LoadingBubble'
 import { useGetChatbotVersionQuery } from '@/services/chatbotApi'
+import { toast } from 'react-toastify'
+
 const suggestedQuestions = [
 	'Cách đăng ký đề tài luận văn?',
 	'Tìm đề tài phù hợp với ngành AI',
@@ -21,10 +23,13 @@ export const AIAssistant = () => {
 	const [input, setInput] = useState('')
 	const bottomRef = useRef<HTMLDivElement>(null)
 	const { data: chatbotVersions } = useGetChatbotVersionQuery()
-	const { messages, sendMessage, status } = useChat({
+	const { messages, sendMessage, status, error } = useChat({
 		transport: new TextStreamChatTransport({
-			api: `http://localhost:3000/api/chatbot/request`
-		})
+			api: `http://localhost:3000/api/chatbots/request`
+		}),
+		onError: (error) => {
+			toast.error(`Đã xảy ra lỗi`)
+		}
 	})
 
 	useEffect(() => {
@@ -98,6 +103,11 @@ export const AIAssistant = () => {
 										})
 									})}
 									{status !== 'ready' && <LoadingBubble />}
+									{error && (
+										<div className='rounded-lg bg-destructive/10 p-4 text-center text-sm text-destructive'>
+											Đã xảy ra lỗi: {error.message}
+										</div>
+									)}
 									<div ref={bottomRef} />
 								</div>
 							)}

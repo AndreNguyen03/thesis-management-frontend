@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui'
 import { Title } from '@radix-ui/react-dialog'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import TitleBox from './TitleBox'
+import TitleBox from '../../../../../components/TitleBox'
 
 const RegistratorInformation = ({
 	studentNames,

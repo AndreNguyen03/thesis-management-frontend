@@ -1,6 +1,5 @@
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import { Tabs, TabsContent } from '@/components/ui/tabs'
-import { TabsList, TabsTrigger } from '@radix-ui/react-tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BarChart3, UserPlus, Users } from 'lucide-react'
 import ManageChatbot from './manage_chatbot/ManageChatbot'
 
@@ -13,6 +12,7 @@ const ManageAI = () => {
 					<TabsTrigger value='manageChatbot'>Quản lý Chatbot</TabsTrigger>
 					<TabsTrigger value='manageAISuggestion'>Quản lý gợi ý AI</TabsTrigger>
 				</TabsList>
+				{/* overview */}
 				<TabsContent value='overview' className='space-y-4'>
 					<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>
 						<Card className='bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60'>
@@ -68,6 +68,7 @@ const ManageAI = () => {
 						</Card>
 					</div>
 				</TabsContent>
+				{/* Quản lý chatbot */}
 				<ManageChatbot />
 			</Tabs>
 		</div>

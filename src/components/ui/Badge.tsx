@@ -10,6 +10,8 @@ export type BadgeVariant =
 	| 'blue'
 	| 'gray'
 	| 'lightBlue'
+	| 'success'
+	| 'graybold'
 
 interface BadgeProps {
 	children: ReactNode
@@ -26,7 +28,9 @@ export const Badge = ({ children, variant = 'default', className }: BadgeProps) 
 		registered: 'bg-green-600 text-white',
 		blue: 'bg-blue-600 text-white transition-transform scale-100 hover:scale-105',
 		lightBlue: 'bg-blue-100 text-blue-800',
-		gray: 'border border-gray-500 text-gray-700'
+		gray: 'border border-gray-500 text-gray-700',
+		graybold: 'bg-gray-500 text-white',
+		success: 'bg-green-600 text-white'
 	}
 
 	return (

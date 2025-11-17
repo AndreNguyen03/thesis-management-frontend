@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui'
 import { LandPlot } from 'lucide-react'
-import TitleBox from './TitleBox'
+import TitleBox from '../../../../../components/TitleBox'
 import { useState } from 'react'
 import type { IRegistration } from '@/models'
 
