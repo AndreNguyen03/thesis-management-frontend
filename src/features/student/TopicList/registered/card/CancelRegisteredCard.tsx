@@ -1,7 +1,7 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
+import type { CanceledRegisteredTopic, Topic } from '@/models'
 import { Calendar, ChevronDown, ChevronUp, Loader2, Send, Users } from 'lucide-react'
 import { useState } from 'react'
-import type { CanceledRegisteredTopic, Topic } from '@/models'
 import { useNavigate } from 'react-router-dom'
 
 export const CancelRegisteredCard: React.FC<{

@@ -1,17 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '../App'
-// import Login from './pages/Login';
-// import Dashboard from './pages/Dashboard';
-// import ThesisList from './pages/ThesisList';
-// import CreateThesis from './pages/CreateThesis';
-// import ManageThesis from './pages/ManageThesis';
-// import ApproveRegistrations from './pages/ApproveRegistrations';
-// import PlagiarismCheck from './pages/PlagiarismCheck';
-// import MyGroups from './pages/MyGroups';
-// import GroupWorkspace from './pages/GroupWorkspace';
-// import LibraryPage from './pages/LibraryPage';
-// import AIChatPage from './pages/AIChatPage';
-import { RequireAuth } from './RequireAuth'
 import { ForgotPassword, Login, ResetPassword } from '@/features/shared/auth'
 import Dashboard from '@/features/shared/dashboard/Dashboard'
 import NotFound from '@/features/shared/NotFound'
@@ -25,6 +13,10 @@ import { CanceledTopicsRegistration } from '@/features/student/TopicList/registe
 import { TopicDetailContainer } from '@/features/student/TopicList/detail/TopicDetailContainer'
 import { ManageLecturerPage } from '@/features/admin/manage_lecturer'
 import { ManageStudentPage } from '@/features/admin/manage_student'
+import Unauthorized from '@/features/shared/authorize/Unauthorized'
+import ManageAI from '@/features/admin/manage_ai/ManageAI'
+import { RequireAuth } from './RequireAuth'
+
 import { CreateTopic } from '@/features/lecturer/new_topic'
 import { ManagePeriodPage } from '@/features/faculty/manage_period'
 import { ManageFacultyStudentPage } from '@/features/faculty/manage_faculty_student'
@@ -84,6 +76,16 @@ export const router = createBrowserRouter([
 				element: <ManageStudentPage />
 			},
 			{ path: 'create-topic', element: <CreateTopic /> },
+
+			{
+				path: 'manage-ai',
+				element: (
+					//<RequireAuth allowedRoles={['admin']}>
+					<ManageAI />
+					//</RequireAuth>
+				)
+			},
+			//   { path: 'create-thesis', element: <CreateThesis /> },
 			{ path: 'manage-period', element: <ManagePeriodPage /> },
 			{ path: 'period/:id', element: <DetailPeriodPage /> },
 			{ path: 'manage-faculty-student', element: <ManageFacultyStudentPage /> },
@@ -103,6 +105,10 @@ export const router = createBrowserRouter([
 						<p className='text-muted-foreground'>Tính năng đang được phát triển...</p>
 					</div>
 				)
+			},
+			{
+				path: 'unauthorized',
+				element: <Unauthorized />
 			},
 			{ path: '*', element: <NotFound /> }
 		]

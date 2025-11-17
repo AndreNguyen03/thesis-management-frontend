@@ -16,6 +16,7 @@ import { Filter, Search } from 'lucide-react'
 import { EmptyStateContainer } from '../EmptyStateContainer'
 import { useGetRegisteredTopicQuery } from '@/services/topicApi'
 import { TopicRegisteredCard } from '../card/TopicRegisteredCard'
+import type { Topic } from '@/models'
 const fields = [
 	'Tất cả lĩnh vực',
 	'Trí tuệ nhân tạo',
@@ -28,7 +29,7 @@ const fields = [
 ]
 export const TopicRegisteredChildren = () => {
 	const { data: topicData = [] } = useGetRegisteredTopicQuery()
-	const [registerTopics, setRegisteredTopics] = useState(topicData)
+	const [registerTopics, setRegisteredTopics] = useState<Topic[]>(topicData)
 	// // const [cancelRegistration, { isLoading: isCancelling, isSuccess }] = useCancelRegistrationMutation()
 	useEffect(() => {
 		if (JSON.stringify(registerTopics) !== JSON.stringify(topicData)) {
@@ -52,7 +53,7 @@ export const TopicRegisteredChildren = () => {
 			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			topic.lecturerNames.some((lecturer) => lecturer.toLowerCase().includes(searchTerm.toLowerCase()))
 
-		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.field === selectedField
+		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.fieldNames.includes(selectedField)
 		return matchesSearch && matchesField
 	})
 
@@ -72,7 +73,7 @@ export const TopicRegisteredChildren = () => {
 			) : (
 				<>
 					{/* Search and Filters */}
-					<Card>
+					<Card className='p-4'>
 						<CardHeader>
 							<CardTitle className='flex items-center gap-2'>
 								<Filter className='h-5 w-5' />

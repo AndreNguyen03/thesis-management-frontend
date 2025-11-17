@@ -20,9 +20,11 @@ const buttonVariants = cva(
 				success: 'bg-green-600 text-white hover:bg-green-700',
 				re_register: 'bg-orange-600 text-white hover:bg-orange-700',
 				register: 'bg-blue-600 text-white hover:bg-blue-700',
-				back: 'mb-6 rounded-lg bg-blue-50 px-4 py-2 text-blue-700 hover:bg-blue-200',
+				back: ' rounded-lg bg-white px-4 py-2 text-blue-700 hover:bg-blue-200 shadow-sm',
 				gray: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-				yellow: 'bg-yellow-300 text-gray-800 hover:bg-yellow-400'
+				yellow: 'bg-yellow-300 text-gray-800 hover:bg-yellow-400',
+				red: 'bg-red-500 text-white hover:bg-red-600',
+				blue: 'bg-blue-600 text-white hover:bg-blue-700'
 			},
 			size: {
 				default: 'h-10 px-4 py-2 ',

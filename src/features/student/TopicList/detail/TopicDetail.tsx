@@ -83,16 +83,16 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 	}
 
 	return (
-		<div className='col-span-5 gap-4 space-y-10 sm:col-span-3'>
+		<div className='col-span-5 gap-4 space-y-4 rounded-md bg-white p-8 sm:col-span-3'>
 			{/* Toàn bộ nội dung chi tiết đề tài */}
-			<div className='flex flex-col justify-between gap-8'>
+			<div className='flex flex-col justify-between'>
 				<div>
 					<DialogTitle className='mb-2 text-2xl font-bold text-primary'>{topic.title}</DialogTitle>
 					<DialogDescription className='mb-4 flex flex-wrap items-center gap-2 text-base text-gray-600'>
 						<span className='text-lg'>
 							{topic.lecturerNames.length > 0 ? topic.lecturerNames.join(', ') : 'Chưa có giảng viên'}
 						</span>
-						•<span className='text-lg'>{topic.major}</span>
+						•<span className='text-lg'>{topic.major ? topic.major : 'Chưa có chuyên ngành'}</span>
 					</DialogDescription>
 				</div>
 				<div className='flex flex-wrap space-x-1'>
@@ -105,7 +105,7 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 				</div>
 			</div>
 
-			<div className='space-y-6'>
+			<div className='space-y-2'>
 				<div className='flex flex-col justify-between gap-5 sm:flex-row'>
 					<div>
 						<h4 className='mb-2 text-lg font-semibold text-gray-800'>Lĩnh vực</h4>

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
 import { Filter, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { topicApi, useGetTopicsQuery } from '@/services/topicApi'
@@ -45,6 +45,7 @@ export const TopicList = () => {
 		return matchesSearch && matchesField
 	})
 	const sortedTopics = [...filteredTopics].sort((a, b) => {
+		selectedField
 		switch (sortBy) {
 			case 'deadline':
 				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
@@ -64,7 +65,7 @@ export const TopicList = () => {
 				<p className='text-muted-foreground'>Tìm kiếm và đăng ký đề tài luận văn phù hợp với bạn</p>
 			</div>
 			{/* Search and Filters */}
-			<Card>
+			<Card className='p-4'>
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2 pb-2'>
 						<Filter className='h-5 w-5' />
@@ -86,7 +87,7 @@ export const TopicList = () => {
 							<SelectTrigger className='w-full sm:w-[200px]'>
 								<SelectValue />
 							</SelectTrigger>
-							<SelectContent>
+							<SelectContent className='max-h-80'>
 								<SelectItem value={'Tất cả lĩnh vực'}>Tất cả lĩnh vực</SelectItem>
 								{fields?.map((field) => (
 									<SelectItem key={field.slug} value={field.name}>

@@ -3,6 +3,7 @@ import { useSidebar } from '@/hooks/useSidebar'
 import {
 	BarChart3,
 	BookOpen,
+	BotMessageSquare,
 	ChevronDown,
 	ChevronLeft,
 	FileText,
@@ -19,12 +20,13 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Button } from '../ui'
-import type { Role } from '@/models/users'
+import { Button } from '../ui/Button'
+import type { Role } from '@/models'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
 }
+
 type MenuItem = {
 	title: string
 	url: string
@@ -69,6 +71,7 @@ const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
 	admin: [
 		{ title: 'Quản lý giảng viên', url: '/manage-lecturers', icon: Users },
 		{ title: 'Quản lý sinh viên', url: '/manage-students', icon: Users },
+		{ title: 'Quản lý AI thông minh', url: '/manage-ai', icon: BotMessageSquare },
 		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }

@@ -1,11 +1,12 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Calendar, ChevronDown, ChevronUp, Eye, Loader2, Send, Star, Trash2, Users } from 'lucide-react'
+import { Dialog } from '@/components/ui/Dialog'
+import { Calendar, ChevronDown, ChevronUp, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
-import type { Topic } from '@/models'
-import { useDeleteRegistrationMutation } from '@/services/registrationApi'
+import { useDeleteRegistrationMutation } from '../../../../../services/registrationApi'
 import { ConfirmCancelRegistration } from '../ConfirmCancelRegistration'
 import { useNavigate } from 'react-router-dom'
+
+import type { Topic } from '@/models'
 import { toast } from '@/hooks/use-toast'
 
 export const TopicRegisteredCard: React.FC<{
@@ -75,7 +76,7 @@ export const TopicRegisteredCard: React.FC<{
 	}
 
 	return (
-		<Card key={topic._id} className={`transition-shadow hover:cursor-pointer hover:shadow-lg`}>
+		<Card key={topic._id} className={`p-2 transition-shadow hover:cursor-pointer hover:shadow-lg`}>
 			<CardHeader onClick={() => setOpenDetail(!openDetail)}>
 				<div className='flex items-start justify-between space-x-4'>
 					<div>
@@ -143,17 +144,15 @@ export const TopicRegisteredCard: React.FC<{
 						)}
 					</div>
 
-					<div className='flex gap-2'>
-						{/* dialog xác nhận */}
-						<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-							<ConfirmCancelRegistration
-								isCanceling={isCanceling}
-								onUnRegister={() => handleUnRegister()}
-								onClose={() => setConfirmOpen(false)}
-							/>
-						</Dialog>
-						{renderDialogActions()}
-					</div>
+					<div className='flex gap-2'>{renderDialogActions()}</div>
+					{/* dialog xác nhận */}
+					<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+						<ConfirmCancelRegistration
+							isCanceling={isCanceling}
+							onUnRegister={() => handleUnRegister()}
+							onClose={() => setConfirmOpen(false)}
+						/>
+					</Dialog>
 				</CardContent>
 			)}
 		</Card>

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { Breadcrumbs } from '../ui/Breadcrumbs'
 import { BreadcrumbProvider } from '../../contexts/BreadcrumbContext'
 import { useAppSelector } from '../../store'
+import { AIAssistant } from '../ai-assistant/AIAssistant'
 
 interface LayoutProps {
 	children: ReactNode
@@ -33,7 +34,7 @@ const Layout = ({ children }: LayoutProps) => {
 							</div>
 						</footer>
 					</div>
-					<div>{/* Placeholder for AIAssistant component */}</div>
+					<AIAssistant />
 				</div>
 			</SidebarProvider>
 		</BreadcrumbProvider>

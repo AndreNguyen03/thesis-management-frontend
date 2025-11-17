@@ -9,11 +9,10 @@ import {
 	PaginationNext,
 	PaginationPrevious
 } from '@/components/ui/pagination'
-import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 import { FilterX, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Input } from '@/components/ui'
+import { Button, Input } from '@/components/ui'
 import { EmptyState } from '../EmptyState'
 import { LoadingState } from '../LoadingState'
 import type { DataTableProps, QueryParams, SearchValue, SortOrder, TableAction } from './types'

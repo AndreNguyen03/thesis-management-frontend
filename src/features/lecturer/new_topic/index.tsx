@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -12,6 +11,7 @@ import { Save, X, Users, BookOpen, Tag, ListChecks, Link, Plus, FileText } from 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { usePageBreadcrumb } from '@/hooks'
+import { Button } from '@/components/ui'
 
 interface Student {
 	id: string
@@ -298,6 +298,7 @@ function CreateTopic() {
 									<SelectItem value='da1'>Đồ án 1</SelectItem>
 									<SelectItem value='da2'>Đồ án 2</SelectItem>
 									<SelectItem value='kltn'>Khóa luận tốt nghiệp</SelectItem>
+									<SelectItem value='nckh'>Nghiên cứu khoa học</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>

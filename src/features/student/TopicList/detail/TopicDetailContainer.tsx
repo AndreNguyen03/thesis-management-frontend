@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ChevronLeft } from 'lucide-react'
 import { useGetTopicByIdQuery } from '../../../../services/topicApi'
 import TopicDetail from './TopicDetail'
 import RelevantInformation from './RelevantInformation'
-import type { Topic, ITopicDetail } from '@/models'
 import { useEffect, useState } from 'react'
+import type { ITopicDetail } from '@/models'
+import { Dialog, DialogContent } from '@/components/ui/Dialog'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
@@ -44,7 +44,7 @@ export const TopicDetailContainer = () => {
 			<Dialog open={true} onOpenChange={() => navigate(-1)}>
 				<DialogContent
 					hideClose={true}
-					className='flex h-full flex-col overflow-auto rounded-xl bg-white p-8 shadow-xl sm:min-w-full'
+					className='flex h-full flex-col overflow-auto rounded-xl bg-[#F2F4FF] p-8 shadow-xl sm:min-w-full sm:overflow-hidden'
 				>
 					<div className='px-4'>
 						<Button variant='back' className='w-fit' onClick={() => navigate(-1)}>
@@ -52,13 +52,12 @@ export const TopicDetailContainer = () => {
 							<p>Quay lại</p>
 						</Button>
 					</div>
-					<div className='grid space-x-5 md:grid-cols-5'>
+					<div className='grid space-x-5 px-4 md:grid-cols-5'>
 						<TopicDetail topic={topic} onUpdate={handleUpdate} />
 						<RelevantInformation
 							studentNames={topic.studentNames}
 							lecturerNames={topic.lecturerNames}
 							historyRegistrations={topic.allUserRegistrations}
-							onUpdate={handleUpdate}
 						/>
 					</div>
 				</DialogContent>

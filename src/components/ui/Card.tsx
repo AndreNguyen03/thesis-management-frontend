@@ -3,10 +3,7 @@ import React from 'react'
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
 	return (
-		<div
-			className={cn('p-10 rounded-2xl border bg-card text-card-foreground shadow-sm', className)}
-			{...props}
-		/>
+		<div className={cn('rounded-2xl border bg-card p-10 text-card-foreground shadow-sm', className)} {...props} />
 	)
 }
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
