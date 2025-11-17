@@ -5,7 +5,7 @@ import { PasswordInput } from './PasswordInput'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLoginMutation } from '../../../services/authApi'
 import { getDeviceInfo } from '@/utils/utils'
-import type { ApiError } from 'models/api'
+import type { ApiError } from '@/models/api'
 import { toast } from 'react-toastify'
 
 type LoginFormValues = {

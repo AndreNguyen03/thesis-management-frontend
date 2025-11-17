@@ -1,7 +1,7 @@
 import type { AcademicTitle } from '@/features/admin/manage_lecturer/types'
 
 // Role
-export type Role = 'student' | 'lecturer' | 'admin'
+export type Role = 'student' | 'lecturer' | 'admin' | 'faculty-board'
 
 // Student Project
 export interface StudentProject {
@@ -78,7 +78,7 @@ export interface BaseUser {
 }
 
 // Student user
-export interface StudentUser  {
+export interface StudentUser {
 	id: string
 	fullName: string
 	email: string
@@ -104,8 +104,8 @@ export interface LecturerProfile {
 	avatarUrl?: string
 	title: AcademicTitle
 	facultyId: string
-    facultyName: string
-	role: 'lecturer' 
+	facultyName: string
+	role: 'lecturer'
 	isActive: boolean
 	areaInterest?: string[]
 	researchInterests?: string[]
@@ -120,3 +120,20 @@ export interface AdminUser extends BaseUser {
 	role: 'admin'
 }
 
+// department-board user
+export interface FacultyBoardProfile {
+	userId: string
+	fullName: string
+	email: string
+	phone?: string
+	avatarUrl?: string
+	title: AcademicTitle
+	facultyId: string
+	facultyName: string
+	role: 'faculty-board'
+	isActive: boolean
+	createdAt?: Date
+	updatedAt?: Date
+}
+
+export type AppUser = StudentUser | LecturerProfile | AdminUser | FacultyBoardProfile

@@ -1,6 +1,6 @@
 export * from './button'
 export * from './FormInput'
-export * from './Card'
+export * from './card'
 export * from './Dropdown'
 export * from './DropdownItem'
 export * from './DropdownLabel'

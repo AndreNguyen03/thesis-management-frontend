@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { SerializedError } from '@reduxjs/toolkit'
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import type { ReactNode } from 'react'
 export type SortOrder = 'asc' | 'desc'
 export interface QueryParams {
 	page: number
-	page_size: number
+	limit: number
 	search_by: string
 	query: string
 	sort_by: string
@@ -18,7 +20,7 @@ export interface TableColumn<T> {
 	title: string
 	sortable?: boolean
 	searchable?: boolean
-    
+
 	render?: (value: any, row: T) => ReactNode
 	renderSearchInput?: (params: {
 		value: SearchValue
@@ -40,7 +42,7 @@ export interface DataTableProps<T> {
 	columns: TableColumn<T>[]
 	actions?: TableAction<T>[]
 	isLoading?: boolean
-	error?: Error | null
+	error?: FetchBaseQueryError | SerializedError | null
 	totalRecords?: number
 	pageSize?: number
 	searchFields?: Record<string, string>
