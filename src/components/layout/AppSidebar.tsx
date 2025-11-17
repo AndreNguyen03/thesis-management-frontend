@@ -66,8 +66,8 @@ const menuItems: {
 		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp }
 	],
 	lecturer: [
-		{ title: 'Đăng đề tài', url: '/create-thesis', icon: PlusCircle },
-		{ title: 'Quản lý đề tài', url: '/manage-thesis', icon: FileText },
+		{ title: 'Đăng đề tài', url: '/create-topic', icon: PlusCircle },
+		{ title: 'Quản lý đề tài', url: '/manage-topic', icon: FileText },
 		{ title: 'Xét duyệt đăng ký', url: '/approve-registrations', icon: UserCheck },
 		{ title: 'Nhóm của tôi', url: '/my-groups', icon: Users },
 		{ title: 'Thư viện số', url: '/library', icon: Library },

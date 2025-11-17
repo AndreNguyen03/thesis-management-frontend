@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { CardContent } from '@/components/ui/Card'
-import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Download, Eye, X } from 'lucide-react'
 import CSVPreviewModal from './CSVPreviewModal'
+import { Button } from '@/components/ui'
 
 export interface LecturerRecord {
 	name: string

@@ -3,8 +3,7 @@ export interface GetChatbotVerDto {
 	name: string
 	description: string
 	status: string
-	knowledge_sourceIds: string[]
-	query_suggestions: GetQuerySuggestionDto[]
+	query_suggestions: GetQuerySuggestionDto[] 
 	updatedAt: Date
 }
 

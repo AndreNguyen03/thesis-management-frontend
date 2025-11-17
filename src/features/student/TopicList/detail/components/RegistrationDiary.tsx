@@ -11,7 +11,7 @@ const RegistrationDiary: React.FC<{ historyRegistrations: IRegistration[] }> = (
 		<div className='col-span-2 row-span-1 flex w-full flex-col space-y-5'>
 			<TitleBox title='Nhật ký đăng ký' isExpanded={isExpanded} onClick={() => setIsExpanded(!isExpanded)} />
 			{isExpanded && (
-				<div className='max-h-100 flex flex-col items-center justify-center space-y-5 overflow-y-auto'>
+				<div className='max-h-100 flex flex-col items-center justify-center space-y-6 overflow-y-auto py-2'>
 					{historyRegistrations.length > 0 ? (
 						historyRegistrations.map((reg, indx) => {
 							return (

@@ -1,6 +1,6 @@
-import type { LecturerUser } from '@/models'
+import type { LecturerProfile } from '@/models'
 
-export function ContactInfo({ lecturer }: { lecturer: LecturerUser }) {
+export function ContactInfo({ lecturer }: { lecturer: LecturerProfile }) {
 	return (
 		<div className='grid gap-4 md:grid-cols-2'>
 			<div className='flex items-center gap-2'>
@@ -8,9 +8,6 @@ export function ContactInfo({ lecturer }: { lecturer: LecturerUser }) {
 			</div>
 			<div className='flex items-center gap-2'>
 				📞 <span>{lecturer.phone}</span>
-			</div>
-			<div className='flex items-center gap-2 md:col-span-2'>
-				📍 <span>{lecturer.office}</span>
 			</div>
 		</div>
 	)

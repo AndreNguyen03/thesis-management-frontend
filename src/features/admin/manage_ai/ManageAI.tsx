@@ -6,15 +6,14 @@ import ManageChatbot from './manage_chatbot/ManageChatbot'
 
 const ManageAI = () => {
 	return (
-		<div className='space-y-8'>
+		<div className='space-y-2'>
 			<Tabs defaultValue='overview' className='w-full space-y-8'>
 				<TabsList className='grid w-full grid-cols-5'>
 					<TabsTrigger value='overview'>Tổng quan</TabsTrigger>
 					<TabsTrigger value='manageChatbot'>Quản lý Chatbot</TabsTrigger>
-					<TabsTrigger value='manageAISuggestion'>Quản lý gợi ý AI</TabsTrigger>s{' '}
+					<TabsTrigger value='manageAISuggestion'>Quản lý gợi ý AI</TabsTrigger>
 				</TabsList>
-				<TabsContent value='overview' className='space-y-6'>
-					{/* Stats Cards */}
+				<TabsContent value='overview' className='space-y-4'>
 					<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>
 						<Card className='bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60'>
 							<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -40,18 +39,6 @@ const ManageAI = () => {
 							</CardContent>
 						</Card>
 					</div>
-
-					{/* Recent Activities */}
-					{/* <Card className='bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60'>
-						<CardHeader>
-							<CardTitle>Hoạt động gần đây</CardTitle>
-							<CardDescription>Các hoạt động mới nhất trong hệ thống</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div className='space-y-4'>hello</div>
-						</CardContent>
-					</Card> */}
-
 					{/* Quick Actions */}
 					<div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
 						<Card className='bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60'>

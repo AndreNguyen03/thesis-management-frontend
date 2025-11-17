@@ -35,7 +35,6 @@ export const ManageLecturerPage = () => {
 		fullName: 'Họ và tên',
 		isActive: 'Trạng thái',
 		phone: 'Số điện thoại',
-		created_at: 'Ngày tạo'
 	}
 
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Quản lý giảng viên' }])
@@ -181,7 +180,7 @@ export const ManageLecturerPage = () => {
 					<h1 className='text-2xl font-bold'>Danh sách giảng viên</h1>
 				</header>
 
-				<section aria-label='Bảng quản lý quản trị viên'>
+				<section aria-label='Bảng quản lý giảng viên'>
 					<DataTable
 						data={data?.datas || []}
 						columns={columns}
@@ -198,15 +197,14 @@ export const ManageLecturerPage = () => {
 						}}
 						toolbar={
 							<div className='flex gap-2'>
-								{/* Nút Thêm quản trị viên */}
 								<Button
 									size='default'
 									className='flex items-center gap-2'
 									onClick={() => setIsCreateDialogOpen(true)}
-									aria-label='Thêm quản trị viên'
+									aria-label='Thêm giảng viên'
 								>
 									<Plus className='h-4 w-4' aria-hidden='true' />
-									<span className='hidden sm:inline'>Thêm quản trị viên</span>
+									<span className='hidden sm:inline'>Thêm giảng viên</span>
 								</Button>
 
 								{/* Nút Tạo hàng loạt */}
@@ -214,7 +212,7 @@ export const ManageLecturerPage = () => {
 									size='default'
 									className='flex items-center gap-2'
 									onClick={() => setIsBulkDialogOpen(true)}
-									aria-label='Tạo quản trị viên hàng loạt'
+									aria-label='Tạo giảng viên hàng loạt'
 									variant='outline'
 								>
 									<Plus className='h-4 w-4' aria-hidden='true' />

@@ -17,6 +17,7 @@ import Unauthorized from '@/features/shared/authorize/Unauthorized'
 import ManageAI from '@/features/admin/manage_ai/ManageAI'
 import { RequireAuth } from './RequireAuth'
 
+import { CreateTopic } from '@/features/lecturer/new_topic'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -70,6 +71,7 @@ export const router = createBrowserRouter([
 				path: 'manage-students',
 				element: <ManageStudentPage />
 			},
+			  { path: 'create-topic', element: <CreateTopic /> },
 
 			{
 				path: 'manage-ai',

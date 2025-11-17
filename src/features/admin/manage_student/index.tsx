@@ -30,11 +30,11 @@ import {
 
 export const ManageStudentPage = () => {
 	const searchFields = {
+        studentCode: 'Mã sinh viên',
 		email: 'Email',
 		fullName: 'Họ và tên',
 		isActive: 'Trạng thái',
 		phone: 'Số điện thoại',
-		created_at: 'Ngày tạo'
 	}
 
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Quản lý sinh viên' }])
@@ -54,7 +54,6 @@ export const ManageStudentPage = () => {
 	})
 
 	const { data, isLoading, error } = useGetStudentsQuery(queryParams)
-    console.log('student :', data)
 	const [createStudent, { isLoading: isCreating }] = useCreateStudentMutation()
 	const [updateStudent, { isLoading: isUpdating }] = useUpdateStudentMutation()
 	const [deleteStudent] = useDeleteStudentMutation()
