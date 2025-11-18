@@ -1,6 +1,6 @@
 import type { GetChatbotVerDto } from '@/models/chatbot-version'
 import { baseApi, type ApiResponse } from './baseApi'
-import type { GetPaginatedKnowledgeDto, KnowledgeSource } from '@/models/knowledge-source.model'
+import type { GetPaginatedKnowledgeDto } from '@/models/knowledge-source.model'
 
 export const chatbotApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({

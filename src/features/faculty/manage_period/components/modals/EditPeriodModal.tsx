@@ -1,13 +1,6 @@
 import { Button, Input } from '@/components/ui'
 import { Calendar } from '@/components/ui/calendar'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle
-} from '@/components/ui/dialog'
+
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
@@ -16,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import type { Period } from '@/models/period'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 
 interface EditPeriodModalProps {
 	open: boolean

@@ -47,7 +47,7 @@ export const TopicRegisteredChildren = () => {
 	const [selectedField, setSelectedField] = useState('Tất cả lĩnh vực')
 
 	const [sortBy, setSortBy] = useState('newest')
-	const filteredTopic = registerTopics.filter((topic) => {
+	const filteredTopic = registerTopics?.filter((topic) => {
 		const matchesSearch =
 			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
