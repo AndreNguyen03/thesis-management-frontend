@@ -2,7 +2,7 @@ import type { Faculty } from './faculty'
 
 export type PeriodStatus = 'ongoing' | 'completed'
 
-export type PhaseType = 'submit_topic' | 'open_registration' | 'execution' | 'completion'
+export type PhaseType = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion'
 
 export type TopicStatus =
 	// Pha 1 - Nộp đề tài
@@ -40,11 +40,10 @@ export interface Period {
 }
 
 export interface CreatePeriodDto {
-    name: string,
-    startTime: Date,  
-    endTime: Date
+	name: string
+	startTime: Date
+	endTime: Date
 }
-
 
 export interface Topic {
 	id: string

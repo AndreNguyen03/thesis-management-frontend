@@ -107,7 +107,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 			key: 'currentPhase',
 			title: 'Pha hiện tại',
 			sortable: false,
-			render: (value: PhaseType) => <Badge variant='outline'>Pha {value}</Badge>
+			render: (value: PhaseType) => <Badge variant='outline'>{value !== 'empty' ? `Pha ${value}` : "Hiện trống"}</Badge>
 		}
 	]
 
