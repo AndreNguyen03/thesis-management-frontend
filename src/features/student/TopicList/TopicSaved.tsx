@@ -35,7 +35,7 @@ export const ThesisSaved = () => {
 	const [selectedField, setSelectedField] = useState('Tất cả lĩnh vực')
 
 	const [sortBy, setSortBy] = useState('newest')
-	const filteredTopics = topics.filter((topic) => {
+	const filteredTopics = topics?.filter((topic) => {
 		const matchesSearch =
 			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||

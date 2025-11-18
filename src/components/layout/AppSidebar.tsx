@@ -76,7 +76,7 @@ const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	],
-    'faculty-board': [
+	faculty_board: [
 		{ title: 'Quản lý giảng viên khoa', url: '/manage-lecturers', icon: Users },
 		{ title: 'Quản lý sinh viên khoa', url: '/manage-students', icon: Users },
 		{ title: 'Quản lý đợt đề tài', url: '/manage-period', icon: Users },
@@ -163,7 +163,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 						to={item.url}
 						end={item.url === '/'}
 						className={({ isActive }) =>
-							`flex items-center gap-3 rounded-md px-3 py-2 transition-colors ${
+							`flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors ${
 								isActive
 									? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
 									: 'hover:bg-gray-100'
@@ -181,7 +181,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	return (
 		<div className={`border-r border-gray-200 bg-white ${isOpen ? 'w-50' : 'w-16'} transition-all duration-300`}>
 			<div
-				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-64' : 'w-16'} transition-all duration-300`}
+				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit' : 'w-16'} transition-all duration-300`}
 			>
 				<div className='px-3 py-4'>
 					<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
@@ -201,14 +201,14 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 								{userRole === 'student' && 'Sinh viên'}
 								{userRole === 'lecturer' && 'Giảng viên'}
 								{userRole === 'admin' && 'Quản trị'}
-								{userRole === 'faculty-board' && 'Ban chủ nhiệm khoa'}
+								{userRole === 'faculty_board' && 'Ban chủ nhiệm khoa'}
 							</div>
 						)}
 						{renderMenuItems(menuItems[userRole])}
 					</div>
 
 					{/* AI Chat */}
-					<div className='mb-6'>
+					{/* <div className='mb-6'>
 						<NavLink
 							to='/ai-chat'
 							className={({ isActive }) =>
@@ -220,7 +220,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 							<MessageSquare className='h-4 w-4' />
 							{isOpen && <span>Hỏi AI Assistant</span>}
 						</NavLink>
-					</div>
+					</div> */}
 
 					{/* Footer Menu */}
 					<div className='mt-auto'>{renderMenuItems(menuItems.footer)}</div>

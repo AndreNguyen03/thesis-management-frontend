@@ -25,7 +25,11 @@ export const periodApi = baseApi.injectEndpoints({
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<PaginatedResponse<Period>>) => response.data,
+			transformResponse: (response: ApiResponse<any>) => ({
+				data: response.data.data,
+				meta: response.data.meta,
+				links: response.data.links,
+			}),
 			providesTags: ['Periods']
 		}),
 
@@ -148,5 +152,5 @@ export const {
 	useCreateCompletionPhaseMutation,
 	useDeletePeriodMutation,
 	useGetPeriodsQuery,
-    useCreatePeriodMutation
+	useCreatePeriodMutation
 } = periodApi

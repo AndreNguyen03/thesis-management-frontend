@@ -13,6 +13,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
 	const user = useAppSelector((state) => state.auth.user)
+	console.log(`Layout user :: `, user)
 	return (
 		<BreadcrumbProvider>
 			<SidebarProvider defaultOpen={true}>

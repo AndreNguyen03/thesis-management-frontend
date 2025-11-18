@@ -108,12 +108,6 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 			title: 'Pha hiện tại',
 			sortable: false,
 			render: (value: PhaseType) => <Badge variant='outline'>Pha {value}</Badge>
-		},
-		{
-			key: 'totalTopics',
-			title: 'Số đề tài',
-			sortable: true,
-			render: (value: number) => <div className='text-center font-semibold'>{value}</div>
 		}
 	]
 
@@ -160,7 +154,6 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 					actions={actions}
 					isLoading={isLoading}
 					error={error}
-					totalRecords={response?.totalRecords || 0}
 					// totalRecords={response?.length || 0}
 					pageSize={queryParams.limit}
 					onQueryChange={setQueryParams}

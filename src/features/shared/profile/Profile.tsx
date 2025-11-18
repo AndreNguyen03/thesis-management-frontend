@@ -14,11 +14,13 @@ export function Profile() {
 
 	switch (role) {
 		case 'student':
-			return <StudentProfile student={user}/>
+			return <StudentProfile student={user} />
 		case 'lecturer':
-			return <LecturerProfilePage lecturer={user}/>
+			return <LecturerProfilePage lecturer={user} />
 		case 'admin':
 			return <div>Admin profile</div>
+		case 'faculty_board':
+			return <div>Faculty Board profile</div>
 		default:
 			return <div>Role không xác định</div>
 	}

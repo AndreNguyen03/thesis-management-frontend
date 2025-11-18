@@ -1,7 +1,7 @@
 import type { AcademicTitle } from '@/features/admin/manage_lecturer/types'
 
 // Role
-export type Role = 'student' | 'lecturer' | 'admin' | 'faculty-board'
+export type Role = 'student' | 'lecturer' | 'admin' | 'faculty_board'
 
 // Student Project
 export interface StudentProject {
@@ -127,10 +127,9 @@ export interface FacultyBoardProfile {
 	email: string
 	phone?: string
 	avatarUrl?: string
-	title: AcademicTitle
 	facultyId: string
 	facultyName: string
-	role: 'faculty-board'
+	role: 'faculty_board'
 	isActive: boolean
 	createdAt?: Date
 	updatedAt?: Date
