@@ -1,11 +1,51 @@
+import type { GetFieldNameReponseDto } from './field.model'
+import type { GetPaginatedObject } from './paginated-object.model'
 import type { IRegistration } from './registration.model'
+import type { GetRequirementNameReponseDto } from './requirement.model'
+import type { MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 
-export interface Topic {
+export interface DraftTopic {
 	_id: string
 
 	title: string
 
 	description: string
+
+	type: string
+
+	major: string
+
+	periodId: string
+
+	maxStudents: number
+
+	createByInfo: MiniActorInforDto
+
+	createdAt: Date
+
+	updatedAt: Date
+
+	currentStatus: string
+
+	currentPhase: string
+
+	fields: GetFieldNameReponseDto[]
+
+	requirements: GetRequirementNameReponseDto[]
+
+	students: ResponseMiniStudentDto[]
+
+	lecturers: ResponseMiniLecturerDto[]
+}
+export interface PaginatedDraftTopics extends GetPaginatedObject {
+	data: DraftTopic[]
+}
+export interface Topic {
+	_id: string
+
+	title: string
+
+	description: string	
 
 	type: string
 

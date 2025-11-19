@@ -7,7 +7,7 @@ import { getPhaseStats, mockTopicsPhase1, mockTopicsPhase2, mockTopicsPhase3, mo
 import { Settings, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
-import type { PeriodPhase, PhaseType } from '@/models/period'
+import type { PeriodPhase, PhaseType } from '@/models/period.model'
 import { PhaseInfo } from '@/utils/utils'
 interface PhaseContentProps {
 	phase: PeriodPhase

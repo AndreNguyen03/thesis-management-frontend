@@ -5,7 +5,7 @@ import { Calendar, Users, Bell, Save, Info } from 'lucide-react'
 import { useState } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog as PreviewDialog, DialogContent as PreviewContent } from '@/components/ui/dialog'
-import type { PhaseType } from '@/models/period'
+import type { PhaseType } from '@/models/period.model'
 import { PhaseInfo, PhaseStatusMap } from '@/utils/utils'
 
 // Mock danh sách giảng viên có sẵn

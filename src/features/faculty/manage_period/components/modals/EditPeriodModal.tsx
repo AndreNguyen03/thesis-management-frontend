@@ -7,8 +7,15 @@ import { CalendarIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
-import type { Period } from '@/models/period'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
+import type { Period } from '@/models/period.model'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle
+} from '@/components/ui/Dialog'
 
 interface EditPeriodModalProps {
 	open: boolean
@@ -32,7 +39,7 @@ export function EditPeriodModal({ open, onOpenChange, period, onSubmit }: EditPe
 			setEndDate(period.endTime ? new Date(period.endTime) : undefined)
 		}
 	}, [period])
-    
+
 	const handleSubmit = () => {
 		if (period && name && startDate && endDate) {
 			onSubmit({

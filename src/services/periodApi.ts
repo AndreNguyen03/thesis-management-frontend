@@ -1,6 +1,13 @@
 import { type QueryParams } from '@/components/ui/DataTable/types'
 import type { PaginatedResponse } from '@/models'
-import { type CreatePeriodDto, type Period, type PeriodBackend, type PeriodPhase } from '@/models/period'
+import {
+	type CreatePeriodDto,
+	type GetCustomMiniPeriodInfoRequestDto,
+	type GetCustomPeriodDetailRequestDto,
+	type Period,
+	type PeriodBackend,
+	type PeriodPhase
+} from '@/models/period.model'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
 
 export const periodApi = baseApi.injectEndpoints({
@@ -28,7 +35,7 @@ export const periodApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<any>) => ({
 				data: response.data.data,
 				meta: response.data.meta,
-				links: response.data.links,
+				links: response.data.links
 			}),
 			providesTags: ['Periods']
 		}),
@@ -140,6 +147,23 @@ export const periodApi = baseApi.injectEndpoints({
 				body
 			}),
 			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
+		}),
+
+		//getSubmissionStatus
+		getSubmissionStatus: builder.query<GetCustomPeriodDetailRequestDto, void>({
+			query: () => ({
+				url: '/periods/get-submission-status',
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<GetCustomPeriodDetailRequestDto>) => response.data
+		}),
+		//Lấy thông tin của kì hiện tại ở khoa của người dùng
+		getCurrentPeriodInfo: builder.query<GetCustomMiniPeriodInfoRequestDto | null, void>({
+			query: () => ({
+				url: '/periods/current-period/info',
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<GetCustomMiniPeriodInfoRequestDto | null>) => response.data
 		})
 	})
 })
@@ -152,5 +176,7 @@ export const {
 	useCreateCompletionPhaseMutation,
 	useDeletePeriodMutation,
 	useGetPeriodsQuery,
-	useCreatePeriodMutation
+	useCreatePeriodMutation,
+	useGetSubmissionStatusQuery,
+	useGetCurrentPeriodInfoQuery
 } = periodApi

@@ -22,6 +22,7 @@ import { ManagePeriodPage } from '@/features/faculty/manage_period'
 import { ManageFacultyStudentPage } from '@/features/faculty/manage_faculty_student'
 import { ManageFacultyLecturerPage } from '@/features/faculty/manage_faculty_lecturer'
 import DetailPeriodPage from '@/features/faculty/manage_period/DetailPeriod'
+import LecturerManageTopics from '@/features/lecturer/manage_topic'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -75,12 +76,13 @@ export const router = createBrowserRouter([
 				path: 'manage-students',
 				element: <ManageStudentPage />
 			},
+			// Giảng viên
 			{ path: 'create-topic', element: <CreateTopic /> },
-
+			{ path: 'manage-topic', element: <LecturerManageTopics /> },
 			{
 				path: 'manage-ai',
 				element: (
-					//<RequireAuth allowedRoles={['admin']}>
+					//manage-ai<RequireAuth allowedRoles={['admin']}>
 					<ManageAI />
 					//</RequireAuth>
 				)

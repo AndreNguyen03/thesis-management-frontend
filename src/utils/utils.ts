@@ -1,4 +1,4 @@
-import type { PhaseType } from '@/models/period'
+import type { PhaseType } from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))

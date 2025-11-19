@@ -5,7 +5,7 @@ import { PhaseContent } from './components/PhaseContent'
 import { Button } from '@/components/ui/button'
 import { mockPeriodDetail } from './mockData'
 import { usePageBreadcrumb } from '@/hooks'
-import type { PeriodPhase, PhaseType } from '@/models/period'
+import type { PeriodPhase, PhaseType } from '@/models/period.model'
 
 // import { useGetPeriodDetailQuery } from '@/services/periodApi'
 

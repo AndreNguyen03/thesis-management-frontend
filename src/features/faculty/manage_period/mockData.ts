@@ -1,4 +1,4 @@
-import type { RegistrationPeriod, Topic, PhaseStats, PhaseType } from '@/models/period'
+import type { RegistrationPeriod, Topic, PhaseStats, PhaseType } from '@/models/period.model'
 
 export const mockPeriods: RegistrationPeriod[] = [
 	{
@@ -154,7 +154,7 @@ export const getPhaseStats = (phase: PhaseType): PhaseStats[] => {
 }
 
 // src/modules/manage-period/mock/detailPeriod.ts
-import type { PeriodBackend } from '@/models/period'
+import type { PeriodBackend } from '@/models/period.model'
 
 export const mockPeriodDetail: PeriodBackend = {
 	id: 'p1',
