@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { Check, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import type { PeriodPhase, PhaseType } from '@/models/period'
+import type { PeriodPhase, PhaseType } from '@/models/period.model'
 import { PhaseInfo } from '@/utils/utils'
 
 interface PhaseStepBarProps {

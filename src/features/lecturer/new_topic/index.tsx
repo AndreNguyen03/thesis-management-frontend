@@ -295,8 +295,6 @@ function CreateTopic() {
 									<SelectValue placeholder='Chọn loại đề tài...' />
 								</SelectTrigger>
 								<SelectContent className='bg-popover'>
-									<SelectItem value='da1'>Đồ án 1</SelectItem>
-									<SelectItem value='da2'>Đồ án 2</SelectItem>
 									<SelectItem value='kltn'>Khóa luận tốt nghiệp</SelectItem>
 									<SelectItem value='nckh'>Nghiên cứu khoa học</SelectItem>
 								</SelectContent>

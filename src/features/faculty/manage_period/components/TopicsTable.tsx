@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { PhaseType, Topic } from '@/models/period'
+import type { PhaseType, Topic } from '@/models/period.model'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

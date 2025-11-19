@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { PhaseStats } from '@/models/period'
+import type { PhaseStats } from '@/models/period.model'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
@@ -30,7 +30,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: index * 0.1 }}
 				>
-					<Card className={cn('transition-all hover:shadow-md px-4 py-2', getVariantClasses(stat.variant))}>
+					<Card className={cn('px-4 py-2 transition-all hover:shadow-md', getVariantClasses(stat.variant))}>
 						<CardHeader className='pb-2'>
 							<CardTitle className='text-sm font-medium text-muted-foreground'>{stat.label}</CardTitle>
 						</CardHeader>

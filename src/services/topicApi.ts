@@ -1,5 +1,5 @@
 import { baseApi, type ApiResponse } from './baseApi'
-import type { CanceledRegisteredTopic, Topic, ITopicDetail } from '@/models'
+import type { CanceledRegisteredTopic, Topic, ITopicDetail, DraftTopic, PaginatedDraftTopics } from '@/models'
 
 export const topicApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -35,6 +35,10 @@ export const topicApi = baseApi.injectEndpoints({
 		getCanceledRegisterTopics: builder.query<CanceledRegisteredTopic[], void>({
 			query: () => `/topics/canceled-registered-topics`,
 			transformResponse: (response: ApiResponse<CanceledRegisteredTopic[]>) => response.data
+		}),
+		getDraftTopics: builder.query<PaginatedDraftTopics, void>({
+			query: () => `/topics/lecturer/get-draft-topics`,
+			transformResponse: (response: ApiResponse<PaginatedDraftTopics>) => response.data
 		})
 	}),
 	overrideExisting: false
@@ -48,5 +52,6 @@ export const {
 	useGetSavedTopicsQuery,
 	useLazyGetTopicByIdQuery,
 	useGetRegisteredTopicQuery,
-	useGetCanceledRegisterTopicsQuery
+	useGetCanceledRegisterTopicsQuery,
+	useGetDraftTopicsQuery
 } = topicApi

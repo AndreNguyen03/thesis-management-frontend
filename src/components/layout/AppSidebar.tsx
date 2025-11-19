@@ -9,7 +9,6 @@ import {
 	FileText,
 	LayoutDashboard,
 	Library,
-	MessageSquare,
 	PlusCircle,
 	Search,
 	Settings,
@@ -22,6 +21,7 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import type { Role } from '@/models'
+import { useGetCurrentPeriodInfoQuery } from '@/services/periodApi'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
@@ -34,10 +34,17 @@ type MenuItem = {
 	children?: MenuItem[]
 }
 
-const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
+const menuItems: Record<Role | 'common' | 'footer' | 'period_info', MenuItem[]> = {
 	common: [
 		{
 			title: 'Dashboard',
+			url: '/',
+			icon: LayoutDashboard
+		}
+	],
+	period_info: [
+		{
+			title: '',
 			url: '/',
 			icon: LayoutDashboard
 		}
@@ -92,7 +99,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const location = useLocation()
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
-
+	const { data: periodInfoData } = useGetCurrentPeriodInfoQuery()
 	function isActive(path: string) {
 		// Logic chính xác hơn cho active state của sub-item
 		if (path === '/' && currentPath === '/') return true
@@ -104,94 +111,117 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const handleMenuClick = (title: string) => {
 		setOpenMenus((prev) => (prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]))
 	}
+	const handlePeriodInfo = (period_info: MenuItem[]) => {
+		if (periodInfoData) {
+			period_info[0].title = `Đợt hiện tại: ${periodInfoData.name}`
+			;((period_info[0].url = `/period/${periodInfoData._id}`), (period_info[0].icon = BookOpen))
+		}
+		return period_info
+	}
+	const renderMenuItems = (items: typeof menuItems.common) => {
+		return (
+			<div className='space-y-1'>
+				{items.map((item) => {
+					const isSubMenuOpen = openMenus.includes(item.title)
+					const isParentActive = item.children ? currentPath.startsWith(item.url) : isActive(item.url)
 
-	const renderMenuItems = (items: typeof menuItems.common) => (
-		<div className='space-y-1'>
-			{items.map((item) => {
-				const isSubMenuOpen = openMenus.includes(item.title)
-				const isParentActive = item.children ? currentPath.startsWith(item.url) : isActive(item.url)
+					if (item.children) {
+						return (
+							<div key={item.title}>
+								<button
+									onClick={() => handleMenuClick(item.title)}
+									className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors ${
+										isParentActive
+											? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
+											: 'hover:bg-gray-100'
+									}`}
+								>
+									<div className='flex items-center gap-3'>
+										<item.icon className='h-4 w-4' />
+										{isOpen && <span>{item.title}</span>}
+									</div>
+									{isOpen && (
+										<ChevronDown
+											className={`h-4 w-4 transform transition-transform ${isSubMenuOpen ? 'rotate-180' : ''}`}
+										/>
+									)}
+								</button>
+								{isOpen && isSubMenuOpen && (
+									<div className='ml-7 mt-1 space-y-1 border-l pl-3'>
+										{item.children.map((sub) => (
+											<NavLink
+												key={sub.title}
+												to={sub.url}
+												end={sub.url === '/topics'} // Đảm bảo "Tất cả đề tài" không active khi ở trang con
+												className={({ isActive }) =>
+													`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
+														isActive
+															? 'bg-blue-50 font-semibold text-blue-700'
+															: 'text-gray-600 hover:bg-gray-50'
+													}`
+												}
+											>
+												<sub.icon className='h-3 w-3' />
+												<span>{sub.title}</span>
+											</NavLink>
+										))}
+									</div>
+								)}
+							</div>
+						)
+					}
 
-				if (item.children) {
 					return (
-						<div key={item.title}>
-							<button
-								onClick={() => handleMenuClick(item.title)}
-								className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors ${
-									isParentActive
+						<NavLink
+							key={item.title}
+							to={item.url}
+							end={item.url === '/'}
+							className={({ isActive }) =>
+								`flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors ${
+									isActive
 										? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
 										: 'hover:bg-gray-100'
-								}`}
-							>
-								<div className='flex items-center gap-3'>
-									<item.icon className='h-4 w-4' />
-									{isOpen && <span>{item.title}</span>}
-								</div>
-								{isOpen && (
-									<ChevronDown
-										className={`h-4 w-4 transform transition-transform ${isSubMenuOpen ? 'rotate-180' : ''}`}
-									/>
-								)}
-							</button>
-							{isOpen && isSubMenuOpen && (
-								<div className='ml-7 mt-1 space-y-1 border-l pl-3'>
-									{item.children.map((sub) => (
-										<NavLink
-											key={sub.title}
-											to={sub.url}
-											end={sub.url === '/topics'} // Đảm bảo "Tất cả đề tài" không active khi ở trang con
-											className={({ isActive }) =>
-												`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
-													isActive
-														? 'bg-blue-50 font-semibold text-blue-700'
-														: 'text-gray-600 hover:bg-gray-50'
-												}`
-											}
-										>
-											<sub.icon className='h-3 w-3' />
-											<span>{sub.title}</span>
-										</NavLink>
-									))}
-								</div>
-							)}
-						</div>
+								}`
+							}
+						>
+							<item.icon className='h-4 w-4' />
+							{isOpen && <span>{item.title}</span>}
+						</NavLink>
 					)
-				}
-
-				return (
-					<NavLink
-						key={item.title}
-						to={item.url}
-						end={item.url === '/'}
-						className={({ isActive }) =>
-							`flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors ${
-								isActive
-									? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
-									: 'hover:bg-gray-100'
-							}`
-						}
-					>
-						<item.icon className='h-4 w-4' />
-						{isOpen && <span>{item.title}</span>}
-					</NavLink>
-				)
-			})}
-		</div>
-	)
+				})}
+			</div>
+		)
+	}
 
 	return (
 		<div className={`border-r border-gray-200 bg-white ${isOpen ? 'w-50' : 'w-16'} transition-all duration-300`}>
 			<div
 				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit' : 'w-16'} transition-all duration-300`}
 			>
-				<div className='px-3 py-4'>
+				<div className='px-3 py-1'>
 					<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
 						<ChevronLeft className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
 					</Button>
 
 					{/* Main Menu */}
-					<div className='mb-6'>
+					<div className='mb-6 flex flex-col gap-1'>
 						{isOpen && <div className='mb-2 px-3 text-xs font-semibold text-gray-500'>Tổng quan</div>}
 						{renderMenuItems(menuItems.common)}
+					</div>
+
+					<div className='mb-6 flex flex-col gap-1'>
+						{isOpen && (
+							<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
+								Kì hiện tại <span className='font-normal'>{`- ${periodInfoData?.faculty.name}`}</span>
+							</div>
+						)}
+						{renderMenuItems(handlePeriodInfo(menuItems.period_info))}
+						{isOpen && (
+							<div className='mb-2 flex flex-col gap-1 px-3 text-xs font-semibold text-gray-500'>
+								<span>{`Bắt đầu ${periodInfoData?.startTime && new Date(periodInfoData?.startTime).toLocaleString('vi-VN')}`}</span>
+								<span>{`Kết thúc ${periodInfoData?.endTime && new Date(periodInfoData?.endTime).toLocaleString('vi-VN')}`}</span>
+							</div>
+						)}
 					</div>
 
 					{/* Role-specific Menu */}

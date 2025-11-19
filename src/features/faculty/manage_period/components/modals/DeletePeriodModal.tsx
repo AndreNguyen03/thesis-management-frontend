@@ -8,7 +8,7 @@ import {
 	DialogFooter
 } from '@/components/ui/dialog'
 import { LoadingState } from '@/components/ui/LoadingState'
-import type { Period } from '@/models/period'
+import type { Period } from '@/models/period.model'
 
 interface DeletePeriodModalProps {
 	open: boolean
@@ -19,7 +19,6 @@ interface DeletePeriodModalProps {
 }
 
 export function DeletePeriodModal({ open, onOpenChange, isLoading, period, onConfirm }: DeletePeriodModalProps) {
-    
 	const handleDelete = () => {
 		if (period) {
 			onConfirm(period.id)

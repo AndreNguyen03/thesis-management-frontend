@@ -1,8 +1,9 @@
-import type { Faculty } from './faculty'
+import type { Faculty } from './faculty.model'
+import type { GetPeriodPhaseDto } from './period-phase.dtos'
 
 export type PeriodStatus = 'ongoing' | 'completed'
 
-export type PhaseType = 'submit_topic' | 'open_registration' | 'execution' | 'completion'
+export type PhaseType = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion'
 
 export type TopicStatus =
 	// Pha 1 - Nộp đề tài
@@ -40,11 +41,10 @@ export interface Period {
 }
 
 export interface CreatePeriodDto {
-    name: string,
-    startTime: Date,  
-    endTime: Date
+	name: string
+	startTime: Date
+	endTime: Date
 }
-
 
 export interface Topic {
 	id: string
@@ -84,4 +84,25 @@ export interface PeriodBackend {
 	status: 'ongoing' | 'completed' | 'upcoming'
 	currentPhase: 'submit_topic' | 'open_registration' | 'execution' | 'completion'
 	phases: PeriodPhase[]
+}
+export interface GetCustomPeriodDetailRequestDto {
+	currentPeriod: string | null
+	currentPhase: string | null
+	isEligible: boolean
+	reason: string | null
+	requirements?: {
+		minTopics?: number
+		submittedTopics?: number
+	}
+}
+
+
+export interface GetCustomMiniPeriodInfoRequestDto {
+    _id: string
+    name: string
+	faculty: Faculty
+    status: string
+    startTime: Date
+    endTime: Date
+    currentPhaseDetail: GetPeriodPhaseDto | null
 }
