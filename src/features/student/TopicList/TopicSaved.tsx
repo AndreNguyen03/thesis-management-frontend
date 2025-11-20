@@ -1,131 +1,162 @@
-import { Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { Input } from '@/components/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
-import { Filter, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useGetSavedTopicsQuery } from '../../../services/topicApi'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import type { Topic } from '@/models'
 import { TopicCard } from './TopicCard'
+import { PaginationQueryParamsDto } from '@/models/query-params'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useGetFieldsQuery } from '@/services/fieldApi'
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious
+} from '@/components/ui/pagination'
 
-const fields = [
-	'Tất cả lĩnh vực',
-	'Trí tuệ nhân tạo',
-	'IoT & Big Data',
-	'Blockchain',
-	'Natural Language Processing',
-	'Computer Vision',
-	'Web Development',
-	'Mobile Development'
-]
-
-export const ThesisSaved = () => {
-	const { data: savedthesesData = [] } = useGetSavedTopicsQuery()
+export const SavedTopics = () => {
+	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
+		page: 1,
+		limit: 8,
+		search_by: 'titleVN',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		filter: 'all',
+		filter_by: 'fieldIds'
+	})
+	//lấy đề tài đã lưu
+	const { data: savedTopicsData } = useGetSavedTopicsQuery({ queries })
+	//Lấy tất cả các fields
+	const { data: fields } = useGetFieldsQuery()
 	const [topics, setTopics] = useState<Topic[]>([])
-	usePageBreadcrumb([
-		{ label: 'Trang chủ', path: '/' },
-		{ label: 'Danh sách đề tài', path: '/' },
-		{ label: 'Đề tài đã lưu' }
-	])
+	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }, { label: 'Đề tài đã lưu' }])
 	useEffect(() => {
-		if (JSON.stringify(topics) !== JSON.stringify(savedthesesData)) {
-			setTopics(savedthesesData)
+		if (JSON.stringify(topics) !== JSON.stringify(savedTopicsData?.data)) {
+			setTopics(savedTopicsData ? savedTopicsData.data : [])
+			setQueries((prev) => ({
+				...prev,
+				page: savedTopicsData ? savedTopicsData.meta.currentPage : 1
+			}))
 		}
-	}, [savedthesesData])
+	}, [savedTopicsData])
+
+	// search input handler
 	const [searchTerm, setSearchTerm] = useState('')
-	const [selectedField, setSelectedField] = useState('Tất cả lĩnh vực')
-
-	const [sortBy, setSortBy] = useState('newest')
-	const filteredTopics = topics?.filter((topic) => {
-		const matchesSearch =
-			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			topic.studentNames.some((name) => name.toLowerCase().includes(searchTerm.toLowerCase()))
-		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.fieldNames.includes(selectedField)
-		return matchesSearch && matchesField
-	})
-
-	const sortedTopics = [...filteredTopics].sort((a, b) => {
-		switch (sortBy) {
-			case 'deadline':
-				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-			default:
-				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+	const setQuery = (query: string) => {
+		setQueries((prev) => ({ ...prev, query }))
+	}
+	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 500 })
+	const onEdit = (val: string) => {
+		setSearchTerm(val)
+		debounceOnChange(val)
+	}
+	// Sự kiện chọn theo lĩnh vực
+	//Set nội dung cho filter
+	const setFieldString = (fieldId: string) => {
+		if (fieldId === 'none') {
+			setQueries((prev) => ({ ...prev, filter: undefined }))
+		} else {
+			setQueries((prev) => ({ ...prev, filter: fieldId }))
 		}
-	})
-
-	const updateStateAfterAction = (topic: Topic) => {
-		if (topic.isSaved) {
-			setTopics((prevTopics) => prevTopics.map((t) => (t._id === topic._id ? topic : t)))
-		} else setTopics((prevTopics) => prevTopics.filter((t) => t._id !== topic._id))
 	}
 	return (
-		<div className='space-y-6'>
-			{/* Header */}
-			<div className='space-y-2'>
-				<h1 className='text-3xl font-bold text-primary'>Danh sách đề tài bạn đã lưu</h1>
-			</div>
+		<div className='space-y-6 py-4'>
+			<div className='grid grid-cols-3 items-center space-y-2 rounded-md bg-white px-4'>
+				{/* Header */}
 
-			{/* Search and Filters */}
-			<Card>
-				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Filter className='h-5 w-5' />
-						Tìm kiếm và lọc
-					</CardTitle>
-				</CardHeader>
-				<CardContent className='space-y-4'>
-					<div className='flex flex-col gap-4 sm:flex-row'>
-						<div className='relative flex-1'>
-							<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
-							<Input
-								placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
-								className='pl-10'
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-							/>
-						</div>
-						<Select value={selectedField} onValueChange={setSelectedField}>
-							<SelectTrigger className='w-full sm:w-[200px]'>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{fields.map((field) => (
-									<SelectItem key={field} value={field}>
-										{field}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-						<Select value={sortBy} onValueChange={setSortBy}>
-							<SelectTrigger className='w-full sm:w-[150px]'>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value='newest'>Mới nhất</SelectItem>
-								<SelectItem value='rating'>Đánh giá cao</SelectItem>
-								<SelectItem value='views'>Xem nhiều</SelectItem>
-								<SelectItem value='deadline'>Gần deadline</SelectItem>
-							</SelectContent>
-						</Select>
+				<h1 className='col-span-1 w-fit text-2xl font-bold text-primary'>Danh sách đề tài bạn đã lưu</h1>
+				{/* Search and Filters */}
+
+				<div className='col-span-2 flex w-full flex-col gap-4 p-2 sm:flex-row sm:items-center'>
+					<div className='relative flex flex-1 items-center'>
+						<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
+						<Input
+							placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
+							className='pl-10'
+							value={searchTerm}
+							onChange={(e) => onEdit(e.target.value)}
+						/>
 					</div>
-				</CardContent>
-			</Card>
+					<Select value={queries.filter} onValueChange={setFieldString}>
+						<SelectTrigger className='w-full sm:w-[200px]'>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value='all'>Tất cả lĩnh vực</SelectItem>
+							{fields?.map((field) => (
+								<SelectItem key={field._id} value={field._id}>
+									{field.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<Select
+						value={queries.sort_by}
+						onValueChange={(value) => setQueries((prev) => ({ ...prev, sort_by: value }))}
+					>
+						<SelectTrigger className='w-full sm:w-[150px]'>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value='createdAt'>Mới nhất</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+			</div>
 
 			{/* Results */}
 			<div className='space-y-4'>
 				<div className='flex items-center justify-between'>
-					<p className='text-md font-bold text-muted-foreground'>Bạn đã lưu {sortedTopics.length} đề tài</p>
+					{queries.query === '' && queries.filter === 'all' ? (
+						<p className='text-md font-bold text-muted-foreground'>Bạn đã lưu {topics.length} đề tài</p>
+					) : (
+						<p className='text-md font-bold text-muted-foreground'>
+							Tìm thấy {topics.length} đề tài có liên quan
+						</p>
+					)}
 				</div>
-
-				<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-					{sortedTopics.map((topic) => (
-						<TopicCard
-							key={topic._id}
-							topic={topic}
-							mode='saved'
-							updateAfterAction={updateStateAfterAction}
-						/>
-					))}
+				<div className='flex flex-col gap-4 align-middle'>
+					<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+						{topics.map((topic) => (
+							<TopicCard key={topic._id} topic={topic} mode='saved' />
+						))}
+					</div>
+					<Pagination>
+						<PaginationContent>
+							<PaginationItem>
+								<PaginationPrevious
+									href='#'
+									onClick={() =>
+										setQueries((prev) => ({ ...prev, page: Math.max(prev.page! - 1, 1) }))
+									}
+								/>
+							</PaginationItem>
+							{[...Array(savedTopicsData?.meta.totalPages)].map((_, idx) => (
+								<PaginationItem key={idx}>
+									<PaginationLink
+										isActive={queries.page === idx + 1}
+										href='#'
+										onClick={() => setQueries((prev) => ({ ...prev, page: idx + 1 }))}
+									>
+										{idx + 1}
+									</PaginationLink>
+								</PaginationItem>
+							))}
+							<PaginationItem>
+								<PaginationNext
+									href='#'
+									onClick={() =>
+										setQueries((prev) => ({ ...prev, page: Math.min(prev.page! + 1, savedTopicsData?.meta.totalPages!) }))
+									}
+								/>
+							</PaginationItem>
+						</PaginationContent>
+					</Pagination>
 				</div>
 			</div>
 		</div>

@@ -13,7 +13,7 @@ const buttonVariants = cva(
 				destructive: 'bg-destructive/85 text-destructive-foreground hover:bg-destructive',
 				outline: 'border border-input bg-background hover:bg-muted hover:text-foreground transition-colors',
 				secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-				ghost: 'hover:bg-muted hover:text-foreground transition-colors hover:border',
+				ghost: ' bg-white border-gray-300 text-gray-500',
 				link: 'text-primary underline-offset-4 hover:underline',
 				disable: 'opacity-80 cursor-not-allowed text-gray-200',
 				delete: 'bg-red-600 text-white hover:bg-red-700',
@@ -24,7 +24,9 @@ const buttonVariants = cva(
 				gray: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
 				yellow: 'bg-yellow-300 text-gray-800 hover:bg-yellow-400',
 				red: 'bg-red-500 text-white hover:bg-red-600',
-				blue: 'bg-blue-600 text-white hover:bg-blue-700'
+				blue: 'bg-blue-600 text-white hover:bg-blue-700',
+				active: 'bg-blue-500 text-white hover:bg-blue-600',
+				nonactive: 'bg-gray-300 text-gray-700 pointer-events-none'
 			},
 			size: {
 				default: 'h-10 px-4 py-2 ',

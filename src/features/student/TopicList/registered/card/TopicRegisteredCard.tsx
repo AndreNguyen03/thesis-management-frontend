@@ -1,20 +1,19 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
 import { Dialog } from '@/components/ui/Dialog'
-import { Calendar, ChevronDown, ChevronUp, Trash2, Users } from 'lucide-react'
+import { ChevronDown, ChevronUp, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useDeleteRegistrationMutation } from '../../../../../services/registrationApi'
 import { ConfirmCancelRegistration } from '../ConfirmCancelRegistration'
 import { useNavigate } from 'react-router-dom'
 
-import type { Topic } from '@/models'
+import { topicStatusLabels, type Topic } from '@/models'
 import { toast } from '@/hooks/use-toast'
 
 export const TopicRegisteredCard: React.FC<{
 	topic: Topic
 }> = ({ topic }) => {
 	const [deleteRegistration, { isLoading: isCanceling }] = useDeleteRegistrationMutation()
-	const isFullSlot = topic.maxStudents === topic.studentNames.length
-	const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
+	const isFullSlot = topic.maxStudents === topic.students.length
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const navigate = useNavigate()
 	const [openDetail, setOpenDetail] = useState(false)
@@ -25,7 +24,7 @@ export const TopicRegisteredCard: React.FC<{
 					<Badge variant='destructive'>Đã đủ</Badge>
 				) : (
 					<Badge variant='default' className='max-w-[100px]'>
-						{topic.maxStudents - topic.studentNames.length} chỗ trống
+						{topic.maxStudents - topic.students.length} chỗ trống
 					</Badge>
 				)}
 				<p className='text-sm font-semibold text-gray-500'>
@@ -62,16 +61,66 @@ export const TopicRegisteredCard: React.FC<{
 	}
 	const renderDepartmentAndLecturers = (topic: Topic) => {
 		return (
-			<CardDescription className='mt-1'>
-				{topic.lecturerNames.length > 0
-					? topic.lecturerNames
-							.map((lec) => {
-								return lec
-							})
-							.join(', ')
-					: 'Chưa có giảng viên'}
-				• {topic.major}
-			</CardDescription>
+			<>
+				<div className='mt-1'>
+					<div>
+						{topic.lecturers.slice(0, 1).map((lec) => {
+							return (
+								<div className='flex flex-row gap-1' key={lec._id}>
+									<span>{`${lec.lecturerInfo.title} ${lec.fullName}`}</span>
+									{/* Render hình ảnh của giảng viên */}
+									<div
+										title={`${lec.lecturerInfo.title} ${lec.fullName}`}
+										className='relative flex items-center justify-center overflow-hidden rounded-full bg-gray-200 text-lg font-semibold text-gray-600'
+									>
+										{lec.avatarUrl ? (
+											<img
+												src={lec.avatarUrl}
+												alt={`${lec.lecturerInfo.title} ${lec.fullName}`}
+												className='h-full w-full object-contain'
+											/>
+										) : (
+											<span className='flex h-6 w-6 items-center justify-center text-[10px]'>
+												{lec.fullName
+													.split(' ')
+													.map((n) => n[0])
+													.join('')}
+											</span>
+										)}
+									</div>
+								</div>
+							)
+						})}
+						{topic.lecturers.length > 1 && (
+							<span className='text-sm text-muted-foreground'>
+								và {topic.lecturers.length - 1} giảng viên khác
+								{topic.lecturers.slice(2, topic.lecturers.length).map((lec) => (
+									// Render các hình ảnh của giảng viên khác
+									<div
+										title={`${lec.lecturerInfo.title} ${lec.fullName}`}
+										className='relative flex items-center justify-center overflow-hidden rounded-full bg-gray-200 text-lg font-semibold text-gray-600'
+									>
+										{lec.avatarUrl ? (
+											<img
+												src={lec.avatarUrl}
+												alt={`${lec.lecturerInfo.title} ${lec.fullName}`}
+												className='h-full w-full object-contain'
+											/>
+										) : (
+											<span className='flex h-6 w-6 items-center justify-center text-[10px]'>
+												{lec.fullName
+													.split(' ')
+													.map((n) => n[0])
+													.join('')}
+											</span>
+										)}
+									</div>
+								))}
+							</span>
+						)}
+					</div>
+				</div>
+			</>
 		)
 	}
 
@@ -79,30 +128,31 @@ export const TopicRegisteredCard: React.FC<{
 		<Card key={topic._id} className={`p-2 transition-shadow hover:cursor-pointer hover:shadow-lg`}>
 			<CardHeader onClick={() => setOpenDetail(!openDetail)}>
 				<div className='flex items-start justify-between space-x-4'>
-					<div>
-						<CardTitle className='text-lg leading-tight'>{topic.title}</CardTitle>
+					<div className='flex flex-col gap-1'>
+						<CardTitle className='text-lg leading-tight'>{topic.titleVN}</CardTitle>
+						<CardTitle className='text-md font-normal'>{topic.titleEng}</CardTitle>
+
 						{renderDepartmentAndLecturers(topic)}
+						<div className='flex gap-2'>
+							{/* Trạng thái của đề tài */}
+							<Badge variant='status'>
+								{'Trạng thái:  '}
+								{topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels]}
+							</Badge>
+							{/* Lĩnh vực */}
+							{topic.fields.map((f) => {
+								return (
+									<Badge key={f._id} variant='blue'>
+										{f.name}
+									</Badge>
+								)
+							})}
+						</div>
 					</div>
-					<div>
-						<Button
-							variant='outline'
-							className='max-w-[100px]'
-							onClick={() => navigate(`/detail-topic/${topic._id}`)}
-						>
-							<p className='text-sm'>Xem chi tiết đề tài</p>
-						</Button>
-					</div>
+
 					{getStatusBadge(topic)}
 				</div>
-				<div className='flex items-center gap-1 text-sm text-muted-foreground'>
-					<Badge variant='outline' className='h-fit'>
-						<Calendar className='mr-1 h-4 w-4' />
-						<p className='text-sm'>Hạn đăng ký:</p>
-					</Badge>
-					<Badge variant='outline' className='h-fit'>
-						<p className='text-sm'>{new Date(topic.deadline).toLocaleString('vi-VN')}</p>
-					</Badge>
-				</div>
+
 				<div className='justify-items-center'>
 					<div className='p-0.5 px-5 hover:bg-muted' onClick={() => setOpenDetail(!openDetail)}>
 						{openDetail ? <ChevronUp className='h-4 w-4' /> : <ChevronDown className='h-4 w-4' />}
@@ -113,10 +163,10 @@ export const TopicRegisteredCard: React.FC<{
 			{openDetail && (
 				<CardContent className={`space-y-4`}>
 					<CardDescription className='mt-1 flex gap-1'>
-						{topic.fieldNames.map((f) => {
+						{topic.requirements.map((f) => {
 							return (
-								<Badge key={f} variant='blue'>
-									{f}
+								<Badge key={f._id} variant='blue'>
+									{f.name}
 								</Badge>
 							)
 						})}
@@ -126,20 +176,20 @@ export const TopicRegisteredCard: React.FC<{
 						<div className='flex items-center gap-4 text-sm text-muted-foreground'>
 							<div className='flex items-center gap-1'>
 								<Users className='h-4 w-4' />
-								{topic.studentNames.length}/{topic.maxStudents}
+								{topic.students.length}/{topic.maxStudents}
 							</div>
 						</div>
 					</div>
 
 					<div className='flex flex-wrap gap-1'>
-						{topic.requirementNames.slice(0, 4).map((req: string) => (
-							<Badge key={req} variant='secondary' className='text-xs'>
-								{req}
+						{topic.requirements.slice(0, 4).map((req) => (
+							<Badge key={req._id} variant='secondary' className='text-xs'>
+								{req.name}
 							</Badge>
 						))}
-						{topic.requirementNames.length > 4 && (
+						{topic.requirements.length > 4 && (
 							<Badge variant='outline' className='text-xs'>
-								+{topic.requirementNames.length - 4}
+								+{topic.requirements.length - 4}
 							</Badge>
 						)}
 					</div>

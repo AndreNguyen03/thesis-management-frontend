@@ -106,3 +106,4 @@ export interface GetCustomMiniPeriodInfoRequestDto {
     endTime: Date
     currentPhaseDetail: GetPeriodPhaseDto | null
 }
+

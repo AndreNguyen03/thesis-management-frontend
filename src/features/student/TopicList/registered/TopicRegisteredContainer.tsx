@@ -74,11 +74,8 @@ export const RegisteredTopicContainer = () => {
 	//const user = useAppSelector((state) => state.auth.user)
 
 	return (
-		<div className='mx-auto max-w-4xl space-y-6'>
-			{/* Header */}
-			<div className='space-y-2'>
-				<h1 className='text-3xl font-bold text-primary'>Danh sách đề tài bạn đã đăng ký</h1>
-			</div>
+		<div className='mx-auto max-w-4xl space-y-6 py-5'>
+		
 
 			{/* Results */}
 			<div className='space-y-4'>

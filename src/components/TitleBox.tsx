@@ -8,7 +8,7 @@ const TitleBox: React.FC<{ title: string; isExpanded: boolean; onClick: () => vo
 }) => {
 	return (
 		<div
-			className='flex w-fit items-center space-x-2 border-sky-500 px-3 py-1 hover:cursor-pointer hover:bg-blue-50'
+			className='flex w-fit items-center space-x-2 border-sky-500 bg-white px-3 py-1 hover:cursor-pointer hover:bg-blue-50'
 			style={{ borderWidth: 1 }}
 			onClick={onClick}
 		>

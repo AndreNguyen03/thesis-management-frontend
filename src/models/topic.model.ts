@@ -1,9 +1,17 @@
 import type { GetFieldNameReponseDto } from './field.model'
+import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { IRegistration } from './registration.model'
 import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
-
+import type { MiniActorInforDto, MiniLecturerInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+export interface PaginationQueryParams {
+	limit?: number
+	page?: number
+	search_by?: string
+	query?: string
+	sort_by?: string
+	sort_order?: string
+}
 export interface DraftTopic {
 	_id: string
 
@@ -43,25 +51,31 @@ export interface PaginatedDraftTopics extends GetPaginatedObject {
 export interface Topic {
 	_id: string
 
-	title: string
+	titleVN: string
 
-	description: string	
+	titleEng: string
+
+	description: string
 
 	type: string
 
-	createBy: string
+	createByInfo: ResponseMiniLecturerDto
+
+	currentPhase: string
+
+	currentStatus: string
 
 	status: string
 
-	major: string
+	major: GetMajorMiniDto
 
-	lecturerNames: string[]
+	lecturers: ResponseMiniLecturerDto[]
 
-	requirementNames: string[]
+	requirements: GetRequirementNameReponseDto[]
 
-	fieldNames: string[]
+	fields: GetFieldNameReponseDto[]
 
-	studentNames: string[]
+	students: ResponseMiniStudentDto[]
 
 	maxStudents: number
 
@@ -74,6 +88,9 @@ export interface Topic {
 	isRegistered: boolean
 
 	isSaved: boolean
+}
+export interface GetPaginatedTopics extends GetPaginatedObject {
+	data: Topic[]
 }
 
 export interface CanceledRegisteredTopic extends Topic {
@@ -144,4 +161,25 @@ export interface CreateTopicPayload {
 	deadline?: string
 	requirements: string[]
 	references?: { name: string; url?: string }[]
+}
+
+export const topicStatusLabels = {
+	draft: 'Bản nháp',
+	submitted: 'Đã nộp',
+	under_review: 'Đang xét duyệt',
+	approved: 'Đã duyệt',
+	rejected: 'Bị từ chối',
+	pending_registration: 'Chờ đăng ký',
+	registered: 'Đã đăng ký',
+	full: 'Đã đủ số lượng',
+	cancelled: 'Đã hủy',
+	in_progress: 'Đang thực hiện',
+	delayed: 'Bị trì hoãn',
+	paused: 'Tạm ngưng',
+	submitted_for_review: 'Đã nộp báo cáo',
+	awaiting_evaluation: 'Chờ đánh giá',
+	graded: 'Đã chấm điểm',
+	reviewed: 'Đã kiểm tra',
+	archived: 'Đã lưu trữ',
+	rejected_final: 'Bị từ chối cuối cùng'
 }

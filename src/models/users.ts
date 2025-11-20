@@ -136,15 +136,18 @@ export interface FacultyBoardProfile {
 }
 
 export type AppUser = StudentUser | LecturerProfile | AdminUser | FacultyBoardProfile
-
+interface ResponseStudentBasicDto {
+    studentCode: string
+    major: string
+}
 export interface ResponseMiniStudentDto {
 	_id: string
-	studentCode: string
 	fullName: string
 	email: string
 	phone: string
 	avatarUrl?: string
 	avatarName?: string
+	studentInfo: ResponseStudentBasicDto
 }
 export interface ResponseMiniLecturerDto {
 	_id: string

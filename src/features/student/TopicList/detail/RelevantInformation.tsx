@@ -1,22 +1,22 @@
 import RegistratorInformation from './components/RegistratorInformation'
 import RegistrationDiary from './components/RegistrationDiary'
-import type { IRegistration } from '@/models'
+import type { IRegistration, ResponseMiniLecturerDto, ResponseMiniStudentDto } from '@/models'
 
 const RelevantInformation = ({
-	studentNames,
-	lecturerNames,
-	historyRegistrations
+	students,
+	lecturers
+	//historyRegistrations
 }: {
-	studentNames: string[]
-	lecturerNames: string[]
-	historyRegistrations: IRegistration[]
+	students: ResponseMiniStudentDto[]
+	lecturers: ResponseMiniLecturerDto[]
+	//historyRegistrations: IRegistration[]
 }) => {
 	return (
 		<div className='col-span-5 grid grid-rows-3 sm:col-span-2'>
 			<div className='row-span-2'>
-				<div className='flex h-fit flex-col space-y-8 rounded-lg bg-white p-5'>
-					<RegistratorInformation studentNames={studentNames} lecturerNames={lecturerNames} />
-					<RegistrationDiary historyRegistrations={historyRegistrations} />
+				<div className='flex h-fit flex-col space-y-8'>
+					<RegistratorInformation students={students} lecturers={lecturers} />
+					{/* <RegistrationDiary historyRegistrations={historyRegistrations} /> */}
 				</div>
 			</div>
 			<div className='row-span-1 bg-black'>dsd</div>

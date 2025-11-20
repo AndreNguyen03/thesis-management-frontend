@@ -12,28 +12,43 @@ import {
 	SelectValue
 } from '@/components/ui'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import { Filter, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { EmptyStateContainer } from '../EmptyStateContainer'
 import { useGetRegisteredTopicQuery } from '@/services/topicApi'
 import { TopicRegisteredCard } from '../card/TopicRegisteredCard'
 import type { Topic } from '@/models'
-const fields = [
-	'Tất cả lĩnh vực',
-	'Trí tuệ nhân tạo',
-	'IoT & Big Data',
-	'Blockchain',
-	'Natural Language Processing',
-	'Computer Vision',
-	'Web Development',
-	'Mobile Development'
-]
+import type { PaginationQueryParamsDto } from '@/models/query-params'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useGetFieldsQuery } from '@/services/fieldApi'
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious
+} from '@/components/ui/pagination'
 export const TopicRegisteredChildren = () => {
-	const { data: topicData = [] } = useGetRegisteredTopicQuery()
-	const [registerTopics, setRegisteredTopics] = useState<Topic[]>(topicData)
+	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
+		page: 1,
+		limit: 10,
+		search_by: 'titleVN',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		filter: 'all',
+		filter_by: 'fieldIds'
+	})
+	//Lấy đề tài đã đăng ký
+	const { data: topicData } = useGetRegisteredTopicQuery({ queries })
+	//Lấy tất cả các lĩnh vực
+	const { data: fields } = useGetFieldsQuery()
+
+	const [registerTopics, setRegisteredTopics] = useState<Topic[]>()
 	// // const [cancelRegistration, { isLoading: isCancelling, isSuccess }] = useCancelRegistrationMutation()
 	useEffect(() => {
-		if (JSON.stringify(registerTopics) !== JSON.stringify(topicData)) {
-			setRegisteredTopics(topicData)
+		if (JSON.stringify(registerTopics) !== JSON.stringify(topicData?.data)) {
+			setRegisteredTopics(topicData?.data)
 		}
 	}, [topicData])
 
@@ -42,42 +57,37 @@ export const TopicRegisteredChildren = () => {
 		{ label: 'Danh sách đề tài', path: '/topics' },
 		{ label: 'Đề tài đã đăng ký' }
 	])
-
+	// Search
 	const [searchTerm, setSearchTerm] = useState('')
-	const [selectedField, setSelectedField] = useState('Tất cả lĩnh vực')
-
-	const [sortBy, setSortBy] = useState('newest')
-	const filteredTopic = registerTopics?.filter((topic) => {
-		const matchesSearch =
-			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			topic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			topic.lecturerNames.some((lecturer) => lecturer.toLowerCase().includes(searchTerm.toLowerCase()))
-
-		const matchesField = selectedField === 'Tất cả lĩnh vực' || topic.fieldNames.includes(selectedField)
-		return matchesSearch && matchesField
-	})
-
-	const sortedRegistrations = [...filteredTopic].sort((a, b) => {
-		switch (sortBy) {
-			case 'deadline':
-				return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-			default:
-				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+	const setQuery = (query: string) => {
+		setQueries((prev) => ({ ...prev, query }))
+	}
+	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 500 })
+	const onEdit = (val: string) => {
+		setSearchTerm(val)
+		debounceOnChange(val)
+	}
+	// Sự kiện chọn theo lĩnh vực
+	//Set nội dung cho filter
+	const setFieldString = (fieldId: string) => {
+		if (fieldId === 'none') {
+			setQueries((prev) => ({ ...prev, filter: undefined }))
+		} else {
+			setQueries((prev) => ({ ...prev, filter: fieldId }))
 		}
-	})
-
+	}
+	const emptyList = registerTopics?.length === 0 && queries.query === '' && queries.filter === 'all'
 	return (
 		<>
-			{sortedRegistrations.length === 0 ? (
-				<EmptyStateContainer type="registered" />
+			{emptyList ? (
+				<EmptyStateContainer type='registered' />
 			) : (
 				<>
 					{/* Search and Filters */}
-					<Card className='p-4'>
+					<Card className='p-0'>
 						<CardHeader>
 							<CardTitle className='flex items-center gap-2'>
-								<Filter className='h-5 w-5' />
-								Tìm kiếm và lọc
+								<h1 className='text-2xl font-bold text-primary'>Danh sách đề tài bạn đã đăng ký</h1>
 							</CardTitle>
 						</CardHeader>
 						<CardContent className='space-y-4'>
@@ -88,39 +98,83 @@ export const TopicRegisteredChildren = () => {
 										placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
 										className='pl-10'
 										value={searchTerm}
-										onChange={(e) => setSearchTerm(e.target.value)}
+										onChange={(e) => onEdit(e.target.value)}
 									/>
 								</div>
-								<Select value={selectedField} onValueChange={setSelectedField}>
+								<Select value={queries.filter} onValueChange={setFieldString}>
 									<SelectTrigger className='w-full sm:w-[200px]'>
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent>
-										{fields.map((field) => (
-											<SelectItem key={field} value={field}>
-												{field}
+										<SelectItem value='all'>Tất cả lĩnh vực</SelectItem>
+
+										{fields?.map((field) => (
+											<SelectItem key={field._id} value={field._id}>
+												{field.name}
 											</SelectItem>
 										))}
 									</SelectContent>
 								</Select>
-								<Select value={sortBy} onValueChange={setSortBy}>
+								<Select value={queries.sort_by}>
 									<SelectTrigger className='w-full sm:w-[150px]'>
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value='newest'>Mới nhất</SelectItem>
-										<SelectItem value='rating'>Đánh giá cao</SelectItem>
-										<SelectItem value='views'>Xem nhiều</SelectItem>
-										<SelectItem value='deadline'>Gần deadline</SelectItem>
+										<SelectItem value='createdAt'>Mới nhất</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
 						</CardContent>
 					</Card>
-					<div className='grid grid-cols-1 gap-6 lg:grid-cols-1'>
-						{sortedRegistrations.map((topic) => (
-							<TopicRegisteredCard key={topic._id} topic={topic} />
-						))}
+					<div className='flex flex-col gap-6'>
+						<div className='grid grid-cols-1 gap-6 lg:grid-cols-1'>
+							{registerTopics && registerTopics?.length > 0 ? (
+								registerTopics?.map((topic) => <TopicRegisteredCard key={topic._id} topic={topic} />)
+							) : (
+								<>
+									{' '}
+									{queries.query === '' ? (
+										<span>{`Tìm thấy ${registerTopics?.length} đề tài liên quan`}</span>
+									) : (
+										<span>{`Không tìm thấy đề tài nào có liên quan tới "${queries.query}"`}</span>
+									)}
+								</>
+							)}
+						</div>
+						<Pagination>
+							<PaginationContent>
+								<PaginationItem>
+									<PaginationPrevious
+										href='#'
+										onClick={() =>
+											setQueries((prev) => ({ ...prev, page: Math.max(prev.page! - 1, 1) }))
+										}
+									/>
+								</PaginationItem>
+								{[...Array(topicData?.meta.totalPages)].map((_, idx) => (
+									<PaginationItem key={idx}>
+										<PaginationLink
+											isActive={queries.page === idx + 1}
+											href='#'
+											onClick={() => setQueries((prev) => ({ ...prev, page: idx + 1 }))}
+										>
+											{idx + 1}
+										</PaginationLink>
+									</PaginationItem>
+								))}
+								<PaginationItem>
+									<PaginationNext
+										href='#'
+										onClick={() =>
+											setQueries((prev) => ({
+												...prev,
+												page: Math.min(prev.page! + 1, topicData?.meta.totalPages!)
+											}))
+										}
+									/>
+								</PaginationItem>
+							</PaginationContent>
+						</Pagination>
 					</div>
 				</>
 			)}
