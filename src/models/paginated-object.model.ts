@@ -14,5 +14,4 @@ interface LinkDto {
 
 export interface GetPaginatedObject {
 	meta: MetaDto
-	links: LinkDto
 }

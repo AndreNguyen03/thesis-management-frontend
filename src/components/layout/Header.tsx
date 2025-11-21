@@ -34,7 +34,7 @@ const Header = ({ user }: HeaderProps) => {
 	if (isLoading) return <LoadingOverlay />
 
 	return (
-		<header className='sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur'>
+		<header className='fixed top-0 z-50 w-full border-b bg-white/95 backdrop-blur'>
 			<div className='container mx-auto flex h-16 items-center px-4'>
 				{/* Logo */}
 				<div className='flex items-center space-x-3'>

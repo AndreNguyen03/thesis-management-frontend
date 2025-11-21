@@ -6,7 +6,7 @@ import type { IRegistration } from '@/models'
 
 const RegistrationDiary: React.FC<{ historyRegistrations: IRegistration[] }> = ({ historyRegistrations }) => {
 	const [isExpanded, setIsExpanded] = useState(true)
-
+	console.log('historyRegistrations', historyRegistrations)
 	return (
 		<div className='col-span-2 row-span-1 flex w-full flex-col space-y-5'>
 			<TitleBox title='Nhật ký đăng ký' isExpanded={isExpanded} onClick={() => setIsExpanded(!isExpanded)} />

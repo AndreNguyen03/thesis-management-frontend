@@ -10,3 +10,11 @@ export interface GetPeriodPhaseDto {
 	allowManualApproval: boolean
 	status: string
 }
+
+export const phaseLabels = {
+  empty: 'Chưa bắt đầu',
+  submit_topic: 'Nộp đề tài',
+  open_registration: 'Mở đăng ký',
+  execution: 'Thực hiện',
+  completion: 'Hoàn thành'
+};

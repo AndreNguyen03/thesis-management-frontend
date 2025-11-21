@@ -7,8 +7,8 @@ export const BasicInfo = ({ student }: { student: StudentUser }) => {
 			{/* Header */}
 			<div className='mb-4 flex items-center gap-4'>
 				<div className='relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-lg font-semibold text-gray-600'>
-					{student.avatar ? (
-						<img src={student.avatar} alt={student.fullName} className='h-full w-full object-cover' />
+					{student.avatarUrl ? (
+						<img src={student.avatarUrl} alt={student.fullName} className='h-full w-full object-cover' />
 					) : student.fullName ? (
 						student.fullName
 							.split(' ')

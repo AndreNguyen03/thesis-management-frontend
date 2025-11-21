@@ -139,12 +139,13 @@ export type AppUser = StudentUser | LecturerProfile | AdminUser | FacultyBoardPr
 
 export interface ResponseMiniStudentDto {
 	_id: string
-	studentCode: string
 	fullName: string
 	email: string
 	phone: string
 	avatarUrl?: string
 	avatarName?: string
+	studentCode: string
+	major: string
 }
 export interface ResponseMiniLecturerDto {
 	_id: string
@@ -153,17 +154,14 @@ export interface ResponseMiniLecturerDto {
 	phone: string
 	avatarUrl: string
 	avatarName: string
-	title: AcademicTitle
-	lecturerInfo: MiniLecturerInforDto
+	titlePath: AcademicTitle
+	title: string
 }
 export interface MiniActorInforDto {
 	_id: string
 	fullName: string
-	email:string
+	email: string
 	phone: string
 	avatarUrl: string
 	avatarName: string
-}
-export interface MiniLecturerInforDto {
-	title: string
 }

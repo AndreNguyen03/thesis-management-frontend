@@ -47,7 +47,7 @@ export const TopicDetailContainer = () => {
 					className='flex h-full flex-col overflow-auto rounded-xl bg-[#F2F4FF] p-8 shadow-xl sm:min-w-full sm:overflow-hidden'
 				>
 					<div className='px-4'>
-						<Button variant='back' className='w-fit' onClick={() => navigate(-1)}>
+						<Button variant='back' className='w-fit border border-gray-300' onClick={() => navigate(-1)}>
 							<ChevronLeft className='size-6' />
 							<p>Quay lại</p>
 						</Button>
@@ -55,9 +55,9 @@ export const TopicDetailContainer = () => {
 					<div className='grid space-x-5 px-4 md:grid-cols-5'>
 						<TopicDetail topic={topic} onUpdate={handleUpdate} />
 						<RelevantInformation
-							studentNames={topic.studentNames}
-							lecturerNames={topic.lecturerNames}
-							historyRegistrations={topic.allUserRegistrations}
+							students={topic.students}
+							lecturers={topic.lecturers}
+							//	historyRegistrations={topic.allUserRegistrations}
 						/>
 					</div>
 				</DialogContent>

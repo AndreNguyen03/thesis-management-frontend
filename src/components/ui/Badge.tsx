@@ -12,6 +12,7 @@ export type BadgeVariant =
 	| 'lightBlue'
 	| 'success'
 	| 'graybold'
+	| 'status'
 
 interface BadgeProps {
 	children: ReactNode
@@ -21,16 +22,17 @@ interface BadgeProps {
 
 export const Badge = ({ children, variant = 'default', className }: BadgeProps) => {
 	const variantStyles: Record<BadgeVariant, string> = {
-		default: 'bg-primary text-primary-foreground',
-		destructive: 'bg-red-600 text-white',
-		secondary: 'bg-gray-200 text-gray-800 scale-100 hover:scale-105',
-		outline: 'border border-gray-300 text-gray-800',
-		registered: 'bg-green-600 text-white',
+		default: 'bg-primary text-primary-foreground transition-transform scale-100 hover:scale-105',
+		destructive: 'bg-red-600 text-white transition-transform scale-100 hover:scale-105',
+		secondary: 'bg-gray-200 text-gray-800 transition-transform scale-100 hover:scale-105',
+		outline: 'border border-gray-300 text-gray-800 transition-transform scale-100 hover:scale-105',
+		registered: 'bg-green-600 text-white transition-transform scale-100 hover:scale-105',
 		blue: 'bg-blue-600 text-white transition-transform scale-100 hover:scale-105',
 		lightBlue: 'bg-blue-100 text-blue-800',
 		gray: 'border border-gray-500 text-gray-700',
 		graybold: 'bg-gray-500 text-white',
-		success: 'bg-green-600 text-white'
+		success: 'bg-green-600 text-white',
+		status: 'bg-yellow-500 text-white transition-transform scale-100 hover:scale-105'
 	}
 
 	return (

@@ -55,7 +55,6 @@ const menuItems: Record<Role | 'common' | 'footer' | 'period_info', MenuItem[]> 
 			url: '/topics',
 			icon: BookOpen,
 			children: [
-				{ title: 'Tất cả đề tài', url: '/topics', icon: Library },
 				{ title: 'Đề tài đã lưu', url: '/topics/saved', icon: Library },
 				{ title: 'Đề tài đã đăng ký', url: '/topics/registered', icon: FileText }
 				//{ title: 'Đăng ký đề tài mới', url: '/topics/new-register', icon: FileText }

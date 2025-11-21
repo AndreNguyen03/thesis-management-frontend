@@ -83,16 +83,20 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 	}
 
 	return (
-		<div className='col-span-5 gap-4 space-y-4 rounded-md bg-white p-8 sm:col-span-3'>
+		<div className='col-span-5 gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8 sm:col-span-3'>
 			{/* Toàn bộ nội dung chi tiết đề tài */}
 			<div className='flex flex-col justify-between'>
 				<div>
-					<DialogTitle className='mb-2 text-2xl font-bold text-primary'>{topic.title}</DialogTitle>
+					<DialogTitle className='mb-2 text-2xl font-bold text-primary'>{topic.titleVN}</DialogTitle>
 					<DialogDescription className='mb-4 flex flex-wrap items-center gap-2 text-base text-gray-600'>
 						<span className='text-lg'>
-							{topic.lecturerNames.length > 0 ? topic.lecturerNames.join(', ') : 'Chưa có giảng viên'}
+							{topic.lecturers.length > 0
+								? topic.lecturers
+										.map((lecturer) => `${lecturer.lecturerInfo.title} ${lecturer.fullName}`)
+										.join(', ')
+								: 'Chưa có giảng viên'}
 						</span>
-						•<span className='text-lg'>{topic.major ? topic.major : 'Chưa có chuyên ngành'}</span>
+						•<span className='text-lg'>{topic.major.name ? topic.major.name : 'Chưa có chuyên ngành'}</span>
 					</DialogDescription>
 				</div>
 				<div className='flex flex-wrap space-x-1'>
@@ -110,9 +114,9 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 					<div>
 						<h4 className='mb-2 text-lg font-semibold text-gray-800'>Lĩnh vực</h4>
 						<div className='flex flex-wrap gap-2'>
-							{topic.fieldNames.map((field: string) => (
-								<Badge key={field} variant='blue' className={'text-md px-3 py-1'}>
-									{field}
+							{topic.fields.map((field) => (
+								<Badge key={field._id} variant='blue' className={'text-md px-3 py-1'}>
+									{field.name}
 								</Badge>
 							))}
 						</div>
@@ -120,9 +124,9 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 					<div>
 						<h4 className='mb-2 text-lg font-semibold text-gray-800'>Yêu cầu kỹ năng</h4>
 						<div className='flex flex-wrap gap-2'>
-							{topic.requirementNames.map((req: string) => (
-								<Badge key={req} variant='secondary' className={'text-md px-3 py-1'}>
-									{req}
+							{topic.requirements.map((req) => (
+								<Badge key={req._id} variant='secondary' className={'text-md px-3 py-1'}>
+									{req.name}
 								</Badge>
 							))}
 						</div>
@@ -130,7 +134,7 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 					<div className='rounded-lg bg-gray-50 p-4'>
 						<span className='font-medium text-gray-700'>Số lượng SV:</span>
 						<p className='mt-1 text-gray-600'>
-							{topic.studentNames.length}/{topic.maxStudents}
+							{topic.students.length}/{topic.maxStudents}
 						</p>
 					</div>
 				</div>
