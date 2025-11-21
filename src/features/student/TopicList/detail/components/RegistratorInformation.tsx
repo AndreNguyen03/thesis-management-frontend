@@ -32,13 +32,13 @@ const RegistratorInformation = ({
 												<p className='mt-1 text-gray-600'>{`${stu.fullName}`}</p>
 												{/* Render hình ảnh của giảng viên */}
 												<div
-													title={`${stu.studentInfo.studentCode} ${stu.fullName}`}
+													title={`${stu.studentCode} ${stu.fullName}`}
 													className='relative mx-auto flex items-center justify-center overflow-hidden rounded-full bg-gray-200 text-center text-lg font-semibold text-gray-600'
 												>
 													{stu.avatarUrl ? (
 														<img
 															src={stu.avatarUrl}
-															alt={`${stu.studentInfo.studentCode} ${stu.fullName}`}
+															alt={`${stu.studentCode} ${stu.fullName}`}
 															className='h-8 w-8 object-contain'
 														/>
 													) : (
@@ -70,16 +70,16 @@ const RegistratorInformation = ({
 												className='mt-2 flex items-center justify-center space-x-2'
 												key={lec._id}
 											>
-												<p className='mt-1 text-gray-600'>{`${lec.lecturerInfo.title} -${lec.fullName}`}</p>
+												<p className='mt-1 text-gray-600'>{`${lec.title} -${lec.fullName}`}</p>
 												{/* Render hình ảnh của giảng viên */}
 												<div
-													title={`${lec.lecturerInfo.title} ${lec.fullName}`}
+													title={`${lec.title} ${lec.fullName}`}
 													className='relative flex items-center justify-center overflow-hidden rounded-full bg-gray-200 text-lg font-semibold text-gray-600'
 												>
 													{lec.avatarUrl ? (
 														<img
 															src={lec.avatarUrl}
-															alt={`${lec.lecturerInfo.title} ${lec.fullName}`}
+															alt={`${lec.title} ${lec.fullName}`}
 															className='h-8 w-8 object-contain'
 														/>
 													) : (

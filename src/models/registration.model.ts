@@ -3,6 +3,7 @@ import type { ResponseMiniLecturerDto } from './users'
 
 export interface IStudentRegistration {
 	_id: string
+	topicId:string
 	titleVN: string
 	titleEng: string
 	type: string

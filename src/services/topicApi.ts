@@ -3,7 +3,6 @@ import type {
 	CanceledRegisteredTopic,
 	Topic,
 	ITopicDetail,
-	DraftTopic,
 	PaginatedDraftTopics,
 	GetPaginatedTopics
 } from '@/models'
