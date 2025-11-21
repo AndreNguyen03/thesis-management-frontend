@@ -7,7 +7,6 @@ import { Profile, ProfileEdit } from '@/features/shared/profile'
 import { SavedTopics } from '@/features/student/TopicList/TopicSaved'
 import { TopicRegisteredChildren } from '@/features/student/TopicList/registered/children/TopicRegisteredChildren'
 import { RegisteredTopicContainer } from '@/features/student/TopicList/registered/TopicRegisteredContainer'
-import { CanceledTopicsRegistration } from '@/features/student/TopicList/registered/children/CanceledTopicsRegistration'
 import { TopicDetailContainer } from '@/features/student/TopicList/detail/TopicDetailContainer'
 import { ManageLecturerPage } from '@/features/admin/manage_lecturer'
 import { ManageStudentPage } from '@/features/admin/manage_student'
@@ -21,6 +20,7 @@ import { ManageFacultyStudentPage } from '@/features/faculty/manage_faculty_stud
 import { ManageFacultyLecturerPage } from '@/features/faculty/manage_faculty_lecturer'
 import DetailPeriodPage from '@/features/faculty/manage_period/DetailPeriod'
 import LecturerManageTopics from '@/features/lecturer/manage_topic'
+import RegistrationHistory from '@/features/student/TopicList/registered/children/RegistrationHistory'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -53,7 +53,7 @@ export const router = createBrowserRouter([
 				path: 'topics/registered',
 				element: <RegisteredTopicContainer />,
 				children: [
-					{ path: 'canceled', element: <CanceledTopicsRegistration /> },
+					{ path: 'canceled', element: <RegistrationHistory /> },
 					{ index: true, element: <TopicRegisteredChildren /> }
 				]
 			},

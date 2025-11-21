@@ -67,16 +67,16 @@ export const TopicRegisteredCard: React.FC<{
 						{topic.lecturers.slice(0, 1).map((lec) => {
 							return (
 								<div className='flex flex-row gap-1' key={lec._id}>
-									<span>{`${lec.lecturerInfo.title} ${lec.fullName}`}</span>
+									<span>{`${lec.title} ${lec.fullName}`}</span>
 									{/* Render hình ảnh của giảng viên */}
 									<div
-										title={`${lec.lecturerInfo.title} ${lec.fullName}`}
+										title={`${lec.title} ${lec.fullName}`}
 										className='relative flex items-center justify-center overflow-hidden rounded-full bg-gray-200 text-lg font-semibold text-gray-600'
 									>
 										{lec.avatarUrl ? (
 											<img
 												src={lec.avatarUrl}
-												alt={`${lec.lecturerInfo.title} ${lec.fullName}`}
+												alt={`${lec.title} ${lec.fullName}`}
 												className='h-full w-full object-contain'
 											/>
 										) : (
@@ -97,13 +97,13 @@ export const TopicRegisteredCard: React.FC<{
 								{topic.lecturers.slice(2, topic.lecturers.length).map((lec) => (
 									// Render các hình ảnh của giảng viên khác
 									<div
-										title={`${lec.lecturerInfo.title} ${lec.fullName}`}
+										title={`${lec.title} ${lec.fullName}`}
 										className='relative flex items-center justify-center overflow-hidden rounded-full bg-gray-200 text-lg font-semibold text-gray-600'
 									>
 										{lec.avatarUrl ? (
 											<img
 												src={lec.avatarUrl}
-												alt={`${lec.lecturerInfo.title} ${lec.fullName}`}
+												alt={`${lec.title} ${lec.fullName}`}
 												className='h-full w-full object-contain'
 											/>
 										) : (

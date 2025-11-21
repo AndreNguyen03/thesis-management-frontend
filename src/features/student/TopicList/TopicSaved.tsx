@@ -50,7 +50,7 @@ export const SavedTopics = () => {
 	const setQuery = (query: string) => {
 		setQueries((prev) => ({ ...prev, query }))
 	}
-	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 500 })
+	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 400 })
 	const onEdit = (val: string) => {
 		setSearchTerm(val)
 		debounceOnChange(val)
@@ -121,42 +121,49 @@ export const SavedTopics = () => {
 					)}
 				</div>
 				<div className='flex flex-col gap-4 align-middle'>
-					<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-						{topics.map((topic) => (
-							<TopicCard key={topic._id} topic={topic} mode='saved' />
-						))}
-					</div>
-					<Pagination>
-						<PaginationContent>
-							<PaginationItem>
-								<PaginationPrevious
-									href='#'
-									onClick={() =>
-										setQueries((prev) => ({ ...prev, page: Math.max(prev.page! - 1, 1) }))
-									}
-								/>
-							</PaginationItem>
-							{[...Array(savedTopicsData?.meta.totalPages)].map((_, idx) => (
-								<PaginationItem key={idx}>
-									<PaginationLink
-										isActive={queries.page === idx + 1}
-										href='#'
-										onClick={() => setQueries((prev) => ({ ...prev, page: idx + 1 }))}
-									>
-										{idx + 1}
-									</PaginationLink>
-								</PaginationItem>
-							))}
-							<PaginationItem>
-								<PaginationNext
-									href='#'
-									onClick={() =>
-										setQueries((prev) => ({ ...prev, page: Math.min(prev.page! + 1, savedTopicsData?.meta.totalPages!) }))
-									}
-								/>
-							</PaginationItem>
-						</PaginationContent>
-					</Pagination>
+					{topics && topics.length > 0 && (
+						<>
+							<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+								{topics.map((topic) => (
+									<TopicCard key={topic._id} topic={topic} mode='saved' />
+								))}
+							</div>
+							<Pagination>
+								<PaginationContent>
+									<PaginationItem>
+										<PaginationPrevious
+											href='#'
+											onClick={() =>
+												setQueries((prev) => ({ ...prev, page: Math.max(prev.page! - 1, 1) }))
+											}
+										/>
+									</PaginationItem>
+									{[...Array(savedTopicsData?.meta.totalPages)].map((_, idx) => (
+										<PaginationItem key={idx}>
+											<PaginationLink
+												isActive={queries.page === idx + 1}
+												href='#'
+												onClick={() => setQueries((prev) => ({ ...prev, page: idx + 1 }))}
+											>
+												{idx + 1}
+											</PaginationLink>
+										</PaginationItem>
+									))}
+									<PaginationItem>
+										<PaginationNext
+											href='#'
+											onClick={() =>
+												setQueries((prev) => ({
+													...prev,
+													page: Math.min(prev.page! + 1, savedTopicsData?.meta.totalPages!)
+												}))
+											}
+										/>
+									</PaginationItem>
+								</PaginationContent>
+							</Pagination>
+						</>
+					)}
 				</div>
 			</div>
 		</div>

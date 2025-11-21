@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { PaginatedStudentRegistration } from '@/models'
 import { baseApi, type ApiResponse } from './baseApi'
+import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
 export const registrationApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -14,8 +16,16 @@ export const registrationApi = baseApi.injectEndpoints({
 				url: `/registrations/cancel-registration/${body.topicId}`,
 				method: 'DELETE'
 			})
+		}),
+		getRegistrationsHistory: builder.query<PaginatedStudentRegistration, { queries: PaginationQueryParamsDto }>({
+			query: ({ queries }) => {
+				const queryString = buildQueryString(queries)
+				return `/registrations/student/history-registrations?${queryString}`
+			},
+			transformResponse: (response: ApiResponse<PaginatedStudentRegistration>) => response.data
 		})
 	}),
 	overrideExisting: false
 })
-export const { useCreateRegistrationMutation, useDeleteRegistrationMutation } = registrationApi
+export const { useCreateRegistrationMutation, useDeleteRegistrationMutation, useGetRegistrationsHistoryQuery } =
+	registrationApi

@@ -1,9 +1,8 @@
 import type { GetFieldNameReponseDto } from './field.model'
 import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
-import type { IRegistration } from './registration.model'
 import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { MiniActorInforDto, MiniLecturerInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+import type { MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 export interface PaginationQueryParams {
 	limit?: number
 	page?: number
@@ -97,7 +96,7 @@ export interface CanceledRegisteredTopic extends Topic {
 	lastestCanceledRegisteredAt: Date
 }
 export interface ITopicDetail extends Topic {
-	allUserRegistrations: IRegistration[] // mới chỉ là các đăng ký của người dùng với topic
+	//allUserRegistrations: IRegistration[] // mới chỉ là các đăng ký của người dùng với topic
 }
 
 export interface LecturerOption {
@@ -169,7 +168,7 @@ export const topicStatusLabels = {
 	under_review: 'Đang xét duyệt',
 	approved: 'Đã duyệt',
 	rejected: 'Bị từ chối',
-	pending_registration: 'Chờ đăng ký',
+	pending_registration: 'Mở  đăng ký',
 	registered: 'Đã đăng ký',
 	full: 'Đã đủ số lượng',
 	cancelled: 'Đã hủy',

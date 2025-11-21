@@ -62,7 +62,7 @@ export const TopicRegisteredChildren = () => {
 	const setQuery = (query: string) => {
 		setQueries((prev) => ({ ...prev, query }))
 	}
-	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 500 })
+	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 400 })
 	const onEdit = (val: string) => {
 		setSearchTerm(val)
 		debounceOnChange(val)
@@ -78,13 +78,13 @@ export const TopicRegisteredChildren = () => {
 	}
 	const emptyList = registerTopics?.length === 0 && queries.query === '' && queries.filter === 'all'
 	return (
-		<>
+		<div className='flex w-full flex-col justify-center space-y-4'>
 			{emptyList ? (
 				<EmptyStateContainer type='registered' />
 			) : (
 				<>
 					{/* Search and Filters */}
-					<Card className='p-0'>
+					<Card className='w-full p-0'>
 						<CardHeader>
 							<CardTitle className='flex items-center gap-2'>
 								<h1 className='text-2xl font-bold text-primary'>Danh sách đề tài bạn đã đăng ký</h1>
@@ -126,10 +126,15 @@ export const TopicRegisteredChildren = () => {
 							</div>
 						</CardContent>
 					</Card>
-					<div className='flex flex-col gap-6'>
+					<div className='flex w-full gap-6'>
 						<div className='grid grid-cols-1 gap-6 lg:grid-cols-1'>
 							{registerTopics && registerTopics?.length > 0 ? (
-								registerTopics?.map((topic) => <TopicRegisteredCard key={topic._id} topic={topic} />)
+								<>
+									{registerTopics?.map((topic) => (
+										<TopicRegisteredCard key={topic._id} topic={topic} />
+									))}
+									
+								</>
 							) : (
 								<>
 									{' '}
@@ -141,43 +146,9 @@ export const TopicRegisteredChildren = () => {
 								</>
 							)}
 						</div>
-						<Pagination>
-							<PaginationContent>
-								<PaginationItem>
-									<PaginationPrevious
-										href='#'
-										onClick={() =>
-											setQueries((prev) => ({ ...prev, page: Math.max(prev.page! - 1, 1) }))
-										}
-									/>
-								</PaginationItem>
-								{[...Array(topicData?.meta.totalPages)].map((_, idx) => (
-									<PaginationItem key={idx}>
-										<PaginationLink
-											isActive={queries.page === idx + 1}
-											href='#'
-											onClick={() => setQueries((prev) => ({ ...prev, page: idx + 1 }))}
-										>
-											{idx + 1}
-										</PaginationLink>
-									</PaginationItem>
-								))}
-								<PaginationItem>
-									<PaginationNext
-										href='#'
-										onClick={() =>
-											setQueries((prev) => ({
-												...prev,
-												page: Math.min(prev.page! + 1, topicData?.meta.totalPages!)
-											}))
-										}
-									/>
-								</PaginationItem>
-							</PaginationContent>
-						</Pagination>
 					</div>
 				</>
 			)}
-		</>
+		</div>
 	)
 }

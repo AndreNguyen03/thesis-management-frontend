@@ -136,10 +136,7 @@ export interface FacultyBoardProfile {
 }
 
 export type AppUser = StudentUser | LecturerProfile | AdminUser | FacultyBoardProfile
-interface ResponseStudentBasicDto {
-    studentCode: string
-    major: string
-}
+
 export interface ResponseMiniStudentDto {
 	_id: string
 	fullName: string
@@ -147,7 +144,8 @@ export interface ResponseMiniStudentDto {
 	phone: string
 	avatarUrl?: string
 	avatarName?: string
-	studentInfo: ResponseStudentBasicDto
+	studentCode: string
+	major: string
 }
 export interface ResponseMiniLecturerDto {
 	_id: string
@@ -156,17 +154,14 @@ export interface ResponseMiniLecturerDto {
 	phone: string
 	avatarUrl: string
 	avatarName: string
-	title: AcademicTitle
-	lecturerInfo: MiniLecturerInforDto
+	titlePath: AcademicTitle
+	title: string
 }
 export interface MiniActorInforDto {
 	_id: string
 	fullName: string
-	email:string
+	email: string
 	phone: string
 	avatarUrl: string
 	avatarName: string
-}
-export interface MiniLecturerInforDto {
-	title: string
 }

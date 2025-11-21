@@ -25,7 +25,7 @@ const buttonVariants = cva(
 				yellow: 'bg-yellow-300 text-gray-800 hover:bg-yellow-400',
 				red: 'bg-red-500 text-white hover:bg-red-600',
 				blue: 'bg-blue-600 text-white hover:bg-blue-700',
-				active: 'bg-blue-500 text-white hover:bg-blue-600',
+				active: 'bg-blue-600 text-white border-blue-600',
 				nonactive: 'bg-gray-300 text-gray-700 pointer-events-none'
 			},
 			size: {
