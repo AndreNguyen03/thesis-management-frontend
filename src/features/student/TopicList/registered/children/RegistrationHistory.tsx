@@ -13,7 +13,7 @@ import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { topicStatusLabels } from '@/models/topic.model'
 import { useGetRegistrationsHistoryQuery } from '@/services/registrationApi'
 import { Eye, Trash2 } from 'lucide-react'
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // Badge màu cho trạng thái

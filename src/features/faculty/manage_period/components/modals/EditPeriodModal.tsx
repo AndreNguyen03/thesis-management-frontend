@@ -43,7 +43,7 @@ export function EditPeriodModal({ open, onOpenChange, period, onSubmit }: EditPe
 	const handleSubmit = () => {
 		if (period && name && startDate && endDate) {
 			onSubmit({
-				id: period.id,
+				id: period._id,
 				name,
 				startDate,
 				endDate

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { StatsCards } from './StatsCards'
 import { TopicsTable } from './TopicsTable'
@@ -7,11 +6,12 @@ import { getPhaseStats, mockTopicsPhase1, mockTopicsPhase2, mockTopicsPhase3, mo
 import { Settings, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
-import type { PeriodPhase, PhaseType } from '@/models/period.model'
 import { PhaseInfo } from '@/utils/utils'
+import type { PeriodPhase } from '@/models/period-phase.models'
+import { Button } from '@/components/ui'
 interface PhaseContentProps {
 	phase: PeriodPhase
-	currentPhase: PhaseType
+	currentPhase: string
 	periodId: string
 	lecturers?: string[]
 }

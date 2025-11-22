@@ -1,12 +1,13 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Users, Bell, Save, Info } from 'lucide-react'
 import { useState } from 'react'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog as PreviewDialog, DialogContent as PreviewContent } from '@/components/ui/dialog'
+import { Dialog as PreviewDialog, DialogContent as PreviewContent } from '@/components/ui/Dialog'
 import type { PhaseType } from '@/models/period.model'
 import { PhaseInfo, PhaseStatusMap } from '@/utils/utils'
+import { Button } from '@/components/ui'
+import type { PeriodPhaseStatus } from '@/models/period-phase.models'
 
 // Mock danh sách giảng viên có sẵn
 const allLecturersMock = [
@@ -28,7 +29,7 @@ interface PhaseSettingsModalProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	phase: PhaseType
-	status: 'not_started' | 'ongoing' | 'completed'
+	status: PeriodPhaseStatus
 	initialStart?: string
 	initialEnd?: string
 	lecturers?: string[]
@@ -69,7 +70,7 @@ export function PhaseSettingsModal({
 
 	const selectAllTemp = () => setTempSelected([...allLecturersMock])
 	const clearAllTemp = () => setTempSelected([])
-
+	console.log('status', status)
 	return (
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>

@@ -1,9 +1,10 @@
-import type { Faculty } from './faculty.model'
-import type { GetPeriodPhaseDto } from './period-phase.dtos'
+import type { GetFaculty } from './faculty.model'
+import type { PeriodPhase } from './period-phase.models'
+import type { ResponseMiniLecturerDto } from './users'
 
 export type PeriodStatus = 'ongoing' | 'completed'
 
-export type PhaseType = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion'
+export type PhaseType = 'submit_topic' | 'open_registration' | 'execution' | 'completion'
 
 export type TopicStatus =
 	// Pha 1 - Nộp đề tài
@@ -13,7 +14,6 @@ export type TopicStatus =
 	| 'approved'
 	| 'rejected'
 	// Pha 2 - Mở đăng ký
-	| 'available'
 	| 'pending_registration'
 	| 'registered'
 	| 'full'
@@ -31,15 +31,15 @@ export type TopicStatus =
 	| 'rejected_final'
 
 export interface Period {
-	id: string
+	_id: string
 	name: string
-	startTime: string
-	endTime: string
-	status: PeriodStatus
-	currentPhase: PhaseType
-	totalTopics: number
+	faculty: GetFaculty
+	phases: PeriodPhase[]
+	status: string
+	currentPhase: string
+	startTime: Date
+	endTime: Date
 }
-
 export interface CreatePeriodDto {
 	name: string
 	startTime: Date
@@ -65,20 +65,10 @@ export interface PhaseStats {
 	variant?: 'default' | 'success' | 'warning' | 'destructive'
 }
 
-export interface PeriodPhase {
-	phase: PhaseType
-	startTime: string
-	endTime: string
-	status: 'not_started' | 'ongoing' | 'completed'
-	maxTopicsPerLecturer?: number
-	requiredLecturerIds?: string[]
-	allowManualApproval: boolean
-}
-
 export interface PeriodBackend {
 	id: string
 	name: string
-	faculty: Faculty
+	faculty: GetFaculty
 	startDate: string
 	endDate: string
 	status: 'ongoing' | 'completed' | 'upcoming'
@@ -96,14 +86,12 @@ export interface GetCustomPeriodDetailRequestDto {
 	}
 }
 
-
 export interface GetCustomMiniPeriodInfoRequestDto {
-    _id: string
-    name: string
-	faculty: Faculty
-    status: string
-    startTime: Date
-    endTime: Date
-    currentPhaseDetail: GetPeriodPhaseDto | null
+	_id: string
+	name: string
+	faculty: GetFaculty
+	status: string
+	startTime: Date
+	endTime: Date
+	currentPhaseDetail: PeriodPhase | null
 }
-

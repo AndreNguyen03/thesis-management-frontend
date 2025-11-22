@@ -9,7 +9,7 @@ import {
 	PaginationNext,
 	PaginationPrevious
 } from '@/components/ui/pagination'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FilterX, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button, Input } from '@/components/ui'
@@ -45,7 +45,7 @@ export function DataTable<T extends Record<string, any>>({
 	const firstFocusableRef = useRef<HTMLElement>(null)
 	const searchFieldRef = useRef<HTMLButtonElement>(null)
 	const searchInputRef = useRef<HTMLInputElement>(null)
-
+	const navigate = useNavigate()
 	useEffect(() => {
 		if (tableRef.current) {
 			const firstFocusable = tableRef.current.querySelector('input, button, [tabindex="0"]') as HTMLElement
@@ -83,7 +83,7 @@ export function DataTable<T extends Record<string, any>>({
 	const updateQuery = (updates: Partial<QueryParams>) => {
 		onQueryChange({
 			page,
-			page_size: pageSize,
+			limit: pageSize,
 			search_by: searchField,
 			query: searchValue.value,
 			sort_by: sortField,
@@ -257,9 +257,7 @@ export function DataTable<T extends Record<string, any>>({
 							</TableRow>
 						) : error ? (
 							<TableRow>
-								<TableCell colSpan={columns.length + (actions ? 1 : 0)}>
-									<div className='text-red-500'>Lỗi: {error.message}</div>
-								</TableCell>
+								<TableCell colSpan={columns.length + (actions ? 1 : 0)}></TableCell>
 							</TableRow>
 						) : !data.length ? (
 							<TableRow>

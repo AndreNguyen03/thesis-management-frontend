@@ -1,31 +1,41 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PhaseStepBar } from './components/PhaseStepBar'
 import { PhaseContent } from './components/PhaseContent'
-import { Button } from '@/components/ui/button'
-import { mockPeriodDetail } from './mockData'
 import { usePageBreadcrumb } from '@/hooks'
-import type { PeriodPhase, PhaseType } from '@/models/period.model'
+import type { PhaseType } from '@/models/period.model'
+import { Button } from '@/components/ui'
+import { useGetPeriodDetailQuery } from '@/services/periodApi'
+import NotFound from '@/features/shared/NotFound'
+import type { PeriodPhase } from '@/models/period-phase.models'
 
 // import { useGetPeriodDetailQuery } from '@/services/periodApi'
 
 export default function DetailPeriodPage() {
 	const { id } = useParams()
 	const navigate = useNavigate()
-
-	// const { data: period, isLoading, error } = useGetPeriodDetailQuery(id!)
-
-	const loading = false
-	const error = null
-	const period = mockPeriodDetail
-
-	const [currentPhaseId, setCurrentPhaseId] = useState<PhaseType>(period?.currentPhase || 'submit_topic')
-
+	const {
+		data: period,
+		isLoading,
+		error
+	} = useGetPeriodDetailQuery(id!, {
+		skip: !id // Nếu dùng RTK Query, nên dùng skip thay vì return sớm ở component
+	})
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Quản lý đợt đăng ký', path: '/manage-period' },
-		{ label: period!.name, path: '/period/:id' }
+		{ label: period?.name ?? 'Đang tải', path: `/period/${period?._id}` }
 	])
+
+	const [currentPhase, setCurrentPhaseId] = useState<string | undefined>(undefined)
+	useEffect(() => {
+		if (period?.currentPhase) {
+			setCurrentPhaseId(period.currentPhase)
+		}
+	}, [period])
+	if (!id) {
+		return <NotFound />
+	}
 
 	if (!period) {
 		return (
@@ -39,7 +49,7 @@ export default function DetailPeriodPage() {
 	}
 
 	// Lấy thông tin pha hiện tại
-	const currentPhase = period.phases.find((p: PeriodPhase) => p.phase === period.currentPhase)
+	const currentPhaseDetail = period.phases.find((p: PeriodPhase) => p.phase === currentPhase)
 
 	return (
 		<div className='min-h-screen'>
@@ -48,7 +58,7 @@ export default function DetailPeriodPage() {
 				<aside className='sticky top-0 h-screen w-[10%] min-w-[120px] border-r'>
 					<PhaseStepBar
 						phases={period.phases}
-						currentPhase={currentPhaseId}
+						currentPhase={currentPhase!}
 						onPhaseChange={(phaseType: PhaseType) => {
 							setCurrentPhaseId(phaseType)
 						}}
@@ -60,9 +70,9 @@ export default function DetailPeriodPage() {
 					<div className='container mx-auto max-w-7xl'>
 						{currentPhase && (
 							<PhaseContent
-								phase={period.phases.find((p) => p.phase === currentPhaseId)!}
+								phase={currentPhaseDetail!}
 								currentPhase={period.currentPhase}
-								periodId={period.id}
+								periodId={period._id}
 							/>
 						)}
 					</div>

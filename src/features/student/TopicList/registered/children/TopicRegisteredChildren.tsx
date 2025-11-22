@@ -20,14 +20,7 @@ import type { Topic } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useGetFieldsQuery } from '@/services/fieldApi'
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious
-} from '@/components/ui/pagination'
+
 export const TopicRegisteredChildren = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,

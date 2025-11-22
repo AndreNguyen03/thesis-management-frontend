@@ -154,7 +154,7 @@ export interface ResponseMiniLecturerDto {
 	phone: string
 	avatarUrl: string
 	avatarName: string
-	titlePath: AcademicTitle
+	//titlePath?: AcademicTitle
 	title: string
 }
 export interface MiniActorInforDto {

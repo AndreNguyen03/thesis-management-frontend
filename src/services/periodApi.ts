@@ -1,19 +1,19 @@
-import { type QueryParams } from '@/components/ui/DataTable/types'
 import type { PaginatedResponse } from '@/models'
+import type { PeriodPhase } from '@/models/period-phase.models'
 import {
 	type CreatePeriodDto,
 	type GetCustomMiniPeriodInfoRequestDto,
 	type GetCustomPeriodDetailRequestDto,
 	type Period,
 	type PeriodBackend,
-	type PeriodPhase
 } from '@/models/period.model'
+import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
 
 export const periodApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		// lấy tất cả period
-		getPeriods: builder.query<PaginatedResponse<Period>, QueryParams>({
+		getPeriods: builder.query<PaginatedResponse<Period>, PaginationQueryParamsDto>({
 			query: (params) => {
 				const queryString = new URLSearchParams(
 					Object.entries(params).reduce(
@@ -41,11 +41,11 @@ export const periodApi = baseApi.injectEndpoints({
 		}),
 
 		// Lấy detail kì đăng ký
-		getPeriodDetail: builder.query<PeriodBackend, string>({
+		getPeriodDetail: builder.query<Period, string>({
 			query: (id) => `/periods/detail-period/${id}`,
 
 			// RTK Query trả về ApiResponse<T>, cần unwrap data.data
-			transformResponse: (response: ApiResponse<PeriodBackend>) => response.data,
+			transformResponse: (response: ApiResponse<Period>) => response.data,
 
 			providesTags: (result, error, id) =>
 				result ? [{ type: 'PeriodDetail', id }] : [{ type: 'PeriodDetail', id: 'LIST' }]
