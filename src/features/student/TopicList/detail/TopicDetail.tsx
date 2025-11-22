@@ -92,7 +92,7 @@ const TopicDetail = ({ topic, onUpdate }: { topic: ITopicDetail; onUpdate: () =>
 						<span className='text-lg'>
 							{topic.lecturers.length > 0
 								? topic.lecturers
-										.map((lecturer) => `${lecturer.lecturerInfo.title} ${lecturer.fullName}`)
+										.map((lecturer) => `${lecturer.title} ${lecturer.fullName}`)
 										.join(', ')
 								: 'Chưa có giảng viên'}
 						</span>

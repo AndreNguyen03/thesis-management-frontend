@@ -14,6 +14,7 @@ import { topicStatusLabels } from '@/models/topic.model'
 import { useGetRegistrationsHistoryQuery } from '@/services/registrationApi'
 import { Eye, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // Badge màu cho trạng thái
 const statusMap: Record<string, { label: string; color: string }> = {
@@ -28,7 +29,7 @@ const RegistrationHistory = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'topicInfo.titleVN, lecturers.fullName, periodName',
+		search_by: 'topicInfo.titleVN,topicInfo.titleEng, lecturers.fullName, periodName',
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
@@ -56,6 +57,7 @@ const RegistrationHistory = () => {
 		setSearchTerm(val)
 		debounceOnChange(val)
 	}
+	const navigate = useNavigate()
 	return (
 		<Card className='space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
 			<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
@@ -102,7 +104,7 @@ const RegistrationHistory = () => {
 								<td className='px-3 py-2'>{hic.periodName}</td>
 								<td className='flex flex-col px-3 py-2'>
 									<span className='font-semibold text-gray-900'>{hic.titleVN}</span>
-									<span className='font-sm text-[13px] text-gray-500'>{hic.titleVN}</span>
+									<span className='font-sm text-[13px] text-gray-500'>{`(${hic.titleEng})`}</span>
 								</td>
 								<td className='px-3 py-2'>
 									<div className='flex flex-col text-sm'>
@@ -125,7 +127,10 @@ const RegistrationHistory = () => {
 									</span>
 								</td>
 								<td className='px-3 py-2 text-center'>
-									<button className='rounded-full p-2 transition-colors hover:bg-gray-100'>
+									<button
+										className='rounded-full p-2 transition-colors hover:bg-gray-100'
+										onClick={() => navigate(`/detail-topic/${hic.topicId}`)}
+									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
 									{(hic.registrationStatus === 'WITHDRAWN' ||
@@ -172,7 +177,7 @@ const RegistrationHistory = () => {
 							onClick={() =>
 								setQueries((prev) => ({
 									...prev,
-									page: Math.min(prev.page! + 1, registrationHistory?.meta.totalPages!)
+									page: Math.min(prev.page! + 1, registrationHistoryData?.meta.totalPages!)
 								}))
 							}
 						/>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { PhaseType, Topic } from '@/models/period.model'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Eye, MoreVertical, CheckCircle, XCircle, Edit } from 'lucide-react'
@@ -39,8 +39,9 @@ export function TopicsTable({ topics, phase }: TopicsTableProps) {
 	)
 
 	const getStatusBadge = (status: string) => {
+		console.log('Status:', status)
 		const variants = {
-			pending: { label: 'Chờ xét', variant: 'outline' as const },
+			pending_registration: { label: 'Chờ xét', variant: 'outline' as const },
 			approved: { label: 'Đã duyệt', variant: 'default' as const },
 			rejected: { label: 'Từ chối', variant: 'destructive' as const },
 			in_progress: { label: 'Đang thực hiện', variant: 'default' as const },

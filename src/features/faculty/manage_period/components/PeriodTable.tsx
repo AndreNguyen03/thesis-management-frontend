@@ -107,9 +107,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 			key: 'currentPhase',
 			title: 'Pha hiện tại',
 			sortable: false,
-			render: (value: PhaseType) => (
-				<Badge variant='outline'>{value !== 'empty' ? `Pha ${value}` : 'Hiện trống'}</Badge>
-			)
+			render: (value: PhaseType) => <Badge variant='outline'>{`Pha ${value}`}</Badge>
 		}
 	]
 
@@ -118,7 +116,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 		{
 			icon: <Eye className='h-4 w-4' />,
 			label: 'Xem chi tiết',
-			onClick: (period) => navigate(`/period/${period.id}`)
+			onClick: (period) => navigate(`/period/${period._id}`)
 		},
 		{
 			icon: <Edit className='h-4 w-4' />,

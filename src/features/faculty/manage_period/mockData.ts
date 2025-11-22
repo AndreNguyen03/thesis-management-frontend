@@ -1,34 +1,6 @@
-import type { RegistrationPeriod, Topic, PhaseStats, PhaseType } from '@/models/period.model'
+import type { ResponseMiniLecturerDto } from '@/models'
+import type {  Topic, PhaseStats, PhaseType } from '@/models/period.model'
 
-export const mockPeriods: RegistrationPeriod[] = [
-	{
-		id: '1',
-		name: 'Đợt đăng ký Tốt nghiệp HK1 2024-2025',
-		startDate: '2024-09-01',
-		endDate: '2025-01-30',
-		status: 'ongoing',
-		currentPhase: 2,
-		totalTopics: 145
-	},
-	{
-		id: '2',
-		name: 'Đợt đăng ký Tốt nghiệp HK2 2023-2024',
-		startDate: '2024-02-01',
-		endDate: '2024-06-30',
-		status: 'completed',
-		currentPhase: 4,
-		totalTopics: 187
-	},
-	{
-		id: '3',
-		name: 'Đợt đăng ký Tốt nghiệp HK2 2024-2025',
-		startDate: '2025-02-01',
-		endDate: '2025-06-30',
-		status: 'completed',
-		currentPhase: 1,
-		totalTopics: 0
-	}
-]
 
 export const mockTopicsPhase1: Topic[] = [
 	{
@@ -42,7 +14,7 @@ export const mockTopicsPhase1: Topic[] = [
 		id: 'T002',
 		title: 'Ứng dụng AI trong phân tích dữ liệu y tế',
 		instructor: 'PGS. Trần Thị B',
-		status: 'pending',
+		status: 'pending_registration',
 		submittedAt: '2024-09-18'
 	},
 	{
@@ -101,7 +73,7 @@ export const mockTopicsPhase4: Topic[] = [
 		title: 'Xây dựng hệ thống quản lý thư viện điện tử',
 		instructor: 'TS. Nguyễn Văn A',
 		student: 'Trần Văn X',
-		status: 'completed',
+		status: 'graded',
 		submittedAt: '2024-09-15',
 		score: 8.5,
 		reportFile: 'report_T001.pdf'
@@ -111,7 +83,7 @@ export const mockTopicsPhase4: Topic[] = [
 		title: 'Ứng dụng AI trong phân tích dữ liệu y tế',
 		instructor: 'PGS. Trần Thị B',
 		student: 'Lê Thị Z',
-		status: 'completed',
+		status: 'graded',
 		submittedAt: '2024-09-18',
 		score: 9.0,
 		reportFile: 'report_T002.pdf'
@@ -155,14 +127,33 @@ export const getPhaseStats = (phase: PhaseType): PhaseStats[] => {
 
 // src/modules/manage-period/mock/detailPeriod.ts
 import type { PeriodBackend } from '@/models/period.model'
-
+const mockLecturers: ResponseMiniLecturerDto[] = [
+	{
+		_id: 'lec1',
+		fullName: 'TS. Nguyễn Văn A',
+		email: 'nguyenvana@university.edu.vn',
+		phone: '0912345678',
+		avatarUrl: '/avatars/lec1.png',
+		avatarName: 'lec1.png',
+		title: 'Tiến sĩ'
+	},
+	{
+		_id: 'lec2',
+		fullName: 'PGS. Trần Thị B',
+		email: 'tranthib@university.edu.vn',
+		phone: '0987654321',
+		avatarUrl: '/avatars/lec2.png',
+		avatarName: 'lec2.png',
+		title: 'Phó Giáo sư'
+	}
+]
 export const mockPeriodDetail: PeriodBackend = {
 	id: 'p1',
 	name: 'Đợt đăng ký đề tài HK1 2025',
 	startDate: '2025-01-01',
 	endDate: '2025-05-30',
 	status: 'ongoing',
-	currentPhase: 'submit_topic' as PhaseType,
+	currentPhase: 'submit_topic',
 	faculty: {
 		name: 'Khoa Công Nghệ Thông Tin',
 		email: 'fit@university.edu.vn',
@@ -170,15 +161,17 @@ export const mockPeriodDetail: PeriodBackend = {
 	},
 	phases: [
 		{
-			phase: 'submit_topic' as PhaseType,
+			_id: '122	',
+			phase: 'submit_topic',
 			startTime: '2025-01-01T00:00:00Z',
 			endTime: '2025-01-15T23:59:59Z',
 			status: 'ongoing',
-			maxTopicsPerLecturer: 3,
-			requiredLecturerIds: ['lec1', 'lec2'],
+			minTopicsPerLecturer: 3,
+			requiredLecturers: mockLecturers,
 			allowManualApproval: true
 		},
 		{
+			_id: '123',
 			phase: 'open_registration' as PhaseType,
 			startTime: '2025-01-16T00:00:00Z',
 			endTime: '2025-01-25T23:59:59Z',
@@ -186,6 +179,7 @@ export const mockPeriodDetail: PeriodBackend = {
 			allowManualApproval: false
 		},
 		{
+			_id: '124',
 			phase: 'execution' as PhaseType,
 			startTime: '2025-01-26T00:00:00Z',
 			endTime: '2025-04-30T23:59:59Z',
@@ -193,6 +187,7 @@ export const mockPeriodDetail: PeriodBackend = {
 			allowManualApproval: false
 		},
 		{
+			_id: '125',
 			phase: 'completion' as PhaseType,
 			startTime: '2025-05-01T00:00:00Z',
 			endTime: '2025-05-30T23:59:59Z',
