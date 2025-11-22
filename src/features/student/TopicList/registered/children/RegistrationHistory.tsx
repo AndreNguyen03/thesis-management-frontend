@@ -29,7 +29,7 @@ const RegistrationHistory = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'topicInfo.titleVN, lecturers.fullName, periodName',
+		search_by: 'topicInfo.titleVN,topicInfo.titleEng, lecturers.fullName, periodName',
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
@@ -104,7 +104,7 @@ const RegistrationHistory = () => {
 								<td className='px-3 py-2'>{hic.periodName}</td>
 								<td className='flex flex-col px-3 py-2'>
 									<span className='font-semibold text-gray-900'>{hic.titleVN}</span>
-									<span className='font-sm text-[13px] text-gray-500'>{hic.titleVN}</span>
+									<span className='font-sm text-[13px] text-gray-500'>{`(${hic.titleEng})`}</span>
 								</td>
 								<td className='px-3 py-2'>
 									<div className='flex flex-col text-sm'>
