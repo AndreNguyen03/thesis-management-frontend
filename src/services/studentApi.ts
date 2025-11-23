@@ -1,3 +1,4 @@
+import type { QueryParams } from '@/components/ui/DataTable/types';
 import type { CreateStudentRequest, StudentTable } from '@/features/admin/manage_student/types';
 import { baseApi } from '@/services/baseApi'
 import type { ApiResponse } from '@/services/baseApi'
@@ -7,22 +8,15 @@ export const studentApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         // 🧩 Lấy danh sách sinh viên
         getStudents: builder.query<
-            { datas: StudentTable[]; total_records: number },
-            {
-                page: number
-                page_size: number
-                search_by?: string
-                query?: string
-                sort_by?: string
-                sort_order?: string
-            }
+            { data: StudentTable[]; totalRecords: number },
+            QueryParams
         >({
             query: (params) => ({
                 url: '/users/students',
                 method: 'GET',
                 params
             }),
-            transformResponse: (response: ApiResponse<{ datas: StudentTable[]; total_records: number }>) =>
+            transformResponse: (response: ApiResponse<{ data: StudentTable[]; totalRecords: number }>) =>
                 response.data,
             providesTags: ['UserProfile', 'ListStudent']
         }),

@@ -3,7 +3,7 @@ import { CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/Button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Download, Eye, X } from 'lucide-react'
-import CSVPreviewModal from './CSVPreviewModal'
+import CSVPreviewModal from './PreviewModal'
 
 export interface LecturerRecord {
 	name: string

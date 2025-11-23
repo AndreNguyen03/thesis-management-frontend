@@ -1,27 +1,19 @@
 import { baseApi } from '@/services/baseApi'
 import type { ApiResponse } from '@/services/baseApi'
 import type { CreateUserRequest, LecturerTable } from '@/features/admin/manage_lecturer/types'
+import type { QueryParams } from '@/components/ui/DataTable/types'
+import type { CreateBatchLecturerDto, CreateLecturerBatchResponse } from '@/models'
 
 export const lecturerApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		// 🧩 Lấy danh sách giảng viên
-		getLecturers: builder.query<
-			{ datas: LecturerTable[]; total_records: number },
-			{
-				page: number
-				page_size: number
-				search_by?: string
-				query?: string
-				sort_by?: string
-				sort_order?: string
-			}
-		>({
+		getLecturers: builder.query<{ data: LecturerTable[]; totalRecords: number }, QueryParams>({
 			query: (params) => ({
 				url: '/users/lecturers',
 				method: 'GET',
 				params
 			}),
-			transformResponse: (response: ApiResponse<{ datas: LecturerTable[]; total_records: number }>) =>
+			transformResponse: (response: ApiResponse<{ data: LecturerTable[]; totalRecords: number }>) =>
 				response.data,
 			providesTags: ['UserProfile', 'ListLecturer']
 		}),
@@ -38,13 +30,13 @@ export const lecturerApi = baseApi.injectEndpoints({
 		}),
 
 		// 🧩 Tạo hàng loạt giảng viên (Batch)
-		createBatchLecturers: builder.mutation<{ created: LecturerTable[]; failed: string[] }, CreateUserRequest[]>({
+		createBatchLecturers: builder.mutation<CreateLecturerBatchResponse, CreateBatchLecturerDto[]>({
 			query: (body) => ({
-				url: '/lecturers/batch',
+				url: '/users/lecturers/batch',
 				method: 'POST',
 				body
 			}),
-			transformResponse: (response: ApiResponse<{ created: LecturerTable[]; failed: string[] }>) => response.data,
+			transformResponse: (response: ApiResponse<CreateLecturerBatchResponse>) => response.data,
 			invalidatesTags: ['UserProfile', 'ListLecturer']
 		}),
 
@@ -71,5 +63,5 @@ export const lecturerApi = baseApi.injectEndpoints({
 	})
 })
 
-export const { useGetLecturersQuery, useCreateLecturerMutation, useUpdateLecturerMutation, useDeleteLecturerMutation } =
+export const { useGetLecturersQuery, useCreateLecturerMutation, useUpdateLecturerMutation, useDeleteLecturerMutation, useCreateBatchLecturersMutation } =
 	lecturerApi

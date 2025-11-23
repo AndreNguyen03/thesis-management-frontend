@@ -83,7 +83,7 @@ export function DataTable<T extends Record<string, any>>({
 	const updateQuery = (updates: Partial<QueryParams>) => {
 		onQueryChange({
 			page,
-			page_size: pageSize,
+			limit: pageSize,
 			search_by: searchField,
 			query: searchValue.value,
 			sort_by: sortField,
@@ -258,7 +258,7 @@ export function DataTable<T extends Record<string, any>>({
 						) : error ? (
 							<TableRow>
 								<TableCell colSpan={columns.length + (actions ? 1 : 0)}>
-									<div className='text-red-500'>Lỗi: {error.message}</div>
+									<div className='text-red-500'>Lỗi: {JSON.stringify(error)}</div>
 								</TableCell>
 							</TableRow>
 						) : !data.length ? (

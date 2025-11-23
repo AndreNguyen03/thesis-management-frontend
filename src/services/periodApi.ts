@@ -148,5 +148,5 @@ export const {
 	useCreateCompletionPhaseMutation,
 	useDeletePeriodMutation,
 	useGetPeriodsQuery,
-    useCreatePeriodMutation
+	useCreatePeriodMutation
 } = periodApi

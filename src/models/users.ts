@@ -1,7 +1,7 @@
 import type { AcademicTitle } from '@/features/admin/manage_lecturer/types'
 
 // Role
-export type Role = 'student' | 'lecturer' | 'admin' | 'faculty-board'
+export type Role = 'student' | 'lecturer' | 'admin' | 'faculty_board'
 
 // Student Project
 export interface StudentProject {
@@ -134,6 +134,28 @@ export interface FacultyBoardProfile {
 	isActive: boolean
 	createdAt?: Date
 	updatedAt?: Date
+}
+
+export interface CreateLecturerSuccessItem {
+	fullName: string
+	email: string
+	facultyName: string
+}
+
+export interface CreateLecturerFailedItem {
+	fullName: string
+	reason: string
+}
+export interface CreateLecturerBatchResponse {
+	success: CreateLecturerSuccessItem[]
+	failed: CreateLecturerFailedItem[]
+}
+
+export interface CreateBatchLecturerDto {
+	fullName: string
+	facultyName: string
+	title: string 
+    phone?: string
 }
 
 export type AppUser = StudentUser | LecturerProfile | AdminUser | FacultyBoardProfile

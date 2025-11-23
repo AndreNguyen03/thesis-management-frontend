@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { Edit2, Plus, Trash2 } from 'lucide-react'
-import { DialogHeader, Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { DialogHeader, Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
 import { DEFAULT_PASSWORD, type CreateStudentRequest, type StudentTable } from './types'
 import { DataTable } from '@/components/ui/DataTable'
 import type { QueryParams, TableColumn, TableAction } from '@/components/ui/DataTable/types'
@@ -46,7 +46,7 @@ export const ManageStudentPage = () => {
 
 	const [queryParams, setQueryParams] = useState<QueryParams>({
 		page: 1,
-		page_size: 10,
+		limit: 10,
 		search_by: 'fullName',
 		query: '',
 		sort_by: 'fullName',
@@ -146,13 +146,13 @@ export const ManageStudentPage = () => {
 
 				<section aria-label='Bảng quản lý quản trị viên'>
 					<DataTable
-						data={data?.datas || []}
+						data={data?.data || []}
 						columns={columns}
 						actions={actions}
 						isLoading={isLoading}
 						error={toErrorObject(error)}
-						totalRecords={data?.total_records || 0}
-						pageSize={queryParams.page_size}
+						totalRecords={data?.totalRecords || 0}
+						pageSize={queryParams.limit}
 						searchFields={searchFields}
 						onQueryChange={setQueryParams}
 						emptyState={{

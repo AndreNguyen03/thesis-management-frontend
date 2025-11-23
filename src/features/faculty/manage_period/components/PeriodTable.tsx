@@ -47,6 +47,8 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 	const { data: response, isLoading, error } = useGetPeriodsQuery(queryParams)
 	const [deletePeriod, { isLoading: isDeleting }] = useDeletePeriodMutation()
 
+    console.log(response)
+
 	async function handleDeletePeriod(periodId: string) {
 		try {
 			const result = await deletePeriod(periodId).unwrap()
@@ -122,7 +124,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 		{
 			icon: <Eye className='h-4 w-4' />,
 			label: 'Xem chi tiết',
-			onClick: (period) => navigate(`/period/${period.id}`)
+			onClick: (period) => navigate(`/period/${period._id}`)
 		},
 		{
 			icon: <Edit className='h-4 w-4' />,

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { Edit2, Plus, Trash2 } from 'lucide-react'
-import { DialogHeader, Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { DialogHeader, Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
 import type { CreateUserRequest, LecturerTable } from './types'
 import {
 	useGetLecturersQuery,
@@ -26,8 +26,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/hooks/use-toast'
 import { toErrorObject } from '@/utils/catch-error'
-import { BulkCreateModal } from './components/BulkCreateModal'
 import { usePageBreadcrumb } from '@/hooks'
+import BulkCreateLecturers from './components/BulkCreateModal'
 
 export const ManageLecturerPage = () => {
 	const searchFields = {
@@ -47,7 +47,7 @@ export const ManageLecturerPage = () => {
 
 	const [queryParams, setQueryParams] = useState<QueryParams>({
 		page: 1,
-		page_size: 10,
+		limit: 10,
 		search_by: 'fullName',
 		query: '',
 		sort_by: 'fullName',
@@ -182,13 +182,13 @@ export const ManageLecturerPage = () => {
 
 				<section aria-label='Bảng quản lý giảng viên'>
 					<DataTable
-						data={data?.datas || []}
+						data={data?.data || []}
 						columns={columns}
 						actions={actions}
 						isLoading={isLoading}
 						error={toErrorObject(error)}
-						totalRecords={data?.total_records || 0}
-						pageSize={queryParams.page_size}
+						totalRecords={data?.totalRecords || 0}
+						pageSize={queryParams.limit}
 						searchFields={searchFields}
 						onQueryChange={setQueryParams}
 						emptyState={{
@@ -338,7 +338,7 @@ export const ManageLecturerPage = () => {
 			</AlertDialog>
 
 			{/* Hộp thoại tạo hàng loạt */}
-			<BulkCreateModal isOpen={isBulkDialogOpen} onClose={() => setIsBulkDialogOpen(false)} />
+			<BulkCreateLecturers isOpen={isBulkDialogOpen} onClose={() => setIsBulkDialogOpen(false)} />
 		</>
 	)
 }

@@ -76,7 +76,7 @@ const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	],
-    'faculty-board': [
+    faculty_board: [
 		{ title: 'Quản lý giảng viên khoa', url: '/manage-lecturers', icon: Users },
 		{ title: 'Quản lý sinh viên khoa', url: '/manage-students', icon: Users },
 		{ title: 'Quản lý đợt đề tài', url: '/manage-period', icon: Users },
@@ -201,7 +201,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 								{userRole === 'student' && 'Sinh viên'}
 								{userRole === 'lecturer' && 'Giảng viên'}
 								{userRole === 'admin' && 'Quản trị'}
-								{userRole === 'faculty-board' && 'Ban chủ nhiệm khoa'}
+								{userRole === 'faculty_board' && 'Ban chủ nhiệm khoa'}
 							</div>
 						)}
 						{renderMenuItems(menuItems[userRole])}

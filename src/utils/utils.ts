@@ -52,6 +52,10 @@ export function decodeJwt<T = any>(token: string): T | null {
 	}
 }
 export const PhaseInfo: Record<PhaseType, { order: number; label: string }> = {
+    empty: {
+        order: 0,
+        label: 'Chưa bắt đầu'
+    },
 	submit_topic: {
 		order: 1,
 		label: 'Nộp đề tài'

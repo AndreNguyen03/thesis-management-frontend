@@ -16,7 +16,6 @@ const App = () => {
 	const dispatch = useAppDispatch()
 
 	useEffect(() => {
-		console.log(`app :: `, userData)
 		if (userData && userData !== user) {
 			dispatch(setUser(userData))
 		}

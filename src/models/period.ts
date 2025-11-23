@@ -1,8 +1,7 @@
-import type { Faculty } from './faculty'
 
 export type PeriodStatus = 'ongoing' | 'completed'
 
-export type PhaseType = 'submit_topic' | 'open_registration' | 'execution' | 'completion'
+export type PhaseType = 'submit_topic' | 'open_registration' | 'execution' | 'completion' | 'empty'
 
 export type TopicStatus =
 	// Pha 1 - Nộp đề tài
@@ -30,7 +29,7 @@ export type TopicStatus =
 	| 'rejected_final'
 
 export interface Period {
-	id: string
+	_id: string
 	name: string
 	startTime: string
 	endTime: string
@@ -40,11 +39,10 @@ export interface Period {
 }
 
 export interface CreatePeriodDto {
-    name: string,
-    startTime: Date,  
-    endTime: Date
+	name: string
+	startTime: Date
+	endTime: Date
 }
-
 
 export interface Topic {
 	id: string
@@ -76,12 +74,13 @@ export interface PeriodPhase {
 }
 
 export interface PeriodBackend {
-	id: string
+	_id: string
 	name: string
-	faculty: Faculty
-	startDate: string
-	endDate: string
+	facultyId: string
+	startTime: string
+	endTime: string
 	status: 'ongoing' | 'completed' | 'upcoming'
-	currentPhase: 'submit_topic' | 'open_registration' | 'execution' | 'completion'
+	totalTopics: number
+	currentPhase: 'submit_topic' | 'open_registration' | 'execution' | 'completion' | 'empty'
 	phases: PeriodPhase[]
 }
