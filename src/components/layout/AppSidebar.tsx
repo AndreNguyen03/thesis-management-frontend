@@ -112,6 +112,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	}
 	const handlePeriodInfo = (period_info: MenuItem[]) => {
 		if (periodInfoData) {
+			localStorage.setItem('currentPeriodId', periodInfoData._id)
 			period_info[0].title = `Đợt hiện tại: ${periodInfoData.name}`
 			;((period_info[0].url = `/period/${periodInfoData._id}`), (period_info[0].icon = BookOpen))
 		}

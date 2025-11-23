@@ -1,4 +1,5 @@
 import type { AcademicTitle } from '@/features/admin/manage_lecturer/types'
+import type { GetPaginatedObject } from './paginated-object.model'
 
 // Role
 export type Role = 'student' | 'lecturer' | 'admin' | 'faculty_board'
@@ -147,6 +148,9 @@ export interface ResponseMiniStudentDto {
 	studentCode: string
 	major: string
 }
+export interface PaginatedStudents extends GetPaginatedObject {
+	data: ResponseMiniStudentDto[]
+}
 export interface ResponseMiniLecturerDto {
 	_id: string
 	fullName: string
@@ -164,4 +168,8 @@ export interface MiniActorInforDto {
 	phone: string
 	avatarUrl: string
 	avatarName: string
+}
+
+export interface PaginatedMiniLecturer extends GetPaginatedObject {
+	data: ResponseMiniLecturerDto[]
 }

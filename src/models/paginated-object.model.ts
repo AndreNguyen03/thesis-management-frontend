@@ -1,4 +1,4 @@
-interface MetaDto {
+export interface MetaDto {
 	itemsPerPage: number
 	totalItems: number
 	currentPage: number

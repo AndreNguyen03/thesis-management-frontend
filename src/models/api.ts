@@ -8,7 +8,7 @@ export type ApiError = {
 	}
 }
 
-export type PaginatedResponse<T> = {
+export interface PaginatedResponse<T> {
 	data: T[]
 	meta: {
 		itemsPerPage: number

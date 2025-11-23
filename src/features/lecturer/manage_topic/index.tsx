@@ -9,9 +9,9 @@ const LecturerManageTopics = () => {
 	])
 
 	return (
-		<div>
-			<Tabs defaultValue='topic-draft'>
-				<TabsList variant='underline'>
+		<div className='h-screen w-full'>
+			<Tabs defaultValue='topic-draft h-screen w-full'>
+				<TabsList variant='underline' defaultValue='topic-draft'>
 					<TabsTrigger variant='underline' value='topic-draft'>
 						Các bản nháp đề tài
 					</TabsTrigger>
@@ -19,6 +19,7 @@ const LecturerManageTopics = () => {
 						Các đề tài đã nộp
 					</TabsTrigger>
 				</TabsList>
+
 				<TabsContent value='topic-draft'>
 					<ManageTopicDraft />
 				</TabsContent>

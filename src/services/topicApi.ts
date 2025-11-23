@@ -4,7 +4,8 @@ import type {
 	Topic,
 	ITopicDetail,
 	PaginatedDraftTopics,
-	GetPaginatedTopics
+	GetPaginatedTopics,
+	CreateTopicPayload
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -59,6 +60,14 @@ export const topicApi = baseApi.injectEndpoints({
 		getDraftTopics: builder.query<PaginatedDraftTopics, void>({
 			query: () => `/topics/lecturer/get-draft-topics`,
 			transformResponse: (response: ApiResponse<PaginatedDraftTopics>) => response.data
+		}),
+		createTopic: builder.mutation<Topic, CreateTopicPayload>({
+			query: (body) => ({
+				url: '/topics',
+				method: 'POST',
+				body
+			}),
+			transformResponse: (response: ApiResponse<Topic>) => response.data
 		})
 	}),
 	overrideExisting: false
@@ -74,5 +83,6 @@ export const {
 	useLazyGetTopicByIdQuery,
 	useGetRegisteredTopicQuery,
 	useGetCanceledRegisterTopicsQuery,
-	useGetDraftTopicsQuery
+	useGetDraftTopicsQuery,
+	useCreateTopicMutation
 } = topicApi

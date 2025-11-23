@@ -32,7 +32,12 @@ export const SavedTopics = () => {
 	//lấy đề tài đã lưu
 	const { data: savedTopicsData } = useGetSavedTopicsQuery({ queries })
 	//Lấy tất cả các fields
-	const { data: fields } = useGetFieldsQuery()
+	const { data: fields } = useGetFieldsQuery({
+		page: 1,
+		limit: 0,
+		sort_by: 'createdAt',
+		sort_order: 'desc'
+	})
 	const [topics, setTopics] = useState<Topic[]>([])
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }, { label: 'Đề tài đã lưu' }])
 	useEffect(() => {
@@ -88,7 +93,7 @@ export const SavedTopics = () => {
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value='all'>Tất cả lĩnh vực</SelectItem>
-							{fields?.map((field) => (
+							{fields?.data?.map((field) => (
 								<SelectItem key={field._id} value={field._id}>
 									{field.name}
 								</SelectItem>

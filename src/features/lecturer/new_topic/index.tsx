@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ComboboxWithAdd, type ComboboxOption } from './components/ComboboxWithAdd'
+import { ComboboxWithAdd } from './components/ComboboxWithAdd'
 import { Chip } from './components/Chip'
 import { DescriptionOptimizer } from './components/DescriptionOptimizer'
 import { toast } from '@/hooks/use-toast'
@@ -12,6 +12,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { usePageBreadcrumb } from '@/hooks'
 import { Button } from '@/components/ui'
+import { useCreateTopicMutation } from '@/services/topicApi'
+import type { CreateTopicPayload, TopicType } from '@/models'
+import type { ComboboxOption } from './components/interface/combo-option.interface'
+import type { PaginationQueryParamsDto } from '@/models/query-params'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useGetFieldsQuery } from '@/services/fieldApi'
+import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
+import { useGetStudentsComboboxQuery } from '@/services/studentApi'
+import { useGetRequirementsQuery } from '@/services/requirementApi'
 
 interface Student {
 	id: string
@@ -21,58 +30,241 @@ interface Student {
 
 function CreateTopic() {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng đề tài' }])
+	const [createTopic, { isLoading }] = useCreateTopicMutation()
 	// Form state
-	const [title, setTitle] = useState('')
-	const [topicType, setTopicType] = useState('')
+	const [titleVN, setTitleVN] = useState('')
+	const [titleEng, setTitleEng] = useState('')
+	const [topicType, setTopicType] = useState<TopicType>('thesis')
 	const [description, setDescription] = useState('')
 	const [maxStudents, setMaxStudents] = useState<number>(1)
+	//handle search terms
+	const [searchTermMajor, setSearchTermMajor] = useState('')
+	const [searchTermField, setSearchTermField] = useState('')
+	const [searchTermRequirement, setSearchTermRequirement] = useState('')
+	const [searchTermLecturer, setSearchTermLecturer] = useState('')
+	const [searchTermStudent, setSearchTermStudent] = useState('')
+
+	//handle major
+	const [queriesMajor, setQueriesMajor] = useState<PaginationQueryParamsDto>({
+		page: 1,
+		limit: 5,
+		search_by: 'fullName',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		filter: '',
+		filter_by: ''
+	})
+	//handle students
+
+	const [queriesStudent, setQueriesStudent] = useState<PaginationQueryParamsDto>({
+		page: 1,
+		limit: 15,
+		search_by: 'fullName',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		filter: '',
+		filter_by: ''
+	})
+	const [queriesLecturer, setQueriesLecturer] = useState<PaginationQueryParamsDto>({
+		page: 1,
+		limit: 15,
+		search_by: 'fullName',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		filter: '',
+		filter_by: ''
+	})
+	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
+		page: 1,
+		limit: 15,
+		search_by: 'name',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		filter: '',
+		filter_by: ''
+	})
+	const [queriesRequirement, setQueriesRequirement] = useState<PaginationQueryParamsDto>({
+		page: 1,
+		limit: 15,
+		search_by: 'name, description',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		filter: '',
+		filter_by: ''
+	})
+	// handle next Page
+	const nextPageMajor = () => {
+		setQueriesMajor((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
+	}
+	const nextPageStudent = () => {
+		setQueriesStudent((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
+	}
+	const nextPageLecturer = () => {
+		setQueriesLecturer((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
+	}
+	const nextPageRequirement = () => {
+		setQueriesRequirement((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
+	}
+	const nextPageField = () => {
+		setQueriesField((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
+	}
+
+	// setQuerries functions
+	const setQueriesMajorsSearch = (query: string) => {
+		setQueriesMajor((prev) => ({ ...prev, query }))
+	}
+	const setQueriesFieldSearch = (query: string) => {
+		setQueriesField((prev) => ({ ...prev, query }))
+	}
+
+	const setQueriesRequirementSearch = (query: string) => {
+		setQueriesRequirement((prev) => ({ ...prev, query }))
+	}
+
+	const setQueriesStudentSearch = (query: string) => {
+		setQueriesStudent((prev) => ({ ...prev, query }))
+	}
+	const setQueriesLecturertSearch = (query: string) => {
+		setQueriesLecturer((prev) => ({ ...prev, query }))
+	}
+	// handle debounce changes
+	const debounceMajorOnChange = useDebounce({ onChange: setQueriesMajorsSearch, duration: 300 })
+	const debounceStudentOnChange = useDebounce({ onChange: setQueriesStudentSearch, duration: 300 })
+	const debounceLecturerOnChange = useDebounce({ onChange: setQueriesLecturertSearch, duration: 300 })
+	const debounceRequirementOnChange = useDebounce({ onChange: setQueriesRequirementSearch, duration: 300 })
+	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
+	// handle onChangeSearch
+
+	const onChangeMajortSearch = (val: string) => {
+		setSearchTermMajor(val)
+		debounceMajorOnChange(val)
+	}
+	const onChangeStudentSearch = (val: string) => {
+		setSearchTermStudent(val)
+		debounceStudentOnChange(val)
+	}
+	const onChangeLecturerSearch = (val: string) => {
+		setSearchTermLecturer(val)
+		debounceLecturerOnChange(val)
+	}
+	const onChangeRequirementSearch = (val: string) => {
+		setSearchTermRequirement(val)
+		debounceRequirementOnChange(val)
+	}
+	const onChangeFieldSearch = (val: string) => {
+		setSearchTermField(val)
+
+		debounceFieldOnChange(val)
+	}
+
+	//handle fetch data cho tất cả các combobox
+
+	//major
+	const { data: majors, refetch: refetchMajors, isLoading: isLoadingMajors } = useGetMajorsQuery(queriesMajor)
+	const [selectedMajor, setSelectedMajor] = useState<string>('')
+
+	// Fields
+	const { data: fields, refetch: refetchFields, isLoading: isLoadingFields } = useGetFieldsQuery(queriesField)
+	const [selectedFields, setSelectedFields] = useState<string[]>([])
 
 	// Co-supervisors
-	const [coSupervisors, setCoSupervisors] = useState<ComboboxOption[]>([
-		{ value: 'supervisor1', label: 'TS. Nguyễn Văn A' },
-		{ value: 'supervisor2', label: 'PGS. Trần Thị B' }
-	])
+	const { data: coSupervisors, isLoading: isLoadingCoSupervisors } = useGetAllLecturersComboboxQuery(queriesLecturer)
 	const [selectedCoSupervisors, setSelectedCoSupervisors] = useState<string[]>([])
 
 	// Students
-	const [students, setStudents] = useState<Student[]>([
-		{ id: 'student1', name: 'Nguyễn Minh C', hasExistingTopic: false },
-		{ id: 'student2', name: 'Lê Hoàng D', hasExistingTopic: true },
-		{ id: 'student3', name: 'Phạm Thu E', hasExistingTopic: false }
-	])
+	const { data: students, isLoading: isLoadingStudents } = useGetStudentsComboboxQuery(queriesStudent)
 	const [selectedStudents, setSelectedStudents] = useState<string[]>([])
-
-	// Fields
-	const [fields, setFields] = useState<ComboboxOption[]>([
-		{ value: 'ai', label: 'Trí tuệ nhân tạo' },
-		{ value: 'web', label: 'Phát triển Web' },
-		{ value: 'mobile', label: 'Ứng dụng di động' },
-		{ value: 'data', label: 'Khoa học dữ liệu' }
-	])
-	const [selectedFields, setSelectedFields] = useState<string[]>([])
-
 	// Requirements
-	const [requirements, setRequirements] = useState<ComboboxOption[]>([
-		{ value: 'react', label: 'React' },
-		{ value: 'nodejs', label: 'Node.js' },
-		{ value: 'python', label: 'Python' },
-		{ value: 'ml', label: 'Machine Learning' }
-	])
+	const {
+		data: requirementsData,
+		refetch: refetchRequirements,
+		isLoading: isLoadingRequirements
+	} = useGetRequirementsQuery(queriesRequirement)
 	const [selectedRequirements, setSelectedRequirements] = useState<string[]>([])
 
+	// Store options
+	const [majorOptions, setMajorOptions] = useState<ComboboxOption[]>([])
+	const [fieldOptions, setFieldOptions] = useState<ComboboxOption[]>([])
+	const [requirementOptions, setRequirementOptions] = useState<ComboboxOption[]>([])
+	const [studentOptions, setStudentOptions] = useState<ComboboxOption[]>([])
+	const [lecturerOptions, setLecturerOptions] = useState<ComboboxOption[]>([])
+
+	// handle wwhen search
+	useEffect(() => {
+		if (fields?.data && queriesField.query) {
+			setFieldOptions(fields.data.map((f) => ({ value: f._id, label: f.name })))
+		}
+	}, [fields, queriesField.query])
+	useEffect(() => {
+		if (requirementsData?.data && queriesRequirement.query) {
+			setRequirementOptions(requirementsData.data.map((r) => ({ value: r._id, label: r.name })))
+		}
+	}, [requirementsData, queriesRequirement.query])
+	useEffect(() => {
+		if (students?.data && queriesStudent.query) {
+			setStudentOptions(students.data.map((s) => ({ value: s._id, label: s.fullName })))
+		}
+	}, [students, queriesStudent.query])
+	useEffect(() => {
+		if (coSupervisors?.data && queriesLecturer.query) {
+			setLecturerOptions(coSupervisors.data.map((l) => ({ value: l._id, label: l.fullName })))
+		}
+	}, [coSupervisors, queriesLecturer.query])
+
+	// store for first fetch
+	useEffect(() => {
+		if (fields?.data) {
+			setFieldOptions((prev) => [
+				...prev,
+				...fields.data
+					.filter((f) => !prev.some((opt) => opt.value === f._id))
+					.map((f) => ({ value: f._id, label: f.name }))
+			])
+		}
+	}, [fields, queriesField.page])
+
+	useEffect(() => {
+		if (requirementsData?.data) {
+			setRequirementOptions((prev) => [
+				...prev,
+				...requirementsData.data
+					.filter((r) => !prev.some((opt) => opt.value === r._id))
+					.map((r) => ({ value: r._id, label: r.name }))
+			])
+		}
+	}, [requirementsData, queriesRequirement.page])
+
+	useEffect(() => {
+		if (students?.data) {
+			setStudentOptions((prev) => [
+				...prev,
+				...students.data
+					.filter((s) => !prev.some((opt) => opt.value === s._id))
+					.map((s) => ({ value: s._id, label: s.fullName }))
+			])
+		}
+	}, [students, queriesStudent.page])
+
+	useEffect(() => {
+		if (coSupervisors?.data) {
+			setLecturerOptions((prev) => [
+				...prev,
+				...coSupervisors.data
+					.filter((l) => !prev.some((opt) => opt.value === l._id))
+					.map((l) => ({ value: l._id, label: l.fullName }))
+			])
+		}
+	}, [coSupervisors, queriesLecturer.page])
 	// Reference links
 	const [referenceLinks, setReferenceLinks] = useState<Array<{ id: string; url: string }>>([])
 	const [linkInput, setLinkInput] = useState('')
 
 	const [validationError, setValidationError] = useState<string>('')
-
-	// Co-supervisor handlers
-	const handleAddCoSupervisor = (value: string) => {
-		const newId = `supervisor${Date.now()}`
-		const newSupervisor = { value: newId, label: value }
-		setCoSupervisors([...coSupervisors, newSupervisor])
-		setSelectedCoSupervisors([...selectedCoSupervisors, newId])
-	}
 
 	const handleSelectCoSupervisor = (value: string) => {
 		if (!selectedCoSupervisors.includes(value)) {
@@ -84,23 +276,8 @@ function CreateTopic() {
 		setSelectedCoSupervisors(selectedCoSupervisors.filter((id) => id !== value))
 	}
 
-	// Student handlers
-	const handleAddStudent = (value: string) => {
-		const newId = `student${Date.now()}`
-		const newStudent: Student = { id: newId, name: value, hasExistingTopic: false }
-		setStudents([...students, newStudent])
-		handleSelectStudent(newId)
-	}
-
 	const handleSelectStudent = (studentId: string) => {
 		setValidationError('')
-
-		const student = students.find((s) => s.id === studentId)
-
-		if (student?.hasExistingTopic) {
-			setValidationError(`Sinh viên "${student.name}" đã có đề tài khác!`)
-			return
-		}
 
 		if (selectedStudents.length >= maxStudents) {
 			setValidationError(`Không thể thêm quá ${maxStudents} sinh viên!`)
@@ -116,12 +293,24 @@ function CreateTopic() {
 		setSelectedStudents(selectedStudents.filter((id) => id !== studentId))
 		setValidationError('')
 	}
-
+	// major handlers
+	const handleAddMajor = (value: string) => {
+		const newId = `major${Date.now()}`
+		const newMajor = { value: newId, label: value }
+		refetchMajors()
+		setSelectedMajor(newId)
+	}
+	const handleSelectMajor = (value: string) => {
+		setSelectedMajor(value)
+	}
+	const handleRemoveMajor = (value: string) => {
+		setSelectedMajor('')
+	}
 	// Field handlers
 	const handleAddField = (value: string) => {
 		const newId = `field${Date.now()}`
 		const newField = { value: newId, label: value }
-		setFields([...fields, newField])
+		refetchFields()
 		setSelectedFields([...selectedFields, newId])
 	}
 
@@ -139,7 +328,7 @@ function CreateTopic() {
 	const handleAddRequirement = (value: string) => {
 		const newId = `req${Date.now()}`
 		const newReq = { value: newId, label: value }
-		setRequirements([...requirements, newReq])
+		refetchRequirements()
 		setSelectedRequirements([...selectedRequirements, newId])
 	}
 
@@ -203,10 +392,18 @@ function CreateTopic() {
 	}
 
 	const handleSave = () => {
-		if (!title.trim()) {
+		if (!titleVN.trim()) {
 			toast({
 				title: 'Lỗi',
 				description: 'Vui lòng nhập tiêu đề đề tài',
+				variant: 'destructive'
+			})
+			return
+		}
+		if (!titleEng.trim()) {
+			toast({
+				title: 'Lỗi',
+				description: 'Vui lòng nhập tiêu đề đề tài bằng tiếng Anh',
 				variant: 'destructive'
 			})
 			return
@@ -229,7 +426,40 @@ function CreateTopic() {
 			})
 			return
 		}
+		if (selectedRequirements.length === 0) {
+			toast({
+				title: 'Lỗi',
+				description: 'Vui lòng chọn ít nhất một yêu cầu',
+				variant: 'destructive'
+			})
+			return
+		}
+		if (!selectedMajor) {
+			toast({
+				title: 'Lỗi',
+				description: 'Vui lòng chọn ít nhất một ngành',
+				variant: 'destructive'
+			})
+			return
+		}
+		const currentPeriodId = localStorage.getItem('currentPeriodId')
 
+		const newTopic: CreateTopicPayload = {
+			titleVN: titleVN,
+			titleEng: titleEng,
+			description: description,
+			type: topicType,
+			majorId: selectedMajor,
+			minStudents: 2,
+			currentStatus: 'draft',
+			currentPhase: 'empty',
+			periodId: currentPeriodId ? currentPeriodId : undefined, // nếu nộp luôn thì periodId còn không thì undefined
+			fieldIds: selectedFields,
+			requirementIds: selectedRequirements,
+			studentIds: selectedStudents,
+			lecturerIds: selectedCoSupervisors
+		}
+		createTopic(newTopic)
 		toast({
 			title: 'Thành công',
 			description: 'Đề tài đã được lưu thành công!'
@@ -237,8 +467,9 @@ function CreateTopic() {
 	}
 
 	const handleCancel = () => {
-		setTitle('')
-		setTopicType('')
+		setTitleVN('')
+		setTitleEng('')
+		setTopicType('thesis')
 		setDescription('')
 		setSelectedCoSupervisors([])
 		setSelectedStudents([])
@@ -261,64 +492,115 @@ function CreateTopic() {
 	}
 
 	return (
-		<div className='min-h-screen bg-gradient-to-br'>
-			<div className='mx-auto max-w-4xl'>
-				<div className='rounded-2xl border border-border bg-card p-8 shadow-lg'>
-					<div className='mb-8'>
-						<h1 className='mb-2 text-3xl font-bold text-foreground'>Đăng đề tài mới</h1>
-						<p className='text-muted-foreground'>Điền đầy đủ thông tin để tạo đề tài nghiên cứu</p>
+		<div className='h-full pt-6'>
+			<div className='mx-auto h-full'>
+				<div className='flex h-full flex-col rounded-2xl border border-border bg-card p-8 pt-6 shadow-lg'>
+					<div className='mb-4'>
+						<h1 className='mb-2 text-xl font-bold text-foreground'>Tạo đề tài mới</h1>
+						<p className='text-sm text-muted-foreground'>
+							Điền đầy đủ thông tin để tạo đề tài khóa luận/nghiên cứu
+						</p>
 					</div>
 
-					<div className='space-y-6'>
+					<div className='flex-1 space-y-6 overflow-y-auto pr-2'>
+						{/* Major choosing */}
+						<div className='col-span-2 space-y-2'>
+							<Label htmlFor='topic-type' className='flex items-center gap-2 text-base font-semibold'>
+								<FileText className='h-4 w-4' />
+								Ngành <span className='text-destructive'>*</span>
+							</Label>
+							<ComboboxWithAdd
+								onSearch={onChangeFieldSearch}
+								searchTerm={searchTermMajor}
+								options={majorOptions.filter((f) => f.value !== selectedMajor)}
+								placeholder='Chọn hoặc thêm ngành...'
+								onSelect={handleSelectMajor}
+								onAdd={handleAddMajor}
+								meta={majors?.meta!}
+								onNextPage={nextPageMajor}
+								isLoading={isLoadingMajors}
+							/>
+							{selectedMajor && (
+								<div className='flex flex-wrap gap-2'>
+									<Chip
+										key={selectedMajor}
+										label={majorOptions.filter((f) => f.value === selectedMajor)[0]?.label || ''}
+										onRemove={() => handleRemoveMajor(selectedMajor)}
+									/>
+								</div>
+							)}
+						</div>
+
 						{/* Title */}
-						<div className='space-y-2'>
+						<div className='col-span-1 space-y-2'>
 							<Label htmlFor='title' className='text-base font-semibold'>
 								Tiêu đề đề tài <span className='text-destructive'>*</span>
 							</Label>
 							<Input
 								id='title'
 								placeholder='Nhập tiêu đề đề tài...'
-								value={title}
-								onChange={(e) => setTitle(e.target.value)}
+								value={titleVN}
+								onChange={(e) => setTitleVN(e.target.value)}
+								className='border-input bg-background transition-colors focus:border-primary'
+							/>
+						</div>
+						{/* Title Eng*/}
+						<div className='col-span-1 space-y-2'>
+							<Label htmlFor='title' className='text-base font-semibold'>
+								Tiêu đề đề tài ENG <span className='text-destructive'>*</span>
+							</Label>
+							<Input
+								id='title'
+								placeholder='Nhập tiêu đề đề tài...'
+								value={titleEng}
+								onChange={(e) => setTitleEng(e.target.value)}
 								className='border-input bg-background transition-colors focus:border-primary'
 							/>
 						</div>
 
 						{/* Topic Type */}
-						<div className='space-y-2'>
+						<div className='col-span-2 space-y-2'>
 							<Label htmlFor='topic-type' className='flex items-center gap-2 text-base font-semibold'>
 								<FileText className='h-4 w-4' />
 								Loại đề tài <span className='text-destructive'>*</span>
 							</Label>
-							<Select value={topicType} onValueChange={setTopicType}>
+							<Select
+								value={topicType as string}
+								onValueChange={(value) => setTopicType(value as TopicType)}
+							>
 								<SelectTrigger id='topic-type' className='bg-background'>
 									<SelectValue placeholder='Chọn loại đề tài...' />
 								</SelectTrigger>
 								<SelectContent className='bg-popover'>
-									<SelectItem value='kltn'>Khóa luận tốt nghiệp</SelectItem>
-									<SelectItem value='nckh'>Nghiên cứu khoa học</SelectItem>
+									<SelectItem value='thesis'>Khóa luận tốt nghiệp</SelectItem>
+									<SelectItem value='scientific_research'>Nghiên cứu khoa học</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 
 						{/* Fields */}
-						<div className='space-y-3'>
+						<div className='col-span-2 space-y-3'>
 							<Label className='flex items-center gap-2 text-base font-semibold'>
 								<Tag className='h-4 w-4' />
 								Lĩnh vực <span className='text-destructive'>*</span>
 							</Label>
 							<ComboboxWithAdd
-								options={fields.filter((f) => !selectedFields.includes(f.value))}
+								onSearch={onChangeFieldSearch}
+								searchTerm={searchTermField}
+								options={fieldOptions.filter((f) => !selectedFields.includes(f.value))}
 								placeholder='Chọn hoặc thêm lĩnh vực...'
 								onSelect={handleSelectField}
 								onAdd={handleAddField}
+								meta={fields?.meta!}
+								onNextPage={nextPageField}
+								isLoading={isLoadingFields}
 							/>
 							{selectedFields.length > 0 && (
 								<div className='flex flex-wrap gap-2'>
 									{selectedFields.map((id) => (
 										<Chip
 											key={id}
-											label={getLabel(fields, id)}
+											label={fieldOptions.filter((f) => f.value === id)[0]?.label || ''}
 											onRemove={() => handleRemoveField(id)}
 										/>
 									))}
@@ -327,23 +609,28 @@ function CreateTopic() {
 						</div>
 
 						{/* Requirements */}
-						<div className='space-y-3'>
+						<div className='col-span-2 space-y-3'>
 							<Label className='flex items-center gap-2 text-base font-semibold'>
 								<ListChecks className='h-4 w-4' />
 								Yêu cầu kỹ thuật
 							</Label>
 							<ComboboxWithAdd
-								options={requirements.filter((r) => !selectedRequirements.includes(r.value))}
+								onSearch={onChangeRequirementSearch}
+								searchTerm={searchTermRequirement}
+								options={requirementOptions.filter((r) => !selectedRequirements.includes(r.value))}
 								placeholder='Chọn hoặc thêm yêu cầu...'
 								onSelect={handleSelectRequirement}
 								onAdd={handleAddRequirement}
+								onNextPage={nextPageRequirement}
+								meta={requirementsData?.meta!}
+								isLoading={isLoadingRequirements}
 							/>
 							{selectedRequirements.length > 0 && (
 								<div className='flex flex-wrap gap-2'>
 									{selectedRequirements.map((id) => (
 										<Chip
 											key={id}
-											label={getLabel(requirements, id)}
+											label={requirementOptions.filter((r) => r.value === id)[0]?.label || ''}
 											onRemove={() => handleRemoveRequirement(id)}
 										/>
 									))}
@@ -352,7 +639,7 @@ function CreateTopic() {
 						</div>
 
 						{/* Description */}
-						<div className='space-y-2'>
+						<div className='col-span-2 space-y-2'>
 							<Label htmlFor='description' className='text-base font-semibold'>
 								Mô tả đề tài <span className='text-destructive'>*</span>
 							</Label>
@@ -369,23 +656,27 @@ function CreateTopic() {
 						</div>
 
 						{/* Co-supervisors */}
-						<div className='space-y-3'>
+						<div className='col-span-2 space-y-3'>
 							<Label className='flex items-center gap-2 text-base font-semibold'>
 								<Users className='h-4 w-4' />
 								Người đồng hướng dẫn
 							</Label>
 							<ComboboxWithAdd
-								options={coSupervisors.filter((s) => !selectedCoSupervisors.includes(s.value))}
+								onSearch={onChangeLecturerSearch}
+								searchTerm={searchTermLecturer}
+								options={lecturerOptions.filter((s) => !selectedCoSupervisors.includes(s.value))}
 								placeholder='Chọn hoặc thêm người đồng hướng dẫn...'
 								onSelect={handleSelectCoSupervisor}
-								onAdd={handleAddCoSupervisor}
+								meta={coSupervisors?.meta!}
+								onNextPage={nextPageLecturer}
+								isLoading={isLoadingCoSupervisors}
 							/>
 							{selectedCoSupervisors.length > 0 && (
 								<div className='flex flex-wrap gap-2'>
 									{selectedCoSupervisors.map((id) => (
 										<Chip
 											key={id}
-											label={getLabel(coSupervisors, id)}
+											label={lecturerOptions.filter((s) => s.value === id)[0]?.label || ''}
 											onRemove={() => handleRemoveCoSupervisor(id)}
 										/>
 									))}
@@ -394,7 +685,7 @@ function CreateTopic() {
 						</div>
 
 						{/* Students */}
-						<div className='space-y-3'>
+						<div className='col-span-2 space-y-3'>
 							<Label className='flex items-center gap-2 text-base font-semibold'>
 								<BookOpen className='h-4 w-4' />
 								Sinh viên tham gia <span className='text-destructive'>*</span>
@@ -427,13 +718,15 @@ function CreateTopic() {
 
 								<div className='flex-1'>
 									<ComboboxWithAdd
-										options={students
-											.filter((s) => !selectedStudents.includes(s.id))
-											.map((s) => ({ value: s.id, label: s.name }))}
+										onSearch={onChangeStudentSearch}
+										searchTerm={searchTermStudent}
+										options={studentOptions.filter((s) => !selectedStudents.includes(s.value))}
 										placeholder='Chọn hoặc thêm sinh viên...'
 										onSelect={handleSelectStudent}
-										onAdd={handleAddStudent}
 										disabled={selectedStudents.length >= maxStudents}
+										meta={students?.meta!}
+										onNextPage={nextPageStudent}
+										isLoading={isLoadingStudents}
 									/>
 								</div>
 							</div>
@@ -451,7 +744,7 @@ function CreateTopic() {
 									{selectedStudents.map((id) => (
 										<Chip
 											key={id}
-											label={getLabel(students, id)}
+											label={students?.data.filter((s) => s._id === id)[0]?.fullName || ''}
 											onRemove={() => handleRemoveStudent(id)}
 										/>
 									))}
@@ -464,7 +757,7 @@ function CreateTopic() {
 						</div>
 
 						{/* Reference Links */}
-						<div className='space-y-3'>
+						<div className='col-span-2 space-y-3'>
 							<Label className='flex items-center gap-2 text-base font-semibold'>
 								<Link className='h-4 w-4' />
 								Link tài liệu tham khảo
@@ -524,7 +817,7 @@ function CreateTopic() {
 						</div>
 
 						{/* Action Buttons */}
-						<div className='flex gap-3 border-t border-border pt-6'>
+						<div className='col-span-2 flex gap-3 border-t border-border pt-6'>
 							<Button
 								onClick={handleSave}
 								className='hover:bg-primary-dark flex-1 bg-primary transition-colors'

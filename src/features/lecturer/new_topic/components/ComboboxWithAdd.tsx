@@ -1,22 +1,23 @@
 import { useState } from 'react'
-import { Check, ChevronsUpDown, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Check, ChevronsUpDown, Loader2, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-
-export interface ComboboxOption {
-	value: string
-	label: string
-}
-
-interface ComboboxWithAddProps {
-	options: ComboboxOption[]
+import type { ComboboxOption } from './interface/combo-option.interface'
+import type { MetaDto } from '@/models/paginated-object.model'
+export interface ComboboxWithAddProps {
+	options: ComboboxOption[] | undefined
 	placeholder?: string
 	emptyText?: string
 	onSelect: (value: string) => void
-	onAdd: (value: string) => void
+	onAdd?: (value: string) => void
 	disabled?: boolean
+	searchTerm: string
+	onSearch: (value: string) => void
+	onNextPage?: () => void
+	meta: MetaDto
+	isLoading?: boolean
 }
 
 export function ComboboxWithAdd({
@@ -25,28 +26,30 @@ export function ComboboxWithAdd({
 	emptyText = 'Không tìm thấy.',
 	onSelect,
 	onAdd,
-	disabled = false
+	disabled = false,
+	onSearch,
+	onNextPage,
+	meta,
+	searchTerm,
+	isLoading
 }: ComboboxWithAddProps) {
 	const [open, setOpen] = useState(false)
-	const [searchValue, setSearchValue] = useState('')
 
 	const handleSelect = (currentValue: string) => {
 		onSelect(currentValue)
 		setOpen(false)
-		setSearchValue('')
+		onSearch('')
 	}
 
 	const handleAdd = () => {
-		if (searchValue.trim()) {
-			onAdd(searchValue.trim())
-			setSearchValue('')
+		if (searchTerm.trim()) {
+			onAdd?.(searchTerm.trim())
+			onSearch('')
 			setOpen(false)
 		}
 	}
-
-	const filteredOptions = options.filter((option) => option.label.toLowerCase().includes(searchValue.toLowerCase()))
-
-	const showAddButton = searchValue.trim() && filteredOptions.length === 0
+	const buttonSeeMore = onNextPage && (meta?.currentPage ?? 0) < (meta?.totalPages ?? 0)
+	const showAddButton = searchTerm.trim() && options?.length === 0
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -64,7 +67,7 @@ export function ComboboxWithAdd({
 			</PopoverTrigger>
 			<PopoverContent className='w-full bg-popover p-0 shadow-lg'>
 				<Command>
-					<CommandInput placeholder='Tìm kiếm...' value={searchValue} onValueChange={setSearchValue} />
+					<CommandInput placeholder='Tìm kiếm...' value={searchTerm} onValueChange={onSearch} />
 					<CommandEmpty>
 						{showAddButton ? (
 							<Button
@@ -73,15 +76,15 @@ export function ComboboxWithAdd({
 								onClick={handleAdd}
 							>
 								<Plus className='mr-2 h-4 w-4' />
-								Thêm "{searchValue}"
+								Thêm "{searchTerm}"
 							</Button>
 						) : (
 							<div className='py-6 text-center text-sm text-muted-foreground'>{emptyText}</div>
 						)}
 					</CommandEmpty>
-					{filteredOptions.length > 0 && (
-						<CommandGroup>
-							{filteredOptions.map((option) => (
+					{options && options.length > 0 && (
+						<CommandGroup className='max-h-60 overflow-y-auto'>
+							{options.map((option) => (
 								<CommandItem
 									key={option.value}
 									value={option.value}
@@ -92,6 +95,15 @@ export function ComboboxWithAdd({
 									{option.label}
 								</CommandItem>
 							))}
+							{buttonSeeMore && (
+								<CommandItem
+									onSelect={() => onNextPage?.()}
+									className='cursor-pointer transition-colors hover:bg-secondary'
+								>
+									{isLoading ? <Loader2 /> : <Check className={cn('mr-2 h-4 w-4', 'opacity-0')} />}
+									{`Xem thêm...`}
+								</CommandItem>
+							)}
 						</CommandGroup>
 					)}
 				</Command>

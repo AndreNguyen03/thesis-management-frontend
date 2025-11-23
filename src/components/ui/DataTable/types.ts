@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 export type SortOrder = 'asc' | 'desc'
 export interface QueryParams {
 	page: number
-	limit: number
+	page_size: number
 	search_by: string
 	query: string
 	sort_by: string

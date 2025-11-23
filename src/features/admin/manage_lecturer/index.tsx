@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { Edit2, Plus, Trash2 } from 'lucide-react'
-import { DialogHeader, Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { DialogHeader, Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
 import type { CreateUserRequest, LecturerTable } from './types'
 import {
 	useGetLecturersQuery,

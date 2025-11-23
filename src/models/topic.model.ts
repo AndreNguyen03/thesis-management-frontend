@@ -137,29 +137,13 @@ export interface FileOption {
 	filePath: string
 }
 
-export type TopicType = 'Đồ án' | 'Khóa luận' | 'NCKH'
+export type TopicType = 'thesis' | 'scientific_research'
 
 export type TopicStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'closed'
 
 export interface SavedUserRef {
 	userId: string
 	savedAt: string
-}
-
-export interface CreateTopicPayload {
-	title: string
-	description: string
-	type: 'Đồ án' | 'Khóa luận' | 'NCKH'
-	majorId: string
-	departmentId: string
-	lecturerIds: string[]
-	coAdvisorIds?: string[]
-	studentIds?: string[]
-	fileIds?: string[]
-	maxStudents: number
-	deadline?: string
-	requirements: string[]
-	references?: { name: string; url?: string }[]
 }
 
 export const topicStatusLabels = {
@@ -181,4 +165,20 @@ export const topicStatusLabels = {
 	reviewed: 'Đã kiểm tra',
 	archived: 'Đã lưu trữ',
 	rejected_final: 'Bị từ chối cuối cùng'
+}
+
+export interface CreateTopicPayload {
+	titleVN: string
+	titleEng: string
+	description: string
+	type: TopicType
+	majorId: string
+	minStudents: number
+	currentStatus: 'draft' | 'submitted'
+	currentPhase: 'empty' | 'submit_topic'
+	periodId?: string
+	fieldIds: string[]
+	requirementIds?: string[]
+	studentIds?: string[]
+	lecturerIds: string[]
 }
