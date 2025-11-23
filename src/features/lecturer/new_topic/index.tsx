@@ -7,7 +7,7 @@ import { ComboboxWithAdd } from './components/ComboboxWithAdd'
 import { Chip } from './components/Chip'
 import { DescriptionOptimizer } from './components/DescriptionOptimizer'
 import { toast } from '@/hooks/use-toast'
-import { Save, X, Users, BookOpen, Tag, ListChecks, Link, Plus, FileText } from 'lucide-react'
+import { Save, X, Users, BookOpen, Tag, ListChecks, Link, Plus, FileText, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { usePageBreadcrumb } from '@/hooks'
@@ -21,6 +21,9 @@ import { useGetFieldsQuery } from '@/services/fieldApi'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
 import { useGetStudentsComboboxQuery } from '@/services/studentApi'
 import { useGetRequirementsQuery } from '@/services/requirementApi'
+import { useGetMajorsQuery } from '@/services/major'
+import { useCountdown } from '@/hooks/count-down'
+import { set } from 'zod'
 
 interface Student {
 	id: string
@@ -28,9 +31,17 @@ interface Student {
 	hasExistingTopic?: boolean
 }
 
-function CreateTopic() {
+function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }) {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng đề tài' }])
-	const [createTopic, { isLoading }] = useCreateTopicMutation()
+	const [createTopic, { isLoading: loadingCreateTopic, isSuccess: successCreateTopic, error: createTopicError }] =
+		useCreateTopicMutation()
+	// current period info
+	const currentPeriodId = localStorage.getItem('currentPeriodId')
+	const currentPeriodName = localStorage.getItem('currentPeriodName')
+	const currentPeriodEndTime = localStorage.getItem('currentPeriodEndTime')
+	// countdown
+
+	const countdown = useCountdown(currentPeriodEndTime!)
 	// Form state
 	const [titleVN, setTitleVN] = useState('')
 	const [titleEng, setTitleEng] = useState('')
@@ -48,7 +59,7 @@ function CreateTopic() {
 	const [queriesMajor, setQueriesMajor] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 5,
-		search_by: 'fullName',
+		search_by: 'name',
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
@@ -140,7 +151,7 @@ function CreateTopic() {
 	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
 	// handle onChangeSearch
 
-	const onChangeMajortSearch = (val: string) => {
+	const onChangeMajorSearch = (val: string) => {
 		setSearchTermMajor(val)
 		debounceMajorOnChange(val)
 	}
@@ -158,7 +169,6 @@ function CreateTopic() {
 	}
 	const onChangeFieldSearch = (val: string) => {
 		setSearchTermField(val)
-
 		debounceFieldOnChange(val)
 	}
 
@@ -196,6 +206,11 @@ function CreateTopic() {
 
 	// handle wwhen search
 	useEffect(() => {
+		if (majors?.data && queriesMajor.query) {
+			setMajorOptions(majors.data.map((f) => ({ value: f._id, label: f.name })))
+		}
+	}, [majors, queriesMajor.query])
+	useEffect(() => {
 		if (fields?.data && queriesField.query) {
 			setFieldOptions(fields.data.map((f) => ({ value: f._id, label: f.name })))
 		}
@@ -217,6 +232,18 @@ function CreateTopic() {
 	}, [coSupervisors, queriesLecturer.query])
 
 	// store for first fetch
+	useEffect(() => {
+		if (majors?.data) {
+			setMajorOptions((prev) => [
+				...prev,
+				...majors.data
+
+					.filter((f) => !prev.some((opt) => opt.value === f._id))
+					.map((f) => ({ value: f._id, label: f.name }))
+			])
+		}
+	}, [majors, queriesMajor.page])
+
 	useEffect(() => {
 		if (fields?.data) {
 			setFieldOptions((prev) => [
@@ -260,6 +287,26 @@ function CreateTopic() {
 			])
 		}
 	}, [coSupervisors, queriesLecturer.page])
+
+	// clear form states after success create topic
+	useEffect(() => {
+		if (successCreateTopic) {
+			setTitleVN('')
+			setTitleEng('')
+			setTopicType('thesis')
+			setDescription('')
+			setSelectedCoSupervisors([])
+			setSelectedStudents([])
+			setSelectedFields([])
+			setSelectedRequirements([])
+			setReferenceLinks([])
+			setLinkInput('')
+			setMaxStudents(1)
+			setValidationError('')
+			setSelectedMajor('')
+		}
+	}, [successCreateTopic])
+
 	// Reference links
 	const [referenceLinks, setReferenceLinks] = useState<Array<{ id: string; url: string }>>([])
 	const [linkInput, setLinkInput] = useState('')
@@ -391,7 +438,15 @@ function CreateTopic() {
 		setReferenceLinks(referenceLinks.filter((link) => link.id !== id))
 	}
 
-	const handleSave = () => {
+	const handleSave = (periodId?: string) => {
+		if (!selectedMajor) {
+			toast({
+				title: 'Lỗi',
+				description: 'Vui lòng chọn ít nhất một ngành',
+				variant: 'destructive'
+			})
+			return
+		}
 		if (!titleVN.trim()) {
 			toast({
 				title: 'Lỗi',
@@ -434,15 +489,6 @@ function CreateTopic() {
 			})
 			return
 		}
-		if (!selectedMajor) {
-			toast({
-				title: 'Lỗi',
-				description: 'Vui lòng chọn ít nhất một ngành',
-				variant: 'destructive'
-			})
-			return
-		}
-		const currentPeriodId = localStorage.getItem('currentPeriodId')
 
 		const newTopic: CreateTopicPayload = {
 			titleVN: titleVN,
@@ -450,22 +496,30 @@ function CreateTopic() {
 			description: description,
 			type: topicType,
 			majorId: selectedMajor,
-			minStudents: 2,
-			currentStatus: 'draft',
-			currentPhase: 'empty',
-			periodId: currentPeriodId ? currentPeriodId : undefined, // nếu nộp luôn thì periodId còn không thì undefined
+			maxStudents: maxStudents,
+			currentStatus: periodId ? 'submitted' : 'draft',
+			currentPhase: periodId ? 'submit_topic' : 'empty',
+			periodId: periodId ? periodId : undefined, // nếu nộp luôn thì periodId còn không thì undefined
 			fieldIds: selectedFields,
 			requirementIds: selectedRequirements,
 			studentIds: selectedStudents,
 			lecturerIds: selectedCoSupervisors
 		}
 		createTopic(newTopic)
-		toast({
-			title: 'Thành công',
-			description: 'Đề tài đã được lưu thành công!'
-		})
-	}
+		refetchDraftTopics?.()
 
+		if (successCreateTopic) {
+			toast({
+				title: 'Thành công',
+				description: 'Đề tài đã được lưu thành công!'
+			})
+		} else
+			toast({
+				title: 'Lỗi',
+				description: 'Không thể lưu đề tài!',
+				variant: 'destructive'
+			})
+	}
 	const handleCancel = () => {
 		setTitleVN('')
 		setTitleEng('')
@@ -510,7 +564,7 @@ function CreateTopic() {
 								Ngành <span className='text-destructive'>*</span>
 							</Label>
 							<ComboboxWithAdd
-								onSearch={onChangeFieldSearch}
+								onSearch={onChangeMajorSearch}
 								searchTerm={searchTermMajor}
 								options={majorOptions.filter((f) => f.value !== selectedMajor)}
 								placeholder='Chọn hoặc thêm ngành...'
@@ -529,6 +583,26 @@ function CreateTopic() {
 									/>
 								</div>
 							)}
+						</div>
+
+						{/* Topic Type */}
+						<div className='col-span-2 space-y-2'>
+							<Label htmlFor='topic-type' className='flex items-center gap-2 text-base font-semibold'>
+								<FileText className='h-4 w-4' />
+								Loại đề tài <span className='text-destructive'>*</span>
+							</Label>
+							<Select
+								value={topicType as string}
+								onValueChange={(value) => setTopicType(value as TopicType)}
+							>
+								<SelectTrigger id='topic-type' className='bg-background'>
+									<SelectValue placeholder='Chọn loại đề tài...' />
+								</SelectTrigger>
+								<SelectContent className='bg-popover'>
+									<SelectItem value='thesis'>Khóa luận tốt nghiệp</SelectItem>
+									<SelectItem value='scientific_research'>Nghiên cứu khoa học</SelectItem>
+								</SelectContent>
+							</Select>
 						</div>
 
 						{/* Title */}
@@ -556,26 +630,6 @@ function CreateTopic() {
 								onChange={(e) => setTitleEng(e.target.value)}
 								className='border-input bg-background transition-colors focus:border-primary'
 							/>
-						</div>
-
-						{/* Topic Type */}
-						<div className='col-span-2 space-y-2'>
-							<Label htmlFor='topic-type' className='flex items-center gap-2 text-base font-semibold'>
-								<FileText className='h-4 w-4' />
-								Loại đề tài <span className='text-destructive'>*</span>
-							</Label>
-							<Select
-								value={topicType as string}
-								onValueChange={(value) => setTopicType(value as TopicType)}
-							>
-								<SelectTrigger id='topic-type' className='bg-background'>
-									<SelectValue placeholder='Chọn loại đề tài...' />
-								</SelectTrigger>
-								<SelectContent className='bg-popover'>
-									<SelectItem value='thesis'>Khóa luận tốt nghiệp</SelectItem>
-									<SelectItem value='scientific_research'>Nghiên cứu khoa học</SelectItem>
-								</SelectContent>
-							</Select>
 						</div>
 
 						{/* Fields */}
@@ -818,8 +872,28 @@ function CreateTopic() {
 
 						{/* Action Buttons */}
 						<div className='col-span-2 flex gap-3 border-t border-border pt-6'>
+							{currentPeriodId && (
+								<div className='flex flex-col items-center justify-center gap-1'>
+									<Button
+										disabled={loadingCreateTopic}
+										onClick={() => handleSave(currentPeriodId)}
+										variant={'outline_gray'}
+									>
+										<Save className='mr-2 h-4 w-4' />
+										Lưu và đăng đề tài
+									</Button>
+									<div className='flex flex-col items-center gap-2 rounded-md bg-blue-100 p-2'>
+										<span className='text-sm'>
+											{`Kì hiện tại `}{' '}
+											<span className='font-medium text-blue-800'>{`${currentPeriodName}`}</span>
+										</span>
+										<span className='text-sm font-bold text-blue-700'>{countdown}</span>
+									</div>
+								</div>
+							)}
 							<Button
-								onClick={handleSave}
+								disabled={loadingCreateTopic}
+								onClick={() => handleSave()}
 								className='hover:bg-primary-dark flex-1 bg-primary transition-colors'
 							>
 								<Save className='mr-2 h-4 w-4' />

@@ -135,9 +135,9 @@ export const TopicRegisteredCard: React.FC<{
 						{renderDepartmentAndLecturers(topic)}
 						<div className='flex gap-2'>
 							{/* Trạng thái của đề tài */}
-							<Badge variant='status'>
+							<Badge className= {`${topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].css}`}>
 								{'Trạng thái:  '}
-								{topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels]}
+								{topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].name}
 							</Badge>
 							{/* Lĩnh vực */}
 							{topic.fields.map((f) => {

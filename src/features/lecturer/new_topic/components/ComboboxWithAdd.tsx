@@ -40,7 +40,6 @@ export function ComboboxWithAdd({
 		setOpen(false)
 		onSearch('')
 	}
-
 	const handleAdd = () => {
 		if (searchTerm.trim()) {
 			onAdd?.(searchTerm.trim())

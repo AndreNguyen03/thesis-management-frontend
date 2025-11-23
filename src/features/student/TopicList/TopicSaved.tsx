@@ -22,7 +22,7 @@ export const SavedTopics = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'titleVN',
+		search_by: 'titleVN,titleEng',
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
