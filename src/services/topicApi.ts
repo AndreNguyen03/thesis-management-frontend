@@ -4,7 +4,9 @@ import type {
 	Topic,
 	ITopicDetail,
 	PaginatedDraftTopics,
-	GetPaginatedTopics
+	GetPaginatedTopics,
+	CreateTopicPayload,
+	PaginatedSubmittedTopics
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -56,9 +58,30 @@ export const topicApi = baseApi.injectEndpoints({
 			query: () => `/topics/canceled-registered-topics`,
 			transformResponse: (response: ApiResponse<CanceledRegisteredTopic[]>) => response.data
 		}),
-		getDraftTopics: builder.query<PaginatedDraftTopics, void>({
+		getDraftTopics: builder.query<PaginatedDraftTopics, PaginationQueryParamsDto>({
 			query: () => `/topics/lecturer/get-draft-topics`,
 			transformResponse: (response: ApiResponse<PaginatedDraftTopics>) => response.data
+		}),
+		getSubmittedTopics: builder.query<PaginatedSubmittedTopics, PaginationQueryParamsDto>({
+			query: (queries) => {
+				const queryString = buildQueryString(queries)
+				return `/topics/lecturer/get-submitted-topics?${queryString}`
+			},
+			transformResponse: (response: ApiResponse<PaginatedSubmittedTopics>) => response.data
+		}),
+		createTopic: builder.mutation<Topic, CreateTopicPayload>({
+			query: (body) => ({
+				url: '/topics',
+				method: 'POST',
+				body
+			}),
+			transformResponse: (response: ApiResponse<Topic>) => response.data
+		}),
+		submitTopic: builder.mutation<ApiResponse<Topic>, { topicId: string; periodId: string }>({
+			query: ({ topicId, periodId }) => ({
+				url: `/topics/lec/submit-topic/${topicId}/${periodId}`,
+				method: 'PATCH'
+			})
 		})
 	}),
 	overrideExisting: false
@@ -74,5 +97,8 @@ export const {
 	useLazyGetTopicByIdQuery,
 	useGetRegisteredTopicQuery,
 	useGetCanceledRegisterTopicsQuery,
-	useGetDraftTopicsQuery
+	useGetDraftTopicsQuery,
+	useGetSubmittedTopicsQuery,
+	useCreateTopicMutation,
+	useSubmitTopicMutation
 } = topicApi

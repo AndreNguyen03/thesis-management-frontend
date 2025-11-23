@@ -40,6 +40,11 @@ export interface Period {
 	startTime: Date
 	endTime: Date
 }
+
+export interface MiniPeriod {
+	_id: string
+	name: string
+}
 export interface CreatePeriodDto {
 	name: string
 	startTime: Date

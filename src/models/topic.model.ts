@@ -1,6 +1,7 @@
 import type { GetFieldNameReponseDto } from './field.model'
 import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
+import type { MiniPeriod } from './period.model'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 export interface PaginationQueryParams {
@@ -11,30 +12,18 @@ export interface PaginationQueryParams {
 	sort_by?: string
 	sort_order?: string
 }
-export interface DraftTopic {
+export interface AbstractTopic {
 	_id: string
 
-	title: string
+	titleVN: string
+
+	titleEng: string
 
 	description: string
 
 	type: string
 
-	major: string
-
-	periodId: string
-
-	maxStudents: number
-
-	createByInfo: MiniActorInforDto
-
-	createdAt: Date
-
-	updatedAt: Date
-
-	currentStatus: string
-
-	currentPhase: string
+	major: GetMajorMiniDto
 
 	fields: GetFieldNameReponseDto[]
 
@@ -43,7 +32,26 @@ export interface DraftTopic {
 	students: ResponseMiniStudentDto[]
 
 	lecturers: ResponseMiniLecturerDto[]
+
+	createdAt: Date
+
+	updatedAt: Date
+
+	maxStudents: number
+
+	currentStatus: string
+
+	currentPhase: string
 }
+export interface SubmittedTopic extends AbstractTopic {
+	submittedAt: string
+	createByInfo: MiniActorInforDto
+	periodInfo: MiniPeriod
+}
+export interface PaginatedSubmittedTopics extends GetPaginatedObject {
+	data: SubmittedTopic[]
+}
+export interface DraftTopic extends AbstractTopic {}
 export interface PaginatedDraftTopics extends GetPaginatedObject {
 	data: DraftTopic[]
 }
@@ -63,8 +71,6 @@ export interface Topic {
 	currentPhase: string
 
 	currentStatus: string
-
-	status: string
 
 	major: GetMajorMiniDto
 
@@ -137,7 +143,7 @@ export interface FileOption {
 	filePath: string
 }
 
-export type TopicType = 'Đồ án' | 'Khóa luận' | 'NCKH'
+export type TopicType = 'thesis' | 'scientific_research'
 
 export type TopicStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'closed'
 
@@ -145,40 +151,43 @@ export interface SavedUserRef {
 	userId: string
 	savedAt: string
 }
-
-export interface CreateTopicPayload {
-	title: string
-	description: string
-	type: 'Đồ án' | 'Khóa luận' | 'NCKH'
-	majorId: string
-	departmentId: string
-	lecturerIds: string[]
-	coAdvisorIds?: string[]
-	studentIds?: string[]
-	fileIds?: string[]
-	maxStudents: number
-	deadline?: string
-	requirements: string[]
-	references?: { name: string; url?: string }[]
+export const TopicTypeTransfer = {
+	thesis: { name: 'Khóa luận', css: 'bg-blue-600 text-white px-1.5 py-0.5 text-xs' },
+	scientific_research: { name: 'Nghiên cứu khoa học', css: 'bg-green-600 text-white px-1.5 py-0.5 text-xs' }
+}
+export const topicStatusLabels = {
+	draft: { name: 'Bản nháp', css: 'bg-gray-200 text-gray-800' },
+	submitted: { name: 'Đã nộp', css: 'bg-yellow-200 text-yellow-800' },
+	under_review: { name: 'Đang xét duyệt', css: 'bg-blue-200 text-blue-800' },
+	approved: { name: 'Đã duyệt', css: 'bg-green-200 text-green-800' },
+	rejected: { name: 'Bị từ chối', css: 'bg-red-200 text-red-800' },
+	pending_registration: { name: 'Mở  đăng ký', css: 'bg-purple-200 text-purple-800' },
+	registered: { name: 'Đã đăng ký', css: 'bg-indigo-200 text-indigo-800' },
+	full: { name: 'Đã đủ số lượng', css: 'bg-gray-400 text-gray-900' },
+	cancelled: { name: 'Đã hủy', css: 'bg-red-400 text-red-900' },
+	in_progress: { name: 'Đang thực hiện', css: 'bg-blue-400 text-blue-900' },
+	delayed: { name: 'Bị trì hoãn', css: 'bg-yellow-400 text-yellow-900' },
+	paused: { name: 'Tạm ngưng', css: 'bg-gray-400 text-gray-900' },
+	submitted_for_review: { name: 'Đã nộp báo cáo', css: 'bg-yellow-200 text-yellow-800' },
+	awaiting_evaluation: { name: 'Chờ đánh giá', css: 'bg-purple-200 text-purple-800' },
+	graded: { name: 'Đã chấm điểm', css: 'bg-green-200 text-green-800' },
+	reviewed: { name: 'Đã kiểm tra', css: 'bg-blue-200 text-blue-800' },
+	archived: { name: 'Đã lưu trữ', css: 'bg-gray-200 text-gray-800' },
+	rejected_final: { name: 'Chưa đạt', css: 'bg-red-200 text-red-800' }
 }
 
-export const topicStatusLabels = {
-	draft: 'Bản nháp',
-	submitted: 'Đã nộp',
-	under_review: 'Đang xét duyệt',
-	approved: 'Đã duyệt',
-	rejected: 'Bị từ chối',
-	pending_registration: 'Mở  đăng ký',
-	registered: 'Đã đăng ký',
-	full: 'Đã đủ số lượng',
-	cancelled: 'Đã hủy',
-	in_progress: 'Đang thực hiện',
-	delayed: 'Bị trì hoãn',
-	paused: 'Tạm ngưng',
-	submitted_for_review: 'Đã nộp báo cáo',
-	awaiting_evaluation: 'Chờ đánh giá',
-	graded: 'Đã chấm điểm',
-	reviewed: 'Đã kiểm tra',
-	archived: 'Đã lưu trữ',
-	rejected_final: 'Bị từ chối cuối cùng'
+export interface CreateTopicPayload {
+	titleVN: string
+	titleEng: string
+	description: string
+	type: TopicType
+	majorId: string
+	maxStudents: number
+	currentStatus: 'draft' | 'submitted'
+	currentPhase: 'empty' | 'submit_topic'
+	periodId?: string
+	fieldIds: string[]
+	requirementIds?: string[]
+	studentIds?: string[]
+	lecturerIds: string[]
 }

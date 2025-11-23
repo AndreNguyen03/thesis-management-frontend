@@ -1,49 +1,107 @@
-import { Badge } from '@/components/ui'
+import { Badge, Button } from '@/components/ui'
 import { Checkbox } from '@/components/ui/checkbox'
-import type { DraftTopic, GetFieldNameReponseDto, GetRequirementNameReponseDto } from '@/models'
-import type { ColumnDef } from '@tanstack/react-table'
+import { topicStatusLabels, TopicTypeTransfer, type DraftTopic, type GetFieldNameReponseDto } from '@/models'
+import type { ColumnDef, HeaderContext } from '@tanstack/react-table'
+import { Eye } from 'lucide-react'
+import { Row } from 'react-day-picker'
 
 type ColumnsProps = {
-	editingIndex: number | null
-	editingValue: string
-	setEditingIndex: (index: number | null) => void
-	setEditingValue: (value: string) => void
-	onEditContent: (id: string, content: string) => void
+	onSeeDetail: (topicId: string) => void
+	showSelection: boolean
 }
 interface NewDraftTopic extends DraftTopic {
 	index: number
 	time: { createdAt: Date; updatedAt: Date }
 }
 
-export const getColumns = (): ColumnDef<NewDraftTopic>[] => [
+export const getColumns = ({ onSeeDetail, showSelection }: ColumnsProps): ColumnDef<NewDraftTopic>[] => [
+	...(showSelection
+		? [
+				{
+					id: 'select',
+					size: 30,
+					header: ({ table }: any) => (
+						<div className='flex justify-center'>
+							<Checkbox
+								checked={table.getIsAllRowsSelected()}
+								onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+								aria-label='Chọn tất cả'
+							/>
+						</div>
+					),
+					cell: ({ row }: any) => (
+						<div className='flex justify-center'>
+							<Checkbox
+								checked={row.getIsSelected()}
+								onCheckedChange={(value) => row.toggleSelected(!!value)}
+								aria-label={`Chọn đề tài ${row.getValue('titleVN')}`}
+							/>
+						</div>
+					),
+					enableSorting: false,
+					enableColumnFilter: false
+				}
+			]
+		: []),
 	{
 		accessorKey: 'index',
-		size: 80,
+		size: 10,
 		header: () => <div className='text-center'>STT</div>,
 		cell: ({ row }) => <div className='text-center capitalize'>{row.getValue('index')}</div>
 	},
 	{
+		accessorKey: 'titleVN',
+		header: () => <div className='text-center'>Tên đề tài</div>,
+		cell: ({ row }) => (
+			<div className=''>
+				<div className='flex max-w-xs justify-center capitalize' title={row.getValue('titleVN')}>
+					<span className='truncate text-wrap'>{row.getValue('titleVN')}</span>
+				</div>
+				<div
+					className='flex max-w-xs justify-center truncate text-xs text-muted-foreground'
+					title={row.original.titleEng}
+				>
+					<span className='truncate text-wrap'>{row.original.titleEng}</span>
+				</div>
+			</div>
+		)
+	},
+	{
 		accessorKey: 'description',
-		size: 300,
 		header: () => <div className='text-center'>Mô tả</div>,
 		cell: ({ row }) => (
-			<>
-				<div className='flex justify-center capitalize'>{row.getValue('description')}</div>
-				<Badge variant='outline'>Bản nháp</Badge>
-			</>
+			<div className=''>
+				<div className='flex justify-center truncate capitalize' title={row.getValue('description')}>
+					<span className='truncate'>{row.getValue('description')}</span>
+				</div>
+			</div>
+		)
+	},
+	{
+		accessorKey: 'currentStatus',
+		size: 120,
+		header: () => <div className='text-center'>Trạng thái</div>,
+		cell: ({ row }) => (
+			<div className='flex justify-center capitalize'>
+				<Badge
+					className={topicStatusLabels[row.getValue('currentStatus') as keyof typeof topicStatusLabels].css}
+				>
+					{topicStatusLabels[row.getValue('currentStatus') as keyof typeof topicStatusLabels].name}
+				</Badge>
+			</div>
 		)
 	},
 	{
 		accessorKey: 'type',
-		size: 120,
+		size: 100,
 		header: () => <div className='text-center'>Loại</div>,
-		cell: ({ row }) => <div className='flex justify-center capitalize'>{row.getValue('type')}</div>
-	},
-	{
-		accessorKey: 'maxStudents',
-		size: 120,
-		header: () => <div className='text-center'>Số lượng sinh viên tối đa</div>,
-		cell: ({ row }) => <div className='flex justify-center capitalize'>{row.getValue('maxStudents')}</div>
+		cell: ({ row }) => (
+			<div className='flex flex-row flex-wrap justify-center capitalize'>
+				<Badge className={TopicTypeTransfer[row.getValue('type') as keyof typeof TopicTypeTransfer].css}>
+					{TopicTypeTransfer[row.getValue('type') as keyof typeof TopicTypeTransfer].name}
+				</Badge>
+			</div>
+		)
 	},
 	{
 		accessorKey: 'time',
@@ -56,12 +114,12 @@ export const getColumns = (): ColumnDef<NewDraftTopic>[] => [
 					return (
 						<>
 							<div>
-								<span className='font-semibold'>Ngày Tạo:</span>
-								{` ${new Date(time.createdAt).toLocaleString('vi-VN')}`}
+								<span className='text-[13px] font-semibold'>Ngày Tạo:</span>
+								<span className='text-[13px]'>{` ${new Date(time.createdAt).toLocaleString('vi-VN')}`}</span>
 							</div>
 							<div>
-								<span className='font-semibold'>Cập nhật:</span>
-								{` ${new Date(time.updatedAt).toLocaleString('vi-VN')}`}
+								<span className='text-[13px] font-semibold'>Cập nhật:</span>
+								<span className='text-[13px]'>{` ${new Date(time.updatedAt).toLocaleString('vi-VN')}`}</span>
 							</div>
 						</>
 					)
@@ -71,15 +129,15 @@ export const getColumns = (): ColumnDef<NewDraftTopic>[] => [
 	},
 	{
 		accessorKey: 'fields',
-		size: 120,
+		size: 200,
 		header: () => <div className='text-center'>Lĩnh vực</div>,
 		cell: ({ row }) => (
-			<div className='flex justify-center capitalize'>
+			<div className='flex flex-row flex-wrap justify-center gap-2 capitalize'>
 				{(() => {
 					const fields = row.getValue('fields') as Array<GetFieldNameReponseDto> | undefined
 					return fields && Array.isArray(fields)
 						? fields.map((field) => (
-								<Badge key={field.slug} className='mr-1'>
+								<Badge variant='mini' key={field.slug} className='mr-1'>
 									{field.name}
 								</Badge>
 							))
@@ -89,21 +147,14 @@ export const getColumns = (): ColumnDef<NewDraftTopic>[] => [
 		)
 	},
 	{
-		accessorKey: 'requirements',
-		size: 120,
-		header: () => <div className='text-center'>Yêu cầu</div>,
+		accessorKey: 'actions',
+		size: 50,
+		header: () => <div className='text-center'>Hành động</div>,
 		cell: ({ row }) => (
-			<div className='flex justify-center capitalize'>
-				{(() => {
-					const requirements = row.getValue('requirements') as Array<GetRequirementNameReponseDto> | undefined
-					return requirements && Array.isArray(requirements)
-						? requirements.map((requirement) => (
-								<Badge key={requirement.slug} className='mr-1'>
-									{requirement.name}
-								</Badge>
-							))
-						: null
-				})()}
+			<div className='flex w-fit flex-row flex-wrap justify-center gap-2 capitalize'>
+				<Button variant='outline' size='sm' onClick={() => onSeeDetail(row.original._id)}>
+					<Eye className='h-4 w-4' />
+				</Button>
 			</div>
 		)
 	}

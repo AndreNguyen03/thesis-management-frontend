@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePageBreadcrumb } from '@/hooks'
-import ManageTopicDraft from './draft/ManageTopicDraft'
+import ManageTopicDraft from './draft/ManageDraftTopic'
+import ManageSubmittedTopics from './submitted_topic/ManageSubmittedTopics'
 
 const LecturerManageTopics = () => {
 	usePageBreadcrumb([
@@ -9,18 +10,22 @@ const LecturerManageTopics = () => {
 	])
 
 	return (
-		<div>
-			<Tabs defaultValue='topic-draft'>
-				<TabsList variant='underline'>
+		<div className='h-screen w-full'>
+			<Tabs defaultValue='topic-draft' className='h-screen w-full'>
+				<TabsList variant='underline' defaultValue='topic-draft'>
 					<TabsTrigger variant='underline' value='topic-draft'>
 						Các bản nháp đề tài
 					</TabsTrigger>
-					<TabsTrigger variant='underline' value='password'>
+					<TabsTrigger variant='underline' value='submitted-topics'>
 						Các đề tài đã nộp
 					</TabsTrigger>
 				</TabsList>
+
 				<TabsContent value='topic-draft'>
 					<ManageTopicDraft />
+				</TabsContent>
+				<TabsContent value='submitted-topics'>
+					<ManageSubmittedTopics />
 				</TabsContent>
 			</Tabs>
 		</div>
