@@ -176,6 +176,7 @@ export const topicStatusLabels = {
 	rejected_final: { name: 'Chưa đạt', css: 'bg-red-200 text-red-800' }
 }
 
+
 export interface CreateTopicPayload {
 	titleVN: string
 	titleEng: string

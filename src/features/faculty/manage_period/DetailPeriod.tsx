@@ -19,7 +19,8 @@ export default function DetailPeriodPage() {
 		isLoading,
 		error
 	} = useGetPeriodDetailQuery(id!, {
-		skip: !id // Nếu dùng RTK Query, nên dùng skip thay vì return sớm ở component
+		skip: !id // Nếu dùng RTK Query, nên dùng skip thay vì return sớm ở compo----------------------------
+		// nent
 	})
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
@@ -64,8 +65,7 @@ export default function DetailPeriodPage() {
 						}}
 					/>
 				</aside>
-
-				{/* Main Content */}
+  				{/* Main Content */}
 				<main className='w-[90%] flex-1'>
 					<div className='container mx-auto max-w-7xl'>
 						{currentPhase && (

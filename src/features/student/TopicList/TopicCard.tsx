@@ -28,7 +28,7 @@ export const TopicCard: React.FC<{
 	mode?: TopicCardMode
 	updateAfterAction?: (topic: Topic) => void
 }> = ({ topic, mode = 'all', updateAfterAction }) => {
-	const isFullSlot = topic.status == 'full'
+	const isFullSlot = topic.currentStatus == "full"
 	const isDisabled = isFullSlot
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const [currentTopic, setCurrentTopic] = useState<Topic>(topic)
@@ -146,9 +146,9 @@ export const TopicCard: React.FC<{
 						<CardTitle className='text-lg leading-tight'>{currentTopic.titleVN}</CardTitle>
 						<CardTitle className='text-md font-normal'>{currentTopic.titleEng}</CardTitle>
 						{/* Trạng thái của đề tài */}
-						<Badge variant='status'>
+						<Badge className={`${topicStatusLabels[currentTopic.currentStatus as keyof typeof topicStatusLabels].css}`}>
 							{'Trạng thái:  '}
-							{topicStatusLabels[currentTopic.currentStatus as keyof typeof topicStatusLabels]}
+							{topicStatusLabels[currentTopic.currentStatus as keyof typeof topicStatusLabels].name}
 						</Badge>
 						<CardTitle className='text-md mt-2 font-semibold'>{currentTopic.major.name}</CardTitle>
 						<CardDescription className='mt-1 space-y-2'>
