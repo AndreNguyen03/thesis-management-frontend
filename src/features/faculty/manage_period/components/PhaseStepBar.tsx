@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Check, Circle, SquarePlus } from 'lucide-react'
+import { Check, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { PhaseType } from '@/models/period.model'
@@ -8,7 +8,6 @@ import type { PeriodPhase } from '@/models/period-phase.models'
 import { Button } from '@/components/ui'
 import { useState } from 'react'
 import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
-import type { keyof } from 'zod'
 
 interface PhaseStepBarProps {
 	phases: PeriodPhase[]

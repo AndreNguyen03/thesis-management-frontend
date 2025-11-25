@@ -9,11 +9,14 @@ import { useGetPeriodDetailQuery } from '@/services/periodApi'
 import NotFound from '@/features/shared/NotFound'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import { PhaseInfo } from '@/utils/utils'
+import { useAppSelector } from '@/store/configureStore'
 
 // import { useGetPeriodDetailQuery } from '@/services/periodApi'
 
 export default function DetailPeriodPage() {
 	const { id } = useParams()
+	const user = useAppSelector((state) => state.auth.user)
+
 	const navigate = useNavigate()
 	const {
 		data: period,
@@ -71,6 +74,7 @@ export default function DetailPeriodPage() {
 							isConfigured={currentPhaseDetail != undefined && currentPhaseDetail.startTime !== null}
 							currentPhase={period.currentPhase}
 							periodId={period._id}
+							
 						/>
 					) : (
 						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-2'>

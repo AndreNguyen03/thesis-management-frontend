@@ -22,7 +22,7 @@ const ManageSubmittedTopics = () => {
 
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
-		limit: 1,
+		limit: 5,
 		search_by: 'titleVN,titleEng,lecturerName',
 		query: '',
 		sort_by: 'createdAt',
