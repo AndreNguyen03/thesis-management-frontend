@@ -136,6 +136,11 @@ export interface FacultyBoardProfile {
 	updatedAt?: Date
 }
 
+export interface LecturerMini {
+    id: string,
+    fullName: string
+}
+
 export interface CreateLecturerSuccessItem {
 	fullName: string
 	email: string

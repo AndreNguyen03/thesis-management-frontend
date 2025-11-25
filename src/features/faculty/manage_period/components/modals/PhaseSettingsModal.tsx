@@ -3,32 +3,51 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Users, CheckSquare } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import type { PhaseType } from '@/models/period'
 import { PhaseInfo, PhaseStatusMap } from '@/utils/utils'
 import { LecturerMultiSelect } from '../LecturerMultiSelect'
+import { useAppSelector } from '@/store'
+import type { FacultyBoardProfile } from '@/models'
+import { useGetLecturersByFacultyQuery } from '@/services/lecturerApi'
 
-const allLecturersMock = [
-	{ id: "gv1", name: "Giảng viên A" },
-	{ id: "gv2", name: "Giảng viên B" },
-	{ id: "gv3", name: "Giảng viên C" },
-]
 interface Props {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	phase: PhaseType
 	status: 'not_started' | 'ongoing' | 'completed'
 
+	// data từ backend
 	initialStart?: string
 	initialEnd?: string
 
-	// Phase 1 only
+	// Phase 1
 	initialMinTopics?: number
 	initialLecturers?: string[]
 	initialAllowManual?: boolean
 
+	// Phase 2, 3, 4 có thể thêm sau
+	// initialMaxTopics?: number
+
 	onSubmit?: (data: any) => void
+}
+
+// cấu hình cho từng phase, mở rộng dễ dàng
+const phaseConfigMap: Record<
+	PhaseType,
+	{
+		showPhase1Settings?: boolean
+		showRegistrationSettings?: boolean
+		showExecutionSettings?: boolean
+		showCompletionSettings?: boolean
+	}
+> = {
+	empty: {},
+	submit_topic: { showPhase1Settings: true },
+	open_registration: { showRegistrationSettings: true },
+	execution: { showExecutionSettings: true },
+	completion: { showCompletionSettings: true }
 }
 
 export function PhaseSettingsModal({
@@ -46,25 +65,35 @@ export function PhaseSettingsModal({
 	const [startTime, setStartTime] = useState(initialStart)
 	const [endTime, setEndTime] = useState(initialEnd)
 
-	// Phase 1:
+	// Phase 1
 	const [minTopics, setMinTopics] = useState(initialMinTopics)
 	const [selectedLecturers, setSelectedLecturers] = useState<string[]>(initialLecturers)
 	const [allowManualApproval, setAllowManualApproval] = useState(initialAllowManual)
 
-	const isPhase1 = phase === 'submit_topic'
+	const facultyId = useAppSelector((state) => (state.auth.user as FacultyBoardProfile).facultyId)
+	const { data: lecturersByFaculty } = useGetLecturersByFacultyQuery(facultyId)
 
-	const isTimeInvalid = startTime && endTime ? endTime <= startTime : false
+	const config = phaseConfigMap[phase] || {}
 
-	// -----------------------------
-	// Submit handler to match DTO
-	// -----------------------------
-	const handleSave = () => {
-		let payload: any = {
-			startTime,
-			endTime
+	const isTimeInvalid = startTime && endTime ? new Date(endTime).getTime() <= new Date(startTime).getTime() : false
+
+	// Khởi tạo state mỗi lần mở modal hoặc data backend thay đổi
+	useEffect(() => {
+		setStartTime(initialStart)
+		setEndTime(initialEnd)
+
+		if (config.showPhase1Settings) {
+			setMinTopics(initialMinTopics)
+			setSelectedLecturers(initialLecturers)
+			setAllowManualApproval(initialAllowManual)
 		}
+	}, [initialStart, initialEnd, initialMinTopics, initialLecturers, initialAllowManual, phase])
 
-		if (isPhase1) {
+	const handleSave = () => {
+		let payload: any = { startTime, endTime }
+
+		// Phase 1 settings
+		if (config.showPhase1Settings) {
 			payload = {
 				...payload,
 				minTopicsPerLecturer: minTopics,
@@ -72,6 +101,9 @@ export function PhaseSettingsModal({
 				allowManualApproval
 			}
 		}
+
+		// các phase khác có thể thêm payload tương tự
+		// if (config.showRegistrationSettings) {...}
 
 		onSubmit?.(payload)
 		onOpenChange(false)
@@ -121,14 +153,13 @@ export function PhaseSettingsModal({
 					</section>
 
 					{/* PHASE 1 SETTINGS */}
-					{isPhase1 && (
+					{config.showPhase1Settings && (
 						<section className='space-y-4 rounded-lg border p-4'>
 							<div className='flex items-center gap-2 font-semibold'>
 								<Users className='h-5 w-5 text-primary' />
 								Cài đặt dành riêng cho Pha 1
 							</div>
 
-							{/* min topics */}
 							<div>
 								<label className='text-sm font-medium'>Số đề tài tối thiểu mỗi giảng viên</label>
 								<Input
@@ -139,16 +170,14 @@ export function PhaseSettingsModal({
 								/>
 							</div>
 
-							{/* Required lecturers */}
 							<div>
 								<LecturerMultiSelect
-									allLecturers={allLecturersMock}
+									allLecturers={lecturersByFaculty}
 									selected={selectedLecturers}
 									onChange={setSelectedLecturers}
 								/>
 							</div>
 
-							{/* Allow manual approval */}
 							<div className='mt-2 flex items-center gap-2'>
 								<CheckSquare className='h-5 w-5 text-primary' />
 								<label className='flex select-none items-center gap-2'>
@@ -162,6 +191,8 @@ export function PhaseSettingsModal({
 							</div>
 						</section>
 					)}
+
+					{/* Các phase khác có thể render ở đây khi config.showRegistrationSettings / showExecutionSettings ... */}
 				</div>
 
 				<DialogFooter>

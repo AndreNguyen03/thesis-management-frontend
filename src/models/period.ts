@@ -1,4 +1,3 @@
-
 export type PeriodStatus = 'ongoing' | 'completed'
 
 export type PhaseType = 'submit_topic' | 'open_registration' | 'execution' | 'completion' | 'empty'
@@ -64,13 +63,14 @@ export interface PhaseStats {
 }
 
 export interface PeriodPhase {
+    _id: string
 	phase: PhaseType
 	startTime: string
 	endTime: string
 	status: 'not_started' | 'ongoing' | 'completed'
 	maxTopicsPerLecturer?: number
 	requiredLecturerIds?: string[]
-	allowManualApproval: boolean
+	allowManualApproval?: boolean
 }
 
 export interface PeriodBackend {
@@ -84,3 +84,104 @@ export interface PeriodBackend {
 	currentPhase: 'submit_topic' | 'open_registration' | 'execution' | 'completion' | 'empty'
 	phases: PeriodPhase[]
 }
+
+export interface CreatePhaseResponse {
+	success: boolean
+	message: string
+}
+
+export type CreatePhaseSubmitTopicDto = Omit<PeriodPhase, 'status'> & {
+	phase: 'submit-topic'
+}
+
+export type CreateExecutionPhaseDto = Omit<PeriodPhase, 'status'> & {
+	phase: 'execution'
+}
+
+export type CreateOpenRegPhaseDto = Omit<PeriodPhase, 'status'> & {
+	phase: 'open-registration'
+}
+
+export type CreateCompletionPhaseDto = Omit<PeriodPhase, 'status'> & {
+	phase: 'completion'
+}
+
+// === Faculty Board Statistics ===
+export interface SubmitTopicPhaseStatistics {
+	periodId: string
+	currentPhase: string
+	rejectedTopicsNumber: number
+	approvalTopicsNumber: number
+	submittedTopicsNumber: number
+	underReviewTopicsNumber: number
+	totalTopicsNumber: number
+}
+
+export interface OpenRegistrationPhaseStatistics {
+	periodId: string
+	currentPhase: string
+	emptyTopicsNumber: number
+	registeredTopicsNumber: number
+	fullTopicsNumber: number
+	totalTopicsInPhaseNumber: number
+}
+
+export interface ExecutionPhaseStatistics {
+	periodId: string
+	currentPhase: string
+	inNormalProcessingNumber: number
+	delayedTopicsNumber: number
+	pausedTopicsNumber: number
+	submittedTopicsNumber: number
+	readyForEvaluationNumber: number
+}
+
+export interface CompletionPhaseStatistics {
+	periodId: string
+	currentPhase: string
+	readyForEvaluationNumber: number
+	gradedTopicsNumber: number
+	achivedTopicsNumber: number
+	rejectedFinalTopicsNumber: number
+}
+
+// === Lecturer Statistics ===
+export interface LecSubmitTopicPhaseStatistics {
+	periodId: string
+	currentPhase: string
+	rejectedTopicsNumber: number
+	approvalTopicsNumber: number
+	submittedTopicsNumber: number
+	underReviewTopicsNumber: number
+	totalTopicsNumber: number
+}
+
+export interface LecOpenRegistrationPhaseStatistics {
+	periodId: string
+	currentPhase: string
+	emptyTopicsNumber: number
+	registeredTopicsNumber: number
+	totalTopicsInPhaseNumber: number
+}
+
+export interface LecExecutionPhaseStatistics {
+	periodId: string
+	currentPhase: string
+	canceledRegisteredTopicsNumber: number
+	inNormalProcessingNumber: number
+	delayedTopicsNumber: number
+	pausedTopicsNumber: number
+	submittedTopicsNumber: number
+	readyForEvaluationNumber: number
+}
+
+export interface LecCompletionPhaseStatistics {
+	periodId: string
+	currentPhase: string
+	readyForEvaluationNumber: number
+	gradedTopicsNumber: number
+	achivedTopicsNumber: number
+	rejectedFinalTopicsNumber: number
+}
+
+export type UpdatePeriodPhaseDto = Omit<PeriodPhase, 'status' | 'phase'>

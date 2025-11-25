@@ -12,6 +12,7 @@ interface PhaseStepBarProps {
 }
 
 export function PhaseStepBar({ phases, currentPhase, onPhaseChange }: PhaseStepBarProps) {
+	const now = new Date()
 	return (
 		<TooltipProvider>
 			{phases.length === 0 ? (
@@ -20,13 +21,17 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange }: PhaseStepB
 				</div>
 			) : (
 				phases.map((phase) => {
-					const isActive = currentPhase === phase.phase
-					const isCompleted = phase.status === 'completed'
-					const isConfigured = phase.startTime && phase.endTime
-					const isClickable = isCompleted || isConfigured
+					const isConfigured = !!phase.startTime && !!phase.endTime
+
+					const isCompleted = isConfigured && now > new Date(phase.endTime)
+					const isActive = isConfigured && now >= new Date(phase.startTime) && now <= new Date(phase.endTime)
+
+					const isClickable = isCompleted || isActive
+
+					const isCurrent = currentPhase === phase.phase
 
 					return (
-						<div key={phase.phase} className='flex flex-col items-center'>
+						<div key={phase.phase} className='flex flex-col items-center py-4'>
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<motion.button
@@ -34,9 +39,19 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange }: PhaseStepB
 										disabled={!isClickable}
 										className={cn(
 											'relative flex h-14 w-14 items-center justify-center rounded-full border-2 shadow-md transition-all duration-300',
+
+											// COMPLETED
 											isCompleted && 'border-success bg-success',
+
+											// ACTIVE
 											isActive && 'border-primary bg-primary',
+
+											// FUTURE OR INACTIVE
 											!isActive && !isCompleted && 'border-step-inactive bg-card',
+
+											// CURRENT selection
+											isCurrent && 'ring-4 ring-primary/30',
+
 											isClickable && 'hover:scale-110',
 											!isClickable && 'cursor-not-allowed opacity-50'
 										)}
@@ -48,6 +63,7 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange }: PhaseStepB
 										)}
 									</motion.button>
 								</TooltipTrigger>
+
 								<TooltipContent side='right'>
 									<p className='font-semibold'>Pha {PhaseInfo[phase.phase].order}</p>
 									<p className='text-sm text-muted-foreground'>{PhaseInfo[phase.phase].label}</p>

@@ -24,7 +24,6 @@ const getStatusBadge = (status: PeriodStatus) => {
 	return <Badge variant={config.variant}>{config.label}</Badge>
 }
 
-// 🚀 Component
 export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => void }) {
 	const navigate = useNavigate()
 

@@ -9,14 +9,11 @@ import { useGetPeriodDetailQuery } from '@/services/periodApi'
 import { LoadingState } from '@/components/ui/LoadingState'
 
 export default function DetailPeriodPage() {
-
 	const { id } = useParams()
 	const navigate = useNavigate()
 
 	const { data: period, isLoading } = useGetPeriodDetailQuery(id!)
-    console.log('period detail', period)
-	const [currentPhase, setCurrentPhase] = useState<PhaseType | null>(null)
-
+	const [currentPhase, setCurrentPhase] = useState<PhaseType>('empty')
 
 	useEffect(() => {
 		if (period) {
@@ -24,13 +21,12 @@ export default function DetailPeriodPage() {
 		}
 	}, [period])
 
-    
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Quản lý đợt đăng ký', path: '/manage-period' },
-		{ label: period!.name , path: '/period/:id' }
+		{ label: period?.name ?? 'Đang tải...', path: '/period/:id' }
 	])
-    
+
 	if (isLoading) {
 		return (
 			<div className='flex min-h-screen items-center justify-center'>
@@ -51,6 +47,8 @@ export default function DetailPeriodPage() {
 		)
 	}
 
+	const selectedPhase = period.phases.find((p) => p.phase === currentPhase)
+
 	return (
 		<div className='min-h-screen'>
 			<div className='flex w-full'>
@@ -68,12 +66,7 @@ export default function DetailPeriodPage() {
 				{/* Main Content */}
 				<main className='w-[90%] flex-1'>
 					<div className='container mx-auto max-w-7xl'>
-						{currentPhase && (
-							<PhaseContent
-								phase={period.phases.find((p) => p.phase === currentPhase)!}
-								currentPhase={currentPhase}
-							/>
-						)}
+						{selectedPhase && <PhaseContent phase={selectedPhase} currentPhase={currentPhase} />}
 					</div>
 				</main>
 			</div>

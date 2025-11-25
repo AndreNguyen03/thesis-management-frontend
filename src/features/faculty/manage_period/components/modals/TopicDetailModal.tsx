@@ -1,165 +1,180 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Topic } from "@/models/period";
-import { Calendar, User, FileText, GraduationCap, TrendingUp } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
+import { Badge, type BadgeVariant } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import type { Topic } from '@/models/topic'
+import { Calendar, User, FileText, GraduationCap, TrendingUp, Folder } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { TopicStatus } from '@/models/topic'
 
 interface TopicDetailModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  topic: Topic | null;
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	topic: Topic | null
 }
 
 export function TopicDetailModal({ open, onOpenChange, topic }: TopicDetailModalProps) {
-  if (!topic) return null;
+	if (!topic) return null
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      pending: { label: "Chờ duyệt", variant: "secondary" as const },
-      approved: { label: "Đã duyệt", variant: "default" as const },
-      rejected: { label: "Từ chối", variant: "destructive" as const },
-      in_progress: { label: "Đang thực hiện", variant: "default" as const },
-      paused: { label: "Tạm dừng", variant: "secondary" as const },
-      completed: { label: "Hoàn thành", variant: "default" as const },
-    };
-    return statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-  };
+	// ------------------------------
+	// 🔰 Status Badge Mapping (chuẩn topic.status)
+	// ------------------------------
+	const TOPIC_STATUS_BADGE_CONFIG: Record<TopicStatus, { label: string; variant: BadgeVariant }> = {
+		// Phase 1
+		draft: { label: 'Bản nháp', variant: 'secondary' },
+		submitted: { label: 'Đã nộp', variant: 'default' },
+		under_review: { label: 'Đang xét duyệt', variant: 'warning' },
+		approved: { label: 'Phê duyệt', variant: 'success' },
+		rejected: { label: 'Từ chối', variant: 'destructive' },
 
-  const statusConfig = getStatusBadge(topic.status);
+		// Phase 2
+		pending_registration: { label: 'Chờ đăng ký', variant: 'secondary' },
+		registered: { label: 'Đã đăng ký', variant: 'registered' },
+		full: { label: 'Đủ số lượng', variant: 'warning' },
+		cancelled: { label: 'Đã hủy', variant: 'destructive' },
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Chi tiết đề tài</DialogTitle>
-        </DialogHeader>
+		// Phase 3
+		in_progress: { label: 'Đang thực hiện', variant: 'blue' },
+		delayed: { label: 'Trễ tiến độ', variant: 'warning' },
+		paused: { label: 'Tạm dừng', variant: 'gray' },
+		submitted_for_review: { label: 'Chờ duyệt báo cáo', variant: 'lightBlue' },
+		awaiting_evaluation: { label: 'Chờ chấm điểm', variant: 'warning' },
 
-        <ScrollArea className="max-h-[600px] pr-4">
-          <div className="space-y-6 py-4">
-            {/* Topic Title & Status */}
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-4">
-                <h3 className="text-lg font-semibold leading-tight">{topic.title}</h3>
-                <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <FileText className="h-4 w-4" />
-                <span>Mã đề tài: {topic.id}</span>
-              </div>
-            </div>
+		// Phase 4
+		graded: { label: 'Đã chấm điểm', variant: 'success' },
+		reviewed: { label: 'Đã đánh giá', variant: 'success' },
+		archived: { label: 'Lưu trữ', variant: 'graybold' },
+		rejected_final: { label: 'Từ chối cuối', variant: 'destructive' }
+	}
 
-            <Separator />
+	const StatusBadge = ({ status }: { status: TopicStatus }) => {
+		const config = TOPIC_STATUS_BADGE_CONFIG[status]
 
-            {/* Instructor */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <User className="h-4 w-4" />
-                <span>Giảng viên hướng dẫn</span>
-              </div>
-              <p className="text-sm text-foreground pl-6">{topic.instructor}</p>
-            </div>
+		// fallback (type-safe)
+		if (!config) {
+			return <Badge variant='default'>{status}</Badge>
+		}
 
-            {/* Student (if available) */}
-            {topic.student && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <GraduationCap className="h-4 w-4" />
-                  <span>Sinh viên thực hiện</span>
-                </div>
-                <p className="text-sm text-foreground pl-6">{topic.student}</p>
-              </div>
-            )}
+		return <Badge variant={config.variant}>{config.label}</Badge>
+	}
 
-            {/* Progress (if available) */}
-            {typeof topic.progress !== 'undefined' && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>Tiến độ thực hiện</span>
-                </div>
-                <div className="pl-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${topic.progress}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium">{topic.progress}%</span>
-                  </div>
-                </div>
-              </div>
-            )}
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className='sm:max-w-[700px]'>
+				<DialogHeader>
+					<DialogTitle className='text-xl'>Chi tiết đề tài</DialogTitle>
+				</DialogHeader>
 
-            {/* Score (if available) */}
-            {typeof topic.score !== 'undefined' && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>Điểm trung bình</span>
-                </div>
-                <p className="text-sm text-foreground pl-6 font-semibold text-lg">
-                  {topic.score}/10
-                </p>
-              </div>
-            )}
+				<ScrollArea className='max-h-[600px] pr-4'>
+					<div className='space-y-6 py-4'>
+						{/* Title + Status */}
+						<div className='flex items-start justify-between gap-4'>
+							<h3 className='text-lg font-semibold leading-tight'>{topic.titleVN}</h3>
+							<StatusBadge status={topic.currentStatus} />
+						</div>
 
-            {/* Registration Count (if available) */}
-            {typeof topic.registrationCount !== 'undefined' && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <GraduationCap className="h-4 w-4" />
-                  <span>Số lượng đăng ký</span>
-                </div>
-                <p className="text-sm text-foreground pl-6">{topic.registrationCount} sinh viên</p>
-              </div>
-            )}
+						<Separator />
 
-            {/* Submitted Date */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Calendar className="h-4 w-4" />
-                <span>Thời gian nộp</span>
-              </div>
-              <p className="text-sm text-foreground pl-6">
-                {new Date(topic.submittedAt).toLocaleDateString("vi-VN")}
-              </p>
-            </div>
+						{/* Giảng viên */}
+						{topic.lecturers && topic.lecturers.length > 0 && (
+							<Section
+								icon={<User className='h-4 w-4' />}
+								label='Giảng viên hướng dẫn'
+								content={topic.lecturers.map((l) => l.fullName).join(', ')}
+							/>
+						)}
 
-            {/* Report File (if available) */}
-            {topic.reportFile && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <FileText className="h-4 w-4" />
-                  <span>File báo cáo</span>
-                </div>
-                <div className="pl-6">
-                  <a 
-                    href="#" 
-                    className="text-sm text-primary hover:underline inline-flex items-center gap-2"
-                  >
-                    <FileText className="h-4 w-4" />
-                    {topic.reportFile}
-                  </a>
-                </div>
-              </div>
-            )}
+						{/* Sinh viên */}
+						{topic.students && topic.students.length > 0 && (
+							<Section
+								icon={<GraduationCap className='h-4 w-4' />}
+								label='Sinh viên thực hiện'
+								content={topic.students.map((s) => s.fullName).join(', ')}
+							/>
+						)}
 
-            {/* Description */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <FileText className="h-4 w-4" />
-                <span>Mô tả đề tài</span>
-              </div>
-              <p className="text-sm text-muted-foreground pl-6 leading-relaxed">
-                Đây là mô tả chi tiết về đề tài. Nội dung này sẽ được cập nhật từ dữ liệu thực tế.
-                Bao gồm mục tiêu, phạm vi, công nghệ sử dụng và kết quả mong đợi của đề tài.
-              </p>
-            </div>
-          </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
-  );
+						{/* Điểm */}
+						{topic.grade?.averageScore != null && (
+							<Section
+								icon={<TrendingUp className='h-4 w-4' />}
+								label='Điểm trung bình'
+								content={`${topic.grade.averageScore}/10`}
+								bold
+							/>
+						)}
+
+						{/* File đính kèm */}
+						{topic.fileIds?.length > 0 && (
+							<Section
+								icon={<Folder className='h-4 w-4' />}
+								label='File đính kèm'
+								content={
+									<div className='space-y-1'>
+										{topic.fileIds.map((f) => (
+											<div key={f} className='flex items-center gap-2 text-sm text-primary'>
+												<FileText className='h-4 w-4' />
+												<span>{f}</span>
+											</div>
+										))}
+									</div>
+								}
+							/>
+						)}
+
+						{/* Mô tả */}
+						<Section
+							icon={<FileText className='h-4 w-4' />}
+							label='Mô tả đề tài'
+							content={topic.description || 'Chưa có mô tả.'}
+							muted
+						/>
+
+						{/* Phase hiện tại */}
+						<Section
+							icon={<Calendar className='h-4 w-4' />}
+							label='Giai đoạn hiện tại'
+							content={topic.currentPhase}
+						/>
+					</div>
+				</ScrollArea>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+/* ——————————————— */
+/*  Small UI helpers */
+/* ——————————————— */
+const Section = ({
+	icon,
+	label,
+	content,
+	bold,
+	muted
+}: {
+	icon: React.ReactNode
+	label: string
+	content: React.ReactNode
+	bold?: boolean
+	muted?: boolean
+}) => {
+	if (!content) return null
+
+	return (
+		<div className='space-y-2'>
+			<div className='flex items-center gap-2 text-sm font-medium'>
+				{icon}
+				<span>{label}</span>
+			</div>
+			<div
+				className={cn(
+					'pl-6 text-sm',
+					bold ? 'text-lg font-semibold' : '',
+					muted ? 'leading-relaxed text-muted-foreground' : 'text-foreground'
+				)}
+			>
+				{content}
+			</div>
+		</div>
+	)
 }

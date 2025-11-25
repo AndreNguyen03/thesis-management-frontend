@@ -2,7 +2,7 @@ import { baseApi } from '@/services/baseApi'
 import type { ApiResponse } from '@/services/baseApi'
 import type { CreateUserRequest, LecturerTable } from '@/features/admin/manage_lecturer/types'
 import type { QueryParams } from '@/components/ui/DataTable/types'
-import type { CreateBatchLecturerDto, CreateLecturerBatchResponse } from '@/models'
+import type { CreateBatchLecturerDto, CreateLecturerBatchResponse, LecturerMini } from '@/models'
 
 export const lecturerApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -17,6 +17,14 @@ export const lecturerApi = baseApi.injectEndpoints({
 				response.data,
 			providesTags: ['UserProfile', 'ListLecturer']
 		}),
+
+        getLecturersByFaculty: builder.query<LecturerMini[], string>({
+            query: (facultyId) => ({
+                url: `users/lecturers/faculty/${facultyId}`,
+                method: 'GET'
+            }),
+            transformResponse: (response: ApiResponse<LecturerMini[]>) => response.data,
+        }),
 
 		// 🧩 Tạo giảng viên mới
 		createLecturer: builder.mutation<LecturerTable, CreateUserRequest>({
@@ -63,5 +71,5 @@ export const lecturerApi = baseApi.injectEndpoints({
 	})
 })
 
-export const { useGetLecturersQuery, useCreateLecturerMutation, useUpdateLecturerMutation, useDeleteLecturerMutation, useCreateBatchLecturersMutation } =
+export const { useGetLecturersQuery, useCreateLecturerMutation, useUpdateLecturerMutation, useDeleteLecturerMutation, useCreateBatchLecturersMutation, useGetLecturersByFacultyQuery } =
 	lecturerApi

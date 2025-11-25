@@ -5,14 +5,15 @@ import { Command, CommandGroup, CommandItem, CommandList, CommandInput, CommandE
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
+import type { LecturerMini } from '@/models'
 
 interface LecturerMultiSelectProps {
-	allLecturers: { id: string; name: string }[]
+	allLecturers: LecturerMini[] | undefined
 	selected: string[]
 	onChange: (value: string[]) => void
 }
 
-export function LecturerMultiSelect({ allLecturers, selected, onChange }: LecturerMultiSelectProps) {
+export function LecturerMultiSelect({ allLecturers = [], selected, onChange }: LecturerMultiSelectProps) {
 	const [open, setOpen] = useState(false)
 	const [localSelected, setLocalSelected] = useState<string[]>(selected)
 
@@ -49,7 +50,7 @@ export function LecturerMultiSelect({ allLecturers, selected, onChange }: Lectur
 					const lec = allLecturers.find((l) => l.id === id)
 					return (
 						<Badge key={id} variant='secondary' className='flex items-center gap-1'>
-							{lec?.name}
+							{lec?.fullName}
 							<X
 								size={14}
 								className='cursor-pointer'
@@ -92,7 +93,7 @@ export function LecturerMultiSelect({ allLecturers, selected, onChange }: Lectur
 										className='flex cursor-pointer items-center gap-2 py-2'
 									>
 										<Checkbox checked={localSelected.includes(lec.id)} />
-										{lec.name}
+										{lec.fullName}
 									</CommandItem>
 								))}
 							</CommandGroup>
