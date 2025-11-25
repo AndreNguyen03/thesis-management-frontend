@@ -8,6 +8,7 @@ import { Button } from '@/components/ui'
 import { useGetPeriodDetailQuery } from '@/services/periodApi'
 import NotFound from '@/features/shared/NotFound'
 import type { PeriodPhase } from '@/models/period-phase.models'
+import { PhaseInfo } from '@/utils/utils'
 
 // import { useGetPeriodDetailQuery } from '@/services/periodApi'
 
@@ -19,8 +20,7 @@ export default function DetailPeriodPage() {
 		isLoading,
 		error
 	} = useGetPeriodDetailQuery(id!, {
-		skip: !id // Nếu dùng RTK Query, nên dùng skip thay vì return sớm ở compo----------------------------
-		// nent
+		skip: !id
 	})
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
@@ -28,10 +28,10 @@ export default function DetailPeriodPage() {
 		{ label: period?.name ?? 'Đang tải', path: `/period/${period?._id}` }
 	])
 
-	const [currentPhase, setCurrentPhaseId] = useState<string | undefined>(undefined)
+	const [currentChosenPhase, setCurrentChosenPhase] = useState<string>('empty')
 	useEffect(() => {
 		if (period?.currentPhase) {
-			setCurrentPhaseId(period.currentPhase)
+			setCurrentChosenPhase(period.currentPhase)
 		}
 	}, [period])
 	if (!id) {
@@ -48,36 +48,44 @@ export default function DetailPeriodPage() {
 			</div>
 		)
 	}
-
 	// Lấy thông tin pha hiện tại
-	const currentPhaseDetail = period.phases.find((p: PeriodPhase) => p.phase === currentPhase)
-
+	const currentPhaseDetail = period.phases.find((p: PeriodPhase) => p.phase === currentChosenPhase)
 	return (
-		<div className='min-h-screen'>
-			<div className='flex w-full'>
-				{/* Sidebar - Step Bar */}
-				<aside className='sticky top-0 h-screen w-[10%] min-w-[120px] border-r'>
-					<PhaseStepBar
-						phases={period.phases}
-						currentPhase={currentPhase!}
-						onPhaseChange={(phaseType: PhaseType) => {
-							setCurrentPhaseId(phaseType)
-						}}
-					/>
-				</aside>
-  				{/* Main Content */}
-				<main className='w-[90%] flex-1'>
-					<div className='container mx-auto max-w-7xl'>
-						{currentPhase && (
-							<PhaseContent
-								phase={currentPhaseDetail!}
-								currentPhase={period.currentPhase}
-								periodId={period._id}
-							/>
-						)}
-					</div>
-				</main>
-			</div>
+		<div className='h-fit'>
+			{/* Sidebar - Step Bar */}
+			<aside className='fixed z-10 h-full w-[10%] min-w-[100px] border-r bg-white'>
+				<PhaseStepBar
+					phases={period.phases}
+					currentPhase={currentChosenPhase}
+					onPhaseChange={(phaseType: PhaseType) => {
+						setCurrentChosenPhase(phaseType)
+					}}
+				/>
+			</aside>
+			{/* Main Content with left margin to avoid sidebar overlap */}
+			<main className='ml-[10%] mt-10 h-full min-w-[120px] flex-1'>
+				<div className='container w-full'>
+					{currentPhaseDetail ? (
+						<PhaseContent
+							phaseDetail={currentPhaseDetail!}
+							isConfigured={currentPhaseDetail != undefined && currentPhaseDetail.startTime !== null}
+							currentPhase={period.currentPhase}
+							periodId={period._id}
+						/>
+					) : (
+						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-2'>
+							<h2 className='text-center text-2xl font-bold'>
+								Pha {PhaseInfo[currentChosenPhase as keyof typeof PhaseInfo].label}
+							</h2>
+							<span className='font-medium'>Khởi đầu cho một kỷ mới</span>
+							<span className='text-gray-500'>
+								Để tiếp tục hãy thiết lập pha <span className='font-semibold'>Nộp đề tài</span> và thông
+								báo cho giảng viên biết!
+							</span>
+						</div>
+					)}
+				</div>
+			</main>
 		</div>
 	)
 }

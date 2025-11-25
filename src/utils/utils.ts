@@ -51,24 +51,39 @@ export function decodeJwt<T = any>(token: string): T | null {
 		return null
 	}
 }
-export const PhaseInfo: Record<PhaseType, { order: number; label: string }> = {
-	submit_topic: {
-		order: 1,
-		label: 'Nộp đề tài'
-	},
-	open_registration: {
-		order: 2,
-		label: 'Mở đăng ký'
-	},
-	execution: {
-		order: 3,
-		label: 'Thực hiện'
-	},
-	completion: {
-		order: 4,
-		label: 'Hoàn thành'
+export const PhaseInfo: Record<PhaseType, { order: number; continue: string; continuePhaseId: string; label: string }> =
+	{
+		empty: {
+			order: 0,
+			continue: 'Mở đăng ký',
+			continuePhaseId: 'submit_topic',
+			label: 'Khởi đầu'
+		},
+		submit_topic: {
+			order: 1,
+			continue: 'Mở đăng ký',
+			continuePhaseId: 'open_registration',
+			label: 'Nộp đề tài'
+		},
+		open_registration: {
+			order: 2,
+			continue: 'Thực hiện',
+			continuePhaseId: 'execution',
+			label: 'Mở đăng ký'
+		},
+		execution: {
+			order: 3,
+			continue: 'Hoàn thành',
+			continuePhaseId: 'completion',
+			label: 'Thực hiện'
+		},
+		completion: {
+			order: 4,
+			continue: 'end',
+			continuePhaseId: 'end',
+			label: 'Hoàn thành -   '
+		}
 	}
-}
 
 export const PhaseStatusMap: Record<
 	'not_started' | 'ongoing' | 'completed',

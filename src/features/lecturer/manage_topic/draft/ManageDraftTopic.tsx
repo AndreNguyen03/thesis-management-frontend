@@ -26,7 +26,6 @@ const ManageTopicDraft = () => {
 	})
 	const { data: draftTopics, refetch } = useGetDraftTopicsQuery(queries)
 
-	const [topics, setTopics] = useState(draftTopics ? draftTopics.data : [])
 	// search input handler
 	const [searchTerm, setSearchTerm] = useState('')
 	const setQuery = (query: string) => {

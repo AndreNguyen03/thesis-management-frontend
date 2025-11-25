@@ -1,89 +1,129 @@
-import { useState } from 'react'
-import { Card } from '@/components/ui/card'
 import { StatsCards } from './StatsCards'
 import { TopicsTable } from './TopicsTable'
-import { getPhaseStats, mockTopicsPhase1, mockTopicsPhase2, mockTopicsPhase3, mockTopicsPhase4 } from '../mockData'
-import { Settings, Eye } from 'lucide-react'
+import { getPhaseStats } from '../utils'
 import { motion } from 'framer-motion'
-import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
-import { PhaseInfo } from '@/utils/utils'
 import type { PeriodPhase } from '@/models/period-phase.models'
-import { Button } from '@/components/ui'
+import { useState } from 'react'
+import type { PaginationTopicsQueryParams } from '@/models'
+import {
+	useFacuBoardApproveTopicMutation,
+	useFacuBoardRejectTopicMutation,
+	useGetTopicsOfPeriodQuery,
+	useGetTopicsQuery
+} from '@/services/topicApi'
+import { set } from 'zod'
+import type { PhaseStats } from '@/models/period.model'
+import { toast } from '@/hooks/use-toast'
+import { CustomPagination } from '@/components/PaginationBar'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useLecGetStatsPeriodQuery } from '@/services/periodApi'
 interface PhaseContentProps {
-	phase: PeriodPhase
+	phaseDetail: PeriodPhase
 	currentPhase: string
 	periodId: string
 	lecturers?: string[]
+	isConfigured: boolean
 }
 
-export function PhaseContent({ phase, currentPhase, periodId, lecturers = [] }: PhaseContentProps) {
-	const [phaseSettingsOpen, setPhaseSettingsOpen] = useState(false)
-	const [phaseConfigured, setPhaseConfigured] = useState(false)
-
-	// stats theo phase.phase
-	const stats = getPhaseStats(phase.phase)
-
-	const getTopicsForPhase = () => {
-		switch (phase.phase) {
-			case 'submit_topic':
-				return mockTopicsPhase1
-			case 'open_registration':
-				return mockTopicsPhase2
-			case 'execution':
-				return mockTopicsPhase3
-			case 'completion':
-				return mockTopicsPhase4
-			default:
-				return []
+export function PhaseContent({ phaseDetail, currentPhase, periodId, isConfigured }: PhaseContentProps) {
+	// // stats theo phase.phase
+	const { data: statsData } = useLecGetStatsPeriodQuery({ periodId, phase: currentPhase })
+	console.log('Stats Data in PhaseContent:', statsData)
+	const stats = getPhaseStats(statsData, phaseDetail.phase)
+	const [queries, setQueries] = useState<PaginationTopicsQueryParams>({
+		page: 1,
+		limit: 10,
+		search_by: 'titleVN,titleEng,lecturers.fullName',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		phase: currentPhase,
+		status: 'all'
+	})
+	//cal api
+	const {
+		data: topicsData,
+		isLoading,
+		isFetching,
+		refetch: refetchTopicsData
+	} = useGetTopicsOfPeriodQuery({ periodId, queries })
+	//duyệt đề tài
+	const [approveTopic, { isSuccess: isApprovedSuccess }] = useFacuBoardApproveTopicMutation()
+	const [rejectTopic, { isSuccess: isRejectSuccess }] = useFacuBoardRejectTopicMutation()
+	const [chosenLabel, setChosenLabelStats] = useState<string | null>('đã nộp')
+	const setChosenLabel = (val: PhaseStats) => {
+		setQueries((prev) => ({ ...prev, status: val.status, page: 1 }))
+		setChosenLabelStats(val.label)
+	}
+	//Các hành động có thể xảy ra bên trong datatable
+	//duyệt đề tài
+	const handleApproveTopic = async (topicId: string) => {
+		//Gọi API duyệt đề tài
+		const res = await approveTopic({ topicId })
+		refetchTopicsData()
+		if (res) {
+			toast({
+				title: 'Duyệt đề tài thành công!',
+				variant: 'success'
+			})
+		} else {
+			toast({
+				title: 'Duyệt đề tài thất bại!',
+				variant: 'destructive'
+			})
 		}
 	}
-
+	const handleRejectTopic = async (topicId: string) => {
+		//Gọi API từ chối đề tài
+		const res = await rejectTopic({ topicId })
+		refetchTopicsData()
+		if (res) {
+			toast({
+				title: 'Từ chối đề tài thành công!',
+				variant: 'success'
+			})
+		}
+	}
+	// tìm kiếm đề tài
+	const debouncedOnChange = useDebounce({
+		onChange: (val: string) => {
+			setQueries((prev) => ({ ...prev, query: val, page: 1 }))
+		},
+		duration: 400
+	})
 	return (
 		<motion.div
-			key={phase.phase}
+			key={phaseDetail ? phaseDetail.phase : 'no-phase'}
 			initial={{ opacity: 0, x: 20 }}
 			animate={{ opacity: 1, x: 0 }}
 			exit={{ opacity: 0, x: -20 }}
 			transition={{ duration: 0.3 }}
-			className='space-y-6'
+			className='h-full space-y-6'
 		>
-			{!phaseConfigured ? (
-				<Card className='border-dashed border-primary/30 bg-primary/5 p-8 text-center'>
-					<div className='mb-4 text-muted-foreground'>
-						Pha '{PhaseInfo[phase.phase].label}' chưa được thiết lập. Vui lòng thiết lập để bắt đầu quản lý.
-					</div>
-					<Button onClick={() => setPhaseSettingsOpen(true)}>
-						<Settings className='mr-2 h-4 w-4' /> Thiết lập ngay
-					</Button>
-				</Card>
-			) : (
-				<>
-					<div className='mb-4 flex items-center justify-between'>
-						<h3 className='text-lg font-semibold'>Thống kê tổng quan - {PhaseInfo[phase.phase].label}</h3>
-						<Button onClick={() => setPhaseSettingsOpen(true)} variant='outline' size='sm'>
-							<Eye className='mr-2 h-4 w-4' />
-							Xem / Chỉnh sửa thiết lập
-						</Button>
-					</div>
-					<StatsCards stats={stats} />
+			<StatsCards stats={stats} onClick={setChosenLabel} />
 
-					<div>
-						<h3 className='mb-4 text-lg font-semibold'>Danh sách đề tài</h3>
-						<TopicsTable topics={getTopicsForPhase()} phase={phase.phase} />
-					</div>
-				</>
-			)}
-
-			<PhaseSettingsModal
-				open={phaseSettingsOpen}
-				onOpenChange={(open) => {
-					setPhaseSettingsOpen(open)
-					if (!open) setPhaseConfigured(true)
-				}}
-				phase={phase.phase}
-				status={phase.status}
-				lecturers={lecturers}
-			/>
+			<div className='pb-10'>
+				<h3 className='mb-4 text-lg font-semibold'>
+					{queries.status ? `Danh sách các đề tài ${chosenLabel?.toLowerCase()}` : 'Danh sách đề tài đã nộp'}
+				</h3>
+				<TopicsTable
+					topics={topicsData?.data}
+					phase={phaseDetail.phase}
+					actions={{
+						onApproveTopic: handleApproveTopic,
+						onRejectTopic: handleRejectTopic,
+						onSearchTopics: (val: string) => {
+							debouncedOnChange(val)
+						}
+					}}
+				/>
+				{topicsData?.meta && topicsData.meta.totalPages > 1 && (
+					<CustomPagination
+						meta={topicsData.meta}
+						onPageChange={(p) => setQueries((prev) => ({ ...prev, page: p }))}
+					/>
+				)}
+			</div>
 		</motion.div>
 	)
 }

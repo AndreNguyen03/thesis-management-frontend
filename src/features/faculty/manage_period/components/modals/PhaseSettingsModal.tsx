@@ -28,7 +28,7 @@ const allLecturersMock = [
 interface PhaseSettingsModalProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	phase: PhaseType
+	needConfiguration: string
 	status: PeriodPhaseStatus
 	initialStart?: string
 	initialEnd?: string
@@ -38,7 +38,7 @@ interface PhaseSettingsModalProps {
 export function PhaseSettingsModal({
 	open,
 	onOpenChange,
-	phase,
+	needConfiguration,
 	status,
 	initialStart = '',
 	initialEnd = '',
@@ -54,9 +54,10 @@ export function PhaseSettingsModal({
 	const [lecturerDropdownOpen, setLecturerDropdownOpen] = useState(false)
 	const [searchText, setSearchText] = useState('')
 
-	const isPhase1 = phase === 'submit_topic'
-	const isPhase2 = phase === 'open_registration'
-	const isPhase4 = phase === 'completion'
+	const isPhase1 = needConfiguration === 'submit_topic'
+	const isPhase2 = needConfiguration === 'open_registration'
+	const isPhase4 = needConfiguration === 'completion'
+	const isPhase5 = needConfiguration === 'end' // xem xét
 
 	const isTimeInvalid = startTime && endTime ? endTime <= startTime : false
 
@@ -78,8 +79,8 @@ export function PhaseSettingsModal({
 					<DialogHeader>
 						<DialogTitle className='flex items-center gap-2 text-xl font-semibold'>
 							<Info className='h-5 w-5 text-primary' />
-							Thiết lập pha '{PhaseInfo[phase].label}' : - Trạng thái:{' '}
-							<Badge variant={PhaseStatusMap[status].variant}>{PhaseStatusMap[status].text}</Badge>
+							Thiết lập pha '{PhaseInfo[needConfiguration as keyof typeof PhaseInfo].label}' : - Trạng
+							thái: <Badge variant={PhaseStatusMap[status].variant}>{PhaseStatusMap[status].text}</Badge>
 						</DialogTitle>
 					</DialogHeader>
 
@@ -241,7 +242,8 @@ export function PhaseSettingsModal({
 						)}
 
 						{/* PHASE 4: SAVE TO LIBRARY */}
-						{isPhase4 && (
+						{/* Tổng kết, xem xét với giai đoạn kết thúc */}
+						{isPhase5 && (
 							<section className='space-y-4 rounded-lg border p-4'>
 								<div className='flex items-center gap-2'>
 									<Save className='h-5 w-5 text-primary' />

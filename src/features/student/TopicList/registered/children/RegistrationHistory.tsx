@@ -117,7 +117,7 @@ const RegistrationHistory = () => {
 								<td className='px-3 py-2'>{hic.major}</td>
 								<td className='px-3 py-2'>{new Date(hic.registeredAt).toLocaleString('vi-VN')}</td>
 								<td className='px-3 py-2'>
-									<span>{topicStatusLabels[hic.topicStatus as keyof typeof topicStatusLabels]}</span>
+									<span>{topicStatusLabels[hic.topicStatus as keyof typeof topicStatusLabels].name}</span>
 								</td>
 								<td className='px-3 py-2'>
 									<span

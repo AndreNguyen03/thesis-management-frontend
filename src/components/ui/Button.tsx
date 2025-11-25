@@ -28,7 +28,8 @@ const buttonVariants = cva(
 				active: 'bg-blue-600 text-white border-blue-600',
 				nonactive: 'bg-gray-300 text-gray-700 pointer-events-none',
 				outline_gray: 'border border-gray-300 bg-white text-gray-800 hover:bg-gray-100',
-				send: 'bg-green-400 text-black hover:bg-green-700'
+				send: 'bg-green-400 text-black hover:bg-green-700',
+				config: 'bg-purple-600 text-white text-wrap text-[13px] max-w-[120px] hover:bg-purple-700 p-0'
 			},
 			size: {
 				default: 'h-10 px-4 py-2 ',

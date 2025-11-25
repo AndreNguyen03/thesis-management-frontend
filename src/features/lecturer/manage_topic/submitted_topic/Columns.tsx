@@ -48,7 +48,7 @@ export const getColumns = ({ onSeeDetail }: ColumnsProps): ColumnDef<NewSubmitte
 		header: () => <div className='text-center'>Mô tả</div>,
 		cell: ({ row }) => (
 			<div className='flex max-w-xl justify-center capitalize' title={row.getValue('description')}>
-				<span className='line-clamp-5 break-words'>{row.getValue('description')}</span>
+				<span className='line-clamp-5 text-wrap break-words'>{row.getValue('description')}</span>
 			</div>
 		)
 	},

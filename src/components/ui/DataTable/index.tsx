@@ -16,6 +16,8 @@ import { Button, Input } from '@/components/ui'
 import { EmptyState } from '../EmptyState'
 import { LoadingState } from '../LoadingState'
 import type { DataTableProps, QueryParams, SearchValue, SortOrder, TableAction } from './types'
+import type { PaginationQueryParams } from '@/models'
+import type { PaginationQueryParamsDto } from '@/models/query-params'
 
 export function DataTable<T extends Record<string, any>>({
 	data,
@@ -33,6 +35,7 @@ export function DataTable<T extends Record<string, any>>({
 	},
 	toolbar
 }: DataTableProps<T>): ReactNode {
+	//bỏ vibe coding di vc
 	const [page, setPage] = useState(1)
 	const [searchField, setSearchField] = useState<string>((columns.find((col) => col.searchable)?.key as string) || '')
 	const [searchValue, setSearchValue] = useState<SearchValue>({ value: '' })
@@ -45,7 +48,6 @@ export function DataTable<T extends Record<string, any>>({
 	const firstFocusableRef = useRef<HTMLElement>(null)
 	const searchFieldRef = useRef<HTMLButtonElement>(null)
 	const searchInputRef = useRef<HTMLInputElement>(null)
-	const navigate = useNavigate()
 	useEffect(() => {
 		if (tableRef.current) {
 			const firstFocusable = tableRef.current.querySelector('input, button, [tabindex="0"]') as HTMLElement
@@ -80,7 +82,7 @@ export function DataTable<T extends Record<string, any>>({
 		updateQuery({ query: '', page: 1 })
 	}
 
-	const updateQuery = (updates: Partial<QueryParams>) => {
+	const updateQuery = (updates: Partial<PaginationQueryParamsDto>) => {
 		onQueryChange({
 			page,
 			limit: pageSize,
