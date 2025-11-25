@@ -68,11 +68,12 @@ export const getColumns = ({ onSeeDetail, showSelection }: ColumnsProps): Column
 	},
 	{
 		accessorKey: 'description',
+		size: 200,
 		header: () => <div className='text-center'>Mô tả</div>,
 		cell: ({ row }) => (
 			<div className=''>
-				<div className='flex justify-center truncate capitalize' title={row.getValue('description')}>
-					<span className='truncate'>{row.getValue('description')}</span>
+				<div className='flex max-w-80 justify-center capitalize' title={row.getValue('description')}>
+					<span className='p line-clamp-5 truncate text-wrap'>{row.getValue('description')}</span>
 				</div>
 			</div>
 		)

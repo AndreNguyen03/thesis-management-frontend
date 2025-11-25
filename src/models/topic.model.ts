@@ -48,8 +48,17 @@ export interface SubmittedTopic extends AbstractTopic {
 	createByInfo: MiniActorInforDto
 	periodInfo: MiniPeriod
 }
+export interface GeneralTopic extends AbstractTopic {
+	submittedAt: string
+	createByInfo: MiniActorInforDto
+	periodInfo: MiniPeriod
+	// file
+}
 export interface PaginatedSubmittedTopics extends GetPaginatedObject {
 	data: SubmittedTopic[]
+}
+export interface PaginatedGeneralTopics extends GetPaginatedObject {
+	data: GeneralTopic[]
 }
 export interface DraftTopic extends AbstractTopic {}
 export interface PaginatedDraftTopics extends GetPaginatedObject {
@@ -190,4 +199,9 @@ export interface CreateTopicPayload {
 	requirementIds?: string[]
 	studentIds?: string[]
 	lecturerIds: string[]
+}
+
+export interface PaginationTopicsQueryParams extends PaginationQueryParams {
+	phase?: string
+	status?: string
 }

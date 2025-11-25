@@ -4,7 +4,7 @@ import type { ResponseMiniLecturerDto } from './users'
 
 export type PeriodStatus = 'ongoing' | 'completed'
 
-export type PhaseType = 'submit_topic' | 'open_registration' | 'execution' | 'completion'
+export type PhaseType = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion'
 
 export type TopicStatus =
 	// Pha 1 - Nộp đề tài
@@ -51,20 +51,8 @@ export interface CreatePeriodDto {
 	endTime: Date
 }
 
-export interface Topic {
-	id: string
-	title: string
-	instructor: string
-	student?: string
-	status: TopicStatus
-	submittedAt: string
-	registrationCount?: number
-	progress?: number
-	score?: number
-	reportFile?: string
-}
-
 export interface PhaseStats {
+	status: string
 	label: string
 	value: number
 	variant?: 'default' | 'success' | 'warning' | 'destructive'

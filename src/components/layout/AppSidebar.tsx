@@ -119,7 +119,18 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 			localStorage.setItem('currentPeriodName', periodInfoData.name)
 			localStorage.setItem('currentPeriodEndTime', periodInfoData.endTime.toString())
 			period_info[0].title = `Đợt hiện tại: ${periodInfoData.name}`
-			;((period_info[0].url = `/period/${periodInfoData._id}`), (period_info[0].icon = BookOpen))
+			switch (userRole) {
+				case 'faculty_board':
+					period_info[0].url = `/period/${periodInfoData._id}`
+					break
+				case 'admin':
+					period_info[0].url = `/period/${periodInfoData._id}`
+					break
+				case 'lecturer':
+					period_info[0].url = `/period/${periodInfoData._id}`
+					break
+			}
+			period_info[0].icon = BookOpen
 		} else {
 			localStorage.removeItem('currentPeriodId')
 			localStorage.removeItem('currentPeriodName')
@@ -205,7 +216,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	return (
 		<div className={`border-r border-gray-200 bg-white ${isOpen ? 'w-50' : 'w-16'} transition-all duration-300`}>
 			<div
-				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit' : 'w-16'} transition-all duration-300`}
+				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit max-w-72' : 'w-16'} transition-all duration-300`}
 			>
 				<div className='px-3 py-1'>
 					<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>

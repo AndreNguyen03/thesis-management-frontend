@@ -11,7 +11,8 @@ import { DeletePeriodModal } from './modals/DeletePeriodModal'
 import type { Period, PeriodStatus, PhaseType } from '@/models/period.model'
 import { useDeletePeriodMutation, useGetPeriodsQuery } from '@/services/periodApi'
 import { toast } from '@/hooks/use-toast'
-import type { ApiError } from '@/models'
+import type { ApiError, PaginationTopicsQueryParams } from '@/models'
+import { PhaseInfo } from '@/utils/utils'
 
 const getStatusBadge = (status: PeriodStatus) => {
 	const variants = {
@@ -28,7 +29,7 @@ const getStatusBadge = (status: PeriodStatus) => {
 export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => void }) {
 	const navigate = useNavigate()
 
-	const [queryParams, setQueryParams] = useState<QueryParams>({
+	const [queryParams, setQueryParams] = useState<PaginationTopicsQueryParams>({
 		page: 1,
 		limit: 10,
 		search_by: 'name',
@@ -107,7 +108,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 			key: 'currentPhase',
 			title: 'Pha hiện tại',
 			sortable: false,
-			render: (value: PhaseType) => <Badge variant='outline'>{`Pha ${value}`}</Badge>
+			render: (value: PhaseType) => <Badge variant='outline'>{`Pha ${PhaseInfo[value].label}`}</Badge>
 		}
 	]
 

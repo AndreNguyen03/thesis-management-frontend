@@ -24,6 +24,7 @@ import { useGetRequirementsQuery } from '@/services/requirementApi'
 import { useGetMajorsQuery } from '@/services/major'
 import { useCountdown } from '@/hooks/count-down'
 import { set } from 'zod'
+import { useComboboxOptions } from '@/hooks/use-combobox-options'
 
 interface Student {
 	id: string
@@ -101,7 +102,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	const [queriesRequirement, setQueriesRequirement] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 15,
-		search_by: 'name, description',
+		search_by: 'nameds',
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
@@ -198,95 +199,21 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	const [selectedRequirements, setSelectedRequirements] = useState<string[]>([])
 
 	// Store options
-	const [majorOptions, setMajorOptions] = useState<ComboboxOption[]>([])
-	const [fieldOptions, setFieldOptions] = useState<ComboboxOption[]>([])
-	const [requirementOptions, setRequirementOptions] = useState<ComboboxOption[]>([])
-	const [studentOptions, setStudentOptions] = useState<ComboboxOption[]>([])
-	const [lecturerOptions, setLecturerOptions] = useState<ComboboxOption[]>([])
-
-	// handle wwhen search
-	useEffect(() => {
-		if (majors?.data && queriesMajor.query) {
-			setMajorOptions(majors.data.map((f) => ({ value: f._id, label: f.name })))
-		}
-	}, [majors, queriesMajor.query])
-	useEffect(() => {
-		if (fields?.data && queriesField.query) {
-			setFieldOptions(fields.data.map((f) => ({ value: f._id, label: f.name })))
-		}
-	}, [fields, queriesField.query])
-	useEffect(() => {
-		if (requirementsData?.data && queriesRequirement.query) {
-			setRequirementOptions(requirementsData.data.map((r) => ({ value: r._id, label: r.name })))
-		}
-	}, [requirementsData, queriesRequirement.query])
-	useEffect(() => {
-		if (students?.data && queriesStudent.query) {
-			setStudentOptions(students.data.map((s) => ({ value: s._id, label: s.fullName })))
-		}
-	}, [students, queriesStudent.query])
-	useEffect(() => {
-		if (coSupervisors?.data && queriesLecturer.query) {
-			setLecturerOptions(coSupervisors.data.map((l) => ({ value: l._id, label: l.fullName })))
-		}
-	}, [coSupervisors, queriesLecturer.query])
 
 	// store for first fetch
-	useEffect(() => {
-		if (majors?.data) {
-			setMajorOptions((prev) => [
-				...prev,
-				...majors.data
+	const majorOptions = useComboboxOptions(majors?.data, queriesMajor.page || 1, 'name')
 
-					.filter((f) => !prev.some((opt) => opt.value === f._id))
-					.map((f) => ({ value: f._id, label: f.name }))
-			])
-		}
-	}, [majors, queriesMajor.page])
+	// 1 dòng cho Field
+	const fieldOptions = useComboboxOptions(fields?.data, queriesField.page || 1, 'name')
 
-	useEffect(() => {
-		if (fields?.data) {
-			setFieldOptions((prev) => [
-				...prev,
-				...fields.data
-					.filter((f) => !prev.some((opt) => opt.value === f._id))
-					.map((f) => ({ value: f._id, label: f.name }))
-			])
-		}
-	}, [fields, queriesField.page])
+	// 1 dòng cho Requirement
+	const requirementOptions = useComboboxOptions(requirementsData?.data, queriesRequirement.page || 1, 'name')
 
-	useEffect(() => {
-		if (requirementsData?.data) {
-			setRequirementOptions((prev) => [
-				...prev,
-				...requirementsData.data
-					.filter((r) => !prev.some((opt) => opt.value === r._id))
-					.map((r) => ({ value: r._id, label: r.name }))
-			])
-		}
-	}, [requirementsData, queriesRequirement.page])
+	// 1 dòng cho Student (dùng 'fullName')
+	const studentOptions = useComboboxOptions(students?.data, queriesStudent.page || 1, 'fullName')
 
-	useEffect(() => {
-		if (students?.data) {
-			setStudentOptions((prev) => [
-				...prev,
-				...students.data
-					.filter((s) => !prev.some((opt) => opt.value === s._id))
-					.map((s) => ({ value: s._id, label: s.fullName }))
-			])
-		}
-	}, [students, queriesStudent.page])
-
-	useEffect(() => {
-		if (coSupervisors?.data) {
-			setLecturerOptions((prev) => [
-				...prev,
-				...coSupervisors.data
-					.filter((l) => !prev.some((opt) => opt.value === l._id))
-					.map((l) => ({ value: l._id, label: l.fullName }))
-			])
-		}
-	}, [coSupervisors, queriesLecturer.page])
+	// 1 dòng cho Lecturer
+	const lecturerOptions = useComboboxOptions(coSupervisors?.data, queriesLecturer.page || 1, 'fullName')
 
 	// clear form states after success create topic
 	useEffect(() => {
@@ -508,17 +435,10 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 		createTopic(newTopic)
 		refetchDraftTopics?.()
 
-		if (successCreateTopic) {
-			toast({
-				title: 'Thành công',
-				description: 'Đề tài đã được lưu thành công!'
-			})
-		} else
-			toast({
-				title: 'Lỗi',
-				description: 'Không thể lưu đề tài!',
-				variant: 'destructive'
-			})
+		toast({
+			title: 'Thành công',
+			description: 'Đề tài đã được lưu thành công!'
+		})
 	}
 	const handleCancel = () => {
 		setTitleVN('')

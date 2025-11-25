@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { PhaseType, Topic } from '@/models/period.model'
+import type { PhaseType } from '@/models/period.model'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
@@ -9,38 +9,38 @@ import { Eye, MoreVertical, CheckCircle, XCircle, Edit } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { TopicDetailModal } from './modals/TopicDetailModal'
 import { EditTopicModal } from './modals/EditTopicModal'
+import type { GeneralTopic, Topic } from '@/models'
+import { useNavigate } from 'react-router-dom'
 
 interface TopicsTableProps {
-	topics: Topic[]
+	topics: GeneralTopic[] | undefined
 	phase: PhaseType
+	actions: {
+		onApproveTopic: (topicId: string) => void
+		onRejectTopic: (topicId: string) => void
+		onSearchTopics: (searchTerm: string) => void
+	}
 }
 
-export function TopicsTable({ topics, phase }: TopicsTableProps) {
+export function TopicsTable({ topics, phase, actions }: TopicsTableProps) {
 	const [searchTerm, setSearchTerm] = useState('')
-	const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
-	const [detailModalOpen, setDetailModalOpen] = useState(false)
-	const [editModalOpen, setEditModalOpen] = useState(false)
-
-	const handleViewDetail = (topic: Topic) => {
-		setSelectedTopic(topic)
-		setDetailModalOpen(true)
+	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
+	const navigate = useNavigate()
+	const handleViewDetail = (topic: GeneralTopic) => {
+		navigate(`/detail-topic/${topic._id}`)
 	}
 
-	const handleEdit = (topic: Topic) => {
+	const handleEdit = (topic: GeneralTopic) => {
 		setSelectedTopic(topic)
-		setEditModalOpen(true)
+		// setEditModalOpen(true)
 	}
-
-	const filteredTopics = topics.filter(
-		(topic) =>
-			topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			topic.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			topic.student?.toLowerCase().includes(searchTerm.toLowerCase())
-	)
-
+	const handleSearchChange = (value: string) => {
+		setSearchTerm(value)
+		actions.onSearchTopics(value)
+	}
 	const getStatusBadge = (status: string) => {
-		console.log('Status:', status)
 		const variants = {
+			submitted: { label: 'Đã nộp', variant: 'outline' as const },
 			pending_registration: { label: 'Chờ xét', variant: 'outline' as const },
 			approved: { label: 'Đã duyệt', variant: 'default' as const },
 			rejected: { label: 'Từ chối', variant: 'destructive' as const },
@@ -53,49 +53,46 @@ export function TopicsTable({ topics, phase }: TopicsTableProps) {
 		return <Badge variant={config.variant}>{config.label}</Badge>
 	}
 
-	const renderPhaseSpecificColumns = (topic: Topic) => {
+	const renderPhaseSpecificColumns = (topic: GeneralTopic) => {
 		switch (phase) {
 			case 'submit_topic':
 				return (
 					<>
-						<TableCell>{new Date(topic.submittedAt).toLocaleDateString('vi-VN')}</TableCell>
-						<TableCell>{getStatusBadge(topic.status)}</TableCell>
+						<TableCell>{new Date(topic.submittedAt).toLocaleString('vi-VN')}</TableCell>
+						<TableCell className='min-w-32'>{getStatusBadge(topic.currentStatus)}</TableCell>
 					</>
 				)
 			case 'open_registration':
 				return (
 					<>
-						<TableCell>{topic.student || 'Chưa có'}</TableCell>
-						<TableCell>{topic.registrationCount || 0} sinh viên</TableCell>
-						<TableCell>{getStatusBadge(topic.status)}</TableCell>
+						<TableCell>{topic.students.map((student) => student.fullName).join(', ') || 'N/A'}</TableCell>
+						<TableCell>{topic.students.length || 0} sinh viên</TableCell>
+						<TableCell>{getStatusBadge(topic.currentStatus)}</TableCell>
 					</>
 				)
 			case 'execution':
 				return (
 					<>
-						<TableCell>{topic.student || 'N/A'}</TableCell>
+						<TableCell>{topic.students.map((student) => student.fullName).join(', ') || 'N/A'}</TableCell>
 						<TableCell>
 							<div className='flex items-center gap-2'>
 								<div className='h-2 w-full rounded-full bg-muted'>
-									<div
-										className='h-2 rounded-full bg-primary transition-all'
-										style={{ width: `${topic.progress || 0}%` }}
-									/>
+									<div className='h-2 rounded-full bg-primary transition-all'>
+										styl width: topic.progres
+									</div>
 								</div>
-								<span className='whitespace-nowrap text-sm text-muted-foreground'>
-									{topic.progress || 0}%
-								</span>
+								<span className='whitespace-nowrap text-sm text-muted-foreground'>topic.progres</span>
 							</div>
 						</TableCell>
-						<TableCell>{getStatusBadge(topic.status)}</TableCell>
+						<TableCell>{getStatusBadge(topic.currentStatus)}</TableCell>
 					</>
 				)
 			case 'completion':
 				return (
 					<>
-						<TableCell>{topic.student || 'N/A'}</TableCell>
-						<TableCell className='font-semibold'>{topic.score?.toFixed(1) || 'N/A'}</TableCell>
-						<TableCell>{getStatusBadge(topic.status)}</TableCell>
+						<TableCell>{topic.students.map((student) => student.fullName).join(', ') || 'N/A'}</TableCell>
+						<TableCell className='font-semibold'>score</TableCell>
+						<TableCell>{getStatusBadge(topic.currentStatus)}</TableCell>
 					</>
 				)
 			default:
@@ -109,7 +106,7 @@ export function TopicsTable({ topics, phase }: TopicsTableProps) {
 				return (
 					<>
 						<TableHead>Thời gian nộp</TableHead>
-						<TableHead>Trạng thái</TableHead>
+						<TableHead className='min-w-30'>Trạng thái</TableHead>
 					</>
 				)
 			case 'open_registration':
@@ -145,9 +142,9 @@ export function TopicsTable({ topics, phase }: TopicsTableProps) {
 		<div className='space-y-4'>
 			<div className='flex items-center justify-between gap-4'>
 				<Input
-					placeholder='Tìm kiếm đề tài, giảng viên, sinh viên...'
+					placeholder='Tìm kiếm đề tài, giảng viên,...'
 					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
+					onChange={(e) => handleSearchChange(e.target.value)}
 					className='max-w-md'
 				/>
 			</div>
@@ -164,28 +161,47 @@ export function TopicsTable({ topics, phase }: TopicsTableProps) {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{filteredTopics.length === 0 ? (
+						{topics?.length === 0 ? (
 							<TableRow>
 								<TableCell colSpan={7} className='py-8 text-center text-muted-foreground'>
 									Không tìm thấy đề tài nào
 								</TableCell>
 							</TableRow>
 						) : (
-							filteredTopics.map((topic, index) => (
+							topics?.map((topic, index) => (
 								<motion.tr
-									key={topic.id}
+									key={topic._id}
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
 									transition={{ delay: index * 0.05 }}
 									className='group hover:bg-muted/50'
 								>
-									<TableCell className='font-medium'>{topic.id}</TableCell>
-									<TableCell className='max-w-[300px]'>
-										<div className='truncate' title={topic.title}>
-											{topic.title}
+									<TableCell className='font-medium'>{topic._id}</TableCell>
+									<TableCell className='max-w-[500px]'>
+										<div
+											className='line-clamp-3 truncate text-wrap font-semibold'
+											title={topic.titleVN}
+										>
+											{topic.titleVN}
+										</div>
+										<div
+											className='line-clamp-3 truncate text-wrap text-gray-500'
+											title={topic.titleEng}
+										>
+											{topic.titleEng}
 										</div>
 									</TableCell>
-									<TableCell>{topic.instructor}</TableCell>
+									<TableCell>
+										{topic.lecturers && topic.lecturers.length > 0
+											? topic.lecturers.map((lecturer, idx) => (
+													<span key={lecturer._id || idx} className='mr-2 font-semibold'>
+														{lecturer.title}
+														{'.'} {lecturer.fullName}
+														{idx < topic.lecturers.length - 1 && ','}
+													</span>
+												))
+											: 'N/A'}
+									</TableCell>
 									{renderPhaseSpecificColumns(topic)}
 									<TableCell>
 										<DropdownMenu>
@@ -199,13 +215,17 @@ export function TopicsTable({ topics, phase }: TopicsTableProps) {
 													<Eye className='mr-2 h-4 w-4' />
 													Xem chi tiết
 												</DropdownMenuItem>
-												{phase === 'submit_topic' && topic.status === 'submitted' && (
+												{phase === 'submit_topic' && topic.currentStatus === 'submitted' && (
 													<>
-														<DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={() => actions.onApproveTopic(topic._id)}
+														>
 															<CheckCircle className='mr-2 h-4 w-4' />
 															Duyệt
 														</DropdownMenuItem>
-														<DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={() => actions.onRejectTopic(topic._id)}
+														>
 															<XCircle className='mr-2 h-4 w-4' />
 															Từ chối
 														</DropdownMenuItem>
@@ -225,9 +245,9 @@ export function TopicsTable({ topics, phase }: TopicsTableProps) {
 				</Table>
 			</div>
 
-			{/* Modals */}
-			<TopicDetailModal open={detailModalOpen} onOpenChange={setDetailModalOpen} topic={selectedTopic} />
-			<EditTopicModal open={editModalOpen} onOpenChange={setEditModalOpen} topic={selectedTopic} />
+			{/* Modals
+			<TopicDetailModal open={detailModalOpen} onOpenChange={setDetailModalOpen} topic={selectedTopic} /> */}
+			{/* <EditTopicModal open={editModalOpen} onOpenChange={setEditModalOpen} topic={selectedTopic} /> */}
 		</div>
 	)
 }

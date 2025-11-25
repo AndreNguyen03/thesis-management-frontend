@@ -7,7 +7,7 @@ export const Breadcrumbs = () => {
 	if (!items.length) return null
 
 	return (
-		<nav className='text-sm text-gray-600'>
+		<nav className='top-5 text-sm text-gray-600'>
 			<ul className='flex gap-2'>
 				{items.map((item, idx) => {
 					const isLast = idx === items.length - 1
@@ -17,7 +17,9 @@ export const Breadcrumbs = () => {
 							{isLast || !item.path ? (
 								<span className='font-semibold'>{item.label}</span>
 							) : (
-								<Link className='hover:underline' to={item.path}>{item.label}</Link>
+								<Link className='hover:underline' to={item.path}>
+									{item.label}
+								</Link>
 							)}
 						</li>
 					)

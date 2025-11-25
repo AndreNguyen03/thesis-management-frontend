@@ -9,14 +9,8 @@ import { TopicCard } from './TopicCard'
 import { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useGetFieldsQuery } from '@/services/fieldApi'
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious
-} from '@/components/ui/pagination'
+import { CustomPagination } from '@/components/PaginationBar'
+
 
 export const SavedTopics = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
@@ -40,16 +34,7 @@ export const SavedTopics = () => {
 	})
 	const [topics, setTopics] = useState<Topic[]>([])
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }, { label: 'Đề tài đã lưu' }])
-	useEffect(() => {
-		if (JSON.stringify(topics) !== JSON.stringify(savedTopicsData?.data)) {
-			setTopics(savedTopicsData ? savedTopicsData.data : [])
-			setQueries((prev) => ({
-				...prev,
-				page: savedTopicsData ? savedTopicsData.meta.currentPage : 1
-			}))
-		}
-	}, [savedTopicsData])
-
+	
 	// search input handler
 	const [searchTerm, setSearchTerm] = useState('')
 	const setQuery = (query: string) => {
@@ -133,40 +118,12 @@ export const SavedTopics = () => {
 									<TopicCard key={topic._id} topic={topic} mode='saved' />
 								))}
 							</div>
-							<Pagination>
-								<PaginationContent>
-									<PaginationItem>
-										<PaginationPrevious
-											href='#'
-											onClick={() =>
-												setQueries((prev) => ({ ...prev, page: Math.max(prev.page! - 1, 1) }))
-											}
-										/>
-									</PaginationItem>
-									{[...Array(savedTopicsData?.meta.totalPages)].map((_, idx) => (
-										<PaginationItem key={idx}>
-											<PaginationLink
-												isActive={queries.page === idx + 1}
-												href='#'
-												onClick={() => setQueries((prev) => ({ ...prev, page: idx + 1 }))}
-											>
-												{idx + 1}
-											</PaginationLink>
-										</PaginationItem>
-									))}
-									<PaginationItem>
-										<PaginationNext
-											href='#'
-											onClick={() =>
-												setQueries((prev) => ({
-													...prev,
-													page: Math.min(prev.page! + 1, savedTopicsData?.meta.totalPages!)
-												}))
-											}
-										/>
-									</PaginationItem>
-								</PaginationContent>
-							</Pagination>
+							{savedTopicsData?.meta && savedTopicsData.meta.totalPages > 1 && (
+								<CustomPagination
+									meta={savedTopicsData.meta}
+									onPageChange={(p) => setQueries((prev) => ({ ...prev, page: p }))}
+								/>
+							)}
 						</>
 					)}
 				</div>

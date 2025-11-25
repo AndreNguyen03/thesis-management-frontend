@@ -3,7 +3,7 @@ import { getColumns } from './Columns'
 import { useGetDraftTopicsQuery, useSubmitTopicMutation } from '@/services/topicApi'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { CreateTopic } from '../../new_topic'
-import { Eye, Search } from 'lucide-react'
+import { Eye, Pointer, Search, X } from 'lucide-react'
 import { useCountdown } from '@/hooks/count-down'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
@@ -11,6 +11,7 @@ import { Button, Input } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
+import { CustomPagination } from '@/components/PaginationBar'
 
 const ManageTopicDraft = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
@@ -25,7 +26,6 @@ const ManageTopicDraft = () => {
 	})
 	const { data: draftTopics, refetch } = useGetDraftTopicsQuery(queries)
 
-	const [topics, setTopics] = useState(draftTopics ? draftTopics.data : [])
 	// search input handler
 	const [searchTerm, setSearchTerm] = useState('')
 	const setQuery = (query: string) => {
@@ -36,15 +36,7 @@ const ManageTopicDraft = () => {
 		setSearchTerm(val)
 		debounceOnChange(val)
 	}
-	useEffect(() => {
-		if (JSON.stringify(draftTopics) !== JSON.stringify(draftTopics?.data)) {
-			setTopics(draftTopics ? draftTopics.data : [])
-			setQueries((prev) => ({
-				...prev,
-				page: draftTopics ? draftTopics.meta.currentPage : 1
-			}))
-		}
-	}, [draftTopics])
+
 	const [showSelection, setShowSelection] = useState(false)
 	//lấ thong tin của kì
 	const currentPeriodId = localStorage.getItem('currentPeriodId')
@@ -91,43 +83,56 @@ const ManageTopicDraft = () => {
 		<div className='h-screen'>
 			<ResizablePanelGroup direction='vertical' className='rounded-lg border'>
 				<ResizablePanel defaultSize={65}>
-					<div className='flex w-fit flex-row items-center gap-2'>
-						<h3 className='m-4 text-xl font-semibold'>Kho đề tài của bạn</h3>
-						{currentPeriodId && (
-							<>
-								<div className='m-2 flex flex-col gap-2 rounded-md bg-blue-100 p-2 lg:flex-row'>
-									<span className='font-semibold'>
-										<span>{`Kì hiện tại: `}</span>
-										{currentPeriodName}
-									</span>
-									<span className='ml-auto mr-4 font-normal'>
-										Thời gian còn lại:{' '}
-										<span className='font-semibold text-blue-700'>{countdown}</span>
-									</span>
-								</div>
-								<Button variant={'active'} onClick={() => setShowSelection((prev) => !prev)}>
-									{showSelection ? 'Ẩn chọn' : 'Chọn đề tài nộp'}
-								</Button>
-							</>
-						)}
-					</div>
-					<div className='relative flex flex-1 items-center'>
-						<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
-						<Input
-							placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
-							className='pl-10'
-							value={searchTerm}
-							onChange={(e) => onEdit(e.target.value)}
-						/>
-					</div>
-					<div>
-						<DataTable
-							columns={columns}
-							data={data}
-							onSubmitSelected={handleSubmitTopics}
-							showSelection={showSelection}
-							isSubmitting={isSubmitting}
-						/>
+					<div className='flex flex-col gap-2 p-2'>
+						<div className='flex w-fit flex-row items-center gap-2'>
+							<h3 className='m-4 text-xl font-semibold'>Kho đề tài của bạn</h3>
+							{currentPeriodId && (
+								<>
+									<div className='m-2 flex flex-col gap-2 rounded-md bg-blue-100 p-2 lg:flex-row'>
+										<span className='font-semibold'>
+											<span>{`Kì hiện tại: `}</span>
+											{currentPeriodName}
+										</span>
+										<span className='ml-auto mr-4 font-normal'>
+											Thời gian còn lại:{' '}
+											<span className='font-semibold text-blue-700'>{countdown}</span>
+										</span>
+									</div>
+									<Button
+										disabled={!(draftTopics && draftTopics.data.length > 0)}
+										variant={'active'}
+										onClick={() => setShowSelection((prev) => !prev)}
+									>
+										{showSelection ? <X /> : <Pointer />}
+										{showSelection ? 'Bỏ chọn' : 'Chọn đề tài nộp'}
+									</Button>
+								</>
+							)}
+						</div>
+						<div className='relative flex flex-1 items-center'>
+							<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
+							<Input
+								placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
+								className='pl-10'
+								value={searchTerm}
+								onChange={(e) => onEdit(e.target.value)}
+							/>
+						</div>
+						<div>
+							<DataTable
+								columns={columns}
+								data={data}
+								onSubmitSelected={handleSubmitTopics}
+								showSelection={showSelection}
+								isSubmitting={isSubmitting}
+							/>
+							{draftTopics?.meta && draftTopics.meta.totalPages > 1 && (
+								<CustomPagination
+									meta={draftTopics.meta}
+									onPageChange={(p) => setQueries((prev) => ({ ...prev, page: p }))}
+								/>
+							)}
+						</div>
 					</div>
 				</ResizablePanel>
 				<ResizableHandle>

@@ -6,7 +6,9 @@ import type {
 	PaginatedDraftTopics,
 	GetPaginatedTopics,
 	CreateTopicPayload,
-	PaginatedSubmittedTopics
+	PaginatedSubmittedTopics,
+	PaginationTopicsQueryParams,
+	PaginatedGeneralTopics
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -16,12 +18,15 @@ export const topicApi = baseApi.injectEndpoints({
 			query: () => `/topics`,
 			transformResponse: (response: ApiResponse<GetPaginatedTopics>) => response.data
 		}),
-		getTopicsOfPeriod: builder.query<GetPaginatedTopics, { periodId: string; query: PaginationQueryParamsDto }>({
-			query: ({ periodId, query }) => {
-				const queryString = buildQueryString(query)
+		getTopicsOfPeriod: builder.query<
+			PaginatedGeneralTopics,
+			{ periodId: string; queries: PaginationTopicsQueryParams }
+		>({
+			query: ({ periodId, queries }) => {
+				const queryString = buildQueryString(queries)
 				return `/topics/period-topics/${periodId}?${queryString}`
 			},
-			transformResponse: (response: ApiResponse<GetPaginatedTopics>) => response.data
+			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data
 		}),
 		getTopicById: builder.query<ITopicDetail, { id: string }>({
 			query: ({ id }) => `/topics/${id}`,
@@ -79,7 +84,19 @@ export const topicApi = baseApi.injectEndpoints({
 		}),
 		submitTopic: builder.mutation<ApiResponse<Topic>, { topicId: string; periodId: string }>({
 			query: ({ topicId, periodId }) => ({
-				url: `/topics/lec/submit-topic/${topicId}/${periodId}`,
+				url: `/topics/lec/submit-topic/${topicId}/in-period/${periodId}`,
+				method: 'PATCH'
+			})
+		}),
+		facuBoardApproveTopic: builder.mutation<string, { topicId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/faculty-board/approve-topic/${topicId}`,
+				method: 'PATCH'
+			})
+		}),
+		facuBoardRejectTopic: builder.mutation<string, { topicId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/faculty-board/reject-topic/${topicId}`,
 				method: 'PATCH'
 			})
 		})
@@ -100,5 +117,7 @@ export const {
 	useGetDraftTopicsQuery,
 	useGetSubmittedTopicsQuery,
 	useCreateTopicMutation,
-	useSubmitTopicMutation
+	useSubmitTopicMutation,
+	useFacuBoardApproveTopicMutation,
+	useFacuBoardRejectTopicMutation
 } = topicApi

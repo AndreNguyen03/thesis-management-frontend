@@ -1,3 +1,5 @@
+import type { PhaseType } from './period.model'
+
 export class PaginationQueryParamsDto {
 	limit?: number = 10
 	page?: number = 1
@@ -13,7 +15,9 @@ export class PaginationQueryParamsDto {
 
 export function buildQueryString(params: PaginationQueryParamsDto): string {
 	return Object.entries(params)
-		.filter(([_, value]) => value !== undefined && value !== null && value !== '' && value !== 'all')
+		.filter(
+			([_, value]) => value !== undefined && value !== null && value !== ' ' && value !== ',' && value !== 'all'
+		)
 		.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value as string)}`)
 		.join('&')
 }

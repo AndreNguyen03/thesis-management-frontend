@@ -5,9 +5,10 @@ import {
 	type GetCustomMiniPeriodInfoRequestDto,
 	type GetCustomPeriodDetailRequestDto,
 	type Period,
-	type PeriodBackend,
+	type PeriodBackend
 } from '@/models/period.model'
-import type { PaginationQueryParamsDto } from '@/models/query-params'
+import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
+import type { GetStatiticInPeriod } from '@/models/statistic.model'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
 
 export const periodApi = baseApi.injectEndpoints({
@@ -164,6 +165,14 @@ export const periodApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<GetCustomMiniPeriodInfoRequestDto | null>) => response.data
+		}),
+
+		//Lấy thông tin thống kê theo pha trong kì
+		lecGetStatsPeriod: builder.query<GetStatiticInPeriod, { periodId: string; phase: string }>({
+			query: ({ periodId, phase }) => {
+				return `/periods/${periodId}/faculty-board/stats?phase=${phase}`
+			},
+			transformResponse: (response: ApiResponse<GetStatiticInPeriod>) => response.data
 		})
 	})
 })
@@ -178,5 +187,6 @@ export const {
 	useGetPeriodsQuery,
 	useCreatePeriodMutation,
 	useGetSubmissionStatusQuery,
-	useGetCurrentPeriodInfoQuery
+	useGetCurrentPeriodInfoQuery,
+	useLecGetStatsPeriodQuery
 } = periodApi
