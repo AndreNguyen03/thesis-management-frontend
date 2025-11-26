@@ -222,72 +222,72 @@ export function getVariantForStatus(status: string): string {
 // src/modules/manage-period/mock/detailPeriod.ts
 import type { PeriodBackend } from '@/models/period.model'
 import type { GetStatiticInPeriod } from '@/models/statistic.model'
-const mockLecturers: ResponseMiniLecturerDto[] = [
-	{
-		_id: 'lec1',
-		fullName: 'TS. Nguyễn Văn A',
-		email: 'nguyenvana@university.edu.vn',
-		phone: '0912345678',
-		avatarUrl: '/avatars/lec1.png',
-		avatarName: 'lec1.png',
-		title: 'Tiến sĩ'
-	},
-	{
-		_id: 'lec2',
-		fullName: 'PGS. Trần Thị B',
-		email: 'tranthib@university.edu.vn',
-		phone: '0987654321',
-		avatarUrl: '/avatars/lec2.png',
-		avatarName: 'lec2.png',
-		title: 'Phó Giáo sư'
-	}
-]
-export const mockPeriodDetail: PeriodBackend = {
-	id: 'p1',
-	name: 'Đợt đăng ký đề tài HK1 2025',
-	startDate: '2025-01-01',
-	endDate: '2025-05-30',
-	status: 'ongoing',
-	currentPhase: 'submit_topic',
-	faculty: {
-		name: 'Khoa Công Nghệ Thông Tin',
-		email: 'fit@university.edu.vn',
-		urlDirection: 'https://fit.university.edu.vn'
-	},
-	phases: [
-		{
-			_id: '122	',
-			phase: 'submit_topic',
-			startTime: '2025-01-01T00:00:00Z',
-			endTime: '2025-01-15T23:59:59Z',
-			status: 'ongoing',
-			minTopicsPerLecturer: 3,
-			requiredLecturers: mockLecturers,
-			allowManualApproval: true
-		},
-		{
-			_id: '123',
-			phase: 'open_registration' as PhaseType,
-			startTime: '2025-01-16T00:00:00Z',
-			endTime: '2025-01-25T23:59:59Z',
-			status: 'not_started',
-			allowManualApproval: false
-		},
-		{
-			_id: '124',
-			phase: 'execution' as PhaseType,
-			startTime: '2025-01-26T00:00:00Z',
-			endTime: '2025-04-30T23:59:59Z',
-			status: 'not_started',
-			allowManualApproval: false
-		},
-		{
-			_id: '125',
-			phase: 'completion' as PhaseType,
-			startTime: '2025-05-01T00:00:00Z',
-			endTime: '2025-05-30T23:59:59Z',
-			status: 'not_started',
-			allowManualApproval: true
-		}
-	]
-}
+// const mockLecturers: ResponseMiniLecturerDto[] = [
+// 	{
+// 		_id: 'lec1',
+// 		fullName: 'TS. Nguyễn Văn A',
+// 		email: 'nguyenvana@university.edu.vn',
+// 		phone: '0912345678',
+// 		avatarUrl: '/avatars/lec1.png',
+// 		avatarName: 'lec1.png',
+// 		title: 'Tiến sĩ'
+// 	},
+// 	{
+// 		_id: 'lec2',
+// 		fullName: 'PGS. Trần Thị B',
+// 		email: 'tranthib@university.edu.vn',
+// 		phone: '0987654321',
+// 		avatarUrl: '/avatars/lec2.png',
+// 		avatarName: 'lec2.png',
+// 		title: 'Phó Giáo sư'
+// 	}
+// ]
+// export const mockPeriodDetail: PeriodBackend = {
+// 	id: 'p1',
+// 	name: 'Đợt đăng ký đề tài HK1 2025',
+// 	startDate: '2025-01-01',
+// 	endDate: '2025-05-30',
+// 	status: 'ongoing',
+// 	currentPhase: 'submit_topic',
+// 	faculty: {
+// 		name: 'Khoa Công Nghệ Thông Tin',
+// 		email: 'fit@university.edu.vn',
+// 		urlDirection: 'https://fit.university.edu.vn'
+// 	},
+// 	phases: [
+// 		{
+// 			_id: '122	',
+// 			phase: 'submit_topic',
+// 			startTime: '2025-01-01T00:00:00Z',
+// 			endTime: '2025-01-15T23:59:59Z',
+// 			status: 'ongoing',
+// 			minTopicsPerLecturer: 3,
+// 			requiredLecturers: mockLecturers,
+// 			allowManualApproval: true
+// 		},
+// 		{
+// 			_id: '123',
+// 			phase: 'open_registration' as PhaseType,
+// 			startTime: '2025-01-16T00:00:00Z',
+// 			endTime: '2025-01-25T23:59:59Z',
+// 			status: 'not_started',
+// 			allowManualApproval: false
+// 		},
+// 		{
+// 			_id: '124',
+// 			phase: 'execution' as PhaseType,
+// 			startTime: '2025-01-26T00:00:00Z',
+// 			endTime: '2025-04-30T23:59:59Z',
+// 			status: 'not_started',
+// 			allowManualApproval: false
+// 		},
+// 		{
+// 			_id: '125',
+// 			phase: 'completion' as PhaseType,
+// 			startTime: '2025-05-01T00:00:00Z',
+// 			endTime: '2025-05-30T23:59:59Z',
+// 			status: 'not_started',
+// 			allowManualApproval: true
+// 		}
+// 	]
+// }

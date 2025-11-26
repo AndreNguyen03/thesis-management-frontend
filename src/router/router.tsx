@@ -39,7 +39,7 @@ export const router = createBrowserRouter([
 			{ index: true, element: <Navigate to='dashboard' replace /> },
 			// { index: true, element: <Navigate to='manage-period' replace /> },
 			{ path: 'dashboard', element: <Dashboard /> },
-			{
+			{	
 				path: 'profile',
 				element: <Profile /> // tạm thời dùng mockUser
 			},

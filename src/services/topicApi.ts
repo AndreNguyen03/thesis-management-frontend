@@ -99,7 +99,32 @@ export const topicApi = baseApi.injectEndpoints({
 				url: `/topics/faculty-board/reject-topic/${topicId}`,
 				method: 'PATCH'
 			})
-		})
+		}),
+		lecturerUploadFiles: builder.mutation<{ message: string }, { topicId: string; files: File[] }>({
+			query: ({ topicId, files }) => {
+				const formData = new FormData()
+				files.forEach((file) => formData.append('files', file))
+				return {
+					url: `/topics/${topicId}/lecturer/upload-files`,
+					method: 'POST',
+					body: formData
+				}
+			}
+		}),
+		lecturerDeleteFiles: builder.mutation<{ message: string }, { topicId: string; fileIds: string[] }>({
+			query: ({ topicId, fileIds }) => ({
+				url: `/topics/${topicId}/lecturer/delete-files`,
+				method: 'DELETE',
+				body: fileIds // gửi mảng fileIds trong body
+			})
+		}),
+		lecturerDeleteFile: builder.mutation<{ message: string }, { topicId: string; fileId: string }>({
+			query: ({ topicId, fileId }) => ({
+				url: `/topics/${topicId}/lecturer/delete-file?fileId=${fileId}`,
+				method: 'DELETE'
+			})
+		}),
+		
 	}),
 	overrideExisting: false
 })
@@ -119,5 +144,8 @@ export const {
 	useCreateTopicMutation,
 	useSubmitTopicMutation,
 	useFacuBoardApproveTopicMutation,
-	useFacuBoardRejectTopicMutation
+	useFacuBoardRejectTopicMutation,
+	useLecturerUploadFilesMutation,
+	useLecturerDeleteFilesMutation,
+	useLecturerDeleteFileMutation
 } = topicApi

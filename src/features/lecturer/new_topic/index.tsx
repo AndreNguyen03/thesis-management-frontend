@@ -174,7 +174,6 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	}
 
 	//handle fetch data cho tất cả các combobox
-
 	//major
 	const { data: majors, refetch: refetchMajors, isLoading: isLoadingMajors } = useGetMajorsQuery(queriesMajor)
 	const [selectedMajor, setSelectedMajor] = useState<string>('')

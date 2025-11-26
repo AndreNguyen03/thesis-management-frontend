@@ -1,9 +1,30 @@
 import type { GetFieldNameReponseDto } from './field.model'
+import type { GetUploadedFileDto } from './file.model'
 import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
-import type { MiniPeriod } from './period.model'
+import type { PeriodPhaseName } from './period-phase.models'
+import type { MiniPeriod, TopicStatus } from './period.model'
 import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+export interface GetDetailGrade {
+	_id: string
+	score: number
+	note: string
+	actorId: string
+}
+export interface GetGrade {
+	averageScore: number
+	detailGrades: GetDetailGrade[]
+}
+export interface GetPhaseHistoryDto {
+	_id: string
+	phaseName: PeriodPhaseName
+	status: TopicStatus
+	actor: GetMiniUserDto
+	notes: string
+	createdAt: Date
+}
+
 export interface PaginationQueryParams {
 	limit?: number
 	page?: number
@@ -102,6 +123,8 @@ export interface Topic {
 	isRegistered: boolean
 
 	isSaved: boolean
+
+	isEditable: boolean
 }
 export interface GetPaginatedTopics extends GetPaginatedObject {
 	data: Topic[]
@@ -111,7 +134,9 @@ export interface CanceledRegisteredTopic extends Topic {
 	lastestCanceledRegisteredAt: Date
 }
 export interface ITopicDetail extends Topic {
-	//allUserRegistrations: IRegistration[] // mới chỉ là các đăng ký của người dùng với topic
+	files: GetUploadedFileDto[]
+	phaseHistories: GetPhaseHistoryDto[]
+	grade: GetGrade
 }
 
 export interface LecturerOption {
@@ -154,14 +179,12 @@ export interface FileOption {
 
 export type TopicType = 'thesis' | 'scientific_research'
 
-export type TopicStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'closed'
-
 export interface SavedUserRef {
 	userId: string
 	savedAt: string
 }
 export const TopicTypeTransfer = {
-	thesis: { name: 'Khóa luận', css: 'bg-blue-600 text-white px-1.5 py-0.5 text-xs' },
+	thesis: { name: 'Khóa luận tốt nghiệp', css: 'bg-blue-600 text-white px-1.5 py-0.5 text-xs' },
 	scientific_research: { name: 'Nghiên cứu khoa học', css: 'bg-green-600 text-white px-1.5 py-0.5 text-xs' }
 }
 export const topicStatusLabels = {

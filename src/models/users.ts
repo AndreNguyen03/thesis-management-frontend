@@ -147,6 +147,7 @@ export interface ResponseMiniStudentDto {
 	avatarName?: string
 	studentCode: string
 	major: string
+	facultyName: string
 }
 export interface PaginatedStudents extends GetPaginatedObject {
 	data: ResponseMiniStudentDto[]
@@ -160,6 +161,8 @@ export interface ResponseMiniLecturerDto {
 	avatarName: string
 	//titlePath?: AcademicTitle
 	title: string
+	facultyName: string
+	roleInTopic: string
 }
 export interface MiniActorInforDto {
 	_id: string
@@ -172,4 +175,14 @@ export interface MiniActorInforDto {
 
 export interface PaginatedMiniLecturer extends GetPaginatedObject {
 	data: ResponseMiniLecturerDto[]
+}
+export interface GetMiniUserDto {
+	_id: string
+	fullName: string
+	email: string
+	phone: string
+	avatarUrl: string
+	role: string
+	// facultyId: string
+	// facultyName: string
 }
