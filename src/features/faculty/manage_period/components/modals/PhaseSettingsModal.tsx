@@ -85,7 +85,7 @@ export function PhaseSettingsModal({
 					</DialogHeader>
 
 					<div className='flex-1 space-y-6 overflow-y-auto py-4 pr-1'>
-						{/* TIME SETTINGS */}
+						{/* TIME SETTINGS */}s
 						<section className='space-y-4 rounded-lg border p-4'>
 							<div className='flex items-center gap-2'>
 								<Calendar className='h-5 w-5 text-primary' />

@@ -1,3 +1,4 @@
+import type { ElementType } from 'react'
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
 
@@ -12,6 +13,7 @@ export type TopicStatus =
 	| 'under_review'
 	| 'approved'
 	| 'rejected'
+	| 'revision_required'
 	// Pha 2 - Mở đăng ký
 	| 'pending_registration'
 	| 'registered'
@@ -35,7 +37,7 @@ export interface Period {
 	faculty: GetFaculty
 	phases: PeriodPhase[]
 	status: string
-	currentPhase: string
+	currentPhase: PhaseType
 	startTime: Date
 	endTime: Date
 }
@@ -54,8 +56,13 @@ export interface PhaseStats {
 	status: string
 	label: string
 	value: number
-	variant?: 'default' | 'success' | 'warning' | 'destructive'
+	variant?: StatVariant
+    description?: string
+    icon?: ElementType 
+    iconVariant?: StatVariant
 }
+
+export type StatVariant = 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'neutral' | 'purple' | 'orange'
 
 export interface PeriodBackend {
 	id: string

@@ -140,6 +140,7 @@ export interface GetPaginatedTopics extends GetPaginatedObject {
 export interface CanceledRegisteredTopic extends Topic {
 	lastestCanceledRegisteredAt: Date
 }
+
 export interface ITopicDetail extends Topic {
 	files: GetUploadedFileDto[]
 	phaseHistories: GetPhaseHistoryDto[]
@@ -198,6 +199,7 @@ export const topicStatusLabels = {
 	draft: { name: 'Bản nháp', css: 'bg-gray-200 text-gray-800' },
 	submitted: { name: 'Đã nộp', css: 'bg-yellow-200 text-yellow-800' },
 	under_review: { name: 'Đang xét duyệt', css: 'bg-blue-200 text-blue-800' },
+	revision_required: { name: 'Yêu cầu sửa', css: 'bg-orange-200 text-orange-800' },
 	approved: { name: 'Đã duyệt', css: 'bg-green-200 text-green-800' },
 	rejected: { name: 'Bị từ chối', css: 'bg-red-200 text-red-800' },
 	pending_registration: { name: 'Mở  đăng ký', css: 'bg-purple-200 text-purple-800' },
