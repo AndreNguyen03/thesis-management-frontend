@@ -11,6 +11,17 @@ export interface PeriodPhase {
 	requiredLecturers?: ResponseMiniLecturerDto[]
 	allowManualApproval?: boolean
 }
+
+export interface PendingAction {
+	id: string
+	type: 'move_to_draft' | 'move_to_next_phase' | 'send_reminder' | 'request_documents'
+	label: string
+	description: string
+	count: number
+	targetIds: string[]
+	severity: 'info' | 'warning' | 'critical'
+}
+
 export const phaseLabels = {
 	empty: 'Chưa bắt đầu',
 	submit_topic: 'Nộp đề tài',
@@ -18,6 +29,6 @@ export const phaseLabels = {
 	execution: 'Thực hiện',
 	completion: 'Hoàn thành'
 }
-export const PeriodPhaseNames = ['empty','submit_topic', 'open_registration', 'execution', 'completion'] as const
+export const PeriodPhaseNames = ['empty', 'submit_topic', 'open_registration', 'execution', 'completion'] as const
 export const PeriodPhaseStatus = ['not_started', 'ongoing', 'completed'] as const
 export type PeriodPhaseStatus = (typeof PeriodPhaseStatus)[number]
