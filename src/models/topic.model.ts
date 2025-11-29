@@ -4,8 +4,9 @@ import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod, TopicStatus } from './period.model'
+import type { RelatedStudentInTopic } from './registration.model'
 import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto} from './users'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -50,7 +51,8 @@ export interface AbstractTopic {
 
 	requirements: GetRequirementNameReponseDto[]
 
-	students: ResponseMiniStudentDto[]
+	students: RelatedStudentInTopic
+	studentsNum: number
 
 	lecturers: ResponseMiniLecturerDto[]
 
@@ -63,6 +65,8 @@ export interface AbstractTopic {
 	currentStatus: string
 
 	currentPhase: string
+
+	allowManualApproval: boolean
 }
 export interface SubmittedTopic extends AbstractTopic {
 	submittedAt: string
@@ -103,14 +107,13 @@ export interface Topic {
 	currentStatus: string
 
 	major: GetMajorMiniDto
+	studentsNum: number
 
 	lecturers: ResponseMiniLecturerDto[]
 
 	requirements: GetRequirementNameReponseDto[]
 
 	fields: GetFieldNameReponseDto[]
-
-	students: ResponseMiniStudentDto[]
 
 	maxStudents: number
 
@@ -125,6 +128,10 @@ export interface Topic {
 	isSaved: boolean
 
 	isEditable: boolean
+
+	allowManualApproval: boolean
+
+	students: RelatedStudentInTopic
 }
 export interface GetPaginatedTopics extends GetPaginatedObject {
 	data: Topic[]
@@ -213,15 +220,36 @@ export interface CreateTopicPayload {
 	titleEng: string
 	description: string
 	type: TopicType
+	currentPhase: string
+	currentStatus: string
 	majorId: string
 	maxStudents: number
-	currentStatus: 'draft' | 'submitted'
-	currentPhase: 'empty' | 'submit_topic'
 	periodId?: string
 	fieldIds: string[]
 	requirementIds?: string[]
 	studentIds?: string[]
 	lecturerIds: string[]
+	allowManualApproval: boolean
+}
+
+export interface CreateTopicRequest {
+	topicData: CreateTopicPayload
+	files: File[] // File lấy từ input type="file"
+}
+
+export interface CreateTopicResponse {
+	topicId: string
+	message: string
+}
+export interface UpdateTopicPayload {
+	titleVN?: string
+	titleEng?: string
+	description?: string
+	majorId?: string
+	maxStudents?: number
+	fieldIds?: string[]
+	requirementIds?: string[] | []
+	type?: string
 }
 
 export interface PaginationTopicsQueryParams extends PaginationQueryParams {

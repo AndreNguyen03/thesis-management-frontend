@@ -1,13 +1,30 @@
 import { Badge, Button, Input } from '@/components/ui'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { Calendar, ChevronLeft, Clock, Download, Edit2, Eye, FileText, Loader2, Save, User, X } from 'lucide-react'
+import {
+	Calendar,
+	ChevronLeft,
+	CircleOff,
+	Clock,
+	Download,
+	Edit2,
+	Eye,
+	EyeOff,
+	File,
+	FileText,
+	Layers,
+	Loader2,
+	Save,
+	ShieldAlert,
+	User,
+	X
+} from 'lucide-react'
 import {
 	useGetTopicByIdQuery,
-	useLecturerDeleteFileMutation,
-	useLecturerUploadFilesMutation,
 	useSaveTopicMutation,
-	useUnsaveTopicMutation
+	useSetAllowManualApprovalMutation,
+	useUnsaveTopicMutation,
+	useUpdateTopicMutation
 } from '../../../../services/topicApi'
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
@@ -18,7 +35,6 @@ import { StatusBadge } from '@/components/topic/status-badege'
 import { Label } from '@/components/ui/label'
 import { TopicTypeTransfer, type ITopicDetail, type TopicType } from '@/models/topic.model'
 import { Separator } from '@/components/ui/separator'
-import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
 import { useCreateRegistrationMutation, useDeleteRegistrationMutation } from '@/services/registrationApi'
 import { getErrorMessage } from '@/utils/catch-error'
@@ -26,7 +42,14 @@ import { useAppSelector } from '@/store'
 import ManageUploadFileModal from './components/ManageUploadFileModal'
 import { downloadFileWithURL } from '@/lib/utils'
 import FieldsContainer from './components/FieldsContainer'
-import type { GetFieldNameReponseDto } from '@/models'
+import type { GetFieldNameReponseDto, GetRequirementNameReponseDto, UpdateTopicPayload } from '@/models'
+import RequirementContainer from './components/RequirementContainer'
+import { useGetMajorsBySameFacultyIdQuery } from '@/services/major'
+import RichTextEditor from '@/components/common/RichTextEditor'
+import DOMPurify from 'dompurify'
+import { Switch } from '@/components/ui/switch'
+import RegistrationDetail from './modal/TopicRegistrationDetail'
+import CancelRegistrationConfirmModal from './modal/CancelRegistrationConfirmModal'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
@@ -36,6 +59,11 @@ export const TopicDetailContainer = () => {
 	const [openFileModal, setOpenFileModal] = useState(false)
 	// Call the query hook unconditionally but skip fetching when no id is present
 	const { data: topic, isLoading, refetch } = useGetTopicByIdQuery({ id: id! }, { skip: !id })
+	// lấy danh sách các major cùng thuộc một khoa với đề tài
+	const { data: majorsOptions } = useGetMajorsBySameFacultyIdQuery(
+		{ facultyId: topic?.major.facultyId || '', queries: { page: 1, limit: 0 } },
+		{ skip: !isEditing }
+	)
 	const [editedTopic, setEditedTopic] = useState<ITopicDetail>(topic as ITopicDetail)
 
 	const user = useAppSelector((state) => state.auth.user)
@@ -44,8 +72,16 @@ export const TopicDetailContainer = () => {
 	const [deleteRegistration, { isLoading: isLoadingUnregister }] = useDeleteRegistrationMutation()
 	const [unsaveTopic, { isLoading: isLoadingUnSave, isSuccess: isSuccessUnSave }] = useUnsaveTopicMutation()
 	const [saveTopic, { isLoading: isLoadingSave, isSuccess: isSuccessSave }] = useSaveTopicMutation()
+	const [updateTopic, { isSuccess: isSuccessUpdate, isLoading: isLoadingUpdate }] = useUpdateTopicMutation()
+	const [setAllowManualApproval, { isLoading: isLoadingManualApproval, isSuccess: isSuccessManualApproval }] =
+		useSetAllowManualApprovalMutation()
 	const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
-
+	// modal
+	const [openConfirmModal, setOpenConfirmModal] = useState(false)
+	// Modal xét duyệt đề tài đăng ký
+	const [modalRegisterModalOpen, setModalRegisterModalOpen] = useState(false)
+	//Modal hủy đăng ký
+	const [openCancelRegistrationModal, setOpenCancelRegistrationModal] = useState(false)
 	// If no id was provided, render an error after hooks have been called
 	if (!id) {
 		return <div>Invalid topic id</div>
@@ -60,7 +96,7 @@ export const TopicDetailContainer = () => {
 
 	const renderRelatedFile = (files: GetUploadedFileDto[]) => {
 		return (
-			<div className='grid grid-cols-1'>
+			<div className='ml-4 grid grid-cols-1'>
 				{/* Nút tải lên file */}
 				{topic.files.map((file) => {
 					switch (file.fileType) {
@@ -132,38 +168,6 @@ export const TopicDetailContainer = () => {
 			</div>
 		)
 	}
-	const renderActionbButtons = () => {
-		return (
-			<div className='flex flex-col gap-1 sm:flex-row'>
-				{/* Render nút bấm cho sinh viên */}
-				{user && (
-					<>
-						{user.role === 'student' && (
-							<Button
-								disabled={isLoadingRegister || isLoadingUnregister}
-								variant='destructive'
-								className='w-fit'
-								onClick={() => {
-									toggleRegistration()
-								}}
-							>
-								{isLoadingRegister || isLoadingUnregister ? <Loader2 /> : null}
-								{topic.isRegistered ? 'Hủy đăng ký' : 'Đăng ký đề tài'}
-							</Button>
-						)}
-						<Button
-							disabled={isLoadingSave || isLoadingUnSave}
-							variant={topic.isSaved ? 'yellow' : 'gray'}
-							onClick={toggleSaveTopic}
-						>
-							{isLoadingSave || isLoadingUnSave ? <Loader2 /> : null}
-							{topic.isSaved ? 'Bỏ lưu' : 'Lưu đề tài'}
-						</Button>
-					</>
-				)}
-			</div>
-		)
-	}
 
 	const handleEdit = () => {
 		setIsEditing(true)
@@ -175,12 +179,103 @@ export const TopicDetailContainer = () => {
 		setEditedTopic(topic)
 	}
 
-	const handleSave = () => {
-		// setTopic(editedTopic)
-		// setIsEditing(false)
-		// toast.success('Đã lưu thay đổi thành công')
+	const handleSave = async () => {
+		const periodId = localStorage.getItem('currentPeriodId')
+		if (!periodId) {
+			toast({
+				title: 'Lỗi',
+				description: 'Không tìm thấy kỳ hiện tại'
+			})
+			return
+		}
+		//Tạo mới instance thay đổi
+		const newPayLoadTopic: UpdateTopicPayload = {
+			titleVN: editedTopic.titleVN !== topic.titleVN ? editedTopic.titleVN : undefined,
+			titleEng: editedTopic.titleEng !== topic.titleEng ? editedTopic.titleEng : undefined,
+			description: editedTopic.description !== topic.description ? editedTopic.description : undefined,
+			majorId: editedTopic.major._id !== topic.major._id ? editedTopic.major._id : undefined,
+			maxStudents: editedTopic.maxStudents !== topic.maxStudents ? editedTopic.maxStudents : undefined,
+			fieldIds: editedTopic.fields.map((field) => field._id),
+			requirementIds: editedTopic.requirements.map((req) => req._id),
+			type: editedTopic.type !== topic.type ? editedTopic.type : undefined
+		}
+
+		try {
+			await updateTopic({ topicId: topic._id, periodId: periodId, body: newPayLoadTopic }).unwrap()
+			setIsEditing(false)
+			toast({
+				title: 'Thành công',
+				description: 'Cập nhật đề tài thành công'
+			})
+			refetch()
+		} catch (error) {
+			toast({
+				title: 'Lỗi',
+				description: 'Cập nhật đề tài thất bại',
+				variant: 'destructive'
+			})
+		}
 	}
 
+	const renderActionsButtons = () => {
+		return (
+			<>
+				{/* Render nút bấm cho sinh viên */}
+				{user && (
+					<div className='flex gap-2'>
+						{(() => {
+							switch (user.role) {
+								case 'student':
+									return <></>
+								case 'lecturer':
+									return (
+										<>
+											{topic.isEditable && (
+												<>
+													{isEditing ? (
+														<>
+															<Button
+																variant='outline'
+																onClick={handleCancel}
+																disabled={isLoadingUpdate}
+															>
+																<X className='h-4 w-4' />
+																<span className='ml-2'>Hủy</span>
+															</Button>
+															<Button
+																variant='default'
+																onClick={() => setOpenConfirmModal(true)}
+																disabled={isLoadingUpdate}
+															>
+																{isLoadingUpdate ? (
+																	<Loader2 className='h-4 w-4 animate-spin' />
+																) : (
+																	<Save className='h-4 w-4' />
+																)}
+																<span className='ml-2'>Lưu</span>
+															</Button>
+														</>
+													) : (
+														<Button variant='default' onClick={handleEdit}>
+															<Edit2 className='h-4 w-4' />
+															<span className='ml-2'>Chỉnh sửa</span>
+														</Button>
+													)}
+												</>
+											)}
+										</>
+									)
+								default:
+									return <></>
+							}
+						})()}
+
+						{/* Render nút bấm chung */}
+					</div>
+				)}
+			</>
+		)
+	}
 	const handleInputChange = (field: keyof ITopicDetail, value: any) => {
 		setEditedTopic((prev) => ({ ...prev, [field]: value }))
 	}
@@ -244,15 +339,38 @@ export const TopicDetailContainer = () => {
 			fields: newFields // Cập nhật trực tiếp vào object editedTopic
 		}))
 	}
+
+	// Hàm xử lý khi requirement thay đổi
+	const handleRequirementsChange = (newRequirements: GetRequirementNameReponseDto[]) => {
+		setEditedTopic((prev) => ({
+			...prev,
+			requirements: newRequirements // Cập nhật trực tiếp vào object editedTopic
+		}))
+	}
+	//Hàm xử lí xét duyệt thủ công
+	// Thay đổi cờ allowManualApproval
+	const handleManualApprovalChange = async (checked: boolean) => {
+		try {
+			await setAllowManualApproval({ topicId: topic._id, allow: checked })
+			refetch()
+		} catch {
+			toast({ title: 'Thất bại', description: 'Có lỗi xảy ra!', variant: 'destructive' })
+		}
+	}
 	return (
 		<Dialog open={true}>
 			<DialogContent hideClose={true} className='h-screen rounded-xl bg-[#F2F4FF] p-8 sm:min-w-full'>
 				<div className='flex flex-col gap-4'>
-					<div className='px-4'>
+					<div className='grid grid-cols-3 px-4'>
 						<Button variant='back' className='w-fit border border-gray-300' onClick={() => navigate(-1)}>
 							<ChevronLeft className='size-6' />
 							<p>Quay lại</p>
 						</Button>
+
+						<div className='flex items-center'>
+							{/* Actions buttton */}
+							{renderActionsButtons()}
+						</div>
 					</div>
 					{/* Nội dung */}
 					<div className='grid space-x-5 px-4 md:grid-cols-6'>
@@ -262,16 +380,18 @@ export const TopicDetailContainer = () => {
 							className='col-span-4 grid max-h-screen min-h-[500px] gap-4 overflow-y-auto pr-5 sm:col-span-4'
 						>
 							{/* các tag */}
-							<div className='flex flex-wrap space-x-1'>
-								<Badge variant='gray' className='h-fit text-sm'>
-									<p>{TopicTypeTransfer[currentTopic.type as TopicType].name}</p>
-								</Badge>
-								{user && user.role === 'student' && (
-									<Badge variant='destructive' className='h-fit text-sm'>
-										<p>{currentTopic.isRegistered ? 'Đã đăng ký' : 'Chưa đăng ký'}</p>
+							{!isEditing && (
+								<div className='flex flex-wrap space-x-1'>
+									<Badge variant='gray' className='h-fit text-sm'>
+										<p>{TopicTypeTransfer[currentTopic.type as TopicType].name}</p>
 									</Badge>
-								)}
-							</div>
+									{user && user.role === 'student' && (
+										<Badge variant='destructive' className='h-fit text-sm'>
+											<p>{currentTopic.isRegistered ? 'Đã đăng ký' : 'Chưa đăng ký'}</p>
+										</Badge>
+									)}
+								</div>
+							)}
 							{/* Tiêu đề */}
 							{isEditing ? (
 								<div className='space-y-4'>
@@ -280,7 +400,7 @@ export const TopicDetailContainer = () => {
 										<Input
 											value={currentTopic.titleVN}
 											onChange={(e) => handleInputChange('titleVN', e.target.value)}
-											className='h-auto py-3 text-2xl font-bold'
+											className='h-auto py-3 font-bold'
 										/>
 									</div>
 									<div>
@@ -313,84 +433,159 @@ export const TopicDetailContainer = () => {
 												Cập nhật: {new Date(topic.updatedAt || '').toLocaleString('vi-VN')}
 											</span>
 										</div>
+										<Button
+											disabled={isLoadingSave || isLoadingUnSave}
+											variant={topic.isSaved ? 'yellow' : 'gray'}
+											onClick={toggleSaveTopic}
+										>
+											{isLoadingSave || isLoadingUnSave ? <Loader2 /> : <Layers />}
+											{topic.isSaved ? 'Đã lưu' : 'Lưu trữ'}
+										</Button>
 									</div>
 								</div>
 							)}
 
-							<div className='flex gap-4'>
-								{topic.isEditable && (
-									<div className='flex gap-2'>
-										{!isEditing ? (
-											<Button onClick={handleEdit} variant='default'>
-												<Edit2 className='mr-2 h-4 w-4' />
-												Chỉnh sửa
-											</Button>
-										) : (
-											<>
-												<Button onClick={handleSave} variant='default'>
-													<Save className='mr-2 h-4 w-4' />
-													Lưu
-												</Button>
-												<Button onClick={handleCancel} variant='outline'>
-													<X className='mr-2 h-4 w-4' />
-													Hủy
-												</Button>
-											</>
-										)}
-									</div>
-								)}
-							</div>
 							<div className='rounded-md border border-gray-300 bg-white px-8 py-6'>
 								<h4 className='mb-2 text-lg font-semibold text-gray-800'>Mô tả chi tiết</h4>
 								{isEditing ? (
-									<Textarea
-										value={currentTopic.description}
-										onChange={(e) => handleInputChange('description', e.target.value)}
-										className='min-h-[150px]'
-									/>
+									// CHẾ ĐỘ CHỈNH SỬA: Dùng CKEditor
+									<div className='w-full'>
+										<RichTextEditor
+											value={currentTopic.description}
+											onChange={(data) => handleInputChange('description', data)}
+											placeholder='Nhập mô tả chi tiết về đề tài...'
+										/>
+									</div>
 								) : (
-									<p className='rounded-lg bg-gray-50 text-lg text-gray-700'>{topic.description}</p>
+									// CHẾ ĐỘ XEM: Render HTML đã được làm sạch
+									<div
+										className='prose max-w-none rounded-lg bg-gray-50 p-4 text-gray-700'
+										// Sử dụng DOMPurify để đảm bảo an toàn, tránh XSS
+										dangerouslySetInnerHTML={{
+											__html: DOMPurify.sanitize(topic.description || '<p>Chưa có mô tả</p>')
+										}}
+									/>
 								)}
 							</div>
 							<div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-								<div className='rounded-md border border-gray-300 bg-white px-8 py-6'>
+								<div className='space-y-3 rounded-md border border-gray-300 bg-white px-8 py-6'>
 									<FieldsContainer
 										selectedFields={isEditing ? editedTopic.fields : topic.fields}
 										isEditing={isEditing}
 										onSelectionChange={handleFieldsChange}
 									/>
 								</div>
-								<div className='rounded-md border border-gray-300 bg-white px-8 py-6'>
-									<h4 className='mb-2 text-lg font-semibold text-gray-800'>Yêu cầu kỹ năng</h4>
-									<div className='flex flex-wrap gap-2'>
-										{topic.requirements.map((req) => (
-											<Badge key={req._id} variant='secondary' className={'text-md px-3 py-1'}>
-												{req.name}
-											</Badge>
-										))}
-									</div>
+								<div className='space-y-3 rounded-md border border-gray-300 bg-white px-8 py-6'>
+									<RequirementContainer
+										selectedRequirements={isEditing ? editedTopic.requirements : topic.requirements}
+										isEditing={isEditing}
+										onSelectionChange={handleRequirementsChange}
+									/>
 								</div>
 							</div>
-							<div className='flex flex-col space-y-2 rounded-md border border-gray-300 bg-white p-8'>
+							<div className='relative flex flex-col space-y-2 rounded-md border border-gray-300 bg-white p-8'>
 								<div>
 									<span className='text-lg font-medium'>Tài liệu tham khảo</span>
-									{currentTopic.isEditable && (
-										<Button variant='link' size='sm' onClick={() => setOpenFileModal(true)}>
-											Quản lý tài liệu
-										</Button>
-									)}
+									<Button variant='link' size='sm' onClick={() => setOpenFileModal(true)}>
+										Quản lý tài liệu
+									</Button>
 								</div>
+								<>
+									<Label className='flex items-center gap-2 text-base font-medium text-blue-800'>
+										<File className='h-4 w-4' />
+										File tham khảo
+									</Label>
+									{topic.files.length > 0 ? (
+										renderRelatedFile(topic.files)
+									) : (
+										<span> Chưa có tài liệu tham khảo nào được tải lên</span>
+									)}
+								</>
 
-								{topic.files.length > 0 ? (
-									renderRelatedFile(topic.files)
-								) : (
-									<span> Chưa có tài liệu tham khảo nào được tải lên</span>
+								{isEditing && (
+									<div className='absolute inset-0 z-10 flex items-center justify-center bg-white/80'>
+										<CircleOff />
+									</div>
 								)}
 							</div>
-							<div className='gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
+							<div className='relative gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
 								<span className='text-lg font-medium'>Lịch sử thay đổi trạng thái</span>
 								<div className='space-y-4'>
 									{topic.phaseHistories.map((history, idx) => {
+										if (
+											idx === 0 &&
+											user?.role === 'lecturer' &&
+											user.userId === history.actor._id
+										) {
+											return (
+												<div key={history._id}>
+													<div className='flex items-start gap-3'>
+														<div className='mt-1'>
+															<div className='h-2 w-2 rounded-full bg-primary' />
+														</div>
+														<div className='flex-1'>
+															<div className='mb-1 flex items-center gap-2'>
+																<PhaseBadge phase={history.phaseName} />
+																<StatusBadge status={history.status} />
+																{idx > 0 &&
+																	history.actor._id ===
+																		topic.phaseHistories[idx - 1].actor._id &&
+																	Math.abs(
+																		new Date(history.createdAt).getTime() -
+																			new Date(
+																				topic.phaseHistories[idx - 1].createdAt
+																			).getTime()
+																	) < 6000 && (
+																		<span className='ml-2 text-xs text-primary'>
+																			Đã tạo và nộp cùng lúc
+																		</span>
+																	)}
+															</div>
+															<div className='flex items-center gap-1'>
+																<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
+																	{history.actor.avatarUrl ? (
+																		<img
+																			src={history.actor.avatarUrl}
+																			alt={history.actor.fullName}
+																			className='h-4 w-4 rounded-full object-cover'
+																		/>
+																	) : (
+																		<User className='h-4 w-4 text-primary' />
+																	)}
+																</div>
+
+																<p className='flex gap-2 text-sm text-muted-foreground'>
+																	<span className='flex gap-1'>
+																		{`${history.actor.title ? history.actor.title : ''} ${history.actor.fullName}`}{' '}
+																		{user?.role === 'lecturer' &&
+																			topic.isRegistered &&
+																			history.actor._id === user.userId && (
+																				<Badge variant='outlineBlue'>
+																					{' '}
+																					Bạn
+																				</Badge>
+																			)}
+																	</span>
+																	•{' '}
+																	{new Date(history.createdAt || '').toLocaleString(
+																		'vi-VN'
+																	)}
+																</p>
+															</div>
+
+															{history.notes && (
+																<p className='mt-1 text-sm text-foreground'>
+																	{history.notes}
+																</p>
+															)}
+														</div>
+													</div>
+													{idx < topic.phaseHistories.length - 1 && (
+														<div className='my-2 ml-1 h-6 w-0.5 bg-border' />
+													)}
+												</div>
+											)
+										}
 										if (idx > 0)
 											return (
 												<div key={history._id}>
@@ -428,8 +623,20 @@ export const TopicDetailContainer = () => {
 																		<User className='h-4 w-4 text-primary' />
 																	)}
 																</div>
-																<p className='text-sm text-muted-foreground'>
-																	{history.actor.fullName} •{' '}
+
+																<p className='flex gap-2 text-sm text-muted-foreground'>
+																	<span className='flex gap-1'>
+																		{`${history.actor.title ? history.actor.title : ''} ${history.actor.fullName}`}{' '}
+																		{user?.role === 'lecturer' &&
+																			topic.isRegistered &&
+																			history.actor._id === user.userId && (
+																				<Badge variant='outlineBlue'>
+																					{' '}
+																					Bạn
+																				</Badge>
+																			)}
+																	</span>
+																	•{' '}
 																	{new Date(history.createdAt || '').toLocaleString(
 																		'vi-VN'
 																	)}
@@ -450,6 +657,11 @@ export const TopicDetailContainer = () => {
 											)
 									})}
 								</div>
+								{isEditing && (
+									<div className='absolute inset-0 z-10 flex items-center justify-center bg-white/60'>
+										<CircleOff />
+									</div>
+								)}
 							</div>
 						</div>
 						{/* Nội dung bên phải */}
@@ -457,20 +669,18 @@ export const TopicDetailContainer = () => {
 							className='col-span-2 flex flex-col gap-4 overflow-y-auto'
 							style={{ maxHeight: 'calc(100vh - 110px)' }}
 						>
-							{/* Actions buttton */}
-							{renderActionbButtons()}
 							<div className='h-fit space-y-4 rounded-md border border-gray-300 bg-white p-8'>
 								<h4 className='mb-2 text-lg font-semibold text-gray-800'>Thông tin cơ bản</h4>
 								<div>
 									<Label className='text-muted-foreground'>Loại đề tài</Label>
-									{isEditing && topic.isEditable ? (
+									{isEditing ? (
 										<select
-											value={topic.type}
+											value={editedTopic.type}
 											onChange={(e) => handleInputChange('type', e.target.value as TopicType)}
 											className='mt-1 w-full rounded-md border border-input bg-background px-3 py-2'
 										>
-											<option value='Khóa luận tốt nghiệp'>Khóa luận tốt nghiệp</option>
-											<option value='Nghiên cứu khoa học'>Nghiên cứu khoa học</option>
+											<option value='thesis'>Khóa luận tốt nghiệp</option>
+											<option value='scientific_research'>Nghiên cứu khoa học</option>
 										</select>
 									) : (
 										<p className='font-medium text-foreground'>
@@ -481,39 +691,90 @@ export const TopicDetailContainer = () => {
 								<Separator />
 								<div>
 									<Label className='text-muted-foreground'>Chuyên ngành</Label>
-									<p className='font-medium text-foreground'>{topic.major.name}</p>
+									{isEditing ? (
+										<select
+											value={editedTopic.major._id}
+											onChange={(e) =>
+												handleInputChange(
+													'major',
+													majorsOptions?.data.find((major) => major._id === e.target.value)
+												)
+											}
+											className='mt-1 w-full rounded-md border border-input bg-background px-3 py-2'
+										>
+											{majorsOptions?.data.map((major) => (
+												<option key={major._id} value={major._id}>
+													{major.name}
+												</option>
+											))}
+										</select>
+									) : (
+										<p className='font-medium text-foreground'>{topic.major.name}</p>
+									)}
 								</div>
 								<Separator />
 								<div>
 									<Label className='text-muted-foreground'>Số sinh viên tối đa</Label>
-									{isEditing && topic.isEditable ? (
+									{isEditing ? (
 										<Input
 											type='number'
-											value={topic.maxStudents}
+											value={editedTopic.maxStudents}
 											onChange={(e) => handleInputChange('maxStudents', parseInt(e.target.value))}
-											className='mt-1'
+											className='mt-1 w-fit'
 										/>
 									) : (
-										<p className='font-medium text-foreground'>{topic.maxStudents}</p>
+										<p className='text-[20px] font-medium text-foreground'>{topic.maxStudents}</p>
 									)}
 								</div>
+								{/* Xét duyệt thủ công */}
+								{user?.role === 'lecturer' ? (
+									<div className='flex flex-col gap-4'>
+										<Label className='text-muted-foreground'>Xét duyệt đăng ký</Label>
+
+										<div className='flex items-center space-x-2'>
+											<Switch
+												disabled={isLoadingManualApproval}
+												checked={topic.allowManualApproval}
+												onCheckedChange={(checked) => {
+													handleManualApprovalChange(checked)
+												}}
+											/>
+										</div>
+									</div>
+								) : (
+									<div className='flex w-fit flex-col gap-4'>
+										<Label className='text-muted-foreground'>Xét duyệt đăng ký</Label>
+
+										{topic.allowManualApproval ? (
+											<span className='flex scale-100 transform items-center justify-between gap-1 rounded-sm border border-yellow-500 bg-yellow-50 px-2 py-1 text-[14px] font-semibold text-yellow-600 shadow-sm duration-300 hover:scale-105'>
+												<ShieldAlert />
+												Yêu cầu cần được phê duyệt
+											</span>
+										) : (
+											<span className='flex scale-100 transform items-center justify-between gap-1 rounded-sm border border-green-500 bg-green-50 px-3 py-1 text-[14px] font-semibold text-green-600 shadow-sm duration-300 hover:scale-105'>
+												<ShieldAlert />
+												Yêu cầu không cần phê duyệt
+											</span>
+										)}
+									</div>
+								)}
 							</div>
 							{/* Thông tin đối tượng là sinh viên tham gia */}
 
-							<div className='h-fit gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
-								<div className='flex'>
-									<h4 className='mb-2 text-lg font-semibold text-gray-800'>Sinh viên đăng ký</h4>
-									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.students.length}/${topic.maxStudents})`}</h4>
+							<div className='relative h-fit gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
+								<div className='mb-2 flex items-center gap-4'>
+									<h4 className='text-lg font-semibold text-gray-800'>Sinh viên đăng ký</h4>
+									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.students.approvedStudents.length}/${topic.maxStudents})`}</h4>
 								</div>
 								<div className='flex flex-col gap-4'>
-									{currentTopic.students.length > 0 ? (
-										currentTopic.students.map((student) => (
+									{currentTopic.students.approvedStudents.length > 0 ? (
+										currentTopic.students.approvedStudents.map((student) => (
 											<div key={student._id} className='flex items-start gap-3'>
 												<div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
-													{student.avatarUrl ? (
+													{student.student.avatarUrl ? (
 														<img
-															src={student.avatarUrl}
-															alt={student.fullName}
+															src={student.student.avatarUrl}
+															alt={student.student.fullName}
 															className='h-10 w-10 rounded-full object-cover'
 														/>
 													) : (
@@ -521,23 +782,132 @@ export const TopicDetailContainer = () => {
 													)}
 												</div>
 												<div className='min-w-0 flex-1'>
-													<p className='font-medium text-foreground'>{`${student.fullName}`}</p>
+													<p className='font-medium text-foreground'>{`${student.student.fullName}`}</p>
 													<p className='truncate text-sm text-muted-foreground'>
-														{student.email}
+														{student.student.email}
+													</p>
+													<p className='truncate text-sm text-muted-foreground'>
+														{student.student.major}
 													</p>
 													<p className='text-xs text-muted-foreground'>
-														{student.facultyName}
+														{student.student.facultyName}
 													</p>
 												</div>
 											</div>
 										))
 									) : (
-										<p className='text-gray-600'>Chưa có sinh viên đăng ký</p>
+										<div className='flex flex-col items-center justify-center text-center'>
+											<div className='mb-3 rounded-full bg-gray-50 p-3'>
+												<User className='h-6 w-6 text-gray-300' />
+											</div>
+											<p className='text-sm font-medium text-gray-500'>
+												Chưa có thành viên chính thức
+											</p>
+											<p className='text-xs text-gray-400'>
+												Sinh viên được duyệt sẽ hiển thị ở đây
+											</p>
+										</div>
+									)}
+									{user &&
+										(() => {
+											switch (user.role) {
+												case 'lecturer':
+													return (
+														currentTopic.students.pendingStudents.length > 0 && (
+															<>
+																{/* Hiển thị yêu cầu đăng ký cần được duyệt */}
+																<div className='flex flex-col justify-between gap-3 border border-b border-yellow-300 bg-yellow-50/50 px-3 py-2 sm:flex-row sm:items-center'>
+																	<h3 className='flex items-center gap-2 font-semibold text-yellow-800'>
+																		<Clock className='h-4 w-4' /> Yêu cầu chờ duyệt
+																		<span className='rounded-full bg-yellow-200 px-2 py-0.5 text-xs text-yellow-800'>
+																			{
+																				currentTopic.students.pendingStudents
+																					.length
+																			}
+																		</span>
+																	</h3>
+																	<h3
+																		className='flex items-center gap-2 rounded-md px-2 py-1 font-semibold text-yellow-800 hover:cursor-pointer hover:bg-yellow-200'
+																		onClick={() => setModalRegisterModalOpen(true)}
+																	>
+																		<Eye className='h-4 w-4' /> Xem chi tiết
+																	</h3>
+																</div>
+															</>
+														)
+													)
+												case 'student':
+													return (
+														currentTopic.students.pendingStudents.length > 0 &&
+														currentTopic.students.pendingStudents.some(
+															(student) => student.student._id === user.userId
+														) && (
+															<>
+																{/* Hiển thị yêu cầu đăng ký cần được duyệt */}
+																<div
+																	className={`flex flex-col justify-between gap-3 border border-b border-yellow-300 bg-yellow-50/50 px-2 py-1 sm:flex-row sm:items-center`}
+																>
+																	<span className='flex items-center gap-2 text-[13px] font-normal text-yellow-800'>
+																		<Clock className='h-4 w-4' /> Yêu cầu của bạn
+																		đang chờ duyệt{' '}
+																		{currentTopic.students.pendingStudents.length -
+																			1 >
+																			0 && (
+																			<span>
+																				{' '}
+																				cùng với{' '}
+																				{currentTopic.students.pendingStudents
+																					.length - 1}{' '}
+																				người khác
+																			</span>
+																		)}
+																	</span>
+																	<Button
+																		disabled={isLoadingUnregister}
+																		variant='toggle_orange'
+																		className='w-fit'
+																		onClick={() => {
+																			setOpenCancelRegistrationModal(true)
+																		}}
+																	>
+																		{isLoadingRegister ? <Loader2 /> : null}
+																		{'Hủy đăng ký'}
+																	</Button>
+																</div>
+															</>
+														)
+													)
+											}
+										})()}
+									{user?.role === 'student' && !currentTopic.isRegistered && (
+										<>
+											<div className='flex flex-col justify-between gap-3 border border-b border-green-400 bg-green-50/60 px-3 py-1 sm:flex-row sm:items-center'>
+												<span className='flex items-center gap-2 text-[14px] font-normal text-green-800'>
+													Đề tài đang được mở đăng ký
+												</span>
+												<Button
+													disabled={isLoadingRegister || isLoadingUnregister}
+													variant='toggle_green'
+													className='w-fit'
+													onClick={() => {
+														toggleRegistration()
+													}}
+												>
+													{isLoadingRegister ? <Loader2 /> : null}
+													{'Đăng ký đề tài'}
+												</Button>
+											</div>
+										</>
 									)}
 								</div>
+								{isEditing && (
+									<div className='absolute inset-0 z-10 flex items-center justify-center bg-white/80'>
+										<CircleOff />
+									</div>
+								)}
 							</div>
 							{/* Thông tin đối tượng là giảng viên tham gia */}
-							<div className='h-fit gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
+							<div className='relative h-fit gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
 								<div className='flex'>
 									<h4 className='mb-2 text-lg font-semibold text-gray-800'>Giảng viên phụ trách</h4>
 									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.lecturers.length})`}</h4>
@@ -557,11 +927,16 @@ export const TopicDetailContainer = () => {
 												)}
 											</div>
 											<div className='min-w-0 flex-1'>
-												<p className='font-medium text-foreground'>
+												<p className='flex gap-2 font-medium text-foreground'>
 													{`${lecturer.title} ${lecturer.fullName}`}{' '}
 													<span className='font-normal text-gray-500'>
 														{lecturer.roleInTopic}
 													</span>
+													{user?.role === 'lecturer' &&
+														topic.isRegistered &&
+														lecturer._id === user.userId && (
+															<Badge variant='outlineBlue'> Bạn</Badge>
+														)}
 												</p>
 
 												<p className='truncate text-sm text-muted-foreground'>
@@ -572,6 +947,11 @@ export const TopicDetailContainer = () => {
 										</div>
 									))}
 								</div>
+								{isEditing && (
+									<div className='absolute inset-0 z-10 flex items-center justify-center bg-white/80'>
+										<CircleOff />
+									</div>
+								)}
 							</div>
 
 							{/* Điểm đánh giá */}
@@ -612,13 +992,49 @@ export const TopicDetailContainer = () => {
 						</div>
 					</div>
 					<ManageUploadFileModal
-						topicId={currentTopic._id}
+						topicId={topic._id}
 						openFileModal={openFileModal}
 						setOpenFileModal={setOpenFileModal}
-						files={currentTopic.files}
+						files={topic.files}
 						onRefetch={() => refetch()}
+						isEditing={isEditing}
 					/>
 				</div>
+				<RegistrationDetail
+					maxStudents={currentTopic.maxStudents}
+					students={currentTopic.students}
+					openModal={modalRegisterModalOpen}
+					setOpenModal={setModalRegisterModalOpen}
+					onRefetch={refetch}
+				/>
+				<Dialog open={openConfirmModal} onOpenChange={setOpenConfirmModal}>
+					<DialogContent>
+						<DialogTitle>Xác nhận lưu thay đổi</DialogTitle>
+						<p>Bạn có chắc chắn muốn lưu các thay đổi?</p>
+						<div className='mt-4 flex justify-end gap-2'>
+							<Button variant='outline' onClick={() => setOpenConfirmModal(false)}>
+								Hủy
+							</Button>
+							<Button
+								variant='default'
+								onClick={async () => {
+									setOpenConfirmModal(false)
+									await handleSave()
+								}}
+							>
+								Xác nhận
+							</Button>
+						</div>
+					</DialogContent>
+				</Dialog>
+				<CancelRegistrationConfirmModal
+					open={openCancelRegistrationModal}
+					onCancel={() => setOpenCancelRegistrationModal(false)}
+					onConfirm={async () => {
+						await toggleRegistration()
+						setOpenCancelRegistrationModal(false)
+					}}
+				/>
 			</DialogContent>
 		</Dialog>
 	)

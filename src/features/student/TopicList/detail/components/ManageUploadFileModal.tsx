@@ -18,13 +18,15 @@ interface ManageUploadFileModalProps {
 	setOpenFileModal: React.Dispatch<React.SetStateAction<boolean>>
 	files: GetUploadedFileDto[]
 	onRefetch: () => void
+	isEditing?: boolean
 }
 const ManageUploadFileModal = ({
 	topicId,
 	openFileModal,
 	setOpenFileModal,
 	files,
-	onRefetch
+	onRefetch,
+	isEditing
 }: ManageUploadFileModalProps) => {
 	const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 
@@ -78,8 +80,8 @@ const ManageUploadFileModal = ({
 		setSelectedFiles([])
 		setFileNames([])
 		setDeleteFileIds([])
-		setRenameFiles([])
 		onRefetch()
+		setRenameFiles([])
 		setErrorMessage(null)
 	}
 	const renderRelatedFile = (files: GetUploadedFileDto[]) => {
@@ -119,8 +121,7 @@ const ManageUploadFileModal = ({
 											const isDuplicate =
 												fileNames.some((name, i) => i !== idx && name === newName) ||
 												files.some((f) => f.fileNameBase === newName)
-											console.log('isDuplicate', isDuplicate, fileNames)
-											console.log('newName', newName)
+
 											if (isDuplicate) {
 												setErrorMessage(`Tên file "${newName}" bị trùng.`)
 												return

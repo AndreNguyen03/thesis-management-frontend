@@ -29,7 +29,10 @@ const buttonVariants = cva(
 				nonactive: 'bg-gray-300 text-gray-700 pointer-events-none',
 				outline_gray: 'border border-gray-300 bg-white text-gray-800 hover:bg-gray-100',
 				send: 'bg-green-400 text-black hover:bg-green-700',
-				config: 'bg-purple-600 text-white text-wrap text-[13px] max-w-[120px] hover:bg-purple-700 p-0'
+				config: 'bg-purple-600 text-white text-wrap text-[13px] max-w-[120px] hover:bg-purple-700 p-0',
+				toggle_green: 'border border-green-500 bg-white text-green-600 hover:bg-green-600 hover:text-white',
+				toggle_orange:
+					'border hover:border-none border-yellow-500  bg-yellow-300 text-yellow-800 hover:bg-red-500 hover:text-white'
 			},
 			size: {
 				default: 'h-10 px-4 py-2 ',

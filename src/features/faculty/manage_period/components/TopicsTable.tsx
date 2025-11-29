@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Eye, MoreVertical, CheckCircle, XCircle, Edit } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { TopicDetailModal } from './modals/TopicDetailModal'
-import { EditTopicModal } from './modals/EditTopicModal'
+
 import type { GeneralTopic, Topic } from '@/models'
 import { useNavigate } from 'react-router-dom'
 

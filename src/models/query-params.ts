@@ -9,7 +9,7 @@ export class PaginationQueryParamsDto {
 	sort_order?: string
 	startDate?: string
 	endDate?: string
-	filter?: string
+	filter?: string 
 	filter_by?: string
 }
 

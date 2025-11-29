@@ -3,34 +3,32 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ComboboxWithAdd } from './components/ComboboxWithAdd'
-import { Chip } from './components/Chip'
+
 import { DescriptionOptimizer } from './components/DescriptionOptimizer'
 import { toast } from '@/hooks/use-toast'
-import { Save, X, Users, BookOpen, Tag, ListChecks, Link, Plus, FileText, Loader2 } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
+import { Save, X, Link, Plus, FileText, Loader2 } from 'lucide-react'
+
 import { usePageBreadcrumb } from '@/hooks'
 import { Button } from '@/components/ui'
-import { useCreateTopicMutation } from '@/services/topicApi'
-import type { CreateTopicPayload, TopicType } from '@/models'
-import type { ComboboxOption } from './components/interface/combo-option.interface'
-import type { PaginationQueryParamsDto } from '@/models/query-params'
-import { useDebounce } from '@/hooks/useDebounce'
-import { useGetFieldsQuery } from '@/services/fieldApi'
-import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
-import { useGetStudentsComboboxQuery } from '@/services/studentApi'
-import { useGetRequirementsQuery } from '@/services/requirementApi'
-import { useGetMajorsQuery } from '@/services/major'
-import { useCountdown } from '@/hooks/count-down'
-import { set } from 'zod'
-import { useComboboxOptions } from '@/hooks/use-combobox-options'
+import { useCreateTopicMutation, useLecturerUploadFilesMutation } from '@/services/topicApi'
+import {
+	type CreateTopicPayload,
+	type TopicType,
+	type GetFieldNameReponseDto,
+	type GetRequirementNameReponseDto,
+	type ResponseMiniLecturerDto,
+	type ResponseMiniStudentDto
+} from '@/models'
 
-interface Student {
-	id: string
-	name: string
-	hasExistingTopic?: boolean
-}
+import FieldsContainer from '@/features/student/TopicList/detail/components/FieldsContainer'
+import type { GetMajorMiniDto } from '@/models/major.model'
+import RequirementContainer from '@/features/student/TopicList/detail/components/RequirementContainer'
+import CoSupervisorContainer from '@/features/student/TopicList/detail/components/CoSupervisorContainer'
+import StudentContainer from '@/features/student/TopicList/detail/components/StudentContainer'
+import { useCountdown } from '@/hooks/count-down'
+import { useGetMajorsQuery } from '@/services/major'
+import { formatFileSize } from '@/utils/format-file-size'
+import RichTextEditor from '@/components/common/RichTextEditor'
 
 function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }) {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng đề tài' }])
@@ -41,7 +39,6 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	const currentPeriodName = localStorage.getItem('currentPeriodName')
 	const currentPeriodEndTime = localStorage.getItem('currentPeriodEndTime')
 	// countdown
-
 	const countdown = useCountdown(currentPeriodEndTime!)
 	// Form state
 	const [titleVN, setTitleVN] = useState('')
@@ -49,172 +46,24 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	const [topicType, setTopicType] = useState<TopicType>('thesis')
 	const [description, setDescription] = useState('')
 	const [maxStudents, setMaxStudents] = useState<number>(1)
-	//handle search terms
-	const [searchTermMajor, setSearchTermMajor] = useState('')
-	const [searchTermField, setSearchTermField] = useState('')
-	const [searchTermRequirement, setSearchTermRequirement] = useState('')
-	const [searchTermLecturer, setSearchTermLecturer] = useState('')
-	const [searchTermStudent, setSearchTermStudent] = useState('')
-
-	//handle major
-	const [queriesMajor, setQueriesMajor] = useState<PaginationQueryParamsDto>({
-		page: 1,
-		limit: 5,
-		search_by: 'name',
-		query: '',
-		sort_by: 'createdAt',
-		sort_order: 'desc',
-		filter: '',
-		filter_by: ''
-	})
-	//handle students
-
-	const [queriesStudent, setQueriesStudent] = useState<PaginationQueryParamsDto>({
-		page: 1,
-		limit: 15,
-		search_by: 'fullName',
-		query: '',
-		sort_by: 'createdAt',
-		sort_order: 'desc',
-		filter: '',
-		filter_by: ''
-	})
-	const [queriesLecturer, setQueriesLecturer] = useState<PaginationQueryParamsDto>({
-		page: 1,
-		limit: 15,
-		search_by: 'fullName',
-		query: '',
-		sort_by: 'createdAt',
-		sort_order: 'desc',
-		filter: '',
-		filter_by: ''
-	})
-	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
-		page: 1,
-		limit: 15,
-		search_by: 'name',
-		query: '',
-		sort_by: 'createdAt',
-		sort_order: 'desc',
-		filter: '',
-		filter_by: ''
-	})
-	const [queriesRequirement, setQueriesRequirement] = useState<PaginationQueryParamsDto>({
-		page: 1,
-		limit: 15,
-		search_by: 'nameds',
-		query: '',
-		sort_by: 'createdAt',
-		sort_order: 'desc',
-		filter: '',
-		filter_by: ''
-	})
-	// handle next Page
-	const nextPageMajor = () => {
-		setQueriesMajor((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
-	}
-	const nextPageStudent = () => {
-		setQueriesStudent((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
-	}
-	const nextPageLecturer = () => {
-		setQueriesLecturer((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
-	}
-	const nextPageRequirement = () => {
-		setQueriesRequirement((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
-	}
-	const nextPageField = () => {
-		setQueriesField((prev: PaginationQueryParamsDto) => ({ ...prev, page: (prev?.page ?? 0) + 1 }))
-	}
-
-	// setQuerries functions
-	const setQueriesMajorsSearch = (query: string) => {
-		setQueriesMajor((prev) => ({ ...prev, query }))
-	}
-	const setQueriesFieldSearch = (query: string) => {
-		setQueriesField((prev) => ({ ...prev, query }))
-	}
-
-	const setQueriesRequirementSearch = (query: string) => {
-		setQueriesRequirement((prev) => ({ ...prev, query }))
-	}
-
-	const setQueriesStudentSearch = (query: string) => {
-		setQueriesStudent((prev) => ({ ...prev, query }))
-	}
-	const setQueriesLecturertSearch = (query: string) => {
-		setQueriesLecturer((prev) => ({ ...prev, query }))
-	}
-	// handle debounce changes
-	const debounceMajorOnChange = useDebounce({ onChange: setQueriesMajorsSearch, duration: 300 })
-	const debounceStudentOnChange = useDebounce({ onChange: setQueriesStudentSearch, duration: 300 })
-	const debounceLecturerOnChange = useDebounce({ onChange: setQueriesLecturertSearch, duration: 300 })
-	const debounceRequirementOnChange = useDebounce({ onChange: setQueriesRequirementSearch, duration: 300 })
-	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
-	// handle onChangeSearch
-
-	const onChangeMajorSearch = (val: string) => {
-		setSearchTermMajor(val)
-		debounceMajorOnChange(val)
-	}
-	const onChangeStudentSearch = (val: string) => {
-		setSearchTermStudent(val)
-		debounceStudentOnChange(val)
-	}
-	const onChangeLecturerSearch = (val: string) => {
-		setSearchTermLecturer(val)
-		debounceLecturerOnChange(val)
-	}
-	const onChangeRequirementSearch = (val: string) => {
-		setSearchTermRequirement(val)
-		debounceRequirementOnChange(val)
-	}
-	const onChangeFieldSearch = (val: string) => {
-		setSearchTermField(val)
-		debounceFieldOnChange(val)
-	}
-
-	//handle fetch data cho tất cả các combobox
-	//major
-	const { data: majors, refetch: refetchMajors, isLoading: isLoadingMajors } = useGetMajorsQuery(queriesMajor)
-	const [selectedMajor, setSelectedMajor] = useState<string>('')
-
+	const [selectedMajor, setSelectedMajor] = useState<GetMajorMiniDto | null>(null)
+	const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+	const [allowManualApproval, setAllowManualApproval] = useState<boolean>(false)
+	const [errorMessage, setErrorMessage] = useState<string | null>(null)
+	//File
+	// Handle file section
+	const [fileNames, setFileNames] = useState<string[]>([])
 	// Fields
-	const { data: fields, refetch: refetchFields, isLoading: isLoadingFields } = useGetFieldsQuery(queriesField)
-	const [selectedFields, setSelectedFields] = useState<string[]>([])
-
+	const [selectedFields, setSelectedFields] = useState<GetFieldNameReponseDto[]>([])
 	// Co-supervisors
-	const { data: coSupervisors, isLoading: isLoadingCoSupervisors } = useGetAllLecturersComboboxQuery(queriesLecturer)
-	const [selectedCoSupervisors, setSelectedCoSupervisors] = useState<string[]>([])
-
+	const [selectedCoSupervisors, setSelectedCoSupervisors] = useState<ResponseMiniLecturerDto[]>([])
 	// Students
-	const { data: students, isLoading: isLoadingStudents } = useGetStudentsComboboxQuery(queriesStudent)
-	const [selectedStudents, setSelectedStudents] = useState<string[]>([])
+	const [selectedStudents, setSelectedStudents] = useState<ResponseMiniStudentDto[]>([])
 	// Requirements
-	const {
-		data: requirementsData,
-		refetch: refetchRequirements,
-		isLoading: isLoadingRequirements
-	} = useGetRequirementsQuery(queriesRequirement)
-	const [selectedRequirements, setSelectedRequirements] = useState<string[]>([])
-
-	// Store options
-
-	// store for first fetch
-	const majorOptions = useComboboxOptions(majors?.data, queriesMajor.page || 1, 'name')
-
-	// 1 dòng cho Field
-	const fieldOptions = useComboboxOptions(fields?.data, queriesField.page || 1, 'name')
-
-	// 1 dòng cho Requirement
-	const requirementOptions = useComboboxOptions(requirementsData?.data, queriesRequirement.page || 1, 'name')
-
-	// 1 dòng cho Student (dùng 'fullName')
-	const studentOptions = useComboboxOptions(students?.data, queriesStudent.page || 1, 'fullName')
-
-	// 1 dòng cho Lecturer
-	const lecturerOptions = useComboboxOptions(coSupervisors?.data, queriesLecturer.page || 1, 'fullName')
-
-	// clear form states after success create topic
+	const [selectedRequirements, setSelectedRequirements] = useState<GetRequirementNameReponseDto[]>([])
+	//Lấy danh sách các ngành dựa theo khoa của giảng viên
+	// lấy danh sách các major cùng thuộc một khoa với đề tài
+	const { data: majorsOptions } = useGetMajorsQuery({ page: 1, limit: 0 })
 	useEffect(() => {
 		if (successCreateTopic) {
 			setTitleVN('')
@@ -228,92 +77,14 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 			setReferenceLinks([])
 			setLinkInput('')
 			setMaxStudents(1)
-			setValidationError('')
-			setSelectedMajor('')
+			setSelectedMajor(null)
+			setSelectedFiles([])
 		}
 	}, [successCreateTopic])
 
 	// Reference links
 	const [referenceLinks, setReferenceLinks] = useState<Array<{ id: string; url: string }>>([])
 	const [linkInput, setLinkInput] = useState('')
-
-	const [validationError, setValidationError] = useState<string>('')
-
-	const handleSelectCoSupervisor = (value: string) => {
-		if (!selectedCoSupervisors.includes(value)) {
-			setSelectedCoSupervisors([...selectedCoSupervisors, value])
-		}
-	}
-
-	const handleRemoveCoSupervisor = (value: string) => {
-		setSelectedCoSupervisors(selectedCoSupervisors.filter((id) => id !== value))
-	}
-
-	const handleSelectStudent = (studentId: string) => {
-		setValidationError('')
-
-		if (selectedStudents.length >= maxStudents) {
-			setValidationError(`Không thể thêm quá ${maxStudents} sinh viên!`)
-			return
-		}
-
-		if (!selectedStudents.includes(studentId)) {
-			setSelectedStudents([...selectedStudents, studentId])
-		}
-	}
-
-	const handleRemoveStudent = (studentId: string) => {
-		setSelectedStudents(selectedStudents.filter((id) => id !== studentId))
-		setValidationError('')
-	}
-	// major handlers
-	const handleAddMajor = (value: string) => {
-		const newId = `major${Date.now()}`
-		const newMajor = { value: newId, label: value }
-		refetchMajors()
-		setSelectedMajor(newId)
-	}
-	const handleSelectMajor = (value: string) => {
-		setSelectedMajor(value)
-	}
-	const handleRemoveMajor = (value: string) => {
-		setSelectedMajor('')
-	}
-	// Field handlers
-	const handleAddField = (value: string) => {
-		const newId = `field${Date.now()}`
-		const newField = { value: newId, label: value }
-		refetchFields()
-		setSelectedFields([...selectedFields, newId])
-	}
-
-	const handleSelectField = (value: string) => {
-		if (!selectedFields.includes(value)) {
-			setSelectedFields([...selectedFields, value])
-		}
-	}
-
-	const handleRemoveField = (value: string) => {
-		setSelectedFields(selectedFields.filter((id) => id !== value))
-	}
-
-	// Requirement handlers
-	const handleAddRequirement = (value: string) => {
-		const newId = `req${Date.now()}`
-		const newReq = { value: newId, label: value }
-		refetchRequirements()
-		setSelectedRequirements([...selectedRequirements, newId])
-	}
-
-	const handleSelectRequirement = (value: string) => {
-		if (!selectedRequirements.includes(value)) {
-			setSelectedRequirements([...selectedRequirements, value])
-		}
-	}
-
-	const handleRemoveRequirement = (value: string) => {
-		setSelectedRequirements(selectedRequirements.filter((id) => id !== value))
-	}
 
 	// Reference link handlers
 	const isValidUrl = (urlString: string) => {
@@ -325,45 +96,20 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 		}
 	}
 
-	const handleAddLink = () => {
-		const trimmedLink = linkInput.trim()
+	//Tải lên nhiều file
+	const [uploadFiles, { isLoading: isUploading }] = useLecturerUploadFilesMutation()
 
-		if (!trimmedLink) {
-			toast({
-				title: 'Lỗi',
-				description: 'Vui lòng nhập link tài liệu',
-				variant: 'destructive'
-			})
-			return
-		}
+	//handle save file
+	// const handleSaveManyFiles = async () => {
+	// 	await Promise.all([
+	// 		selectedFiles.length > 0 ? uploadFiles({ topicId: topicId, files: selectedFiles }).unwrap() : null
+	// 	])
+	// 	toast({ title: 'Thành công', description: 'Cập nhật tài liệu thành công' })
+	// 	setSelectedFiles([])
+	// 	setFileNames([])
 
-		if (!isValidUrl(trimmedLink)) {
-			toast({
-				title: 'Lỗi',
-				description: 'Link không hợp lệ. Vui lòng nhập URL đầy đủ (bao gồm http:// hoặc https://)',
-				variant: 'destructive'
-			})
-			return
-		}
-
-		const newLink = {
-			id: `link${Date.now()}`,
-			url: trimmedLink
-		}
-
-		setReferenceLinks([...referenceLinks, newLink])
-		setLinkInput('')
-
-		toast({
-			title: 'Thành công',
-			description: 'Đã thêm link tham khảo'
-		})
-	}
-
-	const handleRemoveLink = (id: string) => {
-		setReferenceLinks(referenceLinks.filter((link) => link.id !== id))
-	}
-
+	// 	setErrorMessage(null)
+	// }
 	const handleSave = (periodId?: string) => {
 		if (!selectedMajor) {
 			toast({
@@ -421,17 +167,22 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 			titleEng: titleEng,
 			description: description,
 			type: topicType,
-			majorId: selectedMajor,
+			majorId: selectedMajor?._id,
 			maxStudents: maxStudents,
+			periodId: periodId ? periodId : undefined, // nếu nộp luôn thì periodId còn không thì undefined
 			currentStatus: periodId ? 'submitted' : 'draft',
 			currentPhase: periodId ? 'submit_topic' : 'empty',
-			periodId: periodId ? periodId : undefined, // nếu nộp luôn thì periodId còn không thì undefined
-			fieldIds: selectedFields,
-			requirementIds: selectedRequirements,
-			studentIds: selectedStudents,
-			lecturerIds: selectedCoSupervisors
+			fieldIds: selectedFields.map((field) => field._id),
+			requirementIds: selectedRequirements.map((req) => req._id),
+			studentIds: selectedStudents.map((stu) => stu._id),
+			lecturerIds: selectedCoSupervisors.map((lec) => lec._id),
+			allowManualApproval: allowManualApproval
 		}
-		createTopic(newTopic)
+
+		createTopic({
+			topicData: newTopic,
+			files: selectedFiles
+		})
 		refetchDraftTopics?.()
 
 		toast({
@@ -451,19 +202,27 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 		setReferenceLinks([])
 		setLinkInput('')
 		setMaxStudents(1)
-		setValidationError('')
-
 		toast({
 			title: 'Đã hủy',
 			description: 'Thông tin đã được xóa'
 		})
 	}
 
-	const getLabel = (items: ComboboxOption[] | Student[], id: string) => {
-		const item = items.find((i) => ('value' in i ? i.value === id : i.id === id))
-		return 'label' in item! ? item.label : (item as Student).name
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (e.target.files) {
+			const filesArr = Array.from(e.target.files)
+			// Cộng dồn file đã chọn trước đó
+			for (let i = 0; i < filesArr.length; i++) {
+				if (selectedFiles.findIndex((f) => f.name === filesArr[i].name) !== -1) {
+					setErrorMessage(`File "${filesArr[i].name}" đã được chọn hoặc đã tồn tại.`)
+					return
+				}
+			}
+			setSelectedFiles((prev) => [...prev, ...filesArr])
+			setFileNames((prev) => [...prev, ...filesArr.map((f) => f.name)])
+			setErrorMessage(null)
+		}
 	}
-
 	return (
 		<div className='h-full pt-6'>
 			<div className='mx-auto h-full'>
@@ -482,25 +241,22 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 								<FileText className='h-4 w-4' />
 								Ngành <span className='text-destructive'>*</span>
 							</Label>
-							<ComboboxWithAdd
-								onSearch={onChangeMajorSearch}
-								searchTerm={searchTermMajor}
-								options={majorOptions.filter((f) => f.value !== selectedMajor)}
-								placeholder='Chọn hoặc thêm ngành...'
-								onSelect={handleSelectMajor}
-								onAdd={handleAddMajor}
-								meta={majors?.meta!}
-								onNextPage={nextPageMajor}
-								isLoading={isLoadingMajors}
-							/>
-							{selectedMajor && (
-								<div className='flex flex-wrap gap-2'>
-									<Chip
-										key={selectedMajor}
-										label={majorOptions.filter((f) => f.value === selectedMajor)[0]?.label || ''}
-										onRemove={() => handleRemoveMajor(selectedMajor)}
-									/>
-								</div>
+							{majorsOptions && majorsOptions.data && (
+								<select
+									value={selectedMajor?._id}
+									onChange={(e) =>
+										setSelectedMajor(
+											majorsOptions.data.find((major) => major._id === e.target.value) ?? null
+										)
+									}
+									className='mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-[5px]'
+								>
+									{majorsOptions?.data.map((major) => (
+										<option key={major._id} value={major._id}>
+											{major.name}
+										</option>
+									))}
+								</select>
 							)}
 						</div>
 
@@ -551,65 +307,13 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 							/>
 						</div>
 
-						{/* Fields */}
-						<div className='col-span-2 space-y-3'>
-							<Label className='flex items-center gap-2 text-base font-semibold'>
-								<Tag className='h-4 w-4' />
-								Lĩnh vực <span className='text-destructive'>*</span>
-							</Label>
-							<ComboboxWithAdd
-								onSearch={onChangeFieldSearch}
-								searchTerm={searchTermField}
-								options={fieldOptions.filter((f) => !selectedFields.includes(f.value))}
-								placeholder='Chọn hoặc thêm lĩnh vực...'
-								onSelect={handleSelectField}
-								onAdd={handleAddField}
-								meta={fields?.meta!}
-								onNextPage={nextPageField}
-								isLoading={isLoadingFields}
-							/>
-							{selectedFields.length > 0 && (
-								<div className='flex flex-wrap gap-2'>
-									{selectedFields.map((id) => (
-										<Chip
-											key={id}
-											label={fieldOptions.filter((f) => f.value === id)[0]?.label || ''}
-											onRemove={() => handleRemoveField(id)}
-										/>
-									))}
-								</div>
-							)}
-						</div>
-
+						{/* Lĩnh vực */}
+						<FieldsContainer selectedFields={selectedFields} onSelectionChange={setSelectedFields} />
 						{/* Requirements */}
-						<div className='col-span-2 space-y-3'>
-							<Label className='flex items-center gap-2 text-base font-semibold'>
-								<ListChecks className='h-4 w-4' />
-								Yêu cầu kỹ thuật
-							</Label>
-							<ComboboxWithAdd
-								onSearch={onChangeRequirementSearch}
-								searchTerm={searchTermRequirement}
-								options={requirementOptions.filter((r) => !selectedRequirements.includes(r.value))}
-								placeholder='Chọn hoặc thêm yêu cầu...'
-								onSelect={handleSelectRequirement}
-								onAdd={handleAddRequirement}
-								onNextPage={nextPageRequirement}
-								meta={requirementsData?.meta!}
-								isLoading={isLoadingRequirements}
-							/>
-							{selectedRequirements.length > 0 && (
-								<div className='flex flex-wrap gap-2'>
-									{selectedRequirements.map((id) => (
-										<Chip
-											key={id}
-											label={requirementOptions.filter((r) => r.value === id)[0]?.label || ''}
-											onRemove={() => handleRemoveRequirement(id)}
-										/>
-									))}
-								</div>
-							)}
-						</div>
+						<RequirementContainer
+							selectedRequirements={selectedRequirements}
+							onSelectionChange={setSelectedRequirements}
+						/>
 
 						{/* Description */}
 						<div className='col-span-2 space-y-2'>
@@ -617,176 +321,106 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 								Mô tả đề tài <span className='text-destructive'>*</span>
 							</Label>
 							<div className='flex gap-2'>
-								<Textarea
-									id='description'
-									placeholder='Nhập mô tả chi tiết về đề tài (dựa trên lĩnh vực và yêu cầu kỹ thuật đã chọn)...'
-									value={description}
-									onChange={(e) => setDescription(e.target.value)}
-									className='min-h-[150px] flex-1 resize-none border-input bg-background transition-colors focus:border-primary'
-								/>
+								<div className='w-full'>
+									<RichTextEditor
+										value={description}
+										onChange={(data) => setDescription(data)}
+										placeholder='Nhập mô tả chi tiết về đề tài...'
+									/>
+								</div>
 								<DescriptionOptimizer currentDescription={description} onOptimize={setDescription} />
 							</div>
 						</div>
 
 						{/* Co-supervisors */}
-						<div className='col-span-2 space-y-3'>
-							<Label className='flex items-center gap-2 text-base font-semibold'>
-								<Users className='h-4 w-4' />
-								Người đồng hướng dẫn
-							</Label>
-							<ComboboxWithAdd
-								onSearch={onChangeLecturerSearch}
-								searchTerm={searchTermLecturer}
-								options={lecturerOptions.filter((s) => !selectedCoSupervisors.includes(s.value))}
-								placeholder='Chọn hoặc thêm người đồng hướng dẫn...'
-								onSelect={handleSelectCoSupervisor}
-								meta={coSupervisors?.meta!}
-								onNextPage={nextPageLecturer}
-								isLoading={isLoadingCoSupervisors}
-							/>
-							{selectedCoSupervisors.length > 0 && (
-								<div className='flex flex-wrap gap-2'>
-									{selectedCoSupervisors.map((id) => (
-										<Chip
-											key={id}
-											label={lecturerOptions.filter((s) => s.value === id)[0]?.label || ''}
-											onRemove={() => handleRemoveCoSupervisor(id)}
-										/>
-									))}
-								</div>
-							)}
-						</div>
+						<CoSupervisorContainer
+							selectedCoSupervisors={selectedCoSupervisors}
+							onSelectionChange={setSelectedCoSupervisors}
+						/>
 
-						{/* Students */}
-						<div className='col-span-2 space-y-3'>
-							<Label className='flex items-center gap-2 text-base font-semibold'>
-								<BookOpen className='h-4 w-4' />
-								Sinh viên tham gia <span className='text-destructive'>*</span>
-							</Label>
+						{/* Student */}
+						<StudentContainer
+							selectedStudents={selectedStudents}
+							onSelectionChange={setSelectedStudents}
+							maxStudents={maxStudents}
+							setMaxStudents={setMaxStudents}
+						/>
 
-							<div className='flex items-end gap-3'>
-								<div className='flex-1'>
-									<Label htmlFor='max-students' className='mb-2 block text-sm'>
-										Số lượng sinh viên tối đa
-									</Label>
-									<Select
-										value={maxStudents.toString()}
-										onValueChange={(value) => {
-											setMaxStudents(parseInt(value))
-											setValidationError('')
-										}}
-									>
-										<SelectTrigger id='max-students' className='bg-background'>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent className='bg-popover'>
-											{[1, 2, 3, 4].map((num) => (
-												<SelectItem key={num} value={num.toString()}>
-													{num} sinh viên
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div>
-
-								<div className='flex-1'>
-									<ComboboxWithAdd
-										onSearch={onChangeStudentSearch}
-										searchTerm={searchTermStudent}
-										options={studentOptions.filter((s) => !selectedStudents.includes(s.value))}
-										placeholder='Chọn hoặc thêm sinh viên...'
-										onSelect={handleSelectStudent}
-										disabled={selectedStudents.length >= maxStudents}
-										meta={students?.meta!}
-										onNextPage={nextPageStudent}
-										isLoading={isLoadingStudents}
+						{/* Tài liệu tham khảo*/}
+						<div className='flex flex-col gap-2'>
+							<span className='text-lg font-medium'>Tài liệu tham khảo</span>
+							{/* Nút tải lên file */}
+							<div className='mb-4 ml-4 flex flex-col gap-2'>
+								<div className='flex w-full gap-4'>
+									<input
+										type='file'
+										multiple
+										onChange={handleFileChange}
+										className='rounded border px-2 py-1'
+										disabled={isUploading}
 									/>
 								</div>
+								{/* Hiển thị file đã chọn */}
+
+								{selectedFiles.length > 0 && (
+									<>
+										<div className='mt-2 flex flex-col gap-2'>
+											{selectedFiles.map((file, idx) => (
+												<div key={file.name + idx} className='flex items-center gap-2'>
+													<input
+														type='text'
+														value={fileNames[idx]}
+														onChange={(e) => {
+															const newName = e.target.value.trim()
+															// Kiểm tra trùng tên
+															const isDuplicate = fileNames.some(
+																(name, i) => i !== idx && name === newName
+															)
+															if (isDuplicate) {
+																setErrorMessage(`Tên file "${newName}" bị trùng.`)
+																return
+															}
+															const newNames = [...fileNames]
+															newNames[idx] = newName
+															setFileNames(newNames)
+														}}
+														className='w-1/2 rounded border px-2 py-1'
+													/>
+													<span className='text-[13px] font-normal text-gray-400'>
+														{formatFileSize(file.size)}
+													</span>
+
+													<Button
+														variant='outline'
+														size='sm'
+														onClick={() => {
+															setSelectedFiles(selectedFiles.filter((_, i) => i !== idx))
+															setFileNames(fileNames.filter((_, i) => i !== idx))
+														}}
+													>
+														<X className='h-4 w-4' />
+													</Button>
+												</div>
+											))}
+										</div>
+									</>
+								)}
+								{errorMessage && <p className='text-sm text-red-600'>{errorMessage}</p>}
 							</div>
-
-							{validationError && (
-								<Alert variant='destructive'>
-									<AlertCircle className='h-4 w-4' />
-									<AlertTitle>Lỗi</AlertTitle>
-									<AlertDescription>{validationError}</AlertDescription>
-								</Alert>
-							)}
-
-							{selectedStudents.length > 0 && (
-								<div className='flex flex-wrap gap-2'>
-									{selectedStudents.map((id) => (
-										<Chip
-											key={id}
-											label={students?.data.filter((s) => s._id === id)[0]?.fullName || ''}
-											onRemove={() => handleRemoveStudent(id)}
-										/>
-									))}
-								</div>
-							)}
-
-							<p className='text-sm text-muted-foreground'>
-								Đã chọn: {selectedStudents.length}/{maxStudents} sinh viên
-							</p>
 						</div>
 
-						{/* Reference Links */}
-						<div className='col-span-2 space-y-3'>
-							<Label className='flex items-center gap-2 text-base font-semibold'>
-								<Link className='h-4 w-4' />
-								Link tài liệu tham khảo
+						{/* Allow Manual Approval */}
+						<div className='col-span-2 flex items-center gap-2'>
+							<input
+								type='checkbox'
+								checked={allowManualApproval}
+								onChange={(e) => setAllowManualApproval(e.target.checked)}
+								id='allow-manual-approval'
+								className='h-4 w-4'
+							/>
+							<Label htmlFor='allow-manual-approval' className='text-base font-semibold'>
+								Cho phép phê duyệt thủ công đăng ký đề tài
 							</Label>
-							<div className='flex gap-2'>
-								<Input
-									placeholder='Nhập URL tài liệu (vd: https://example.com)...'
-									value={linkInput}
-									onChange={(e) => setLinkInput(e.target.value)}
-									onKeyPress={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault()
-											handleAddLink()
-										}
-									}}
-									className='flex-1 border-input bg-background transition-colors focus:border-primary'
-								/>
-								<Button
-									type='button'
-									onClick={handleAddLink}
-									variant='outline'
-									className='transition-colors hover:bg-primary hover:text-primary-foreground'
-								>
-									<Plus className='h-4 w-4' />
-								</Button>
-							</div>
-							{referenceLinks.length > 0 && (
-								<div className='space-y-2'>
-									{referenceLinks.map((link) => (
-										<div
-											key={link.id}
-											className='group flex items-center gap-2 rounded-lg border border-border bg-secondary/50 p-3 transition-colors hover:border-primary/50'
-										>
-											<Link className='h-4 w-4 shrink-0 text-primary' />
-											<a
-												href={link.url}
-												target='_blank'
-												rel='noopener noreferrer'
-												className='flex-1 truncate text-sm text-foreground transition-colors hover:text-primary'
-											>
-												{link.url}
-											</a>
-											<button
-												onClick={() => handleRemoveLink(link.id)}
-												className='shrink-0 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1'
-												aria-label='Xóa link'
-											>
-												<X className='h-4 w-4' />
-											</button>
-										</div>
-									))}
-								</div>
-							)}
-							<p className='text-xs text-muted-foreground'>
-								Thêm các link tài liệu, paper, hoặc trang web tham khảo liên quan đến đề tài
-							</p>
 						</div>
 
 						{/* Action Buttons */}
@@ -794,7 +428,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 							{currentPeriodId && (
 								<div className='flex flex-col items-center justify-center gap-1'>
 									<Button
-										disabled={loadingCreateTopic}
+										disabled={loadingCreateTopic || countdown === 'End'}
 										onClick={() => handleSave(currentPeriodId)}
 										variant={'outline_gray'}
 									>
@@ -806,7 +440,9 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 											{`Kì hiện tại `}{' '}
 											<span className='font-medium text-blue-800'>{`${currentPeriodName}`}</span>
 										</span>
-										<span className='text-sm font-bold text-blue-700'>{countdown}</span>
+										<span className='text-sm font-bold text-blue-700'>
+											{countdown === 'End' ? 'Đã kết thúc' : countdown}
+										</span>
 									</div>
 								</div>
 							)}

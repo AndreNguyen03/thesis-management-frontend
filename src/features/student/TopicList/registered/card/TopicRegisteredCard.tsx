@@ -1,6 +1,6 @@
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
 import { Dialog } from '@/components/ui/Dialog'
-import { ChevronDown, ChevronUp, Trash2, Users } from 'lucide-react'
+import { ChevronDown, ChevronUp, Eye, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useDeleteRegistrationMutation } from '../../../../../services/registrationApi'
 import { ConfirmCancelRegistration } from '../ConfirmCancelRegistration'
@@ -8,23 +8,30 @@ import { useNavigate } from 'react-router-dom'
 
 import { topicStatusLabels, type Topic } from '@/models'
 import { toast } from '@/hooks/use-toast'
+import DOMPurify from 'dompurify'
+import { stripHtml } from '@/utils/lower-case-html'
 
 export const TopicRegisteredCard: React.FC<{
 	topic: Topic
 }> = ({ topic }) => {
 	const [deleteRegistration, { isLoading: isCanceling }] = useDeleteRegistrationMutation()
-	const isFullSlot = topic.maxStudents === topic.students.length
+	const isFullSlot = topic.maxStudents === topic.studentsNum
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const navigate = useNavigate()
 	const [openDetail, setOpenDetail] = useState(false)
 	const getStatusBadge = (topic: Topic) => {
 		return (
 			<div className='flex flex-col items-end justify-center gap-2'>
+				{/* Trạng thái của đề tài */}
+				<Badge className={`${topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].css}`}>
+					{'Trạng thái:  '}
+					{topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].name}
+				</Badge>
 				{isFullSlot ? (
 					<Badge variant='destructive'>Đã đủ</Badge>
 				) : (
 					<Badge variant='default' className='max-w-[100px]'>
-						{topic.maxStudents - topic.students.length} chỗ trống
+						{topic.maxStudents - topic.studentsNum} chỗ trống
 					</Badge>
 				)}
 				<p className='text-sm font-semibold text-gray-500'>
@@ -123,9 +130,12 @@ export const TopicRegisteredCard: React.FC<{
 			</>
 		)
 	}
+	//Xử lý render description
+	const plainTextDescription = stripHtml(topic.description || '')
 
+	//
 	return (
-		<Card key={topic._id} className={`p-2 transition-shadow hover:cursor-pointer hover:shadow-lg`}>
+		<Card key={topic._id} className={`relative p-2 transition-shadow hover:cursor-pointer hover:shadow-lg`}>
 			<CardHeader onClick={() => setOpenDetail(!openDetail)}>
 				<div className='flex items-start justify-between space-x-4'>
 					<div className='flex flex-col gap-1'>
@@ -134,11 +144,6 @@ export const TopicRegisteredCard: React.FC<{
 
 						{renderDepartmentAndLecturers(topic)}
 						<div className='flex gap-2'>
-							{/* Trạng thái của đề tài */}
-							<Badge className= {`${topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].css}`}>
-								{'Trạng thái:  '}
-								{topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].name}
-							</Badge>
 							{/* Lĩnh vực */}
 							{topic.fields.map((f) => {
 								return (
@@ -148,50 +153,41 @@ export const TopicRegisteredCard: React.FC<{
 								)
 							})}
 						</div>
+						<div className='flex flex-wrap gap-1'>
+							{topic.requirements.slice(0, 4).map((req) => (
+								<Badge key={req._id} variant='secondary' className='text-xs'>
+									{req.name}
+								</Badge>
+							))}
+							{topic.requirements.length > 4 && (
+								<Badge variant='outline' className='text-xs'>
+									+{topic.requirements.length - 4}
+								</Badge>
+							)}
+						</div>
 					</div>
 
 					{getStatusBadge(topic)}
 				</div>
 
-				<div className='justify-items-center'>
+				<div className='flex items-center justify-center'>
 					<div className='p-0.5 px-5 hover:bg-muted' onClick={() => setOpenDetail(!openDetail)}>
 						{openDetail ? <ChevronUp className='h-4 w-4' /> : <ChevronDown className='h-4 w-4' />}
+					</div>
+					<div
+						className='flex items-center justify-center gap-2 rounded-sm p-0.5 px-2 hover:bg-gray-100'
+						onClick={() => navigate(`/detail-topic/${topic._id}`)}
+					>
+						<Eye className='h-4 w-4' />
+						<span className='text-[13px] font-semibold text-gray-600'>Xem chi tiết</span>
 					</div>
 				</div>
 			</CardHeader>
 
 			{openDetail && (
-				<CardContent className={`space-y-4`}>
-					<CardDescription className='mt-1 flex gap-1'>
-						{topic.requirements.map((f) => {
-							return (
-								<Badge key={f._id} variant='blue'>
-									{f.name}
-								</Badge>
-							)
-						})}
-					</CardDescription>
-					<p className='line-clamp-3 text-sm text-muted-foreground'>{topic.description}</p>
-					<div className='space-y-2'>
-						<div className='flex items-center gap-4 text-sm text-muted-foreground'>
-							<div className='flex items-center gap-1'>
-								<Users className='h-4 w-4' />
-								{topic.students.length}/{topic.maxStudents}
-							</div>
-						</div>
-					</div>
-
-					<div className='flex flex-wrap gap-1'>
-						{topic.requirements.slice(0, 4).map((req) => (
-							<Badge key={req._id} variant='secondary' className='text-xs'>
-								{req.name}
-							</Badge>
-						))}
-						{topic.requirements.length > 4 && (
-							<Badge variant='outline' className='text-xs'>
-								+{topic.requirements.length - 4}
-							</Badge>
-						)}
+				<CardContent className={`absolute space-y-4`} onBlur={() => setOpenDetail(false)}>
+					<div className='prose line-clamp-5 max-w-none truncate text-wrap rounded-lg bg-gray-50 p-4 text-[13px] text-gray-700'>
+						{plainTextDescription}
 					</div>
 
 					<div className='flex gap-2'>{renderDialogActions()}</div>

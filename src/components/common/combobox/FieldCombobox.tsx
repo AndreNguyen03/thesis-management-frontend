@@ -19,13 +19,11 @@ import { useEffect, useState } from 'react'
 
 interface FieldsContainerProps {
 	// Danh sách các field ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
-	selectedFields: GetFieldNameReponseDto[]
-	isEditing?: boolean
-	// Hàm callback để update ngược lại parent
-	onSelectionChange?: (newFields: GetFieldNameReponseDto[]) => void
+	selectedFields: string[]
+	onSelectionChange?: (val: string[]) => void
 }
 
-const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }: FieldsContainerProps) => {
+const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerProps) => {
 	const [open, setOpen] = useState(false)
 
 	const handleOpenModal = (boolean: boolean) => {
@@ -41,7 +39,9 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 		search_by: 'name',
 		query: '',
 		sort_by: 'name',
-		sort_order: 'asc'
+		sort_order: 'asc',
+		filter: selectedFields.join(','),
+		filter_by: '_id'
 	})
 
 	// Debounce search
@@ -51,35 +51,21 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
 
 	// Fetch data
-	const {
-		data: fieldPagingData,
-		isLoading,
-		isFetching
-	} = useGetFieldsQuery(queriesField, { skip: !isEditing || !open })
+	const { data: fieldPagingData, isLoading, isFetching } = useGetFieldsQuery(queriesField, { skip: !open })
 
 	// Logic chọn/bỏ chọn
-	const handleSelect = (field: GetFieldNameReponseDto) => {
-		const isSelected = selectedFields.some((f) => f._id === field._id)
-		let newSelected: GetFieldNameReponseDto[]
+	const handleSelect = (fieldId: string) => {
+		const isSelected = selectedFields?.some((f) => f === fieldId)
+		let newSelected: string[]
 
 		if (isSelected) {
 			// Nếu đã chọn -> Bỏ chọn
-			newSelected = selectedFields.filter((f) => f._id !== field._id)
+			newSelected = selectedFields.filter((f) => f !== fieldId)
 		} else {
-			// Nếu chưa chọn -> Thêm vào
-			// Giới hạn chọn tối đa 3 lĩnh vực
-			if (selectedFields.length >= 3) {
-				return
-			}
-			newSelected = [...selectedFields, field]
+			newSelected = [...selectedFields, fieldId]
 		}
 
 		// Gọi callback để parent update state
-		onSelectionChange?.(newSelected)
-	}
-
-	const handleRemove = (id: string) => {
-		const newSelected = selectedFields.filter((f) => f._id !== id)
 		onSelectionChange?.(newSelected)
 	}
 
@@ -105,56 +91,9 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 			}
 		}
 	}, [fieldPagingData, queriesField.page])
-	// CHẾ ĐỘ XEM (VIEW MODE)
-	if (!isEditing) {
-		return (
-			<div className='rounded-md'>
-				<h4 className='mb-2 text-lg font-semibold text-gray-800'>Lĩnh vực</h4>
-				{selectedFields.length > 0 ? (
-					<div className='flex flex-wrap gap-2'>
-						{selectedFields.map((field) => (
-							<Badge key={field._id} variant='blue' className='text-md px-3 py-1'>
-								{field.name}
-							</Badge>
-						))}
-					</div>
-				) : (
-					<p className='text-sm text-gray-500'>Chưa cập nhật lĩnh vực</p>
-				)}
-			</div>
-		)
-	}
 
-	// CHẾ ĐỘ CHỈNH SỬA (EDIT MODE)
 	return (
 		<div>
-			<div className='flex items-center gap-4'>
-				<h4 className='mb-2 text-lg font-semibold text-gray-800'>
-					Lĩnh vực <span className='text-red-500'>*</span>
-				</h4>
-				<h4 className='mb-2 text-sm font-semibold text-gray-500'>Chọn tối đa 3 lĩnh vực chính</h4>
-				<h4 className='mb-2 text-lg font-semibold text-blue-600'>{`(${selectedFields.length})`}</h4>
-			</div>
-			{/* 1. Hiển thị các tags đã chọn (có nút xóa) */}
-			<div className='mb-2 flex flex-wrap gap-2'>
-				{selectedFields.map((field) => (
-					<Badge
-						key={field._id}
-						variant='secondary'
-						className='flex items-center gap-1 px-3 py-1 pr-1 text-sm'
-					>
-						{field.name}
-						<button
-							onClick={() => handleRemove(field._id)}
-							className='ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300'
-						>
-							<X className='h-3 w-3' />
-						</button>
-					</Badge>
-				))}
-			</div>
-
-			{/* 2. Combobox tìm kiếm & chọn */}
 			<Popover open={open} onOpenChange={handleOpenModal}>
 				<PopoverTrigger asChild>
 					<Button
@@ -167,6 +106,7 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 						<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
 					</Button>
 				</PopoverTrigger>
+
 				<PopoverContent className='w-[400px] p-0'>
 					<Command shouldFilter={false}>
 						<CommandInput placeholder='Tìm kiếm lĩnh vực...' onValueChange={debounceFieldOnChange} />
@@ -186,12 +126,12 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 
 									<CommandGroup heading='Danh sách lĩnh vực'>
 										{selectableOptions.map((field) => {
-											const isSelected = selectedFields.some((f) => f._id === field._id)
+											const isSelected = selectedFields.some((f) => f === field._id)
 											return (
 												<CommandItem
 													key={field._id}
 													value={field._id} // Lưu ý: value phải unique
-													onSelect={() => handleSelect(field)}
+													onSelect={() => handleSelect(field._id)}
 													className='cursor-pointer'
 												>
 													<Check
@@ -235,4 +175,4 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 	)
 }
 
-export default FieldsContainer
+export default FieldsCombobox
