@@ -43,13 +43,13 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 	const [rejectReason, setRejectReason] = useState<string>('')
 	const [rejectReasonType, setRejectReasonType] = useState('')
 	const isRegisterable = students.approvedStudents.length < maxStudents
-	const handleApprove = (registrationId: string) => {
+	const handleApprove = async (registrationId: string) => {
 		const replyPayload: QueryReplyRegistration = {
 			status: RegistrationStatus.APPROVED,
 			lecturerResponse: 'Chúc mừng bạn đã được duyệt vào đề tài!'
 		}
 		// Call API Approve
-		replyRegistration({ registrationId: registrationId, body: replyPayload })
+		await replyRegistration({ registrationId: registrationId, body: replyPayload })
 		if (isErrorRegistration) {
 			toast({
 				variant: 'destructive',
@@ -58,20 +58,19 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 			})
 		}
 		onRefetch()
-		alert('Đã duyệt thành công!')
 	}
-	const confirmReject = () => {
+	const confirmReject = async () => {
 		const replyPayload: QueryReplyRegistration = {
 			status: RegistrationStatus.REJECTED,
 			lecturerResponse: rejectReason ? rejectReason : 'Rất tiếc, yêu cầu của bạn đã bị từ chối.',
 			rejectionReasonType: rejectReasonType
 		}
-		replyRegistration({ registrationId: selectedRequest._id, body: replyPayload })
+		await replyRegistration({ registrationId: selectedRequest._id, body: replyPayload })
 		setRejectModalOpen(false)
 		onRefetch()
-		alert('Đã từ chối yêu cầu!')
 	}
 	const handleOpenReject = (request: any) => {
+		console.log('Selected Request: ', request)
 		setSelectedRequest(request)
 		setRejectReasonType('')
 		setRejectReason('')

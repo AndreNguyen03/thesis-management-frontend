@@ -14,6 +14,7 @@ import {
 	FileText,
 	Layers,
 	Loader2,
+	Plus,
 	Save,
 	ShieldAlert,
 	User,
@@ -50,6 +51,8 @@ import DOMPurify from 'dompurify'
 import { Switch } from '@/components/ui/switch'
 import RegistrationDetail from './modal/TopicRegistrationDetail'
 import CancelRegistrationConfirmModal from './modal/CancelRegistrationConfirmModal'
+import AddLecturerModal from './modal/AddLecturerModal'
+import AddStudentModal from './modal/AddStudentModal'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
@@ -83,6 +86,11 @@ export const TopicDetailContainer = () => {
 	//Modal hủy đăng ký
 	const [openCancelRegistrationModal, setOpenCancelRegistrationModal] = useState(false)
 	// If no id was provided, render an error after hooks have been called
+	//Modal thêm giảng viên
+	const [openAddLecturerModal, setOpenAddLecturerModal] = useState(false)
+
+	//Modal thêm sinh viên
+	const [openAddStudentModal, setOpenAddStudentModal] = useState(false)
 	if (!id) {
 		return <div>Invalid topic id</div>
 	}
@@ -357,6 +365,12 @@ export const TopicDetailContainer = () => {
 			toast({ title: 'Thất bại', description: 'Có lỗi xảy ra!', variant: 'destructive' })
 		}
 	}
+
+	//Xử lý đóng trang thêm sinh viên mở trang xem chi tiết đăng ký
+	const handleGoToApproval = () => {
+		setOpenAddStudentModal(false)
+		setModalRegisterModalOpen(true)
+	}
 	return (
 		<Dialog open={true}>
 			<DialogContent hideClose={true} className='h-screen rounded-xl bg-[#F2F4FF] p-8 sm:min-w-full'>
@@ -438,7 +452,11 @@ export const TopicDetailContainer = () => {
 											variant={topic.isSaved ? 'yellow' : 'gray'}
 											onClick={toggleSaveTopic}
 										>
-											{isLoadingSave || isLoadingUnSave ? <Loader2 /> : <Layers />}
+											{isLoadingSave || isLoadingUnSave ? (
+												<Loader2 className='h-5 w-5 animate-spin' />
+											) : (
+												<Layers />
+											)}
 											{topic.isSaved ? 'Đã lưu' : 'Lưu trữ'}
 										</Button>
 									</div>
@@ -808,6 +826,17 @@ export const TopicDetailContainer = () => {
 											</p>
 										</div>
 									)}
+									{user && user.role === 'lecturer' && (
+										<div className='mt-2 flex items-center gap-2'>
+											<div
+												className='flex items-center rounded-sm px-2 py-2 hover:cursor-pointer hover:bg-blue-100'
+												onClick={() => setOpenAddStudentModal(true)}
+											>
+												<Plus className='h-4 w-4 text-primary' />
+												<span className='ml-2 text-sm text-primary'>Thêm sinh viên</span>
+											</div>
+										</div>
+									)}
 									{user &&
 										(() => {
 											switch (user.role) {
@@ -946,6 +975,17 @@ export const TopicDetailContainer = () => {
 											</div>
 										</div>
 									))}
+									{user && user.role === 'lecturer' && currentTopic.lecturers.length < 2 && (
+										<div className='flex items-center gap-2'>
+											<div
+												className='flex items-center rounded-sm px-2 py-2 hover:cursor-pointer hover:bg-blue-100'
+												onClick={() => setOpenAddLecturerModal(true)}
+											>
+												<Plus className='h-4 w-4 text-primary' />
+												<span className='ml-2 text-sm text-primary'>Thêm giảng viên</span>
+											</div>
+										</div>
+									)}
 								</div>
 								{isEditing && (
 									<div className='absolute inset-0 z-10 flex items-center justify-center bg-white/80'>
@@ -1006,6 +1046,20 @@ export const TopicDetailContainer = () => {
 					openModal={modalRegisterModalOpen}
 					setOpenModal={setModalRegisterModalOpen}
 					onRefetch={refetch}
+				/>
+				<AddStudentModal
+					topic={currentTopic}
+					open={openAddStudentModal}
+					onCancel={() => setOpenAddStudentModal(false)}
+					onRefetch={refetch}
+					goToApproval={handleGoToApproval}
+				/>
+				{/* Modal thêm giảng viên */}
+				<AddLecturerModal
+					open={openAddLecturerModal}
+					onCancel={() => setOpenAddLecturerModal(false)}
+					onRefetch={refetch}
+					topic={currentTopic}
 				/>
 				<Dialog open={openConfirmModal} onOpenChange={setOpenConfirmModal}>
 					<DialogContent>

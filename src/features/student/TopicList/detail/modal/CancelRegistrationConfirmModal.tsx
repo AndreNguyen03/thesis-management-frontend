@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/Button'
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/Dialog'
 import { Loader2 } from 'lucide-react'
-import { useState } from 'react'
 
 interface CancelRegistrationConfirmModalProps {
 	open: boolean
