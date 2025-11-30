@@ -1,13 +1,17 @@
 import type { PaginatedResponse } from '@/models'
-import type { PeriodPhase } from '@/models/period-phase.models'
 import {
+	type CreateCompletionPhaseDto,
+	type CreateExecutionPhaseDto,
+	type CreateOpenRegPhaseDto,
 	type CreatePeriodDto,
+	type CreatePhaseResponse,
+	type CreatePhaseSubmitTopicDto,
 	type GetCustomMiniPeriodInfoRequestDto,
 	type GetCustomPeriodDetailRequestDto,
 	type Period,
-	type PeriodBackend
+	type UpdatePeriodPhaseDto
 } from '@/models/period.model'
-import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
+import { type PaginationQueryParamsDto } from '@/models/query-params'
 import type { GetStatiticInPeriod } from '@/models/statistic.model'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
 
@@ -73,80 +77,70 @@ export const periodApi = baseApi.injectEndpoints({
 
 		// Submit Topic Phase
 		createSubmitTopicPhase: builder.mutation<
-			{ message: string },
-			{
-				periodId: string
-				body: PeriodPhase
-			}
+			CreatePhaseResponse,
+			{ periodId: string; body: CreatePhaseSubmitTopicDto; force?: boolean }
 		>({
-			query: ({ periodId, body }) => ({
-				url: `/${periodId}/create-submit-topic-phase`,
+			query: ({ periodId, body, force }) => ({
+				url: `periods/${periodId}/config-submit-topic-phase${force ? '?force=true' : ''}`,
 				method: 'PATCH',
 				body
 			}),
+			transformResponse: (response: ApiResponse<CreatePhaseResponse>) => response.data,
 			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
 		}),
 
-		// Open Registration Phase
-		createOpenRegPhase: builder.mutation<
-			{ message: string },
-			{
-				periodId: string
-				body: {
-					phase: string
-					startTime: Date
-					endTime: Date
-					allowManualApproval: boolean
-				}
-			}
-		>({
-			query: ({ periodId, body }) => ({
-				url: `/${periodId}/create-open-reg-phase`,
-				method: 'PATCH',
-				body
-			}),
-			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
-		}),
-
-		// Execution Phase
+		// --- Tạo pha thực hiện đề tài ---
 		createExecutionPhase: builder.mutation<
-			{ message: string },
-			{
-				periodId: string
-				body: {
-					phase: string
-					startTime: Date
-					endTime: Date
-					allowManualApproval: boolean
-				}
-			}
+			CreatePhaseResponse,
+			{ periodId: string; body: CreateExecutionPhaseDto; force?: boolean }
 		>({
-			query: ({ periodId, body }) => ({
-				url: `/${periodId}/create-execution-phase`,
+			query: ({ periodId, body, force }) => ({
+				url: `periods/${periodId}/config-execution-phase${force ? '?force=true' : ''}`,
 				method: 'PATCH',
 				body
 			}),
+			transformResponse: (response: ApiResponse<CreatePhaseResponse>) => response.data,
 			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
 		}),
 
-		// Completion Phase
-		createCompletionPhase: builder.mutation<
-			{ message: string },
-			{
-				periodId: string
-				body: {
-					phase: string
-					startTime: Date
-					endTime: Date
-					allowManualApproval: boolean
-				}
-			}
+		// --- Tạo pha mở đăng ký ---
+		createOpenRegPhase: builder.mutation<
+			CreatePhaseResponse,
+			{ periodId: string; body: CreateOpenRegPhaseDto; force?: boolean }
 		>({
-			query: ({ periodId, body }) => ({
-				url: `/${periodId}/create-completion-phase`,
+			query: ({ periodId, body, force }) => ({
+				url: `periods/${periodId}/config-open-reg-phase${force ? '?force=true' : ''}`,
 				method: 'PATCH',
 				body
 			}),
+			transformResponse: (response: ApiResponse<CreatePhaseResponse>) => response.data,
+			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
+		}),
+
+		// --- Tạo pha hoàn thành ---
+		createCompletionPhase: builder.mutation<
+			CreatePhaseResponse,
+			{ periodId: string; body: CreateCompletionPhaseDto }
+		>({
+			query: ({ periodId, body }) => ({
+				url: `periods/${periodId}/config-completion-phase`,
+				method: 'PATCH',
+				body
+			}),
+			transformResponse: (response: ApiResponse<CreatePhaseResponse>) => response.data,
+			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
+		}),
+
+		updatePhase: builder.mutation<
+			{ message: string },
+			{ periodId: string; phaseId: string; body: UpdatePeriodPhaseDto }
+		>({
+			query: ({ periodId, phaseId, body }) => ({
+				url: `periods/${periodId}/update-phase/${phaseId}`,
+				method: 'PATCH',
+				body
+			}),
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
 			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
 		}),
 

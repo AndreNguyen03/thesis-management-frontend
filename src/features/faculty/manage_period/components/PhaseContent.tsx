@@ -1,104 +1,49 @@
 import { StatsCards } from './StatsCards'
-import { TopicsTable } from './TopicsTable'
-import { getPhaseStats } from '../utils'
+import { getLabelForStatus, getPhaseStats } from '../utils'
 import { motion } from 'framer-motion'
 import type { PendingAction, PeriodPhase } from '@/models/period-phase.models'
-import { useMemo, useState } from 'react'
-import type { GeneralTopic, PaginationTopicsQueryParams, Topic } from '@/models'
-import {
-	useFacuBoardApproveTopicMutation,
-	useFacuBoardRejectTopicMutation,
-	useGetTopicsOfPeriodQuery,
-	useGetTopicsQuery
-} from '@/services/topicApi'
-import { set } from 'zod'
-import type { PhaseStats, PhaseType } from '@/models/period.model'
-import { toast } from '@/hooks/use-toast'
-import { CustomPagination } from '@/components/PaginationBar'
-import { useDebounce } from '@/hooks/useDebounce'
+import { useMemo, useState, type SetStateAction , type Dispatch} from 'react'
+import { type GeneralTopic, type TopicStatus } from '@/models'
+import type { PhaseType } from '@/models/period.model'
+// import { toast } from '@/hooks/use-toast'
 import { useLecGetStatsPeriodQuery } from '@/services/periodApi'
 import { PhaseHeader } from './PhaseHeader'
 import { PhaseActionsBox } from './PhaseActionsBox'
+import { TopicsTable } from './TopicsTable'
+import { useGetTopicsInPhaseQuery } from '@/services/topicApi'
+import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
 	currentPhase: PhaseType
 	periodId: string
 	lecturers?: string[]
-	isConfigured: boolean
+    onPhaseSettingOpen: Dispatch<SetStateAction<boolean>>
+    phaseSettingOpen: boolean
 }
 
-export function PhaseContent({ phaseDetail, currentPhase, periodId, isConfigured }: PhaseContentProps) {
+export function PhaseContent({ phaseDetail, currentPhase, periodId, phaseSettingOpen, onPhaseSettingOpen }: PhaseContentProps) {
 	// // stats theo phase.phase
 	const { data: statsData } = useLecGetStatsPeriodQuery({ periodId, phase: currentPhase })
-	console.log('Stats Data in PhaseContent:', statsData)
+
 	const stats = getPhaseStats(statsData, phaseDetail.phase)
 
-	const [queries, setQueries] = useState<PaginationTopicsQueryParams>({
-		page: 1,
-		limit: 10,
-		search_by: 'titleVN,titleEng,lecturers.fullName',
-		query: '',
-		sort_by: 'createdAt',
-		sort_order: 'desc',
-		phase: currentPhase,
-		status: 'all'
+	const [statusFilter, setStatusFilter] = useState<TopicStatus | 'all'>('all')
+
+
+	const { data: topicsData } = useGetTopicsInPhaseQuery({
+		phaseId: phaseDetail._id,
+		queries: {
+			page: 1,
+			limit: 10,
+			search_by: 'titleVN',
+			query: '',
+			sort_by: 'startDate',
+			sort_order: 'desc'
+		}
 	})
 
-	//cal api
-	const {
-		data: topicsData,
-		isLoading,
-		isFetching,
-		refetch: refetchTopicsData
-	} = useGetTopicsOfPeriodQuery({ periodId, queries })
-
-	//duyệt đề tài
-	const [approveTopic, { isSuccess: isApprovedSuccess }] = useFacuBoardApproveTopicMutation()
-	const [rejectTopic, { isSuccess: isRejectSuccess }] = useFacuBoardRejectTopicMutation()
-	const [chosenLabel, setChosenLabelStats] = useState<string | null>('đã nộp')
-	const setChosenLabel = (val: PhaseStats) => {
-		setQueries((prev) => ({ ...prev, status: val.status, page: 1 }))
-		setChosenLabelStats(val.label)
-	}
-
-	//Các hành động có thể xảy ra bên trong datatable
-	//duyệt đề tài
-	const handleApproveTopic = async (topicId: string) => {
-		//Gọi API duyệt đề tài
-		const res = await approveTopic({ topicId })
-		refetchTopicsData()
-		if (res) {
-			toast({
-				title: 'Duyệt đề tài thành công!',
-				variant: 'success'
-			})
-		} else {
-			toast({
-				title: 'Duyệt đề tài thất bại!',
-				variant: 'destructive'
-			})
-		}
-	}
-
-	const handleRejectTopic = async (topicId: string) => {
-		//Gọi API từ chối đề tài
-		const res = await rejectTopic({ topicId })
-		refetchTopicsData()
-		if (res) {
-			toast({
-				title: 'Từ chối đề tài thành công!',
-				variant: 'success'
-			})
-		}
-	}
-
-	// tìm kiếm đề tài
-	const debouncedOnChange = useDebounce({
-		onChange: (val: string) => {
-			setQueries((prev) => ({ ...prev, query: val, page: 1 }))
-		},
-		duration: 400
-	})
+	const now = Date.now()
+	const showPending = phaseDetail.endTime && now > new Date(phaseDetail.endTime).getTime()
 
 	const handleActionComplete = (actionId: string) => {
 		// In real app, this would refetch data from API
@@ -181,10 +126,14 @@ export function PhaseContent({ phaseDetail, currentPhase, periodId, isConfigured
 
 		return actions
 	}
+
 	const pendingActions = useMemo(
 		() => (topicsData ? getPendingActions(currentPhase, topicsData.data) : []),
 		[currentPhase, topicsData]
 	)
+
+    console.log(phaseDetail)
+
 	return (
 		<motion.div
 			key={phaseDetail ? phaseDetail.phase : 'no-phase'}
@@ -194,34 +143,25 @@ export function PhaseContent({ phaseDetail, currentPhase, periodId, isConfigured
 			transition={{ duration: 0.3 }}
 			className='h-full space-y-6'
 		>
-			<PhaseHeader phase={phaseDetail} />
+			<PhaseHeader phase={phaseDetail} onViewConfig={() => {
+                onPhaseSettingOpen(true)
+            }} />
 
-			<StatsCards stats={stats} onClick={setChosenLabel} />
+			<StatsCards stats={stats} onClick={setStatusFilter} />
 
 			{/* Phase Actions Box */}
-			<PhaseActionsBox phase={phaseDetail} actions={pendingActions} onActionComplete={handleActionComplete} />
+			{showPending && (
+				<PhaseActionsBox phase={phaseDetail} actions={pendingActions} onActionComplete={handleActionComplete} />
+			)}
 			<div className='pb-10'>
 				<h3 className='mb-4 text-lg font-semibold'>
-					{queries.status ? `Danh sách các đề tài ${chosenLabel?.toLowerCase()}` : 'Danh sách đề tài đã nộp'}
+					{statusFilter && statusFilter !== 'all'
+						? `Danh sách các đề tài ${getLabelForStatus(statusFilter)}`
+						: 'Danh sách đề tài đã nộp'}
 				</h3>
-				<TopicsTable
-					topics={topicsData?.data}
-					phase={phaseDetail.phase}
-					actions={{
-						onApproveTopic: handleApproveTopic,
-						onRejectTopic: handleRejectTopic,
-						onSearchTopics: (val: string) => {
-							debouncedOnChange(val)
-						}
-					}}
-				/>
-				{topicsData?.meta && topicsData.meta.totalPages > 1 && (
-					<CustomPagination
-						meta={topicsData.meta}
-						onPageChange={(p) => setQueries((prev) => ({ ...prev, page: p }))}
-					/>
-				)}
+				<TopicsTable phase={phaseDetail} statFilter={statusFilter} />
 			</div>
+			
 		</motion.div>
 	)
 }

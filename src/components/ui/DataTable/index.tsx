@@ -10,7 +10,7 @@ import {
 	PaginationPrevious
 } from '@/components/ui/pagination'
 import { Link, useNavigate } from 'react-router-dom'
-import { FilterX, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react'
+import { FilterX, ArrowUpDown, ChevronUp, ChevronDown, MoreVertical } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button, Input } from '@/components/ui'
 import { EmptyState } from '../EmptyState'
@@ -18,6 +18,7 @@ import { LoadingState } from '../LoadingState'
 import type { DataTableProps, QueryParams, SearchValue, SortOrder, TableAction } from './types'
 import type { PaginationQueryParams } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../dropdown-menu'
 
 export function DataTable<T extends Record<string, any>>({
 	data,
@@ -33,27 +34,48 @@ export function DataTable<T extends Record<string, any>>({
 		title: 'Không có dữ liệu',
 		description: 'Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm'
 	},
-	toolbar
+	toolbar,
+	bulkActions
 }: DataTableProps<T>): ReactNode {
-	//bỏ vibe coding di vc
+	//bỏ vibe coding di vc , (có thực sự biết code frontend ko?)
 	const [page, setPage] = useState(1)
 	const [searchField, setSearchField] = useState<string>((columns.find((col) => col.searchable)?.key as string) || '')
 	const [searchValue, setSearchValue] = useState<SearchValue>({ value: '' })
 	const [sortField, setSortField] = useState<string>((columns.find((col) => col.sortable)?.key as string) || '')
 	const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
 
 	const totalPages = Math.ceil(totalRecords / pageSize)
 	const tableRef = useRef<HTMLDivElement>(null)
 	const firstFocusableRef = useRef<HTMLElement>(null)
 	const searchFieldRef = useRef<HTMLButtonElement>(null)
 	const searchInputRef = useRef<HTMLInputElement>(null)
+
+	console.log(data)
 	useEffect(() => {
 		if (tableRef.current) {
 			const firstFocusable = tableRef.current.querySelector('input, button, [tabindex="0"]') as HTMLElement
 			firstFocusableRef.current = firstFocusable
 		}
 	}, [data])
+
+	const toggleRowSelection = (id: string) => {
+		setSelectedRows((prev) => {
+			const newSet = new Set(prev)
+			if (newSet.has(id)) newSet.delete(id)
+			else newSet.add(id)
+			return newSet
+		})
+	}
+
+	const toggleSelectAll = () => {
+		if (selectedRows.size === data.length) {
+			setSelectedRows(new Set())
+		} else {
+			setSelectedRows(new Set(data.map((row) => row._id)))
+		}
+	}
 
 	const handlePageChange = (newPage: number) => {
 		if (newPage > 0 && newPage <= totalPages) {
@@ -148,6 +170,35 @@ export function DataTable<T extends Record<string, any>>({
 		)
 	}
 
+	const renderActionDropdown = (row: T, actions: TableAction<T>[]) => {
+		return (
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button variant='outline' size='sm' aria-label='Hành động'>
+						<MoreVertical className='h-4 w-4' />
+					</Button>
+				</DropdownMenuTrigger>
+
+				<DropdownMenuContent align='end'>
+					{actions.map((action) => {
+						const disabled = action.disabled?.(row)
+						return (
+							<DropdownMenuItem
+								key={action.label}
+								disabled={disabled}
+								onClick={() => !disabled && action.onClick?.(row)}
+							>
+								<span className='flex items-center gap-2'>
+									{action.icon} {action.label}
+								</span>
+							</DropdownMenuItem>
+						)
+					})}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		)
+	}
+
 	return (
 		<div className='space-y-4'>
 			{/* Bộ lọc và thanh công cụ */}
@@ -204,11 +255,45 @@ export function DataTable<T extends Record<string, any>>({
 						</div>
 					</div>
 
-					{toolbar && (
-						<div className='flex justify-end lg:ml-auto' role='toolbar' aria-label='Hành động bảng'>
-							{toolbar}
-						</div>
-					)}
+					<div className='flex justify-end gap-2 lg:ml-auto' role='toolbar' aria-label='Hành động bảng'>
+						{selectedRows.size > 0 && bulkActions && (
+							<>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button variant='outline' size='sm'>
+											{selectedRows.size} item được chọn
+											<MoreVertical className='ml-2 h-4 w-4' />
+										</Button>
+									</DropdownMenuTrigger>
+
+									<DropdownMenuContent align='end'>
+										{bulkActions(data.filter((row) => selectedRows.has(row._id))).map(
+											(action) => (
+												<DropdownMenuItem
+													key={action.label}
+													onClick={() =>
+														action.onClick?.(
+															data.filter((row) => selectedRows.has(row._id))
+														)
+													}
+												>
+													<span className='flex items-center gap-2'>
+														{action.icon} {action.label}
+													</span>
+												</DropdownMenuItem>
+											)
+										)}
+									</DropdownMenuContent>
+								</DropdownMenu>
+								{/* Nút hủy chọn tất cả */}
+								<Button variant='secondary' size='sm' onClick={() => setSelectedRows(new Set())}>
+									Hủy chọn tất cả
+								</Button>
+							</>
+						)}
+
+						{toolbar && <>{toolbar}</>}
+					</div>
 				</div>
 			</section>
 
@@ -222,6 +307,14 @@ export function DataTable<T extends Record<string, any>>({
 				<Table role='table'>
 					<TableHeader className='sticky top-0 z-10 bg-muted/50 shadow-sm'>
 						<TableRow role='row'>
+							<TableHead>
+								<input
+									type='checkbox'
+									aria-label='Chọn tất cả'
+									checked={selectedRows.size === data.length && data.length > 0}
+									onChange={toggleSelectAll}
+								/>
+							</TableHead>
 							{columns.map((column) => (
 								<TableHead
 									key={column.key as string}
@@ -253,23 +346,34 @@ export function DataTable<T extends Record<string, any>>({
 					<TableBody>
 						{isLoading ? (
 							<TableRow>
-								<TableCell colSpan={columns.length + (actions ? 1 : 0)}>
+								<TableCell colSpan={columns.length + (actions ? 1 : 0) + 1}>
 									<LoadingState message={'Đang tải dữ liệu...'} />
 								</TableCell>
 							</TableRow>
 						) : error ? (
 							<TableRow>
-								<TableCell colSpan={columns.length + (actions ? 1 : 0)}></TableCell>
+								<TableCell colSpan={columns.length + (actions ? 1 : 0) + 1}></TableCell>
 							</TableRow>
 						) : !data.length ? (
 							<TableRow>
-								<TableCell colSpan={columns.length + (actions ? 1 : 0)} className='py-8 text-center'>
+								<TableCell
+									colSpan={columns.length + (actions ? 1 : 0) + 1}
+									className='py-8 text-center'
+								>
 									<EmptyState title={emptyState.title} description={emptyState.description} />
 								</TableCell>
 							</TableRow>
 						) : (
 							data.map((row, index) => (
 								<TableRow key={index}>
+									<TableCell>
+										<input
+											type='checkbox'
+											checked={selectedRows.has(row._id)}
+											onChange={() => toggleRowSelection(row._id)}
+											aria-label={`Chọn row ${row._id}`}
+										/>
+									</TableCell>
 									{columns.map((column) => (
 										<TableCell key={column.key as string}>
 											{column.render ? column.render(row[column.key], row) : row[column.key]}
@@ -279,7 +383,7 @@ export function DataTable<T extends Record<string, any>>({
 									{actions && (
 										<TableCell className='text-right'>
 											<div className='flex justify-end gap-2'>
-												{actions.map((action) => renderActionButton(action, row))}
+												{renderActionDropdown(row, actions)}
 											</div>
 										</TableCell>
 									)}

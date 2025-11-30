@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useState } from 'react'
 import { Button } from '@/components/ui'
-import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
+import { PhaseSettingsModal } from './modals/PhaseSettingsModalOld'
 import { PhaseInfo } from '@/utils/utils'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import type { PhaseType } from '@/models/period.model'
@@ -88,12 +88,6 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, o
 						style={{ height: '1.5rem' }}
 					/>
 
-					{currentPhase === 'empty' && !collapsed && (
-						<Button variant='config' size='sm' onClick={() => setPhaseSettingsOpen(true)}>
-							Thiết lập pha {PhaseInfo[currentPhase].continue}
-						</Button>
-					)}
-
 					{/* REAL PHASE NODES */}
 					{phases.map((p, index) => {
 						const isActive = currentPhase === p.phase
@@ -154,12 +148,6 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, o
 										transition={{ duration: 0.5 }}
 										style={{ height: '1.5rem' }}
 									/>
-								)}
-
-								{isCompleted && !collapsed && (
-									<Button variant='config' size='sm'>
-										Thiết lập pha {PhaseInfo[p.phase].continue}
-									</Button>
 								)}
 							</div>
 						)

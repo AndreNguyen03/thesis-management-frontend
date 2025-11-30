@@ -182,7 +182,7 @@ export function SendNotificationModal({ open, onOpenChange, action, phaseType, o
 									value={content}
 									onChange={(e) => setContent(e.target.value)}
 									rows={10}
-									className='font-mono text-sm'
+									className='font-mono text-sm bg-white'
 								/>
 								<p className='text-xs text-muted-foreground'>
 									Các biến như {'{teacherName}'}, {'{periodName}'}, {'{deadline}'} sẽ được tự động

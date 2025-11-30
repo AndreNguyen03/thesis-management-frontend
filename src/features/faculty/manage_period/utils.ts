@@ -1,4 +1,4 @@
-import type { ResponseMiniLecturerDto } from '@/models'
+import type { ResponseMiniLecturerDto, TopicStatus } from '@/models'
 import type { PhaseStats, PhaseType, StatVariant } from '@/models/period.model'
 import {
 	FileText,
@@ -199,6 +199,13 @@ export const getPhaseStats = (rawStats: GetStatiticInPeriod | undefined, phase: 
 					...statMeta.all
 				},
 				{
+					status: 'full',
+					label: 'Đã đủ sinh viên',
+					value: rawStats.fullTopicsNumber,
+					variant: 'success',
+					...statMeta.registered
+				},
+				{
 					status: 'registered',
 					label: 'Đã có sinh viên',
 					value: rawStats.registeredTopicsNumber,
@@ -211,13 +218,6 @@ export const getPhaseStats = (rawStats: GetStatiticInPeriod | undefined, phase: 
 					value: rawStats.emptyTopicsNumber,
 					variant: 'warning',
 					...statMeta.pending_registration
-				},
-				{
-					status: 'total_students',
-					label: 'Tổng SV đăng ký',
-					value: rawStats.fullTopicsNumber,
-					variant: 'info',
-					...statMeta.total_students
 				}
 			]
 
@@ -290,42 +290,65 @@ export const getPhaseStats = (rawStats: GetStatiticInPeriod | undefined, phase: 
 	}
 }
 
-export function getLabelForStatus(status: string): string {
-	switch (status) {
-		case 'approved':
-			return 'Đã duyệt'
-		case 'submitted':
-			return 'Đã nộp'
-		case 'rejected':
-			return 'Bị từ chối'
-		case 'graded':
-			return 'Đã chấm điểm'
-		case 'in_progress':
-			return 'Đang thực hiện'
-		case 'completed':
-			return 'Hoàn thành'
-		default:
-			return 'Khác'
-	}
+export const toInputDateTime = (iso?: string) => {
+	if (!iso) return ''
+	const date = new Date(iso)
+	const yyyy = date.getFullYear()
+	const mm = String(date.getMonth() + 1).padStart(2, '0')
+	const dd = String(date.getDate()).padStart(2, '0')
+	const hh = String(date.getHours()).padStart(2, '0')
+	const min = String(date.getMinutes()).padStart(2, '0')
+	return `${yyyy}-${mm}-${dd}T${hh}:${min}`
 }
 
-export function getVariantForStatus(status: string): string {
-	switch (status) {
-		case 'approved':
-			return 'success'
-		case 'submitted':
-			return 'info'
-		case 'rejected':
-			return 'destructive'
-		case 'graded':
-			return 'warning'
-		case 'in_progress':
-			return 'primary'
-		case 'completed':
-			return 'success'
-		default:
-			return 'default'
+export function getLabelForStatus(status: TopicStatus | 'all'): string {
+	const mapping: Record<string, string> = {
+		all: 'Tất cả',
+		draft: 'Nháp',
+		submitted: 'Đã nộp',
+		approved: 'Đã được chấp thuận',
+		under_review: 'Đang chờ',
+		rejected: 'Từ chối',
+		adjust_request: 'Cần chỉnh sửa nội dung',
+		registered: 'Đã có sinh viên đăng ký',
+		pending_registration: 'Chưa có sinh viên nào',
+		in_progress: 'Đang thực hiện',
+		paused: 'Tạm dừng tiến độ',
+		submitted_for_review: 'Đã hoàn thành, chờ duyệt',
+		delayed: 'Chậm tiến độ',
+		graded: 'Đã chấm điểm xong',
+		archived: 'Đã đưa vào lưu trữ',
+		awaiting_evaluation: 'Chờ giảng viên chấm',
+		rejected_final: 'Không đạt yêu cầu cuối',
+		full: 'Đã đầy',
+		cancelled: 'Đã hủy'
 	}
+
+	return mapping[status] ?? 'Khác'
+}
+
+export function getVariantForStatus(status: TopicStatus | 'all'): string {
+	const mapping: Record<string, string> = {
+		all: 'primary',
+		submitted: 'warning',
+		approved: 'success',
+		rejected: 'destructive',
+		adjust_request: 'purple',
+		registered: 'success',
+		pending_registration: 'neutral',
+		in_progress: 'primary',
+		paused: 'neutral',
+		submitted_for_review: 'success',
+		delayed: 'warning',
+		graded: 'success',
+		archived: 'neutral',
+		awaiting_evaluation: 'warning',
+		rejected_final: 'destructive',
+		full: 'warning',
+		cancelled: 'destructive'
+	}
+
+	return mapping[status] ?? 'default'
 }
 // src/modules/manage-period/mock/detailPeriod.ts
 import type { PeriodBackend } from '@/models/period.model'

@@ -43,7 +43,7 @@ function LayoutContent({ user, children }: { user: any; children: ReactNode }) {
 				<div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${mainMargin}`}>
 					{/* Breadcrumbs sticky below header, always visible */}
 					<div className='fixed top-16 z-30 w-full border-b bg-gray-50'>
-						<div className='container mx-auto px-4 py-2'>
+						<div className='mx-auto px-4 py-2'>
 							<Breadcrumbs />
 						</div>
 					</div>

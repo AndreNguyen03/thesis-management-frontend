@@ -27,7 +27,7 @@ import {
 	AlertCircle
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
-import { SendNotificationModal } from './SendNotificationModal'
+import { SendNotificationModal } from './modals/SendNotificationModal'
 
 interface PhaseActionsBoxProps {
 	phase: PeriodPhase

@@ -2,10 +2,11 @@ import type { PhaseStats } from '@/models/period.model'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { iconVariantStyles, statVariantClasses } from '../utils'
+import type { TopicStatus } from '@/models'
 
-interface StatsCardsProps {
+interface StatsCardsProps { 
 	stats: PhaseStats[]
-	onClick?: (chosenStats: PhaseStats) => void
+	onClick?: (chosenStats: TopicStatus | 'all') => void
 }
 
 export function StatsCards({ stats, onClick }: StatsCardsProps) {
@@ -20,10 +21,10 @@ export function StatsCards({ stats, onClick }: StatsCardsProps) {
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: index * 0.1 }}
-						whileHover={{ y: -5 }} // ✨ hover dịch lên 5px
-						whileTap={{ y: 2 }} // ✨ click dịch xuống 2px
+						whileHover={{ y: -5 }} 
+						whileTap={{ y: 2 }}
 						style={{ cursor: onClick ? 'pointer' : 'default' }}
-						onClick={() => onClick?.(stat)}
+						onClick={() => onClick?.(stat.status)}
 					>
 						<div
 							className={cn(

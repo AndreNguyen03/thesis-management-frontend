@@ -5,6 +5,7 @@ import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod, TopicStatus } from './period.model'
 import type { RelatedStudentInTopic } from './registration.model'
+import type { SortOrder } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto} from './users'
 export interface GetDetailGrade {
@@ -32,8 +33,20 @@ export interface PaginationQueryParams {
 	search_by?: string
 	query?: string
 	sort_by?: string
-	sort_order?: string
+	sort_order?: SortOrder
 }
+
+export interface DetailGrade {
+	score: number
+	note: string
+	actorId: string
+}
+
+export interface Grade {
+	averageScore: number
+	detailGrades: DetailGrade[]
+}
+
 export interface AbstractTopic {
 	_id: string
 
@@ -55,6 +68,8 @@ export interface AbstractTopic {
 	studentsNum: number
 
 	lecturers: ResponseMiniLecturerDto[]
+
+	grade: Grade
 
 	createdAt: Date
 
@@ -186,6 +201,31 @@ export interface FileOption {
 }
 
 export type TopicType = 'thesis' | 'scientific_research'
+export type TopicStatus =
+	// Pha 1 - Nộp đề tài
+	| 'draft'
+	| 'submitted'
+	| 'under_review'
+	| 'approved'
+	| 'rejected'
+	| 'adjust_request'
+	// Pha 2 - Mở đăng ký
+	| 'available'
+	| 'pending_registration'
+	| 'registered'
+	| 'full'
+	| 'cancelled'
+	// Pha 3 - Thực hiện đề tài
+	| 'in_progress'
+	| 'delayed'
+	| 'paused'
+	| 'submitted_for_review'
+	| 'awaiting_evaluation'
+	// Pha 4 - Hoàn tất
+	| 'graded'
+	| 'reviewed'
+	| 'archived'
+	| 'rejected_final'
 
 export interface SavedUserRef {
 	userId: string
@@ -216,7 +256,10 @@ export const topicStatusLabels = {
 	archived: { name: 'Đã lưu trữ', css: 'bg-gray-200 text-gray-800' },
 	rejected_final: { name: 'Chưa đạt', css: 'bg-red-200 text-red-800' }
 }
-
+export interface RequestGradeTopicDto {
+    score: number
+    note?: string
+}
 export interface CreateTopicPayload {
 	titleVN: string
 	titleEng: string

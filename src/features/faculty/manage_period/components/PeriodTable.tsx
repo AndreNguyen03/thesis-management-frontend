@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DataTable } from '@/components/ui/DataTable'
-import type { QueryParams, TableAction, TableColumn } from '@/components/ui/DataTable/types'
+import type { TableAction, TableColumn } from '@/components/ui/DataTable/types'
 import { Plus, Edit, Trash, Eye } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
@@ -140,7 +140,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 
 	return (
 		<div className='flex h-full flex-col' role='main'>
-			<header className='mb-6 flex items-center justify-between'>
+			<header className='mt-16 mb-6 flex items-center justify-between'>
 				<header className='flex flex-col items-start justify-between'>
 					<h1 className='text-2xl font-bold'>Quản lý Đợt Đăng Ký</h1>
 					<p className='mt-1 text-muted-foreground'>Quản lý các đợt đăng ký đề tài tốt nghiệp</p>
@@ -155,7 +155,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 					actions={actions}
 					isLoading={isLoading}
 					error={error}
-					// totalRecords={response?.length || 0}
+					totalRecords={response?.meta.totalItems || 0}
 					pageSize={queryParams.limit}
 					onQueryChange={setQueryParams}
 					searchFields={{

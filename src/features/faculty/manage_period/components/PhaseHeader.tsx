@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
 import { CalendarDays, Clock, Settings, Eye, Bell } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { SendNotificationModal } from './SendNotificationModal'
+import { SendNotificationModal } from './modals/SendNotificationModal'
 
 interface PhaseHeader {
 	phase: PeriodPhase
@@ -90,28 +90,17 @@ export function PhaseHeader({ phase, onViewConfig, onEditConfig }: PhaseHeader) 
 				{/* Action Buttons */}
 				<div className='flex items-center gap-2'>
 					{/* Cấu hình */}
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant='outline' size='sm'>
-								<Settings className='h-4 w-4' />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align='end'>
-							<DropdownMenuItem onClick={onViewConfig}>
-								<Eye className='mr-2 h-4 w-4' />
-								Xem cấu hình
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={onEditConfig}>
-								<Settings className='mr-2 h-4 w-4' />
-								Chỉnh sửa pha
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+
+					<Button variant='outline' size='sm' onClick={onViewConfig}>
+						Thiết lập
+						<Settings className='h-4 w-4' />
+					</Button>
 
 					{/* Gửi thông báo */}
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button variant='outline' size='sm'>
+								Thông báo
 								<Bell className='h-4 w-4' />
 							</Button>
 						</DropdownMenuTrigger>
@@ -145,7 +134,7 @@ export function PhaseHeader({ phase, onViewConfig, onEditConfig }: PhaseHeader) 
 					<Clock className='h-4 w-4 text-primary' />
 					<span className='text-muted-foreground'>Thời gian hiện tại:</span>
 					<span className='font-mono font-medium text-foreground'>
-						{currentTime.toLocaleTimeString('vi-VN')}
+						{currentTime.toLocaleString('vi-VN')}
 					</span>
 				</div>
 
