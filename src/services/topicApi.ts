@@ -8,9 +8,13 @@ import type {
 	CreateTopicPayload,
 	PaginatedSubmittedTopics,
 	PaginationTopicsQueryParams,
-	PaginatedGeneralTopics
+	PaginatedGeneralTopics,
+	UpdateTopicPayload,
+	CreateTopicRequest,
+	CreateTopicResponse
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
+
 
 export const topicApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -74,13 +78,44 @@ export const topicApi = baseApi.injectEndpoints({
 			},
 			transformResponse: (response: ApiResponse<PaginatedSubmittedTopics>) => response.data
 		}),
-		createTopic: builder.mutation<Topic, CreateTopicPayload>({
-			query: (body) => ({
-				url: '/topics',
-				method: 'POST',
-				body
-			}),
-			transformResponse: (response: ApiResponse<Topic>) => response.data
+		createTopic: builder.mutation<CreateTopicResponse, CreateTopicRequest>({
+			query: ({ topicData, files }) => {
+				const formData = new FormData()
+
+				// 1. Append Files (key phải khớp với 'files' trong FilesInterceptor ở NestJS)
+				if (files && files.length > 0) {
+					files.forEach((file) => {
+						formData.append('files', file)
+					})
+				}
+
+				// 2. Append DTO Fields
+				// Duyệt qua từng key của topicData để append vào formData
+				Object.keys(topicData).forEach((key) => {
+					const value = topicData[key as keyof typeof topicData]
+
+					if (value === undefined || value === null) return
+
+					if (Array.isArray(value)) {
+						// Xử lý mảng (fieldIds, requirementIds)
+						// NestJS thường đọc mảng theo kiểu key[] hoặc lặp lại key
+						value.forEach((item) => {
+							formData.append(`${key}[]`, item as string)
+							// Hoặc formData.append(key, item); tùy cấu hình ValidationPipe
+						})
+					} else {
+						// Các trường nguyên thủy (string, number)
+						formData.append(key, value.toString())
+					}
+				})
+
+				return {
+					url: '/topics', // Đường dẫn tới Controller
+					method: 'POST',
+					body: formData
+					// FormData không cần responseHandler đặc biệt, RTK Query tự xử lý
+				}
+			}
 		}),
 		submitTopic: builder.mutation<ApiResponse<Topic>, { topicId: string; periodId: string }>({
 			query: ({ topicId, periodId }) => ({
@@ -97,6 +132,46 @@ export const topicApi = baseApi.injectEndpoints({
 		facuBoardRejectTopic: builder.mutation<string, { topicId: string }>({
 			query: ({ topicId }) => ({
 				url: `/topics/faculty-board/reject-topic/${topicId}`,
+				method: 'PATCH'
+			})
+		}),
+		lecturerUploadFiles: builder.mutation<{ message: string }, { topicId: string; files: File[] }>({
+			query: ({ topicId, files }) => {
+				const formData = new FormData()
+				files.forEach((file) => formData.append('files', file))
+				return {
+					url: `/topics/${topicId}/lecturer/upload-files`,
+					method: 'POST',
+					body: formData
+				}
+			}
+		}),
+		lecturerDeleteFiles: builder.mutation<{ message: string }, { topicId: string; fileIds: string[] }>({
+			query: ({ topicId, fileIds }) => ({
+				url: `/topics/${topicId}/lecturer/delete-files`,
+				method: 'DELETE',
+				body: fileIds // gửi mảng fileIds trong body
+			})
+		}),
+		lecturerDeleteFile: builder.mutation<{ message: string }, { topicId: string; fileId: string }>({
+			query: ({ topicId, fileId }) => ({
+				url: `/topics/${topicId}/lecturer/delete-file?fileId=${fileId}`,
+				method: 'DELETE'
+			})
+		}),
+		updateTopic: builder.mutation<
+			{ messsage: string },
+			{ topicId: string; periodId: string; body: UpdateTopicPayload }
+		>({
+			query: ({ topicId, periodId, body }) => ({
+				url: `/topics/${topicId}/in-period/${periodId}`,
+				method: 'PATCH',
+				body
+			})
+		}),
+		setAllowManualApproval: builder.mutation<{ message: string }, { topicId: string; allow: boolean }>({
+			query: ({ topicId, allow }) => ({
+				url: `/topics/${topicId}/set-allow-manual-approval?allowManualApproval=${allow}`,
 				method: 'PATCH'
 			})
 		})
@@ -119,5 +194,10 @@ export const {
 	useCreateTopicMutation,
 	useSubmitTopicMutation,
 	useFacuBoardApproveTopicMutation,
-	useFacuBoardRejectTopicMutation
+	useFacuBoardRejectTopicMutation,
+	useLecturerUploadFilesMutation,
+	useLecturerDeleteFilesMutation,
+	useLecturerDeleteFileMutation,
+	useUpdateTopicMutation,
+	useSetAllowManualApprovalMutation
 } = topicApi

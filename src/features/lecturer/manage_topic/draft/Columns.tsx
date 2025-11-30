@@ -1,20 +1,27 @@
 import { Badge, Button } from '@/components/ui'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
 import { topicStatusLabels, TopicTypeTransfer, type DraftTopic, type GetFieldNameReponseDto } from '@/models'
-import type { ColumnDef, HeaderContext } from '@tanstack/react-table'
-import { Eye } from 'lucide-react'
-import { Row } from 'react-day-picker'
+import type { ColumnDef } from '@tanstack/react-table'
+import { Eye, Loader2 } from 'lucide-react'
 
 type ColumnsProps = {
 	onSeeDetail: (topicId: string) => void
 	showSelection: boolean
+	onManualApprovalChange?: (checked: boolean, topicId: string) => void
+	pendingId?: string | null
 }
 interface NewDraftTopic extends DraftTopic {
 	index: number
 	time: { createdAt: Date; updatedAt: Date }
 }
 
-export const getColumns = ({ onSeeDetail, showSelection }: ColumnsProps): ColumnDef<NewDraftTopic>[] => [
+export const getColumns = ({
+	onSeeDetail,
+	showSelection,
+	onManualApprovalChange,
+	pendingId
+}: ColumnsProps): ColumnDef<NewDraftTopic>[] => [
 	...(showSelection
 		? [
 				{
@@ -144,6 +151,25 @@ export const getColumns = ({ onSeeDetail, showSelection }: ColumnsProps): Column
 							))
 						: null
 				})()}
+			</div>
+		)
+	},
+	{
+		accessorKey: 'allowManualApproval',
+		size: 50,
+		header: () => <div className='text-center'>Duyệt tự động</div>,
+		cell: ({ row }) => (
+			<div className='flex justify-center capitalize'>
+				<div className='flex items-center space-x-2'>
+					{pendingId === row.original._id ? <Loader2 className='h-2 w-2 animate-spin' /> : null}
+					<Switch
+						disabled={pendingId === row.original._id}
+						checked={row.getValue('allowManualApproval')}
+						onCheckedChange={(checked) => {
+							onManualApprovalChange && onManualApprovalChange(checked, row.original._id)
+						}}
+					/>
+				</div>
 			</div>
 		)
 	},

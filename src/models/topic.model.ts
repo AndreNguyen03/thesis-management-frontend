@@ -1,9 +1,31 @@
 import type { GetFieldNameReponseDto } from './field.model'
+import type { GetUploadedFileDto } from './file.model'
 import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
-import type { MiniPeriod } from './period.model'
+import type { PeriodPhaseName } from './period-phase.models'
+import type { MiniPeriod, TopicStatus } from './period.model'
+import type { RelatedStudentInTopic } from './registration.model'
 import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto} from './users'
+export interface GetDetailGrade {
+	_id: string
+	score: number
+	note: string
+	actorId: string
+}
+export interface GetGrade {
+	averageScore: number
+	detailGrades: GetDetailGrade[]
+}
+export interface GetPhaseHistoryDto {
+	_id: string
+	phaseName: PeriodPhaseName
+	status: TopicStatus
+	actor: GetMiniUserDto
+	notes: string
+	createdAt: Date
+}
+
 export interface PaginationQueryParams {
 	limit?: number
 	page?: number
@@ -29,7 +51,8 @@ export interface AbstractTopic {
 
 	requirements: GetRequirementNameReponseDto[]
 
-	students: ResponseMiniStudentDto[]
+	students: RelatedStudentInTopic
+	studentsNum: number
 
 	lecturers: ResponseMiniLecturerDto[]
 
@@ -42,6 +65,8 @@ export interface AbstractTopic {
 	currentStatus: string
 
 	currentPhase: string
+
+	allowManualApproval: boolean
 }
 export interface SubmittedTopic extends AbstractTopic {
 	submittedAt: string
@@ -82,14 +107,13 @@ export interface Topic {
 	currentStatus: string
 
 	major: GetMajorMiniDto
+	studentsNum: number
 
 	lecturers: ResponseMiniLecturerDto[]
 
 	requirements: GetRequirementNameReponseDto[]
 
 	fields: GetFieldNameReponseDto[]
-
-	students: ResponseMiniStudentDto[]
 
 	maxStudents: number
 
@@ -102,6 +126,12 @@ export interface Topic {
 	isRegistered: boolean
 
 	isSaved: boolean
+
+	isEditable: boolean
+
+	allowManualApproval: boolean
+
+	students: RelatedStudentInTopic
 }
 export interface GetPaginatedTopics extends GetPaginatedObject {
 	data: Topic[]
@@ -111,7 +141,9 @@ export interface CanceledRegisteredTopic extends Topic {
 	lastestCanceledRegisteredAt: Date
 }
 export interface ITopicDetail extends Topic {
-	//allUserRegistrations: IRegistration[] // mới chỉ là các đăng ký của người dùng với topic
+	files: GetUploadedFileDto[]
+	phaseHistories: GetPhaseHistoryDto[]
+	grade: GetGrade
 }
 
 export interface LecturerOption {
@@ -154,14 +186,12 @@ export interface FileOption {
 
 export type TopicType = 'thesis' | 'scientific_research'
 
-export type TopicStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'closed'
-
 export interface SavedUserRef {
 	userId: string
 	savedAt: string
 }
 export const TopicTypeTransfer = {
-	thesis: { name: 'Khóa luận', css: 'bg-blue-600 text-white px-1.5 py-0.5 text-xs' },
+	thesis: { name: 'Khóa luận tốt nghiệp', css: 'bg-blue-600 text-white px-1.5 py-0.5 text-xs' },
 	scientific_research: { name: 'Nghiên cứu khoa học', css: 'bg-green-600 text-white px-1.5 py-0.5 text-xs' }
 }
 export const topicStatusLabels = {
@@ -190,15 +220,36 @@ export interface CreateTopicPayload {
 	titleEng: string
 	description: string
 	type: TopicType
+	currentPhase: string
+	currentStatus: string
 	majorId: string
 	maxStudents: number
-	currentStatus: 'draft' | 'submitted'
-	currentPhase: 'empty' | 'submit_topic'
 	periodId?: string
 	fieldIds: string[]
 	requirementIds?: string[]
 	studentIds?: string[]
 	lecturerIds: string[]
+	allowManualApproval: boolean
+}
+
+export interface CreateTopicRequest {
+	topicData: CreateTopicPayload
+	files: File[] // File lấy từ input type="file"
+}
+
+export interface CreateTopicResponse {
+	topicId: string
+	message: string
+}
+export interface UpdateTopicPayload {
+	titleVN?: string
+	titleEng?: string
+	description?: string
+	majorId?: string
+	maxStudents?: number
+	fieldIds?: string[]
+	requirementIds?: string[] | []
+	type?: string
 }
 
 export interface PaginationTopicsQueryParams extends PaginationQueryParams {

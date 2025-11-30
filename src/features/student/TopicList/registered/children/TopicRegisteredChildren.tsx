@@ -16,34 +16,26 @@ import { Search } from 'lucide-react'
 import { EmptyStateContainer } from '../EmptyStateContainer'
 import { useGetRegisteredTopicQuery } from '@/services/topicApi'
 import { TopicRegisteredCard } from '../card/TopicRegisteredCard'
-import type { Topic } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
-import { useGetFieldsQuery } from '@/services/fieldApi'
+import FieldsCombobox from '@/components/common/combobox/FieldCombobox'
 
 export const TopicRegisteredChildren = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 10,
-		search_by: 'titleVN',
+		search_by: 'titleVN,titleEng',
 		query: '',
 		sort_by: 'createdAt',
-		sort_order: 'desc',
-		filter: 'all',
+		sort_order: 'asc',
+		filter: '',
 		filter_by: 'fieldIds'
 	})
 	//Lấy đề tài đã đăng ký
-	const { data: topicData } = useGetRegisteredTopicQuery({ queries })
+	const { data: registerTopics } = useGetRegisteredTopicQuery({ queries })
 	//Lấy tất cả các lĩnh vực
-	const { data: fields } = useGetFieldsQuery()
-
-	const [registerTopics, setRegisteredTopics] = useState<Topic[]>()
+	// const { data: fields } = useGetFieldsQuery()
 	// // const [cancelRegistration, { isLoading: isCancelling, isSuccess }] = useCancelRegistrationMutation()
-	useEffect(() => {
-		if (JSON.stringify(registerTopics) !== JSON.stringify(topicData?.data)) {
-			setRegisteredTopics(topicData?.data)
-		}
-	}, [topicData])
 
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
@@ -60,16 +52,9 @@ export const TopicRegisteredChildren = () => {
 		setSearchTerm(val)
 		debounceOnChange(val)
 	}
-	// Sự kiện chọn theo lĩnh vực
-	//Set nội dung cho filter
-	const setFieldString = (fieldId: string) => {
-		if (fieldId === 'none') {
-			setQueries((prev) => ({ ...prev, filter: undefined }))
-		} else {
-			setQueries((prev) => ({ ...prev, filter: fieldId }))
-		}
-	}
-	const emptyList = registerTopics?.length === 0 && queries.query === '' && queries.filter === 'all'
+
+	const emptyList = registerTopics?.data.length === 0 && queries.query === '' && queries.filter?.includes('all')
+
 	return (
 		<div className='flex w-full flex-col justify-center space-y-4'>
 			{emptyList ? (
@@ -94,20 +79,13 @@ export const TopicRegisteredChildren = () => {
 										onChange={(e) => onEdit(e.target.value)}
 									/>
 								</div>
-								<Select value={queries.filter} onValueChange={setFieldString}>
-									<SelectTrigger className='w-full sm:w-[200px]'>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value='all'>Tất cả lĩnh vực</SelectItem>
 
-										{fields?.map((field) => (
-											<SelectItem key={field._id} value={field._id}>
-												{field.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
+								<FieldsCombobox
+									selectedFields={queries.filter ? queries.filter.split(',') : []}
+									onSelectionChange={(value: string[]) => {
+										setQueries((prev) => ({ ...prev, filter: value.join(',') }))
+									}}
+								/>
 								<Select value={queries.sort_by}>
 									<SelectTrigger className='w-full sm:w-[150px]'>
 										<SelectValue />
@@ -120,19 +98,18 @@ export const TopicRegisteredChildren = () => {
 						</CardContent>
 					</Card>
 					<div className='flex w-full gap-6'>
-						<div className='grid grid-cols-1 gap-6 lg:grid-cols-1'>
-							{registerTopics && registerTopics?.length > 0 ? (
+						<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+							{registerTopics && registerTopics?.data.length > 0 ? (
 								<>
-									{registerTopics?.map((topic) => (
+									{registerTopics?.data.map((topic) => (
 										<TopicRegisteredCard key={topic._id} topic={topic} />
 									))}
-									
 								</>
 							) : (
 								<>
 									{' '}
 									{queries.query === '' ? (
-										<span>{`Tìm thấy ${registerTopics?.length} đề tài liên quan`}</span>
+										<span>{`Tìm thấy ${registerTopics?.data.length} đề tài liên quan`}</span>
 									) : (
 										<span>{`Không tìm thấy đề tài nào có liên quan tới "${queries.query}"`}</span>
 									)}

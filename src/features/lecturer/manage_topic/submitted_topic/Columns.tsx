@@ -7,7 +7,9 @@ import {
 	type GetRequirementNameReponseDto,
 	type SubmittedTopic
 } from '@/models'
+import { stripHtml } from '@/utils/lower-case-html'
 import type { ColumnDef } from '@tanstack/react-table'
+import DOMPurify from 'dompurify'
 import { Eye } from 'lucide-react'
 
 type ColumnsProps = {
@@ -46,11 +48,16 @@ export const getColumns = ({ onSeeDetail }: ColumnsProps): ColumnDef<NewSubmitte
 		accessorKey: 'description',
 		size: 300,
 		header: () => <div className='text-center'>Mô tả</div>,
-		cell: ({ row }) => (
-			<div className='flex max-w-xl justify-center capitalize' title={row.getValue('description')}>
-				<span className='line-clamp-5 text-wrap break-words'>{row.getValue('description')}</span>
-			</div>
-		)
+		cell: ({ row }) => {
+			const rawHtml = row.getValue('description') as string
+			const plainTextTitle = stripHtml(rawHtml || '')
+
+			return (
+				<div className='flex max-w-xl justify-center capitalize' title={plainTextTitle}>
+					<span className='line-clamp-5 text-wrap break-words'>{plainTextTitle}</span>
+				</div>
+			)
+		}
 	},
 	{
 		accessorKey: 'type',
@@ -89,14 +96,8 @@ export const getColumns = ({ onSeeDetail }: ColumnsProps): ColumnDef<NewSubmitte
 	{
 		accessorKey: 'createdAt',
 		size: 50,
-		header: () => <div className='text-center'> Ngày tạo</div>,
-		cell: ({ row }) => (
-			<div className='flex justify-center capitalize'>
-				{(() => {
-					return <>{new Date(row.getValue('createdAt')).toLocaleString('vi-VN')}</>
-				})()}
-			</div>
-		)
+		header: () => <div className='text-center'>Số lượng đăng ký</div>,
+		cell: ({ row }) => <div className='flex justify-center capitalize'>{row.original.studentsNum}</div>
 	},
 	{
 		accessorKey: 'submittedAt',

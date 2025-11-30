@@ -7,14 +7,7 @@ import { Loader2, RotateCw, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious
-} from '@/components/ui/pagination'
+
 import { CustomPagination } from '@/components/PaginationBar'
 
 const ManageSubmittedTopics = () => {

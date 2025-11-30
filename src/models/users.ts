@@ -69,7 +69,7 @@ export interface ThesisStats {
 
 // Base user fields
 export interface BaseUser {
-	id: string
+	_id: string
 	fullName: string
 	email: string
 	phone?: string
@@ -80,7 +80,7 @@ export interface BaseUser {
 
 // Student user
 export interface StudentUser {
-	id: string
+	userId: string
 	fullName: string
 	email: string
 	phone?: string
@@ -147,6 +147,8 @@ export interface ResponseMiniStudentDto {
 	avatarName?: string
 	studentCode: string
 	major: string
+	facultyName: string
+	skills?: string[]
 }
 export interface PaginatedStudents extends GetPaginatedObject {
 	data: ResponseMiniStudentDto[]
@@ -160,6 +162,8 @@ export interface ResponseMiniLecturerDto {
 	avatarName: string
 	//titlePath?: AcademicTitle
 	title: string
+	facultyName: string
+	roleInTopic: string
 }
 export interface MiniActorInforDto {
 	_id: string
@@ -172,4 +176,15 @@ export interface MiniActorInforDto {
 
 export interface PaginatedMiniLecturer extends GetPaginatedObject {
 	data: ResponseMiniLecturerDto[]
+}
+export interface GetMiniUserDto {
+	_id: string
+	fullName: string
+	email: string
+	phone: string
+	avatarUrl: string
+	role: string
+	title?: string
+	// facultyId: string
+	// facultyName: string
 }

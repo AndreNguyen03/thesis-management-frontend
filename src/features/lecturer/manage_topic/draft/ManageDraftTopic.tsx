@@ -1,6 +1,6 @@
 import { DataTable } from './DataTable'
 import { getColumns } from './Columns'
-import { useGetDraftTopicsQuery, useSubmitTopicMutation } from '@/services/topicApi'
+import { useGetDraftTopicsQuery, useSetAllowManualApprovalMutation, useSubmitTopicMutation } from '@/services/topicApi'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { CreateTopic } from '../../new_topic'
 import { Eye, Pointer, Search, X } from 'lucide-react'
@@ -57,9 +57,25 @@ const ManageTopicDraft = () => {
 		setShowSelection(false)
 		refetch()
 	}
+	const [pendingId, setPendingId] = useState<string | null>(null)
+
+	// Thay đổi cờ allowManualApproval
+	const [setAllowManualApproval] = useSetAllowManualApprovalMutation()
+	const handleManualApprovalChange = async (checked: boolean, topicId: string) => {
+		try {
+			await setAllowManualApproval({ topicId, allow: checked })
+			refetch()
+		} catch {
+			toast({ title: 'Thất bại', description: 'Có lỗi xảy ra!', variant: 'destructive' })
+		} finally {
+			setPendingId(null)
+		}
+	}
 	const columns = getColumns({
 		onSeeDetail: (topicId) => navigate(`/detail-topic/${topicId}`),
-		showSelection
+		showSelection,
+		onManualApprovalChange: handleManualApprovalChange,
+		pendingId
 	})
 	const data =
 		draftTopics?.data.map((topic, index) => ({

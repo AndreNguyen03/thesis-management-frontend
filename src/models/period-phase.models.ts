@@ -18,6 +18,6 @@ export const phaseLabels = {
 	execution: 'Thực hiện',
 	completion: 'Hoàn thành'
 }
-export const PeriodPhaseNames = ['empty','submit_topic', 'open_registration', 'execution', 'completion'] as const
+export type PeriodPhaseName = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion';
 export const PeriodPhaseStatus = ['not_started', 'ongoing', 'completed'] as const
 export type PeriodPhaseStatus = (typeof PeriodPhaseStatus)[number]
