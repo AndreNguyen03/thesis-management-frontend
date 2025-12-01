@@ -16,7 +16,7 @@ import { CustomPagination } from '@/components/PaginationBar'
 const ManageTopicDraft = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
-		limit: 8,
+		limit: 5,
 		search_by: 'titleVN,titleEng,lecturerName',
 		query: '',
 		sort_by: 'createdAt',
@@ -24,7 +24,7 @@ const ManageTopicDraft = () => {
 		filter: 'all',
 		filter_by: 'fieldIds'
 	})
-	const { data: draftTopics, refetch } = useGetDraftTopicsQuery(queries)
+	const { data: draftTopics, refetch } = useGetDraftTopicsQuery({ queries })
 
 	// search input handler
 	const [searchTerm, setSearchTerm] = useState('')
@@ -96,8 +96,8 @@ const ManageTopicDraft = () => {
 		}
 	}, [submitError])
 	return (
-		<div className='h-screen'>
-			<ResizablePanelGroup direction='vertical' className='rounded-lg border'>
+		<div className='h-screen max-h-[740px] p-2'>
+			<ResizablePanelGroup direction='vertical' className='h-full rounded-lg border'>
 				<ResizablePanel defaultSize={65}>
 					<div className='flex flex-col gap-2 p-2'>
 						<div className='flex w-fit flex-row items-center gap-2'>
@@ -134,7 +134,7 @@ const ManageTopicDraft = () => {
 								onChange={(e) => onEdit(e.target.value)}
 							/>
 						</div>
-						<div>
+						<div className='min-h-0 flex-1'>
 							<DataTable
 								columns={columns}
 								data={data}
@@ -142,20 +142,18 @@ const ManageTopicDraft = () => {
 								showSelection={showSelection}
 								isSubmitting={isSubmitting}
 							/>
-							{draftTopics?.meta && draftTopics.meta.totalPages > 1 && (
-								<CustomPagination
-									meta={draftTopics.meta}
-									onPageChange={(p) => setQueries((prev) => ({ ...prev, page: p }))}
-								/>
-							)}
 						</div>
+						{draftTopics?.meta && draftTopics.meta.totalPages > 1 && (
+							<CustomPagination
+								meta={draftTopics.meta}
+								onPageChange={(p) => setQueries((prev) => ({ ...prev, page: p }))}
+							/>
+						)}
 					</div>
 				</ResizablePanel>
-				<ResizableHandle>
-					<Eye className='h-4 w-4 text-gray-500' />
-				</ResizableHandle>
+				<ResizableHandle withHandle />
 
-				<ResizablePanel defaultSize={35}>
+				<ResizablePanel defaultSize={35} className='pt-2'>
 					<CreateTopic refetchDraftTopics={refetch} />
 				</ResizablePanel>
 			</ResizablePanelGroup>

@@ -10,9 +10,15 @@ interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
 	data: TData[]
 	isLoading?: boolean
+	onChangeSelectedTopicIds: (selectedTopicIds: TData[]) => void
 }
 
-export function DataTable<TData, TValue>({ columns, data, isLoading }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+	columns,
+	data,
+	isLoading,
+	onChangeSelectedTopicIds
+}: DataTableProps<TData, TValue>) {
 	const table = useReactTable({
 		data,
 		columns,
@@ -23,29 +29,27 @@ export function DataTable<TData, TValue>({ columns, data, isLoading }: DataTable
 			maxSize: 500
 		}
 	})
-	
+	useEffect(() => {
+		onChangeSelectedTopicIds(table.getSelectedRowModel().rows.map((row) => row.original))
+	}, [table.getSelectedRowModel().rows.length])
 	return (
-		<div className='overflow-hidden rounded-md border'>
+		<div className='h-full overflow-hidden rounded-md border'>
 			<Table>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
 						<TableRow key={headerGroup.id} className='text-center'>
-							{headerGroup.headers.map((header) => {
-								return (
-									<TableHead
-										key={header.id}
-										className='text-center'
-										style={{ width: header.getSize() }}
-									>
-										{header.isPlaceholder
-											? null
-											: flexRender(header.column.columnDef.header, header.getContext())}
-									</TableHead>
-								)
-							})}
+							{headerGroup.headers.map((header) => (
+								<TableHead key={header.id} className='text-center' style={{ width: header.getSize() }}>
+									{header.isPlaceholder
+										? null
+										: flexRender(header.column.columnDef.header, header.getContext())}
+								</TableHead>
+							))}
 						</TableRow>
 					))}
 				</TableHeader>
+			</Table>
+			<div className='max-h-[500px] overflow-auto'>
 				{isLoading ? (
 					<div className='flex w-full justify-center p-4'>
 						<Loader2 className='w- h-8 animate-spin' />
@@ -79,7 +83,7 @@ export function DataTable<TData, TValue>({ columns, data, isLoading }: DataTable
 						)}
 					</TableBody>
 				)}
-			</Table>
+			</div>
 		</div>
 	)
 }

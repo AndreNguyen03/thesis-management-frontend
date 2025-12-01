@@ -50,7 +50,6 @@ export const lecturerApi = baseApi.injectEndpoints({
 			invalidatesTags: ['UserProfile', 'ListLecturer']
 		}),
 
-		// 🧩 Cập nhật thông tin quản trị viên
 		updateLecturer: builder.mutation<LecturerTable, { id: string; data: Partial<LecturerTable> }>({
 			query: ({ id, data }) => ({
 				url: `/users/lecturers/${id}`,
@@ -60,8 +59,6 @@ export const lecturerApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<LecturerTable>) => response.data,
 			invalidatesTags: ['UserProfile', 'ListLecturer']
 		}),
-
-		// 🧩 Xóa quản trị viên
 		deleteLecturer: builder.mutation<{ success: boolean; id: string }, string>({
 			query: (id) => ({
 				url: `/users/lecturers/${id}`,

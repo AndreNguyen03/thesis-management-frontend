@@ -8,10 +8,9 @@ const LecturerManageTopics = () => {
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Quản lý đề tài', path: '/manage-topic' }
 	])
-
 	return (
-		<div className='h-screen w-full'>
-			<Tabs defaultValue='topic-draft' className='h-screen w-full'>
+		<div className='max-h-[calc(100vh)] flex-1 overflow-auto'>
+			<Tabs defaultValue='topic-draft' className='h-full w-full'>
 				<TabsList variant='underline' defaultValue='topic-draft'>
 					<TabsTrigger variant='underline' value='topic-draft'>
 						Các bản nháp đề tài

@@ -15,7 +15,6 @@ import type {
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
-
 export const topicApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getTopics: builder.query<GetPaginatedTopics, void>({
@@ -67,8 +66,11 @@ export const topicApi = baseApi.injectEndpoints({
 			query: () => `/topics/canceled-registered-topics`,
 			transformResponse: (response: ApiResponse<CanceledRegisteredTopic[]>) => response.data
 		}),
-		getDraftTopics: builder.query<PaginatedDraftTopics, PaginationQueryParamsDto>({
-			query: () => `/topics/lecturer/get-draft-topics`,
+		getDraftTopics: builder.query<PaginatedDraftTopics, { queries: PaginationQueryParamsDto }>({
+			query: ({ queries }) => {
+				const queryString = buildQueryString(queries)
+				return `/topics/lecturer/get-draft-topics?${queryString}`
+			},
 			transformResponse: (response: ApiResponse<PaginatedDraftTopics>) => response.data
 		}),
 		getSubmittedTopics: builder.query<PaginatedSubmittedTopics, PaginationQueryParamsDto>({
@@ -174,6 +176,13 @@ export const topicApi = baseApi.injectEndpoints({
 				url: `/topics/${topicId}/set-allow-manual-approval?allowManualApproval=${allow}`,
 				method: 'PATCH'
 			})
+		}),
+		withdrawSubmittedTopics: builder.mutation<{ message: string }, { topicIds: string[] }>({
+			query: ({ topicIds }) => ({
+				url: '/topics/withdraw-submitted-topics',
+				method: 'PATCH',
+				body: { topicIds }
+			})
 		})
 	}),
 	overrideExisting: false
@@ -199,5 +208,6 @@ export const {
 	useLecturerDeleteFilesMutation,
 	useLecturerDeleteFileMutation,
 	useUpdateTopicMutation,
-	useSetAllowManualApprovalMutation
+	useSetAllowManualApprovalMutation,
+	useWithdrawSubmittedTopicsMutation
 } = topicApi

@@ -2,6 +2,7 @@ import { Badge, Button } from '@/components/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { topicStatusLabels, TopicTypeTransfer, type DraftTopic, type GetFieldNameReponseDto } from '@/models'
+import { stripHtml } from '@/utils/lower-case-html'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Eye, Loader2 } from 'lucide-react'
 
@@ -79,8 +80,8 @@ export const getColumns = ({
 		header: () => <div className='text-center'>Mô tả</div>,
 		cell: ({ row }) => (
 			<div className=''>
-				<div className='flex max-w-80 justify-center capitalize' title={row.getValue('description')}>
-					<span className='p line-clamp-5 truncate text-wrap'>{row.getValue('description')}</span>
+				<div className='flex max-w-80 justify-center capitalize' title={stripHtml(row.getValue('description'))}>
+					<span className='p line-clamp-5 truncate text-wrap'>{stripHtml(row.getValue('description'))}</span>
 				</div>
 			</div>
 		)
@@ -175,7 +176,7 @@ export const getColumns = ({
 	},
 	{
 		accessorKey: 'actions',
-		size: 50,
+		size: 10,
 		header: () => <div className='text-center'>Hành động</div>,
 		cell: ({ row }) => (
 			<div className='flex w-fit flex-row flex-wrap justify-center gap-2 capitalize'>

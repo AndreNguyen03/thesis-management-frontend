@@ -1,12 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
-import type { ResponseMiniLecturerDto } from '@/models/users'
 import { useAssignStudentToTopicMutation, useUnassignStudentFromTopicMutation } from '@/services/registrationApi'
 
-import AddingCoSupervisorContainer from '../components/AddingCoSupervisor'
-import { toast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
+
 import type { ITopicDetail } from '@/models'
 import AddingStudentsContainer from '../components/AddingStudentContainer'
-import { getErrorMessage } from '@/utils/catch-error'
 interface AddLecturertModalProps {
 	topic: ITopicDetail
 	open: boolean
@@ -15,31 +13,32 @@ interface AddLecturertModalProps {
 	goToApproval: () => void
 }
 const AddStudentModal: React.FC<AddLecturertModalProps> = ({ topic, open, onCancel, onRefetch, goToApproval }) => {
-	const [assignStudentToTopic, { isLoading: isLoadingAssign, isError: isAssignErrror }] =
-		useAssignStudentToTopicMutation()
+	const [assignStudentToTopic, { isLoading: isLoadingAssign }] = useAssignStudentToTopicMutation()
 	const [unassignStudentFromTopic] = useUnassignStudentFromTopicMutation()
 	const handleConfirm = async (studentId: string) => {
-		await assignStudentToTopic({ topicId: topic._id, studentId: studentId })
-		if (isAssignErrror) {
-			toast({
-				title: 'Thêm sinh viên vào đề tài thất bại',	
-				description:
-					getErrorMessage(isAssignErrror) || 'Đã có lỗi xảy ra trong quá trình thêm sinh viên vào đề tài',
-				variant: 'destructive'
-			})
-			return
+		try {
+			await assignStudentToTopic({ topicId: topic._id, studentId }).unwrap()
+			toast.success('Đã thêm sinh viên vào đề tài')
+			onRefetch()
+		} catch (error: any) {
+			if (error?.data?.errorCode === 'STUDENT_ALREADY_REGISTERED') {
+				toast.error('Sinh viên đã đăng ký đề tài này rồi')
+			} else if (error?.data?.errorCode === 'STUDENT_JUST_REGISTER_ONE_TOPIC_EACH_TYPE') {
+				toast.error('Sinh viên đã đăng ký đề tài khác ')
+			} else {
+				toast.error('Đã có lỗi xảy ra trong quá trình thêm sinh viên vào đề tài')
+			}
 		}
-		onRefetch()
 	}
+
 	const handleDelete = async (studentId: string) => {
-		await unassignStudentFromTopic({ topicId: topic._id, studentId: studentId })
-		if (isAssignErrror)
-			toast({
-				title: 'Xóa sinh viên khỏi đề tài thất bại',
-				description: 'Đã có lỗi xảy ra trong quá trình xóa sinh viên khỏi đề tài',
-				variant: 'destructive'
-			})
-		onRefetch()
+		try {
+			await unassignStudentFromTopic({ topicId: topic._id, studentId }).unwrap()
+			toast.success('Đã xóa sinh viên khỏi đề tài')
+			onRefetch()
+		} catch (error: any) {
+			toast.error('Đã có lỗi xảy ra trong quá trình xóa sinh viên khỏi đề tài')
+		}
 	}
 
 	return (

@@ -37,7 +37,7 @@ import { Label } from '@/components/ui/label'
 import { TopicTypeTransfer, type ITopicDetail, type TopicType } from '@/models/topic.model'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/hooks/use-toast'
-import { useCreateRegistrationMutation, useDeleteRegistrationMutation } from '@/services/registrationApi'
+import { useCreateRegistrationMutation, useLeaveTopicMutation } from '@/services/registrationApi'
 import { getErrorMessage } from '@/utils/catch-error'
 import { useAppSelector } from '@/store'
 import ManageUploadFileModal from './components/ManageUploadFileModal'
@@ -72,7 +72,7 @@ export const TopicDetailContainer = () => {
 	const user = useAppSelector((state) => state.auth.user)
 	//Actions for registration adn saving
 	const [createRegistration, { isLoading: isLoadingRegister }] = useCreateRegistrationMutation()
-	const [deleteRegistration, { isLoading: isLoadingUnregister }] = useDeleteRegistrationMutation()
+	const [leaveTopic, { isLoading: isLoadingUnregister }] = useLeaveTopicMutation()
 	const [unsaveTopic, { isLoading: isLoadingUnSave, isSuccess: isSuccessUnSave }] = useUnsaveTopicMutation()
 	const [saveTopic, { isLoading: isLoadingSave, isSuccess: isSuccessSave }] = useSaveTopicMutation()
 	const [updateTopic, { isSuccess: isSuccessUpdate, isLoading: isLoadingUpdate }] = useUpdateTopicMutation()
@@ -292,7 +292,7 @@ export const TopicDetailContainer = () => {
 	const toggleRegistration = async () => {
 		if (topic.isRegistered) {
 			try {
-				await deleteRegistration({ topicId: topic._id }).unwrap()
+				await leaveTopic({ topicId: topic._id }).unwrap()
 				toast({
 					title: 'Thành công',
 					description: 'Hủy đăng ký đề tài thành công'

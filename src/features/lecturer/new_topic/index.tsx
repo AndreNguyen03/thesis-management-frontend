@@ -224,7 +224,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 		}
 	}
 	return (
-		<div className='h-full pt-6'>
+		<div className='h-full pt-2'>
 			<div className='mx-auto h-full'>
 				<div className='flex h-full flex-col rounded-2xl border border-border bg-card p-8 pt-6 shadow-lg'>
 					<div className='mb-4'>

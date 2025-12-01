@@ -1,16 +1,13 @@
 import { Badge, Card, CardHeader, CardTitle } from '@/components/ui'
 import { Eye } from 'lucide-react'
 import { useState } from 'react'
-import { useDeleteRegistrationMutation } from '../../../../../services/registrationApi'
 import { useNavigate } from 'react-router-dom'
 
 import { topicStatusLabels, type Topic } from '@/models'
-import { stripHtml } from '@/utils/lower-case-html'
 
 export const TopicRegisteredCard: React.FC<{
 	topic: Topic
 }> = ({ topic }) => {
-	//const [deleteRegistration, { isLoading: isCanceling }] = useDeleteRegistrationMutation()
 	const isFullSlot = topic.maxStudents === topic.studentsNum
 	//const [confirmOpen, setConfirmOpen] = useState(false)
 	const navigate = useNavigate()
@@ -30,10 +27,6 @@ export const TopicRegisteredCard: React.FC<{
 						{topic.maxStudents - topic.studentsNum} chỗ trống
 					</Badge>
 				)}
-				<p className='text-sm font-semibold text-gray-500'>
-					{'Đăng ký lúc: '}
-					{new Date(topic.createdAt).toLocaleString('vi-VN')}
-				</p>
 			</div>
 		)
 	}
@@ -139,7 +132,10 @@ export const TopicRegisteredCard: React.FC<{
 
 					{getStatusBadge(topic)}
 				</div>
-
+				<p className='text-sm font-normal text-gray-500'>
+					{'Thời gian tạo: '}
+					{new Date(topic.createdAt).toLocaleString('vi-VN')}
+				</p>
 				<div className='flex items-center justify-center'>
 					<div
 						className='flex items-center justify-center gap-2 rounded-sm p-0.5 px-2 hover:bg-gray-100'

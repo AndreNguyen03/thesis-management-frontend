@@ -40,9 +40,9 @@ export function DataTable<TData, TValue>({
 		table.resetRowSelection()
 	}
 	return (
-		<div className='flex flex-wrap gap-2'>
+		<div className='h-full overflow-hidden rounded-md border'>
 			{showSelection && onSubmitSelected && (
-				<div className='flex items-center justify-center gap-2'>
+				<div className='flex items-center gap-2'>
 					<Button
 						variant={'send'}
 						disabled={table.getSelectedRowModel().rows.length === 0 || isSubmitting}
@@ -56,7 +56,7 @@ export function DataTable<TData, TValue>({
 					</span>
 				</div>
 			)}
-			<div className='w-full overflow-hidden rounded-md border'>
+			<div className='max-h-[400px] overflow-auto'>
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (

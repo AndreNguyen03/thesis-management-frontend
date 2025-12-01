@@ -201,7 +201,7 @@ export const topicStatusLabels = {
 	approved: { name: 'Đã duyệt', css: 'bg-green-200 text-green-800' },
 	rejected: { name: 'Bị từ chối', css: 'bg-red-200 text-red-800' },
 	pending_registration: { name: 'Mở  đăng ký', css: 'bg-purple-200 text-purple-800' },
-	registered: { name: 'Đã đăng ký', css: 'bg-indigo-200 text-indigo-800' },
+	registered: { name: 'Đã có đăng ký', css: 'bg-indigo-200 text-indigo-800' },
 	full: { name: 'Đã đủ số lượng', css: 'bg-gray-400 text-gray-900' },
 	cancelled: { name: 'Đã hủy', css: 'bg-red-400 text-red-900' },
 	in_progress: { name: 'Đang thực hiện', css: 'bg-blue-400 text-blue-900' },

@@ -38,9 +38,9 @@ export const registrationApi = baseApi.injectEndpoints({
 				method: 'POST'
 			})
 		}),
-		deleteRegistration: builder.mutation<ApiResponse<any>, { topicId: string }>({
+		leaveTopic: builder.mutation<ApiResponse<any>, { topicId: string }>({
 			query: (body) => ({
-				url: `/registrations/cancel-registration/${body.topicId}`,
+				url: `/registrations/leave-registration/${body.topicId}`,
 				method: 'DELETE'
 			})
 		}),
@@ -77,7 +77,7 @@ export const {
 	useAssignLecturerToTopicMutation,
 	useAssignStudentToTopicMutation,
 	useCreateRegistrationMutation,
-	useDeleteRegistrationMutation,
+	useLeaveTopicMutation,
 	useGetRegistrationsHistoryQuery,
 	useReplyRegistrationMutation,
 	useUnassignLecturerFromTopicMutation,

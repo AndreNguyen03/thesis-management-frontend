@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { useGetProfileQuery } from './services/userApi'
 import { setUser } from '@/features/shared/auth'
 import { LoadingOverlay } from '@/components/ui'
+import { Toaster as ToasterSonner } from 'sonner'
 import { Toaster } from './components/ui/toaster'
 
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
 		<Layout>
 			<Outlet />
 			<Toaster />
+			<ToasterSonner />
 		</Layout>
 	)
 }
