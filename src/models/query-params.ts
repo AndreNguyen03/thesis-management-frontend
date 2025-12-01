@@ -1,4 +1,3 @@
-import type { PhaseType } from './period.model'
 
 export class PaginationQueryParamsDto {
 	limit?: number = 10

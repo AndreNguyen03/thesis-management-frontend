@@ -13,7 +13,7 @@ export interface IStudentRegistration {
 	registeredAt: Date
 	lecturers: ResponseMiniLecturerDto[]
 	periodName: string
-	periodId: string
+	periodId: string	
 }
 
 export interface PaginatedStudentRegistration extends GetPaginatedObject {

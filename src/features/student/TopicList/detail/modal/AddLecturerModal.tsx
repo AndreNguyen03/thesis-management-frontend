@@ -18,7 +18,7 @@ const AddLecturerModal: React.FC<AddLecturertModalProps> = ({ topic, open, onCan
 	const [unassignLecturerFromTopic] = useUnassignLecturerFromTopicMutation()
 
 	const handleConfirm = async (lecturerId: string) => {
-		assignLecturerToTopic({ topicId: topic._id, lecturerId: lecturerId })
+		await assignLecturerToTopic({ topicId: topic._id, lecturerId: lecturerId })
 		if (isAssignErrror)
 			toast({
 				title: 'Thêm giảng viên đồng hướng dẫn thất bại',
@@ -28,7 +28,7 @@ const AddLecturerModal: React.FC<AddLecturertModalProps> = ({ topic, open, onCan
 		onRefetch()
 	}
 	const handleDelete = async (lecturerId: string) => {
-		unassignLecturerFromTopic({ topicId: topic._id, lecturerId: lecturerId })
+		await unassignLecturerFromTopic({ topicId: topic._id, lecturerId: lecturerId })
 		if (isAssignErrror)
 			toast({
 				title: 'Xóa giảng viên đồng hướng dẫn thất bại',

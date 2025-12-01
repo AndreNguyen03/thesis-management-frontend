@@ -19,11 +19,12 @@ import { TopicRegisteredCard } from '../card/TopicRegisteredCard'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import FieldsCombobox from '@/components/common/combobox/FieldCombobox'
+import { CustomPagination } from '@/components/PaginationBar'
 
 export const TopicRegisteredChildren = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
-		limit: 10,
+		limit: 6,
 		search_by: 'titleVN,titleEng',
 		query: '',
 		sort_by: 'createdAt',
@@ -117,6 +118,12 @@ export const TopicRegisteredChildren = () => {
 							)}
 						</div>
 					</div>
+					{registerTopics?.meta && registerTopics?.meta.totalPages > 1 && (
+						<CustomPagination
+							meta={registerTopics?.meta}
+							onPageChange={(p) => setQueries((prev) => ({ ...prev, page: p }))}
+						/>
+					)}
 				</>
 			)}
 		</div>

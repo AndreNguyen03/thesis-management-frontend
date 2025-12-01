@@ -1,34 +1,25 @@
+import { CustomPagination } from '@/components/PaginationBar'
 import { Card, Input } from '@/components/ui'
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious
-} from '@/components/ui/pagination'
 import { useDebounce } from '@/hooks/useDebounce'
-import type { IStudentRegistration } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
-import { topicStatusLabels } from '@/models/topic.model'
 import { useGetRegistrationsHistoryQuery } from '@/services/registrationApi'
 import { Eye, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // Badge màu cho trạng thái
 const statusMap: Record<string, { label: string; color: string }> = {
 	approved: { label: 'Đã Duyệt', color: 'text-center bg-green-100 text-green-700' },
 	rejected: { label: 'Bị Từ Chối', color: 'text-center bg-red-100 text-red-700' },
-	completed: { label: 'Hoàn Thành', color: 'text-center bg-blue-100 text-blue-700' },
 	pending: { label: 'Chờ Duyệt', color: 'text-center bg-yellow-100 text-yellow-700' },
-	withdrawn: { label: 'Đã Rút', color: 'text-center bg-gray-100 text-gray-700' }
+	withdrawn: { label: 'Đã Rút', color: 'text-center bg-gray-100 text-gray-700' },
+	canceled: { label: 'Đã bị hủy', color: 'text-center bg-gray-100 text-gray-700' }
 }
 
 const RegistrationHistory = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
+		limit: 10,
 		page: 1,
-		limit: 8,
 		search_by: 'topicInfo.titleVN,topicInfo.titleEng, lecturers.fullName, periodName',
 		query: '',
 		sort_by: 'createdAt',
@@ -37,16 +28,6 @@ const RegistrationHistory = () => {
 		filter_by: 'fieldIds'
 	})
 	const { data: registrationHistoryData } = useGetRegistrationsHistoryQuery({ queries })
-	const [registrations, setRegistrations] = useState<IStudentRegistration[]>([])
-	useEffect(() => {
-		if (JSON.stringify(registrations) !== JSON.stringify(registrationHistoryData?.data)) {
-			setRegistrations(registrationHistoryData ? registrationHistoryData.data : [])
-			setQueries((prev) => ({
-				...prev,
-				page: registrationHistoryData ? registrationHistoryData.meta.currentPage : 1
-			}))
-		}
-	}, [registrationHistoryData])
 	// search input handler
 	const [searchTerm, setSearchTerm] = useState('')
 	const setQuery = (query: string) => {
@@ -69,18 +50,6 @@ const RegistrationHistory = () => {
 					onChange={(e) => onEdit(e.target.value)}
 					className='sm:w-[350px]'
 				/>
-				{/* <Select value={status} onValueChange={setStatus}>
-					<SelectTrigger className='sm:w-[220px]'>
-						<SelectValue placeholder='Tất cả Trạng thái' />
-					</SelectTrigger>
-					<SelectContent>
-						{statusOptions.map((opt) => (
-							<SelectItem key={opt.value} value={opt.value}>
-								{opt.label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select> */}
 			</div>
 			<div className='overflow-x-auto rounded-lg border'>
 				<table className='min-w-full bg-white'>
@@ -91,15 +60,15 @@ const RegistrationHistory = () => {
 							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Giảng viên</th>
 							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngành</th>
 							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngày đăng ký</th>
-							<th className='whitespace-nowrap px-3 py-2 text-left text-[15px] font-semibold'>
+							{/* <th className='whitespace-nowrap px-3 py-2 text-left text-[15px] font-semibold'>
 								Trạng thái đề tài
-							</th>
+							</th> */}
 							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái</th>
 							<th className='px-3 py-2 text-center text-[15px] font-semibold'>Hành động</th>
 						</tr>
 					</thead>
 					<tbody>
-						{registrations?.map((hic) => (
+						{registrationHistoryData?.data.map((hic) => (
 							<tr key={hic._id} className='border-b last:border-b-0 hover:bg-gray-50'>
 								<td className='px-3 py-2'>{hic.periodName}</td>
 								<td className='flex flex-col px-3 py-2'>
@@ -108,17 +77,18 @@ const RegistrationHistory = () => {
 								</td>
 								<td className='px-3 py-2'>
 									<div className='flex flex-col text-sm'>
-										HD:{' '}
 										{hic.lecturers
-											.map((lecturer) => `${lecturer.title} ${lecturer.fullName}`)
+											.map((lecturer) => `${lecturer.title}. ${lecturer.fullName}`)
 											.join(', ')}
 									</div>
 								</td>
 								<td className='px-3 py-2'>{hic.major}</td>
 								<td className='px-3 py-2'>{new Date(hic.registeredAt).toLocaleString('vi-VN')}</td>
-								<td className='px-3 py-2'>
-									<span>{topicStatusLabels[hic.topicStatus as keyof typeof topicStatusLabels].name}</span>
-								</td>
+								{/* <td className='px-3 py-2'>
+									<span>
+										{topicStatusLabels[hic.topicStatus as keyof typeof topicStatusLabels].name}
+									</span>
+								</td> */}
 								<td className='px-3 py-2'>
 									<span
 										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[hic.registrationStatus].color}`}
@@ -142,7 +112,7 @@ const RegistrationHistory = () => {
 								</td>
 							</tr>
 						))}
-						{registrations.length === 0 && (
+						{registrationHistoryData?.data.length === 0 && (
 							<tr>
 								<td colSpan={5} className='py-6 text-center text-gray-400'>
 									Không có dữ liệu phù hợp.
@@ -152,38 +122,12 @@ const RegistrationHistory = () => {
 					</tbody>
 				</table>
 			</div>
-			<Pagination className='justify-end'>
-				<PaginationContent>
-					<PaginationItem className=''>
-						<PaginationPrevious
-							href='#'
-							onClick={() => setQueries((prev) => ({ ...prev, page: Math.max(prev.page! - 1, 1) }))}
-						/>
-					</PaginationItem>
-					{[...Array(registrationHistoryData?.meta.totalPages)].map((_, idx) => (
-						<PaginationItem key={idx}>
-							<PaginationLink
-								isActive={queries.page === idx + 1}
-								href='#'
-								onClick={() => setQueries((prev) => ({ ...prev, page: idx + 1 }))}
-							>
-								{idx + 1}
-							</PaginationLink>
-						</PaginationItem>
-					))}
-					<PaginationItem>
-						<PaginationNext
-							href='#'
-							onClick={() =>
-								setQueries((prev) => ({
-									...prev,
-									page: Math.min(prev.page! + 1, registrationHistoryData?.meta.totalPages!)
-								}))
-							}
-						/>
-					</PaginationItem>
-				</PaginationContent>
-			</Pagination>
+			{registrationHistoryData?.meta && registrationHistoryData?.meta.totalPages > 1 && (
+				<CustomPagination
+					meta={registrationHistoryData?.meta}
+					onPageChange={(p) => setQueries((prev) => ({ ...prev, page: p }))}
+				/>
+			)}
 		</Card>
 	)
 }
