@@ -10,14 +10,10 @@ import type {
 	PaginatedSubmittedTopics,
 	PaginationTopicsQueryParams,
 	PaginatedGeneralTopics,
-<<<<<<< HEAD
 	UpdateTopicPayload,
 	CreateTopicRequest,
 	CreateTopicResponse,
     RequestGradeTopicDto
-=======
-	RequestGradeTopicDto
->>>>>>> d1758f0 (push to merge from main)
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
