@@ -32,8 +32,8 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
 	const [detailModalOpen, setDetailModalOpen] = useState(false)
 
-    console.log('phase detail', phase._id)
-
+	console.log('phase detail', phase)
+    console.log('phase :::', phase.phase)
 	const navigate = useNavigate()
 
 	const [queryParams, setQueryParams] = useState<QueryParams>({
@@ -41,11 +41,15 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 		limit: 10,
 		search_by: 'title',
 		query: '',
-		sort_by: 'startDate',
+		sort_by: 'createdAt',
 		sort_order: 'desc'
 	})
 
-	const { data, isLoading, error, refetch } = useGetTopicsInPhaseQuery({ phaseId: phase._id, queries: queryParams })
+	const { data, isLoading, error, refetch } = useGetTopicsInPhaseQuery({
+		phaseId: phase._id,
+		queries: queryParams,
+		phase: phase.phase
+	})
 
 	const [approveTopic, { isLoading: isLoadingApprove }] = useFacuBoardApproveTopicMutation()
 	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()

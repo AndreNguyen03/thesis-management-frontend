@@ -35,9 +35,11 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 	const [selectedLecturerIds, setSelectedLecturerIds] = useState<string[]>(
 		phase?.requiredLecturers?.map((lec) => lec._id) ?? []
 	)
+    console.log('lecturer selected ,:::', selectedLecturerIds)
 	const [allowManualApproval, setAllowManualApproval] = useState(phase?.allowManualApproval ?? false)
 
 	const { data: lecturersByFaculty } = useGetAllLecturersComboboxQuery({ limit: 1000, page: 1, sort_order: 'desc' })
+
 
 	const isPhase1 = currentPhase === 'empty' || currentPhase === 'submit_topic'
 	const isTimeInvalid = startTime && endTime ? new Date(endTime).getTime() <= new Date(startTime).getTime() : false
@@ -68,18 +70,16 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 			allowManualApproval
 		},
 		execution: {},
-		open_regítration: {},
+		open_registration: {},
 		completion: {}
 	}
 
 	useEffect(() => {
 		setStartTime(toInputDateTime(phase?.startTime))
 		setEndTime(toInputDateTime(phase?.endTime))
-		if (isPhase1) {
-			setMinTopics(phase?.minTopicsPerLecturer ?? 1)
-			setSelectedLecturerIds(phase?.requiredLecturers?.map((lec) => lec._id) ?? [])
-			setAllowManualApproval(phase?.allowManualApproval ?? false)
-		}
+		setMinTopics(phase?.minTopicsPerLecturer ?? 1)
+		setSelectedLecturerIds(phase?.requiredLecturers?.map((lec) => lec._id) ?? [])
+		setAllowManualApproval(phase?.allowManualApproval ?? false)
 	}, [isPhase1, phase])
 
 	const handleSave = async () => {

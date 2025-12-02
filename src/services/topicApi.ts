@@ -10,10 +10,14 @@ import type {
 	PaginatedSubmittedTopics,
 	PaginationTopicsQueryParams,
 	PaginatedGeneralTopics,
+<<<<<<< HEAD
 	UpdateTopicPayload,
 	CreateTopicRequest,
 	CreateTopicResponse,
     RequestGradeTopicDto
+=======
+	RequestGradeTopicDto
+>>>>>>> d1758f0 (push to merge from main)
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -34,11 +38,14 @@ export const topicApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data
 		}),
 
-		getTopicsInPhase: builder.query<PaginatedGeneralTopics, { phaseId: string; queries: QueryParams }>({
-			query: ({ phaseId, queries }) => {
+		getTopicsInPhase: builder.query<
+			PaginatedGeneralTopics,
+			{ phaseId: string; queries: QueryParams; phase: string }
+		>({
+			query: ({ phaseId, queries, phase }) => {
 				const queryString = buildQueryString(queries)
 				return {
-					url: `/periods/get-topics-in-phase/${phaseId}${queryString ? `?${queryString}` : ''}`,
+					url: `/periods/${phaseId}/get-topics-in-phase${queryString ? `?${queryString}` : ``}&phase=${phase}`,
 					method: 'GET'
 				}
 			},

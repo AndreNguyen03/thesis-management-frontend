@@ -108,9 +108,13 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	// 	setSelectedFiles([])
 	// 	setFileNames([])
 
+<<<<<<< HEAD
 	// 	setErrorMessage(null)
 	// }
 	const handleSave = (periodId?: string) => {
+=======
+	const handleSave = async (periodId?: string) => {
+>>>>>>> d1758f0 (push to merge from main)
 		if (!selectedMajor) {
 			toast({
 				title: 'Lỗi',
@@ -178,11 +182,16 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 			lecturerIds: selectedCoSupervisors.map((lec) => lec._id),
 			allowManualApproval: allowManualApproval
 		}
+<<<<<<< HEAD
 
 		createTopic({
 			topicData: newTopic,
 			files: selectedFiles
 		})
+=======
+		const res = await createTopic(newTopic)
+        console.log('create topic :::',res)
+>>>>>>> d1758f0 (push to merge from main)
 		refetchDraftTopics?.()
 
 		toast({
