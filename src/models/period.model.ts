@@ -1,6 +1,5 @@
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
-import type { ResponseMiniLecturerDto } from './users'
 
 export type PeriodStatus = 'ongoing' | 'completed'
 
@@ -83,8 +82,18 @@ export interface GetCustomMiniPeriodInfoRequestDto {
 	_id: string
 	name: string
 	faculty: GetFaculty
+	phases: PeriodPhase[]
 	status: string
 	startTime: Date
 	endTime: Date
-	currentPhaseDetail: PeriodPhase | null
+	currentPhase: string
+	currentPhaseDetail: PeriodPhase
 }
+
+export const PeriodPhaseName = {
+	EMPTY: 'empty',
+	SUBMIT_TOPIC: 'submit_topic',
+	OPEN_REGISTRATION: 'open_registration',
+	EXECUTION: 'execution',
+	COMPLETION: 'completion'
+} as const

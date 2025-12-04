@@ -2,11 +2,13 @@ import { Badge, Button } from '@/components/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { topicStatusLabels, TopicTypeTransfer, type GetFieldNameReponseDto, type SubmittedTopic } from '@/models'
+import { PeriodPhaseStatus } from '@/models/period-phase.models'
 import { stripHtml } from '@/utils/lower-case-html'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import { Eye, Loader2, UndoDot } from 'lucide-react'
 
 type ColumnsProps = {
+	isAbleInSubmitPhase: boolean
 	onSeeDetail: (topicId: string) => void
 	showSelection: boolean
 	onManualApprovalChange?: (checked: boolean, topicId: string) => void
@@ -24,7 +26,8 @@ export const getColumns = ({
 	onManualApprovalChange,
 	pendingId,
 	pendingWithdrawId,
-	onWithdraw
+	onWithdraw,
+	isAbleInSubmitPhase
 }: ColumnsProps): ColumnDef<NewSubmittedTopic>[] => [
 	{
 		accessorKey: 'index',
@@ -173,7 +176,7 @@ export const getColumns = ({
 							>
 								<Eye className='h-4 w-4' />
 							</Button>
-							{row.original.currentStatus === 'submitted' && (
+							{row.original.currentStatus === 'submitted' && isAbleInSubmitPhase && (
 								<Button
 									title='Rút'
 									variant='outline'

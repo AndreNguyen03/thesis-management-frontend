@@ -15,7 +15,7 @@ export function useCountdown(targetTime: string | number | Date | null) {
 			const now = Date.now()
 			const diff = end - now
 			if (diff <= 0) {
-				setCountdown('End')
+				setCountdown('Đã kết thúc')
 				return
 			}
 			const days = Math.floor(diff / (1000 * 60 * 60 * 24))
@@ -31,5 +31,5 @@ export function useCountdown(targetTime: string | number | Date | null) {
 		return () => clearInterval(interval)
 	}, [targetTime])
 
-	return countdown
+	return `${countdown}`
 }

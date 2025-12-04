@@ -23,6 +23,11 @@ import { Button } from '../ui/Button'
 import type { Role } from '@/models'
 import { useGetCurrentPeriodInfoQuery } from '@/services/periodApi'
 import { useCountdown } from '@/hooks/count-down'
+import { useAppSelector } from '@/store'
+import { PeriodPhaseStatus } from '@/models/period-phase.models'
+import { PhaseInfo } from '@/utils/utils'
+import type { PhaseType } from '@/models/period.model'
+import { Badge } from '../ui'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
@@ -99,9 +104,8 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const location = useLocation()
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
-	const { data: periodInfoData } = useGetCurrentPeriodInfoQuery()
-	const currentPeriodEndTime = localStorage.getItem('currentPeriodEndTime')
-	const countdown = useCountdown(currentPeriodEndTime!)
+	const { currentPeriod, isLoading } = useAppSelector((state) => state.period)
+	const countdown = useCountdown(currentPeriod?.currentPhaseDetail.endTime!)
 	function isActive(path: string) {
 		// Logic chính xác hơn cho active state của sub-item
 		if (path === '/' && currentPath === '/') return true
@@ -114,27 +118,20 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 		setOpenMenus((prev) => (prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]))
 	}
 	const handlePeriodInfo = (period_info: MenuItem[]) => {
-		if (periodInfoData) {
-			localStorage.setItem('currentPeriodId', periodInfoData._id)
-			localStorage.setItem('currentPeriodName', periodInfoData.name)
-			localStorage.setItem('currentPeriodEndTime', periodInfoData.endTime.toString())
-			period_info[0].title = `Đợt hiện tại: ${periodInfoData.name}`
+		if (currentPeriod) {
+			period_info[0].title = `Kì hiện tại: ${currentPeriod.name}`
 			switch (userRole) {
 				case 'faculty_board':
-					period_info[0].url = `/period/${periodInfoData._id}`
+					period_info[0].url = `/period/${currentPeriod._id}`
 					break
 				case 'admin':
-					period_info[0].url = `/period/${periodInfoData._id}`
+					period_info[0].url = `/period/${currentPeriod._id}`
 					break
 				case 'lecturer':
-					period_info[0].url = `/period/${periodInfoData._id}`
+					period_info[0].url = `/period/${currentPeriod._id}`
 					break
 			}
 			period_info[0].icon = BookOpen
-		} else {
-			localStorage.removeItem('currentPeriodId')
-			localStorage.removeItem('currentPeriodName')
-			localStorage.removeItem('currentPeriodEndTime')
 		}
 		return period_info
 	}
@@ -228,29 +225,25 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 						{isOpen && <div className='mb-2 px-3 text-xs font-semibold text-gray-500'>Tổng quan</div>}
 						{renderMenuItems(menuItems.common)}
 					</div>
-
-					<div className='mb-6 flex flex-col gap-1'>
-						{isOpen && (
-							<>
-								<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
-									Kì hiện tại{' '}
-									<span className='font-normal'>{`- ${periodInfoData?.faculty.name}`}</span>
+					{/* Hiển thị thông tin kì */}
+					{currentPeriod && (
+						<div className='mb-6 flex flex-col gap-1'>
+							{isOpen && (
+								<div>
+									<div className='mb-2 px-3 text-xs text-gray-500'>
+										<span className='font-semibold'>{`${currentPeriod?.faculty.name}`}</span>
+									</div>
+									<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
+										<Badge>{`Đợt ${PhaseInfo[currentPeriod.currentPhaseDetail.phase].label}`}</Badge>
+									</div>
+									<div className='mb-2 flex gap-1 px-3 text-xs font-semibold text-gray-500'>
+										<span>{`Kết thúc ${countdown}`}</span>
+									</div>
 								</div>
-								<div className='mb-2 flex flex-col gap-1 px-3 text-xs font-semibold text-gray-500'>
-									<span>{`Bắt đầu ${periodInfoData?.startTime && new Date(periodInfoData?.startTime).toLocaleString('vi-VN')}`}</span>
-									<span>{`Kết thúc ${periodInfoData?.endTime && new Date(periodInfoData?.endTime).toLocaleString('vi-VN')}`}</span>
-								</div>
-							</>
-						)}
-						{renderMenuItems(handlePeriodInfo(menuItems.period_info))}
-						{isOpen && (
-							<>
-								<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
-									<span className='font-normal'>{`Còn ${countdown}`}</span>
-								</div>
-							</>
-						)}
-					</div>
+							)}
+							{renderMenuItems(handlePeriodInfo(menuItems.period_info))}
+						</div>
+					)}
 
 					{/* Role-specific Menu */}
 					<div className='mb-6'>

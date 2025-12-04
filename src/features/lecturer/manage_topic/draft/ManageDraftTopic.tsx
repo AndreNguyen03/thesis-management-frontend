@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { CustomPagination } from '@/components/PaginationBar'
+import { useAppSelector } from '@/store'
 
 const ManageTopicDraft = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
@@ -39,16 +40,14 @@ const ManageTopicDraft = () => {
 
 	const [showSelection, setShowSelection] = useState(false)
 	//lấ thong tin của kì
-	const currentPeriodId = localStorage.getItem('currentPeriodId')
-	const currentPeriodName = localStorage.getItem('currentPeriodName')
-	const currentPeriodEndTime = localStorage.getItem('currentPeriodEndTime')
-	const countdown = useCountdown(currentPeriodEndTime ? new Date(currentPeriodEndTime) : null)
+	const {currentPeriod, isLoading} = useAppSelector((state) => state.period)
+	const countdown = useCountdown(currentPeriod?.endTime ? new Date(currentPeriod.endTime) : null)
 	const [submitTopic, { isLoading: isSubmitting, isSuccess: isSubmitSuccess, error: submitError }] =
 		useSubmitTopicMutation()
 	const navigate = useNavigate()
 
 	const handleSubmitTopics = async (selectedTopics: any[]) => {
-		await submitTopic({ topicId: selectedTopics[0]._id, periodId: currentPeriodId! })
+		await submitTopic({ topicId: selectedTopics[0]._id, periodId: currentPeriod?._id! })
 		toast({
 			title: 'Thành công',
 			description: 'Bạn đã thực hiện thao tác thành công!',
@@ -102,12 +101,11 @@ const ManageTopicDraft = () => {
 					<div className='flex flex-col gap-2 p-2'>
 						<div className='flex w-fit flex-row items-center gap-2'>
 							<h3 className='m-4 text-xl font-semibold'>Kho đề tài của bạn</h3>
-							{currentPeriodId && (
+							{currentPeriod && (
 								<>
 									<div className='m-2 flex flex-col gap-2 rounded-md bg-blue-100 p-2 lg:flex-row'>
 										<span className='font-semibold'>
-											<span>{`Kì hiện tại: `}</span>
-											{currentPeriodName}
+											<span>{`Kì hiện tại: ${currentPeriod.name}`}</span>
 										</span>
 										<span className='ml-auto mr-4 font-normal'>
 											Thời gian còn lại:{' '}

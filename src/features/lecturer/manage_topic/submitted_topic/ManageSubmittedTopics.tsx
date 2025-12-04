@@ -16,6 +16,9 @@ import { CustomPagination } from '@/components/PaginationBar'
 import { toast } from 'sonner'
 import { WithdrawConfirmation } from './modal/WIthdrawConfirmation'
 import type { SubmittedTopic } from '@/models'
+import { useAppSelector } from '@/store'
+import { PeriodPhaseName } from '@/models/period.model'
+import { PeriodPhaseStatus } from '@/models/period-phase.models'
 
 const ManageSubmittedTopics = () => {
 	const navigate = useNavigate()
@@ -57,6 +60,8 @@ const ManageSubmittedTopics = () => {
 	const [pendingId, setPendingId] = useState<string | null>(null)
 	const [selectedWithdrawTopics, setSelectedWithdrawTopics] = useState<SubmittedTopic[]>([])
 	const [showSelection, setShowSelection] = useState(false)
+	//lấy thông tin kì hiện tại
+	const { currentPeriod } = useAppSelector((state) => state.period)
 	const handleWithdraw = async (topic?: SubmittedTopic) => {
 		try {
 			if (topic) {
@@ -74,14 +79,17 @@ const ManageSubmittedTopics = () => {
 			toast('Rút đề tài thất bại. Vui lòng thử lại sau.')
 		}
 	}
-
+	const isAbleInSubmitPhase =
+		currentPeriod?.currentPhaseDetail.phase === PeriodPhaseName.SUBMIT_TOPIC &&
+		currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
 	const columns = getColumns({
 		onSeeDetail: (topicId) => navigate(`/detail-topic/${topicId}`),
 		showSelection: showSelection,
 		onManualApprovalChange: handleManualApprovalChange,
 		pendingId,
 		pendingWithdrawId,
-		onWithdraw: handleWithdraw
+		onWithdraw: handleWithdraw,
+		isAbleInSubmitPhase: isAbleInSubmitPhase
 	})
 	const data =
 		submittedTopics?.data.map((topic, index) => ({

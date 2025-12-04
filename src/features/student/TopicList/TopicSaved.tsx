@@ -32,7 +32,7 @@ export const SavedTopics = () => {
 		sort_by: 'createdAt',
 		sort_order: 'desc'
 	})
-	const [topics, setTopics] = useState<Topic[]>([])
+
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }, { label: 'Đề tài đã lưu' }])
 	
 	// search input handler
@@ -103,18 +103,18 @@ export const SavedTopics = () => {
 			<div className='space-y-4'>
 				<div className='flex items-center justify-between'>
 					{queries.query === '' && queries.filter === 'all' ? (
-						<p className='text-md font-bold text-muted-foreground'>Bạn đã lưu {topics.length} đề tài</p>
+						<p className='text-md font-bold text-muted-foreground'>Bạn đã lưu {savedTopicsData?.data.length} đề tài</p>
 					) : (
 						<p className='text-md font-bold text-muted-foreground'>
-							Tìm thấy {topics.length} đề tài có liên quan
+							Tìm thấy {savedTopicsData?.data.length} đề tài có liên quan
 						</p>
 					)}
 				</div>
 				<div className='flex flex-col gap-4 align-middle'>
-					{topics && topics.length > 0 && (
+					{savedTopicsData?.data && savedTopicsData.data.length > 0 && (
 						<>
 							<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-								{topics.map((topic) => (
+								{savedTopicsData.data.map((topic) => (
 									<TopicCard key={topic._id} topic={topic} mode='saved' />
 								))}
 							</div>
