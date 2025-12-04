@@ -1,4 +1,3 @@
-import type { QueryParams } from '@/components/ui/DataTable/types'
 import { baseApi, type ApiResponse } from './baseApi'
 import type {
 	CanceledRegisteredTopic,
@@ -6,14 +5,12 @@ import type {
 	ITopicDetail,
 	PaginatedDraftTopics,
 	GetPaginatedTopics,
-	CreateTopicPayload,
 	PaginatedSubmittedTopics,
-	PaginationTopicsQueryParams,
 	PaginatedGeneralTopics,
 	UpdateTopicPayload,
 	CreateTopicRequest,
 	CreateTopicResponse,
-    RequestGradeTopicDto
+	RequestGradeTopicDto
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -23,20 +20,10 @@ export const topicApi = baseApi.injectEndpoints({
 			query: () => `/topics`,
 			transformResponse: (response: ApiResponse<GetPaginatedTopics>) => response.data
 		}),
-		getTopicsOfPeriod: builder.query<
-			PaginatedGeneralTopics,
-			{ periodId: string; queries: PaginationTopicsQueryParams }
-		>({
-			query: ({ periodId, queries }) => {
-				const queryString = buildQueryString(queries)
-				return `/topics/period-topics/${periodId}?${queryString}`
-			},
-			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data
-		}),
 
 		getTopicsInPhase: builder.query<
 			PaginatedGeneralTopics,
-			{ periodId: string; queries: QueryParams; phase: string }
+			{ periodId: string; queries: PaginationQueryParamsDto; phase: string }
 		>({
 			query: ({ periodId, queries, phase }) => {
 				const queryString = buildQueryString(queries)
@@ -298,7 +285,6 @@ export const topicApi = baseApi.injectEndpoints({
 export const {
 	useGetTopicsQuery,
 	useGetTopicByIdQuery,
-	useGetTopicsOfPeriodQuery,
 	useGetTopicsInPhaseQuery,
 	useSaveTopicMutation,
 	useUnsaveTopicMutation,

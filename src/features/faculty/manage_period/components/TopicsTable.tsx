@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import type { PhaseType } from '@/models/period.model'
-import type { GeneralTopic, TopicStatus } from '@/models/topic.model'
+import type { GeneralTopic, GetPhaseHistoryDto, TopicStatus } from '@/models/topic.model'
 import { DataTable } from '@/components/ui/DataTable'
 import { Badge, type BadgeVariant } from '@/components/ui/badge'
 import { Eye, CheckCircle, XCircle, Edit } from 'lucide-react'
@@ -11,11 +11,12 @@ import {
 	useFacuBoardRejectTopicMutation,
 	useGetTopicsInPhaseQuery
 } from '@/services/topicApi'
-import type { QueryParams, TableAction, TableBulkAction, TableColumn } from '@/components/ui/DataTable/types'
+import type { TableAction, TableBulkAction, TableColumn } from '@/components/ui/DataTable/types'
 import { useNavigate } from 'react-router-dom'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getLabelForStatus } from '../utils'
 import { toast } from '@/hooks/use-toast'
+import type { PaginationQueryParamsDto } from '@/models/query-params'
 
 interface TopicsTableProps {
 	phase: PeriodPhase
@@ -29,7 +30,7 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 
 	const navigate = useNavigate()
 
-	const [queryParams, setQueryParams] = useState<QueryParams>({
+	const [queryParams, setQueryParams] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 10,
 		search_by: 'title',
@@ -46,7 +47,6 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 		},
 		{ skip: !periodId }
 	)
-
 	const [approveTopic, { isLoading: isLoadingApprove }] = useFacuBoardApproveTopicMutation()
 	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()
 
@@ -56,7 +56,7 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 				...prev,
 				query: statFilter,
 				page: 1,
-				search_by: 'currentStatus'
+				search_by: 'lastStatusInPhaseHistory.status'
 			}))
 		} else {
 			setQueryParams((prev) => ({ ...prev, query: '', page: 1 }))
@@ -167,11 +167,12 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 				searchable: true
 			},
 			{
-				key: 'currentStatus' as const,
+				key: 'lastStatusInPhaseHistory' as const,
 				title: 'Trạng thái',
 				sortable: false,
 				searchable: true,
-				render: (status: TopicStatus) => getStatusBadge(status),
+				render: (lastStatusInPhaseHistory: GetPhaseHistoryDto) =>
+					getStatusBadge(lastStatusInPhaseHistory.status as TopicStatus),
 				renderSearchInput: ({ value, onChange }) => (
 					<select
 						className='w-full rounded border p-2 text-sm'

@@ -65,6 +65,7 @@ export interface AbstractTopic {
 	requirements: GetRequirementNameReponseDto[]
 
 	students: RelatedStudentInTopic
+
 	studentsNum: number
 
 	lecturers: ResponseMiniLecturerDto[]
@@ -90,6 +91,7 @@ export interface SubmittedTopic extends AbstractTopic {
 }
 export interface GeneralTopic extends AbstractTopic {
 	submittedAt: string
+	lastStatusInPhaseHistory: GetPhaseHistoryDto
 	createByInfo: MiniActorInforDto
 	periodInfo: MiniPeriod
 	// file

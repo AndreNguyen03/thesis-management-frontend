@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { PaginationQueryParamsDto } from '@/models/query-params'
 import type { SerializedError } from '@reduxjs/toolkit'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import type { ReactNode } from 'react'
 export type SortOrder = 'asc' | 'desc'
-export interface QueryParams {
-	page: number
-	limit: number
-	search_by: string
-	query: string
-	sort_by: string
-	sort_order: SortOrder
-}
+// export interface QueryParams {
+// 	page: number
+// 	limit: number
+// 	search_by: string
+// 	query: string
+// 	sort_by: string
+// 	sort_order: SortOrder
+// }
 export interface SearchValue {
 	value: string
 	date?: Date
@@ -46,7 +47,7 @@ export interface DataTableProps<T> {
 	totalRecords?: number
 	pageSize?: number
 	searchFields?: Record<string, string>
-	onQueryChange: (params: QueryParams) => void
+	onQueryChange: (params: PaginationQueryParamsDto) => void
 	emptyState?: { title: string; description: string }
 	toolbar?: ReactNode
 	bulkActions?: (selectedRows: T[]) => TableBulkAction<T>[]
