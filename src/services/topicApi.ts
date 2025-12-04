@@ -36,17 +36,17 @@ export const topicApi = baseApi.injectEndpoints({
 
 		getTopicsInPhase: builder.query<
 			PaginatedGeneralTopics,
-			{ phaseId: string; queries: QueryParams; phase: string }
+			{ periodId: string; queries: QueryParams; phase: string }
 		>({
-			query: ({ phaseId, queries, phase }) => {
+			query: ({ periodId, queries, phase }) => {
 				const queryString = buildQueryString(queries)
 				return {
-					url: `/periods/${phaseId}/get-topics-in-phase${queryString ? `?${queryString}` : ``}&phase=${phase}`,
+					url: `/periods/${periodId}/get-topics-in-phase${queryString ? `?${queryString}` : ``}&phase=${phase}`,
 					method: 'GET'
 				}
 			},
 			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data,
-			providesTags: (result, error, { phaseId }) => [{ type: 'PhaseTopics' as const, id: phaseId }]
+			providesTags: (result, error, { periodId }) => [{ type: 'PhaseTopics' as const, id: periodId }]
 		}),
 
 		getTopicById: builder.query<ITopicDetail, { id: string }>({
@@ -137,12 +137,12 @@ export const topicApi = baseApi.injectEndpoints({
 				}
 			}
 		}),
-		submitTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
-			query: ({ topicId, phaseId }) => ({
-				url: `/topics/lec/submit-topic/${topicId}/in-period/${phaseId}`,
+		submitTopic: builder.mutation<{ message: string }, { topicId: string; periodId: string }>({
+			query: ({ topicId, periodId }) => ({
+				url: `/topics/lec/submit-topic/${topicId}/in-period/${periodId}`,
 				method: 'PATCH'
 			}),
-			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+			invalidatesTags: (_result, _error, { periodId }) => [{ type: 'PhaseTopics', id: periodId }]
 		}),
 
 		facuBoardApproveTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({

@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Loader2, Users } from 'lucide-react'
-import type { PendingAction } from '@/models/period-phase.models'
 import type { PhaseType } from '@/models/period.model'
 
 interface NotificationTemplate {
@@ -91,12 +90,11 @@ const notificationTemplates: Record<PhaseType, NotificationTemplate[]> = {
 interface SendNotificationModalProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	action: PendingAction
 	phaseType: PhaseType
 	onSend: () => Promise<void>
 }
 
-export function SendNotificationModal({ open, onOpenChange, action, phaseType, onSend }: SendNotificationModalProps) {
+export function SendNotificationModal({ open, onOpenChange, phaseType, onSend }: SendNotificationModalProps) {
 	const [selectedTemplate, setSelectedTemplate] = useState<string>('')
 	const [content, setContent] = useState<string>('')
 	const [isSending, setIsSending] = useState(false)

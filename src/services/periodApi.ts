@@ -1,4 +1,5 @@
 import type { PaginatedResponse } from '@/models'
+import type { Phase1Response, Phase2Response, Phase3Response } from '@/models/period-phase.models'
 import {
 	type CreateCompletionPhaseDto,
 	type CreateExecutionPhaseDto,
@@ -167,11 +168,24 @@ export const periodApi = baseApi.injectEndpoints({
 				return `/periods/${periodId}/faculty-board/stats?phase=${phase}`
 			},
 			transformResponse: (response: ApiResponse<GetStatiticInPeriod>) => response.data
+		}),
+		resolvePhase: builder.mutation<
+			Phase1Response | Phase2Response | Phase3Response,
+			{ periodId: string; phase: string }
+		>({
+			query: ({ periodId, phase }) => ({
+				url: `/periods/${periodId}/phases/${phase}/resolve`,
+				method: 'POST'
+			}),
+			transformResponse: (response: ApiResponse<Phase1Response | Phase2Response | Phase3Response>) =>
+				response.data,
+			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
 		})
 	})
 })
 
 export const {
+    useResolvePhaseMutation,
 	useGetPeriodDetailQuery,
 	useCreateSubmitTopicPhaseMutation,
 	useCreateOpenRegPhaseMutation,

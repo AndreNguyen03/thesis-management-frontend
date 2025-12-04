@@ -10,7 +10,6 @@ export type PeriodStatus = 'ongoing' | 'completed'
 
 export type PhaseType = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion'
 
-
 export interface Period {
 	_id: string
 	name: string
@@ -37,9 +36,9 @@ export interface PhaseStats {
 	label: string
 	value: number
 	variant?: StatVariant
-    description?: string
-    icon?: ElementType 
-    iconVariant?: StatVariant
+	description?: string
+	icon?: ElementType
+	iconVariant?: StatVariant
 }
 
 export type StatVariant = 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'neutral' | 'purple' | 'orange'
@@ -77,7 +76,7 @@ export interface GetCustomMiniPeriodInfoRequestDto {
 	currentPhaseDetail: PeriodPhase
 }
 
-<<<<<<< HEAD
+
 export const PeriodPhaseName = {
 	EMPTY: 'empty',
 	SUBMIT_TOPIC: 'submit_topic',
@@ -85,7 +84,7 @@ export const PeriodPhaseName = {
 	EXECUTION: 'execution',
 	COMPLETION: 'completion'
 } as const
-=======
+
 export interface    CreatePhaseResponse {
 	success: boolean
 	message: string
@@ -107,4 +106,3 @@ export type CreateCompletionPhaseDto = Omit<PeriodPhase, 'status'> & {
 	phase: 'completion'
 }
 export type UpdatePeriodPhaseDto = Omit<PeriodPhase, 'status' | 'phase'>
->>>>>>> 0d77ca8 (push period)

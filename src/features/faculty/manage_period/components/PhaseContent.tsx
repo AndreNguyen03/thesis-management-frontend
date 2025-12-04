@@ -1,27 +1,31 @@
 import { StatsCards } from './StatsCards'
 import { getLabelForStatus, getPhaseStats } from '../utils'
 import { motion } from 'framer-motion'
-import type { PendingAction, PeriodPhase } from '@/models/period-phase.models'
-import { useMemo, useState, type SetStateAction , type Dispatch} from 'react'
-import { type GeneralTopic, type TopicStatus } from '@/models'
+import { type PeriodPhase, type ResolvePhaseResponse } from '@/models/period-phase.models'
+import { useState, type SetStateAction, type Dispatch, useEffect } from 'react'
+import { type TopicStatus } from '@/models'
 import type { PhaseType } from '@/models/period.model'
 // import { toast } from '@/hooks/use-toast'
-import { useLecGetStatsPeriodQuery } from '@/services/periodApi'
+import { useLecGetStatsPeriodQuery, useResolvePhaseMutation } from '@/services/periodApi'
 import { PhaseHeader } from './PhaseHeader'
 import { PhaseActionsBox } from './PhaseActionsBox'
 import { TopicsTable } from './TopicsTable'
-import { useGetTopicsInPhaseQuery } from '@/services/topicApi'
-import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
 	currentPhase: PhaseType
 	periodId: string
 	lecturers?: string[]
-    onPhaseSettingOpen: Dispatch<SetStateAction<boolean>>
-    phaseSettingOpen: boolean
+	onPhaseSettingOpen: Dispatch<SetStateAction<boolean>>
+	completePhase: () => void
 }
 
-export function PhaseContent({ phaseDetail, currentPhase, periodId, phaseSettingOpen, onPhaseSettingOpen }: PhaseContentProps) {
+export function PhaseContent({
+	phaseDetail,
+	currentPhase,
+	periodId,
+	onPhaseSettingOpen,
+	completePhase
+}: PhaseContentProps) {
 	// // stats theo phase.phase
 	const { data: statsData } = useLecGetStatsPeriodQuery({ periodId, phase: currentPhase })
 
@@ -29,110 +33,42 @@ export function PhaseContent({ phaseDetail, currentPhase, periodId, phaseSetting
 
 	const [statusFilter, setStatusFilter] = useState<TopicStatus | 'all'>('all')
 
+	const [resolvePhase, { isLoading: isResolving }] = useResolvePhaseMutation()
 
-	const { data: topicsData } = useGetTopicsInPhaseQuery({
-		phaseId: phaseDetail._id,
-		queries: {
-			page: 1,
-			limit: 10,
-			search_by: 'titleVN',
-			query: '',
-			sort_by: 'startDate',
-			sort_order: 'desc'
+	const [resolvePhaseData, setResolvePhaseData] = useState<ResolvePhaseResponse | null>(null)
+
+	useEffect(() => {
+		if (!phaseDetail) return
+
+		// Nếu pha chưa cấu hình (không endTime) → vẫn resolve ngay
+		if (!phaseDetail.endTime) {
+			handleResolve()
+			return
 		}
-	})
 
-	const now = Date.now()
-	const showPending = phaseDetail.endTime && now > new Date(phaseDetail.endTime).getTime()
+		const end = new Date(phaseDetail.endTime).getTime()
+		const now = Date.now()
+		const delay = end - now
 
-	const handleActionComplete = (actionId: string) => {
-		// In real app, this would refetch data from API
-		console.log('Action completed:', actionId)
+		// Pha đã kết thúc → resolve ngay
+		if (delay <= 0) {
+			handleResolve()
+			return
+		}
+
+		// Chưa kết thúc → chờ đến endTime
+		const timer = setTimeout(() => handleResolve(), delay)
+		return () => clearTimeout(timer)
+	}, [phaseDetail?.endTime])
+
+	const handleResolve = async () => {
+		try {
+			const res = await resolvePhase({ periodId, phase: phaseDetail.phase }).unwrap()
+			setResolvePhaseData(res)
+		} catch (err) {
+			console.error(err)
+		}
 	}
-
-	const getPendingActions = (phaseType: PhaseType, topics: GeneralTopic[]): PendingAction[] => {
-		const submittedTopics = topics.filter((t) => t.currentStatus === 'submitted')
-		const registeredTopics = topics.filter((t) => t.currentStatus === 'registered')
-
-		const actions: PendingAction[] = []
-
-		if (phaseType === 'submit_topic') {
-			actions.push({
-				id: 'remind-teachers',
-				type: 'send_reminder',
-				label: 'Giảng viên chưa nộp đủ đề tài',
-				description: 'Gửi nhắc nhở cho các giảng viên chưa nộp đủ số lượng đề tài yêu cầu',
-				count: 12,
-				targetIds: ['t1', 't2', 't3'],
-				severity: 'warning'
-			})
-		}
-
-		if (phaseType === 'open_registration') {
-			if (submittedTopics.length > 0) {
-				actions.push({
-					id: 'move-empty-to-draft',
-					type: 'move_to_draft',
-					label: 'Đề tài không có người đăng ký',
-					description: 'Chuyển các đề tài chưa có sinh viên đăng ký về trạng thái Draft',
-					count: submittedTopics.length,
-					targetIds: submittedTopics.map((t) => t._id),
-					severity: 'warning'
-				})
-			}
-
-			if (registeredTopics.length > 0) {
-				actions.push({
-					id: 'move-registered-to-execution',
-					type: 'move_to_next_phase',
-					label: 'Đề tài có người đăng ký',
-					description: 'Chuyển các đề tài đã có sinh viên đăng ký sang pha Thực hiện',
-					count: registeredTopics.length,
-					targetIds: registeredTopics.map((t) => t._id),
-					severity: 'info'
-				})
-				actions.push({
-					id: 'remind-students',
-					type: 'send_reminder',
-					label: 'Nhắc sinh viên chưa đăng ký',
-					description: 'Gửi email nhắc nhở sinh viên hoàn thành đăng ký đề tài',
-					count: 25,
-					targetIds: [],
-					severity: 'info'
-				})
-			}
-		}
-
-		if (phaseType === 'execution') {
-			actions.push({
-				id: 'remind-documents',
-				type: 'request_documents',
-				label: 'Sinh viên chưa nộp tài liệu cuối',
-				description: 'Yêu cầu sinh viên nộp tài liệu còn thiếu',
-				count: 5,
-				targetIds: ['s1', 's2', 's3', 's4', 's5'],
-				severity: 'critical'
-			})
-			actions.push({
-				id: 'remind-submit-docs',
-				type: 'send_reminder',
-				label: 'Gửi nhắc nhở nộp tài liệu cuối',
-				description: 'Nhắc sinh viên hoàn thành việc nộp tài liệu',
-				count: 5,
-				targetIds: ['s1', 's2', 's3', 's4', 's5'],
-				severity: 'warning'
-			})
-		}
-
-		return actions
-	}
-
-	const pendingActions = useMemo(
-		() => (topicsData ? getPendingActions(currentPhase, topicsData.data) : []),
-		[currentPhase, topicsData]
-	)
-
-    console.log(phaseDetail)
 
 	return (
 		<motion.div
@@ -143,15 +79,23 @@ export function PhaseContent({ phaseDetail, currentPhase, periodId, phaseSetting
 			transition={{ duration: 0.3 }}
 			className='h-full space-y-6'
 		>
-			<PhaseHeader phase={phaseDetail} onViewConfig={() => {
-                onPhaseSettingOpen(true)
-            }} />
+			<PhaseHeader
+				phase={phaseDetail}
+				onViewConfig={() => {
+					onPhaseSettingOpen(true)
+				}}
+			/>
 
 			<StatsCards stats={stats} onClick={setStatusFilter} />
 
 			{/* Phase Actions Box */}
-			{showPending && (
-				<PhaseActionsBox phase={phaseDetail} actions={pendingActions} onActionComplete={handleActionComplete} />
+			{resolvePhaseData?.canTriggerNextPhase === true && phaseDetail.phase === currentPhase && (
+				<PhaseActionsBox
+					resolvePhaseData={resolvePhaseData}
+					phase={phaseDetail}
+					onCompletePhase={completePhase}
+					isResolving={isResolving}
+				/>
 			)}
 			<div className='pb-10'>
 				<h3 className='mb-4 text-lg font-semibold'>
@@ -159,9 +103,8 @@ export function PhaseContent({ phaseDetail, currentPhase, periodId, phaseSetting
 						? `Danh sách các đề tài ${getLabelForStatus(statusFilter)}`
 						: 'Danh sách đề tài đã nộp'}
 				</h3>
-				<TopicsTable phase={phaseDetail} statFilter={statusFilter} />
+				<TopicsTable phase={phaseDetail} statFilter={statusFilter} periodId={periodId} />
 			</div>
-			
 		</motion.div>
 	)
 }

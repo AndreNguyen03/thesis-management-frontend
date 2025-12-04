@@ -2,9 +2,6 @@ import { motion } from 'framer-motion'
 import { Check, Circle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { useState } from 'react'
-import { Button } from '@/components/ui'
-import { PhaseSettingsModal } from './modals/PhaseSettingsModalOld'
 import { PhaseInfo } from '@/utils/utils'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import type { PhaseType } from '@/models/period.model'
@@ -18,9 +15,7 @@ interface PhaseStepBarProps {
 }
 
 export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, onCollapsedChange }: PhaseStepBarProps) {
-	const [phaseSettingsOpen, setPhaseSettingsOpen] = useState(false)
 
-	const currentPhaseDetail = phases.find((p) => p.phase === currentPhase)
 
 	const toggle = () => {
 		const next = !collapsed
@@ -155,13 +150,7 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, o
 				</div>
 			</div>
 
-			{/* Modal */}
-			<PhaseSettingsModal
-				open={phaseSettingsOpen}
-				onOpenChange={() => setPhaseSettingsOpen((prev) => !prev)}
-				needConfiguration={PhaseInfo[currentPhase as keyof typeof PhaseInfo].continuePhaseId}
-				status={currentPhaseDetail ? currentPhaseDetail.status : 'not_started'}
-			/>
+
 		</TooltipProvider>
 	)
 }

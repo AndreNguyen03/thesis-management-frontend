@@ -3,11 +3,11 @@ import type { GetUploadedFileDto } from './file.model'
 import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
-import type { MiniPeriod, TopicStatus } from './period.model'
+import type { MiniPeriod } from './period.model'
 import type { RelatedStudentInTopic } from './registration.model'
 import type { SortOrder } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto} from './users'
+import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto } from './users'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -208,7 +208,6 @@ export type TopicStatus =
 	| 'under_review'
 	| 'approved'
 	| 'rejected'
-	| 'adjust_request'
 	// Pha 2 - Mở đăng ký
 	| 'available'
 	| 'pending_registration'
@@ -257,8 +256,8 @@ export const topicStatusLabels = {
 	rejected_final: { name: 'Chưa đạt', css: 'bg-red-200 text-red-800' }
 }
 export interface RequestGradeTopicDto {
-    score: number
-    note?: string
+	score: number
+	note?: string
 }
 export interface CreateTopicPayload {
 	titleVN: string

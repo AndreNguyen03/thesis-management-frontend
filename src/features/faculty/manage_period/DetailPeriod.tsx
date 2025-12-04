@@ -9,24 +9,22 @@ import { useGetPeriodDetailQuery } from '@/services/periodApi'
 import NotFound from '@/features/shared/NotFound'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import { PhaseInfo } from '@/utils/utils'
-import { useAppSelector } from '@/store/configureStore'
 import { cn } from '@/lib/utils'
 import { PhaseSettingsModal } from './components/modals/PhaseSettingsModal'
 import { LoadingState } from '@/components/ui/LoadingState'
+import { getNextPhase } from './utils'
 
 export default function DetailPeriodPage() {
 	const { id } = useParams()
-	const user = useAppSelector((state) => state.auth.user)
 	const navigate = useNavigate()
 
 	const {
 		data: period,
 		isLoading,
-		error
+		refetch
 	} = useGetPeriodDetailQuery(id!, {
 		skip: !id
 	})
-
 	const [isSidebarHidden, setSidebarHidden] = useState(false)
 	const [currentChosenPhase, setCurrentChosenPhase] = useState<PhaseType>('empty')
 	const [phaseSettingOpen, setPhaseSettingsOpen] = useState<boolean>(false)
@@ -43,7 +41,7 @@ export default function DetailPeriodPage() {
 		}
 	}, [period])
 
-    if (isLoading) return <LoadingState message='Đang tải dữ liệu pha...'/>
+	if (isLoading) return <LoadingState message='Đang tải dữ liệu pha...' />
 
 	if (!id) return <NotFound />
 
@@ -58,12 +56,12 @@ export default function DetailPeriodPage() {
 		)
 	}
 
-	console.log('period :::', period)
+	const currentPhaseDetail = period.phases.find(
+		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
+	)
 
-	const currentPhaseDetail = period.phases.find((p: PeriodPhase) => p.phase === currentChosenPhase)
+    console.log('current phase detail  detail period:::', currentPhaseDetail)
 
-	console.log('current phase detail :::', currentPhaseDetail)
-    console.log('current chosen phaes :::', currentChosenPhase)
 	return (
 		<div className='flex h-screen min-h-0'>
 			{/* Sidebar */}
@@ -85,8 +83,15 @@ export default function DetailPeriodPage() {
 							phaseDetail={currentPhaseDetail}
 							currentPhase={period.currentPhase}
 							periodId={period._id}
+							completePhase={() => {
+								const nextPhase = getNextPhase(currentChosenPhase)
+								if (!nextPhase) {
+									console.log('Đã là pha cuối, không còn pha tiếp theo')
+									return
+								}
+								setCurrentChosenPhase(nextPhase)
+							}}
 							onPhaseSettingOpen={setPhaseSettingsOpen}
-							phaseSettingOpen={phaseSettingOpen}
 						/>
 					) : (
 						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-2'>
@@ -99,7 +104,6 @@ export default function DetailPeriodPage() {
 								size='sm'
 								onClick={() => {
 									setPhaseSettingsOpen(true)
-									console.log(phaseSettingOpen)
 								}}
 							>
 								Thiết lập pha {PhaseInfo[period.currentPhase].continue}
@@ -114,6 +118,7 @@ export default function DetailPeriodPage() {
 				phase={currentPhaseDetail}
 				currentPhase={currentChosenPhase}
 				periodId={period._id}
+                onSuccess={() => refetch()}
 			/>
 		</div>
 	)

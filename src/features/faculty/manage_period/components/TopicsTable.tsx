@@ -11,13 +11,7 @@ import {
 	useFacuBoardRejectTopicMutation,
 	useGetTopicsInPhaseQuery
 } from '@/services/topicApi'
-import type {
-	DataTableProps,
-	QueryParams,
-	TableAction,
-	TableBulkAction,
-	TableColumn
-} from '@/components/ui/DataTable/types'
+import type { QueryParams, TableAction, TableBulkAction, TableColumn } from '@/components/ui/DataTable/types'
 import { useNavigate } from 'react-router-dom'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getLabelForStatus } from '../utils'
@@ -25,15 +19,14 @@ import { toast } from '@/hooks/use-toast'
 
 interface TopicsTableProps {
 	phase: PeriodPhase
+	periodId: string
 	statFilter: TopicStatus | 'all'
 }
 
-export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
+export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
 	const [detailModalOpen, setDetailModalOpen] = useState(false)
 
-	console.log('phase detail', phase)
-    console.log('phase :::', phase.phase)
 	const navigate = useNavigate()
 
 	const [queryParams, setQueryParams] = useState<QueryParams>({
@@ -45,18 +38,20 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 		sort_order: 'desc'
 	})
 
-	const { data, isLoading, error, refetch } = useGetTopicsInPhaseQuery({
-		phaseId: phase._id,
-		queries: queryParams,
-		phase: phase.phase
-	})
+	const { data, isLoading, error, refetch } = useGetTopicsInPhaseQuery(
+		{
+			periodId,
+			queries: queryParams,
+			phase: phase.phase
+		},
+		{ skip: !periodId }
+	)
 
 	const [approveTopic, { isLoading: isLoadingApprove }] = useFacuBoardApproveTopicMutation()
 	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()
 
 	useEffect(() => {
 		if (statFilter !== 'all') {
-			console.log(statFilter)
 			setQueryParams((prev) => ({
 				...prev,
 				query: statFilter,
@@ -79,7 +74,7 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 			toast({ title: 'Duyệt đề tài thành công', variant: 'success' })
 			refetch()
 		} catch (err) {
-			toast({ title: 'Duyệt thất bại', variant: 'destructive' })
+			toast({ title: `Duyệt thất bại ${err}`, variant: 'destructive' })
 		}
 	}
 
@@ -89,7 +84,7 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 			toast({ title: 'Từ chối đề tài thành công', variant: 'success' })
 			refetch()
 		} catch (err) {
-			toast({ title: 'Từ chối thất bại', variant: 'destructive' })
+			toast({ title: `Từ chối thất bại ${err}`, variant: 'destructive' })
 		}
 	}
 
@@ -115,7 +110,6 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 			under_review: { label: 'Đang xét duyệt', variant: 'lightBlue' },
 			approved: { label: 'Được duyệt', variant: 'success' },
 			rejected: { label: 'Bị từ chối', variant: 'destructive' },
-			adjust_request: { label: 'Yêu cầu sửa', variant: 'destructive' },
 			// Phase 2
 			available: { label: 'Đang trống', variant: 'default' },
 			pending_registration: { label: 'Chờ đăng ký', variant: 'outline' },
@@ -212,7 +206,10 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 				{
 					key: 'students' as const,
 					title: 'Sinh viên đăng ký',
-					render: (s: GeneralTopic['students']) => s?.map((x) => x.fullName).join(', ') ?? '—',
+					render: (s: GeneralTopic['students']) =>
+						s?.approvedStudents?.length
+							? s.approvedStudents.map((x) => x.student.fullName).join(', ')
+							: '—',
 					searchable: true
 				}
 			]
@@ -223,8 +220,11 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 				...baseCols,
 				{
 					key: 'students' as const,
-					title: 'Sinh viên thực hiện',
-					render: (s: GeneralTopic['students']) => s?.map((x) => x.fullName).join(', ') ?? '—',
+					title: 'Sinh viên đăng ký',
+					render: (s: GeneralTopic['students']) =>
+						s?.approvedStudents?.length
+							? s.approvedStudents.map((x) => x.student.fullName).join(', ')
+							: '—',
 					searchable: true
 				}
 			]
@@ -431,7 +431,11 @@ export function TopicsTable({ phase, statFilter }: TopicsTableProps) {
 				onQueryChange={(q) => setQueryParams(q)}
 			/>
 
-			<TopicDetailModal open={detailModalOpen} onOpenChange={setDetailModalOpen} topic={selectedTopic} />
+			<TopicDetailModal
+				isOpen={detailModalOpen}
+				onClose={() => setDetailModalOpen(false)}
+				topic={selectedTopic}
+			/>
 		</TooltipProvider>
 	)
 }

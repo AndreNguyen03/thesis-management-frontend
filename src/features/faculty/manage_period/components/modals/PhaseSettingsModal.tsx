@@ -25,9 +25,10 @@ interface Props {
 	phase: PeriodPhase | undefined
 	currentPhase: PhaseType
 	periodId: string
+	onSuccess: () => void
 }
 
-export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, periodId }: Props) {
+export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, periodId, onSuccess }: Props) {
 	const [startTime, setStartTime] = useState(toInputDateTime(phase?.startTime) ?? '')
 	const [endTime, setEndTime] = useState(toInputDateTime(phase?.endTime) ?? '')
 
@@ -35,11 +36,9 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 	const [selectedLecturerIds, setSelectedLecturerIds] = useState<string[]>(
 		phase?.requiredLecturers?.map((lec) => lec._id) ?? []
 	)
-    console.log('lecturer selected ,:::', selectedLecturerIds)
 	const [allowManualApproval, setAllowManualApproval] = useState(phase?.allowManualApproval ?? false)
 
 	const { data: lecturersByFaculty } = useGetAllLecturersComboboxQuery({ limit: 1000, page: 1, sort_order: 'desc' })
-
 
 	const isPhase1 = currentPhase === 'empty' || currentPhase === 'submit_topic'
 	const isTimeInvalid = startTime && endTime ? new Date(endTime).getTime() <= new Date(startTime).getTime() : false
@@ -91,6 +90,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 
 		try {
 			const response = await hook({ periodId, body: payload }).unwrap()
+			onSuccess?.()
 			onOpenChange(false)
 			toast({
 				title: response.message,

@@ -9,7 +9,7 @@ const LecturerManageTopics = () => {
 		{ label: 'Quản lý đề tài', path: '/manage-topic' }
 	])
 	return (
-		<div className='max-h-[calc(100vh)] flex-1 overflow-auto'>
+		<div className='max-h-[calc(100vh)] flex-1 overflow-auto mt-10'>
 			<Tabs defaultValue='topic-draft' className='h-full w-full'>
 				<TabsList variant='underline' defaultValue='topic-draft'>
 					<TabsTrigger variant='underline' value='topic-draft'>
