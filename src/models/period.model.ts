@@ -1,10 +1,7 @@
 import type { ElementType } from 'react'
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
-<<<<<<< HEAD
-=======
 import type { TopicStatus } from './topic.model'
->>>>>>> 0d77ca8 (push period)
 
 export type PeriodStatus = 'ongoing' | 'completed'
 
