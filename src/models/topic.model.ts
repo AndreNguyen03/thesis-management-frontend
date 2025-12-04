@@ -3,10 +3,11 @@ import type { GetUploadedFileDto } from './file.model'
 import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
-import type { MiniPeriod, TopicStatus } from './period.model'
+import type { MiniPeriod } from './period.model'
 import type { RelatedStudentInTopic } from './registration.model'
+import type { SortOrder } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto} from './users'
+import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto } from './users'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -32,8 +33,20 @@ export interface PaginationQueryParams {
 	search_by?: string
 	query?: string
 	sort_by?: string
-	sort_order?: string
+	sort_order?: SortOrder
 }
+
+export interface DetailGrade {
+	score: number
+	note: string
+	actorId: string
+}
+
+export interface Grade {
+	averageScore: number
+	detailGrades: DetailGrade[]
+}
+
 export interface AbstractTopic {
 	_id: string
 
@@ -55,6 +68,8 @@ export interface AbstractTopic {
 	studentsNum: number
 
 	lecturers: ResponseMiniLecturerDto[]
+
+	grade: Grade
 
 	createdAt: Date
 
@@ -140,6 +155,7 @@ export interface GetPaginatedTopics extends GetPaginatedObject {
 export interface CanceledRegisteredTopic extends Topic {
 	lastestCanceledRegisteredAt: Date
 }
+
 export interface ITopicDetail extends Topic {
 	files: GetUploadedFileDto[]
 	phaseHistories: GetPhaseHistoryDto[]
@@ -185,6 +201,30 @@ export interface FileOption {
 }
 
 export type TopicType = 'thesis' | 'scientific_research'
+export type TopicStatus =
+	// Pha 1 - Nộp đề tài
+	| 'draft'
+	| 'submitted'
+	| 'under_review'
+	| 'approved'
+	| 'rejected'
+	// Pha 2 - Mở đăng ký
+	| 'available'
+	| 'pending_registration'
+	| 'registered'
+	| 'full'
+	| 'cancelled'
+	// Pha 3 - Thực hiện đề tài
+	| 'in_progress'
+	| 'delayed'
+	| 'paused'
+	| 'submitted_for_review'
+	| 'awaiting_evaluation'
+	// Pha 4 - Hoàn tất
+	| 'graded'
+	| 'reviewed'
+	| 'archived'
+	| 'rejected_final'
 
 export interface SavedUserRef {
 	userId: string
@@ -198,6 +238,7 @@ export const topicStatusLabels = {
 	draft: { name: 'Bản nháp', css: 'bg-gray-200 text-gray-800' },
 	submitted: { name: 'Đã nộp', css: 'bg-yellow-200 text-yellow-800' },
 	under_review: { name: 'Đang xét duyệt', css: 'bg-blue-200 text-blue-800' },
+	revision_required: { name: 'Yêu cầu sửa', css: 'bg-orange-200 text-orange-800' },
 	approved: { name: 'Đã duyệt', css: 'bg-green-200 text-green-800' },
 	rejected: { name: 'Bị từ chối', css: 'bg-red-200 text-red-800' },
 	pending_registration: { name: 'Mở  đăng ký', css: 'bg-purple-200 text-purple-800' },
@@ -214,7 +255,10 @@ export const topicStatusLabels = {
 	archived: { name: 'Đã lưu trữ', css: 'bg-gray-200 text-gray-800' },
 	rejected_final: { name: 'Chưa đạt', css: 'bg-red-200 text-red-800' }
 }
-
+export interface RequestGradeTopicDto {
+	score: number
+	note?: string
+}
 export interface CreateTopicPayload {
 	titleVN: string
 	titleEng: string

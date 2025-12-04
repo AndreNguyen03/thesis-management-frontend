@@ -7,6 +7,7 @@ export interface GetStatiticInPeriod {
 	approvalTopicsNumber: number
 	submittedTopicsNumber: number
 	totalTopicsNumber: number
+    adjustRequestTopicsNumber: number // new
 
 	//config for open registration phase
 	emptyTopicsNumber: number

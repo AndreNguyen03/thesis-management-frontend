@@ -9,37 +9,41 @@ import { useGetPeriodDetailQuery } from '@/services/periodApi'
 import NotFound from '@/features/shared/NotFound'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import { PhaseInfo } from '@/utils/utils'
-import { useAppSelector } from '@/store/configureStore'
-
-// import { useGetPeriodDetailQuery } from '@/services/periodApi'
+import { cn } from '@/lib/utils'
+import { PhaseSettingsModal } from './components/modals/PhaseSettingsModal'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { getNextPhase } from './utils'
 
 export default function DetailPeriodPage() {
 	const { id } = useParams()
-	const user = useAppSelector((state) => state.auth.user)
-
 	const navigate = useNavigate()
+
 	const {
 		data: period,
 		isLoading,
-		error
+		refetch
 	} = useGetPeriodDetailQuery(id!, {
 		skip: !id
 	})
+	const [isSidebarHidden, setSidebarHidden] = useState(false)
+	const [currentChosenPhase, setCurrentChosenPhase] = useState<PhaseType>('empty')
+	const [phaseSettingOpen, setPhaseSettingsOpen] = useState<boolean>(false)
+
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Quản lý đợt đăng ký', path: '/manage-period' },
 		{ label: period?.name ?? 'Đang tải', path: `/period/${period?._id}` }
 	])
 
-	const [currentChosenPhase, setCurrentChosenPhase] = useState<string>('empty')
 	useEffect(() => {
 		if (period?.currentPhase) {
 			setCurrentChosenPhase(period.currentPhase)
 		}
 	}, [period])
-	if (!id) {
-		return <NotFound />
-	}
+
+	if (isLoading) return <LoadingState message='Đang tải dữ liệu pha...' />
+
+	if (!id) return <NotFound />
 
 	if (!period) {
 		return (
@@ -51,45 +55,71 @@ export default function DetailPeriodPage() {
 			</div>
 		)
 	}
-	// Lấy thông tin pha hiện tại
-	const currentPhaseDetail = period.phases.find((p: PeriodPhase) => p.phase === currentChosenPhase)
+
+	const currentPhaseDetail = period.phases.find(
+		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
+	)
+
+    console.log('current phase detail  detail period:::', currentPhaseDetail)
+
 	return (
-		<div className='h-fit'>
-			{/* Sidebar - Step Bar */}
-			<aside className='fixed z-10 h-full w-[10%] min-w-[100px] border-r bg-white'>
+		<div className='flex h-screen min-h-0'>
+			{/* Sidebar */}
+			<aside className={cn('h-fit transition-all duration-300', isSidebarHidden ? 'w-12' : 'w-24')}>
 				<PhaseStepBar
 					phases={period.phases}
 					currentPhase={currentChosenPhase}
-					onPhaseChange={(phaseType: PhaseType) => {
-						setCurrentChosenPhase(phaseType)
-					}}
+					onPhaseChange={setCurrentChosenPhase}
+					collapsed={isSidebarHidden}
+					onCollapsedChange={setSidebarHidden}
 				/>
 			</aside>
-			{/* Main Content with left margin to avoid sidebar overlap */}
-			<main className='ml-[10%] mt-10 h-full min-w-[120px] flex-1'>
-				<div className='container w-full'>
+
+			{/* Main Content */}
+			<main className='min-h-0 flex-1 overflow-y-auto px-4 pt-12'>
+				<div className='h-full'>
 					{currentPhaseDetail ? (
 						<PhaseContent
-							phaseDetail={currentPhaseDetail!}
-							isConfigured={currentPhaseDetail != undefined && currentPhaseDetail.startTime !== null}
+							phaseDetail={currentPhaseDetail}
 							currentPhase={period.currentPhase}
 							periodId={period._id}
-							
+							completePhase={() => {
+								const nextPhase = getNextPhase(currentChosenPhase)
+								if (!nextPhase) {
+									console.log('Đã là pha cuối, không còn pha tiếp theo')
+									return
+								}
+								setCurrentChosenPhase(nextPhase)
+							}}
+							onPhaseSettingOpen={setPhaseSettingsOpen}
 						/>
 					) : (
 						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-2'>
-							<h2 className='text-center text-2xl font-bold'>
-								Pha {PhaseInfo[currentChosenPhase as keyof typeof PhaseInfo].label}
-							</h2>
-							<span className='font-medium'>Khởi đầu cho một kỷ mới</span>
+							<h2 className='text-2xl font-bold'>Pha {PhaseInfo[currentChosenPhase].label}</h2>
 							<span className='text-gray-500'>
-								Để tiếp tục hãy thiết lập pha <span className='font-semibold'>Nộp đề tài</span> và thông
-								báo cho giảng viên biết!
+								Thiết lập pha {PhaseInfo[period.currentPhase].continue} để bắt đầu quản lý.
 							</span>
+							<Button
+								variant='default'
+								size='sm'
+								onClick={() => {
+									setPhaseSettingsOpen(true)
+								}}
+							>
+								Thiết lập pha {PhaseInfo[period.currentPhase].continue}
+							</Button>
 						</div>
 					)}
 				</div>
 			</main>
+			<PhaseSettingsModal
+				open={phaseSettingOpen}
+				onOpenChange={setPhaseSettingsOpen}
+				phase={currentPhaseDetail}
+				currentPhase={currentChosenPhase}
+				periodId={period._id}
+                onSuccess={() => refetch()}
+			/>
 		</div>
 	)
 }

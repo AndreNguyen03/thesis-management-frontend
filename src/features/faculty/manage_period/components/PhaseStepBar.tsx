@@ -1,92 +1,89 @@
 import { motion } from 'framer-motion'
-import { Check, Circle } from 'lucide-react'
+import { Check, Circle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import type { PhaseType } from '@/models/period.model'
 import { PhaseInfo } from '@/utils/utils'
 import type { PeriodPhase } from '@/models/period-phase.models'
-import { Button } from '@/components/ui'
-import { useState } from 'react'
-import { PhaseSettingsModal } from './modals/PhaseSettingsModal'
+import type { PhaseType } from '@/models/period.model'
 
 interface PhaseStepBarProps {
 	phases: PeriodPhase[]
 	currentPhase: string
 	onPhaseChange: (phase: PhaseType) => void
+	collapsed?: boolean
+	onCollapsedChange?: (collapsed: boolean) => void
 }
 
-export function PhaseStepBar({ phases, currentPhase, onPhaseChange }: PhaseStepBarProps) {
-	const [phaseSettingsOpen, setPhaseSettingsOpen] = useState(false)
-	const currentPhaseDetail = phases.find((p: PeriodPhase) => p.phase === currentPhase)
-	//nếu currentPhaseDetail không tồn tại, tức là đang ở pha empty
-	//còn nếu có thì kiểm tra thêm status của pha đso để xác định đã hoàn thành hay chưa
+export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, onCollapsedChange }: PhaseStepBarProps) {
+
+
+	const toggle = () => {
+		const next = !collapsed
+		onCollapsedChange?.(next)
+	}
+
 	return (
-		<>
-			<TooltipProvider>
-				<div className='relative flex flex-col items-center justify-between px-6 py-8'>
-					<div className='flex flex-col items-center'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<motion.button
-									disabled={true}
-									className={cn(
-										'relative flex h-8 w-8 items-center justify-center rounded-full border-2 shadow-md transition-all duration-300',
-										currentPhase !== 'empty' &&
-											'border-success bg-gradient-to-br from-success to-success/80',
-										currentPhase === 'empty' &&
-											'border-primary bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/30'
-									)}
-									whileHover={{ scale: 1.08 }}
-									whileTap={{ scale: 0.95 }}
-								>
-									{currentPhase !== 'empty' ? (
-										<Check className='h-7 w-7 text-white' />
-									) : (
-										<Circle
-											className={cn(
-												'h-7 w-7',
-												currentPhase === 'empty' ? 'text-white' : 'text-muted-foreground'
-											)}
-										/>
-									)}
+		<TooltipProvider>
+			<div
+				className={cn(
+					'relative mt-12 flex h-full flex-col justify-between rounded-2xl border-2 bg-white transition-all duration-300',
+					collapsed ? 'w-14 px-2 py-3' : 'w-24 px-3 py-4'
+				)}
+			>
+				{/* Toggle Collapse */}
+				<button
+					className='absolute right-0 top-0 flex h-6 w-6 items-center justify-center self-end rounded-full border bg-white shadow'
+					onClick={toggle}
+				>
+					{collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+				</button>
+				{/* Phase Nodes */}
+				<div className='flex flex-col items-center'>
+					{/* EMPTY NODE */}
 
-									{currentPhase === 'empty' && (
-										<motion.div
-											className='absolute inset-0 rounded-full bg-primary/40'
-											initial={{ scale: 1, opacity: 0.7 }}
-											animate={{ scale: 1.6, opacity: 0 }}
-											transition={{ duration: 1.5, repeat: Infinity }}
-										/>
-									)}
-								</motion.button>
-							</TooltipTrigger>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<motion.button
+								disabled
+								className={cn(
+									'relative mt-3 flex h-6 w-6 items-center justify-center rounded-full border-2 shadow transition-all',
+									currentPhase !== 'empty'
+										? 'border-success bg-success'
+										: 'border-primary bg-primary shadow-primary/40'
+								)}
+								whileHover={{ scale: 1.05 }}
+							>
+								{currentPhase !== 'empty' ? (
+									<Check className='h-4 w-4 text-white' />
+								) : (
+									<Circle className='h-4 w-4 text-white' />
+								)}
+							</motion.button>
+						</TooltipTrigger>
 
+						{!collapsed && (
 							<TooltipContent side='right'>
 								<p className='font-semibold'>Pha {PhaseInfo['empty'].order}</p>
 								<p className='text-sm text-muted-foreground'>{PhaseInfo['empty'].label}</p>
 							</TooltipContent>
-							<span className='mt-2 text-sm text-muted-foreground'>{PhaseInfo['empty'].label}</span>
+						)}
 
-							<motion.div
-								className={cn(
-									'my-2 w-1 origin-top rounded',
-									currentPhase !== 'empty' ? 'bg-success' : 'bg-step-inactive'
-								)}
-								initial={{ scaleY: 0 }}
-								animate={{ scaleY: currentPhase !== 'empty' ? 1 : 0 }}
-								transition={{ duration: 0.6 }}
-								style={{ height: '3rem' }}
-							/>
-							{currentPhase === 'empty' && (
-								<div className='mb-5 mt-5'>
-									<Button variant='config' onClick={() => setPhaseSettingsOpen(true)}>
-										Thiết lập pha {PhaseInfo[currentPhase].continue}
-									</Button>
-								</div>
-							)}
-						</Tooltip>
-					</div>
+						{!collapsed && (
+							<span className='mt-1 text-xs text-muted-foreground'>{PhaseInfo['empty'].label}</span>
+						)}
+					</Tooltip>
 
+					<motion.div
+						className={cn(
+							'my-2 w-1 origin-top rounded',
+							currentPhase !== 'empty' ? 'bg-success' : 'bg-step-inactive'
+						)}
+						animate={{ scaleY: currentPhase !== 'empty' ? 1 : 0 }}
+						transition={{ duration: 0.5 }}
+						style={{ height: '1.5rem' }}
+					/>
+
+					{/* REAL PHASE NODES */}
 					{phases.map((p, index) => {
 						const isActive = currentPhase === p.phase
 						const isCompleted = p.status === 'completed'
@@ -95,112 +92,65 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange }: PhaseStepB
 
 						return (
 							<div key={p.phase} className='flex flex-col items-center'>
-								{/* Step circle */}
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<motion.button
 											onClick={() => isClickable && onPhaseChange(p.phase)}
 											disabled={!isClickable}
 											className={cn(
-												'relative flex h-14 w-14 items-center justify-center rounded-full border-2 shadow-md transition-all duration-300',
-												isCompleted &&
-													'border-success bg-gradient-to-br from-success to-success/80',
-												isActive &&
-													'border-primary bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/30',
+												'relative flex h-10 w-10 items-center justify-center rounded-full border-2 shadow transition-all',
+												isCompleted && 'border-success bg-success',
+												isActive && 'border-primary bg-primary shadow-primary/40',
 												!isActive && !isCompleted && 'border-step-inactive bg-card',
-												isClickable && 'hover:scale-110 active:scale-95',
+												isClickable && 'hover:scale-105 active:scale-95',
 												!isClickable && 'cursor-not-allowed opacity-50'
 											)}
-											whileHover={isClickable ? { scale: 1.08 } : {}}
-											whileTap={isClickable ? { scale: 0.95 } : {}}
 										>
 											{isCompleted ? (
-												<Check className='h-7 w-7 text-white' />
+												<Check className='h-6 w-6 text-white' />
 											) : (
 												<Circle
 													className={cn(
-														'h-7 w-7',
+														'h-6 w-6',
 														isActive ? 'text-white' : 'text-muted-foreground'
 													)}
-												/>
-											)}
-
-											{isActive && (
-												<motion.div
-													className='absolute inset-0 rounded-full bg-primary/40'
-													initial={{ scale: 1, opacity: 0.7 }}
-													animate={{ scale: 1.6, opacity: 0 }}
-													transition={{ duration: 1.5, repeat: Infinity }}
 												/>
 											)}
 										</motion.button>
 									</TooltipTrigger>
 
-									<TooltipContent side='right'>
-										<p className='font-semibold'>Pha {PhaseInfo[p.phase].order}</p>
-										<p className='text-sm text-muted-foreground'>{PhaseInfo[p.phase].label}</p>
-									</TooltipContent>
-									<span className='mt-2 text-sm text-muted-foreground'>
-										{PhaseInfo[p.phase].label}
-									</span>
+									{!collapsed && (
+										<TooltipContent side='right'>
+											<p className='font-semibold'>Pha {PhaseInfo[p.phase].order}</p>
+											<p className='text-sm text-muted-foreground'>{PhaseInfo[p.phase].label}</p>
+										</TooltipContent>
+									)}
+
+									{!collapsed && (
+										<span className='mt-1 text-xs text-muted-foreground'>
+											{PhaseInfo[p.phase].label}
+										</span>
+									)}
 								</Tooltip>
 
 								{!isLast && (
-									<>
-										<motion.div
-											className={cn(
-												'my-4 w-1 origin-top rounded bg-success/80',
-												isCompleted ? 'bg-success/80' : 'bg-step-inactive'
-											)}
-											initial={{ scaleY: 0 }}
-											animate={{ scaleY: isCompleted ? 1 : 0 }}
-											transition={{ duration: 0.6 }}
-											style={{ height: '3rem' }}
-										/>
-
-										{isCompleted && (
-											<div className='mb-5 mt-5'>
-												<Button variant='config'>
-													Thiết lập pha {PhaseInfo[p.phase].continue}
-												</Button>
-											</div>
+									<motion.div
+										className={cn(
+											'my-2 w-1 origin-top rounded',
+											isCompleted ? 'bg-success' : 'bg-step-inactive'
 										)}
-									</>
-								)}
-
-								{isLast && (
-									<>
-										<motion.div
-											className={cn(
-												'my-4 w-1 origin-top rounded bg-success/80',
-												isCompleted ? 'bg-success/80' : 'bg-step-inactive'
-											)}
-											initial={{ scaleY: 0 }}
-											animate={{ scaleY: isCompleted ? 1 : 0 }}
-											transition={{ duration: 0.6 }}
-											style={{ height: '3rem' }}
-										/>
-
-										{isCompleted && (
-											<div className='mb-5 mt-5'>
-												<Button variant='config'>Tổng kết {PhaseInfo[p.phase].continue}</Button>
-											</div>
-										)}
-									</>
+										animate={{ scaleY: isCompleted ? 1 : 0 }}
+										transition={{ duration: 0.5 }}
+										style={{ height: '1.5rem' }}
+									/>
 								)}
 							</div>
 						)
 					})}
 				</div>
-			</TooltipProvider>
-			<PhaseSettingsModal
-				open={phaseSettingsOpen}
-				onOpenChange={() => {
-					setPhaseSettingsOpen((prev) => !prev)
-				}}
-				needConfiguration={PhaseInfo[currentPhase as keyof typeof PhaseInfo].continuePhaseId}
-				status={currentPhaseDetail ? currentPhaseDetail.status : 'not_started'}
-			/>
-		</>
+			</div>
+
+
+		</TooltipProvider>
 	)
 }

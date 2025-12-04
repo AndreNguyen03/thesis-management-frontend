@@ -55,7 +55,7 @@ export const PhaseInfo: Record<PhaseType, { order: number; continue: string; con
 	{
 		empty: {
 			order: 0,
-			continue: 'Mở đăng ký',
+			continue: 'Nộp đề tài',
 			continuePhaseId: 'submit_topic',
 			label: 'Khởi đầu'
 		},

@@ -1,11 +1,12 @@
 
+export type SortOrder = 'asc' | 'desc'
 export class PaginationQueryParamsDto {
 	limit?: number = 10
 	page?: number = 1
 	search_by?: string
 	query?: string
 	sort_by?: string
-	sort_order?: string
+	sort_order?: SortOrder
 	startDate?: string
 	endDate?: string
 	filter?: string 

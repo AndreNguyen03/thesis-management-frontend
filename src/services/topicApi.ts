@@ -1,3 +1,4 @@
+import type { QueryParams } from '@/components/ui/DataTable/types'
 import { baseApi, type ApiResponse } from './baseApi'
 import type {
 	CanceledRegisteredTopic,
@@ -11,7 +12,8 @@ import type {
 	PaginatedGeneralTopics,
 	UpdateTopicPayload,
 	CreateTopicRequest,
-	CreateTopicResponse
+	CreateTopicResponse,
+    RequestGradeTopicDto
 } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -31,6 +33,22 @@ export const topicApi = baseApi.injectEndpoints({
 			},
 			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data
 		}),
+
+		getTopicsInPhase: builder.query<
+			PaginatedGeneralTopics,
+			{ periodId: string; queries: QueryParams; phase: string }
+		>({
+			query: ({ periodId, queries, phase }) => {
+				const queryString = buildQueryString(queries)
+				return {
+					url: `/periods/${periodId}/get-topics-in-phase${queryString ? `?${queryString}` : ``}&phase=${phase}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data,
+			providesTags: (result, error, { periodId }) => [{ type: 'PhaseTopics' as const, id: periodId }]
+		}),
+
 		getTopicById: builder.query<ITopicDetail, { id: string }>({
 			query: ({ id }) => `/topics/${id}`,
 			transformResponse: (response: ApiResponse<ITopicDetail>) => response.data
@@ -119,23 +137,112 @@ export const topicApi = baseApi.injectEndpoints({
 				}
 			}
 		}),
-		submitTopic: builder.mutation<ApiResponse<Topic>, { topicId: string; periodId: string }>({
+		submitTopic: builder.mutation<{ message: string }, { topicId: string; periodId: string }>({
 			query: ({ topicId, periodId }) => ({
 				url: `/topics/lec/submit-topic/${topicId}/in-period/${periodId}`,
 				method: 'PATCH'
-			})
+			}),
+			invalidatesTags: (_result, _error, { periodId }) => [{ type: 'PhaseTopics', id: periodId }]
 		}),
-		facuBoardApproveTopic: builder.mutation<string, { topicId: string }>({
+
+		facuBoardApproveTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
 			query: ({ topicId }) => ({
 				url: `/topics/faculty-board/approve-topic/${topicId}`,
 				method: 'PATCH'
-			})
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),
-		facuBoardRejectTopic: builder.mutation<string, { topicId: string }>({
+
+		facuBoardRejectTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
 			query: ({ topicId }) => ({
 				url: `/topics/faculty-board/reject-topic/${topicId}`,
 				method: 'PATCH'
-			})
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		markUnderReviewingTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/under-review`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		setTopicInProgressing: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/set-in-progressing`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		markDelayedTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/mark-deplayed-topic`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		markPausedTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/mark-paused-topic`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		markCompletedProcessing: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/sumit-topic/completed-processing`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		setAwaitingEvaluation: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/set-awaiting-evaluation`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		scoringBoardGradeTopic: builder.mutation<
+			{ message: string },
+			{ topicId: string; body: RequestGradeTopicDto; phaseId: string }
+		>({
+			query: ({ topicId, body }) => ({
+				url: `/topics/${topicId}/scoring-board/grade-topic`,
+				method: 'PATCH',
+				body
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		scoringBoardRejectTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/scoring-board/reject-topic`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		markReviewedTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/review-graded-topic`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		archiveTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/archive-topic`,
+				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),
 		lecturerUploadFiles: builder.mutation<{ message: string }, { topicId: string; files: File[] }>({
 			query: ({ topicId, files }) => {
@@ -192,6 +299,7 @@ export const {
 	useGetTopicsQuery,
 	useGetTopicByIdQuery,
 	useGetTopicsOfPeriodQuery,
+	useGetTopicsInPhaseQuery,
 	useSaveTopicMutation,
 	useUnsaveTopicMutation,
 	useGetSavedTopicsQuery,
@@ -203,11 +311,21 @@ export const {
 	useCreateTopicMutation,
 	useSubmitTopicMutation,
 	useFacuBoardApproveTopicMutation,
-	useFacuBoardRejectTopicMutation,
 	useLecturerUploadFilesMutation,
 	useLecturerDeleteFilesMutation,
 	useLecturerDeleteFileMutation,
 	useUpdateTopicMutation,
 	useSetAllowManualApprovalMutation,
-	useWithdrawSubmittedTopicsMutation
+	useWithdrawSubmittedTopicsMutation,
+	useFacuBoardRejectTopicMutation,
+	useMarkUnderReviewingTopicMutation,
+	useSetTopicInProgressingMutation,
+	useMarkDelayedTopicMutation,
+	useMarkPausedTopicMutation,
+	useMarkCompletedProcessingMutation,
+	useSetAwaitingEvaluationMutation,
+	useScoringBoardGradeTopicMutation,
+	useScoringBoardRejectTopicMutation,
+	useMarkReviewedTopicMutation,
+	useArchiveTopicMutation
 } = topicApi

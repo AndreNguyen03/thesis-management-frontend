@@ -140,7 +140,7 @@ export const ManageStudentPage = () => {
 	return (
 		<>
 			<div className='flex h-full flex-col' role='main'>
-				<header className='mb-6 flex items-center justify-between'>
+				<header className='mt-16 mb-6 flex items-center justify-between'>
 					<h1 className='text-2xl font-bold'>Danh sách sinh viên</h1>
 				</header>
 

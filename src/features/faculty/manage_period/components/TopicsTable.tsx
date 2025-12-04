@@ -1,252 +1,441 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { PeriodPhase } from '@/models/period-phase.models'
 import type { PhaseType } from '@/models/period.model'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/input'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Eye, MoreVertical, CheckCircle, XCircle, Edit } from 'lucide-react'
-import { motion } from 'framer-motion'
-
-import type { GeneralTopic, Topic } from '@/models'
+import type { GeneralTopic, TopicStatus } from '@/models/topic.model'
+import { DataTable } from '@/components/ui/DataTable'
+import { Badge, type BadgeVariant } from '@/components/ui/badge'
+import { Eye, CheckCircle, XCircle, Edit } from 'lucide-react'
+import { TopicDetailModal } from './modals/TopicDetailModal'
+import {
+	useFacuBoardApproveTopicMutation,
+	useFacuBoardRejectTopicMutation,
+	useGetTopicsInPhaseQuery
+} from '@/services/topicApi'
+import type { QueryParams, TableAction, TableBulkAction, TableColumn } from '@/components/ui/DataTable/types'
 import { useNavigate } from 'react-router-dom'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { getLabelForStatus } from '../utils'
+import { toast } from '@/hooks/use-toast'
 
 interface TopicsTableProps {
-	topics: GeneralTopic[] | undefined
-	phase: PhaseType
-	actions: {
-		onApproveTopic: (topicId: string) => void
-		onRejectTopic: (topicId: string) => void
-		onSearchTopics: (searchTerm: string) => void
-	}
+	phase: PeriodPhase
+	periodId: string
+	statFilter: TopicStatus | 'all'
 }
 
-export function TopicsTable({ topics, phase, actions }: TopicsTableProps) {
-	const [searchTerm, setSearchTerm] = useState('')
+export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
+	const [detailModalOpen, setDetailModalOpen] = useState(false)
+
 	const navigate = useNavigate()
+
+	const [queryParams, setQueryParams] = useState<QueryParams>({
+		page: 1,
+		limit: 10,
+		search_by: 'title',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc'
+	})
+
+	const { data, isLoading, error, refetch } = useGetTopicsInPhaseQuery(
+		{
+			periodId,
+			queries: queryParams,
+			phase: phase.phase
+		},
+		{ skip: !periodId }
+	)
+
+	const [approveTopic, { isLoading: isLoadingApprove }] = useFacuBoardApproveTopicMutation()
+	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()
+
+	useEffect(() => {
+		if (statFilter !== 'all') {
+			setQueryParams((prev) => ({
+				...prev,
+				query: statFilter,
+				page: 1,
+				search_by: 'currentStatus'
+			}))
+		} else {
+			setQueryParams((prev) => ({ ...prev, query: '', page: 1 }))
+		}
+	}, [statFilter])
+
 	const handleViewDetail = (topic: GeneralTopic) => {
-		navigate(`/detail-topic/${topic._id}`)
+		setSelectedTopic(topic)
+		setDetailModalOpen(true)
 	}
 
-	const handleEdit = (topic: GeneralTopic) => {
-		setSelectedTopic(topic)
-		// setEditModalOpen(true)
+	const handleApprove = async (topicId: string) => {
+		try {
+			await approveTopic({ topicId, phaseId: phase._id }).unwrap()
+			toast({ title: 'Duyệt đề tài thành công', variant: 'success' })
+			refetch()
+		} catch (err) {
+			toast({ title: `Duyệt thất bại ${err}`, variant: 'destructive' })
+		}
 	}
-	const handleSearchChange = (value: string) => {
-		setSearchTerm(value)
-		actions.onSearchTopics(value)
+
+	const handleReject = async (topicId: string) => {
+		try {
+			await rejectTopic({ topicId, phaseId: phase._id }).unwrap()
+			toast({ title: 'Từ chối đề tài thành công', variant: 'success' })
+			refetch()
+		} catch (err) {
+			toast({ title: `Từ chối thất bại ${err}`, variant: 'destructive' })
+		}
 	}
-	const getStatusBadge = (status: string) => {
-		const variants = {
-			submitted: { label: 'Đã nộp', variant: 'outline' as const },
-			pending_registration: { label: 'Chờ xét', variant: 'outline' as const },
-			approved: { label: 'Đã duyệt', variant: 'default' as const },
-			rejected: { label: 'Từ chối', variant: 'destructive' as const },
-			in_progress: { label: 'Đang thực hiện', variant: 'default' as const },
-			paused: { label: 'Tạm dừng', variant: 'secondary' as const },
-			completed: { label: 'Hoàn thành', variant: 'default' as const }
+
+	const truncateText = (text: string, length = 30) => (text.length > length ? text.slice(0, length) + '…' : text)
+
+	const TopicStatusByPhase: Record<PhaseType, TopicStatus[]> = {
+		empty: [],
+
+		submit_topic: ['draft', 'submitted', 'under_review', 'approved', 'rejected'],
+
+		open_registration: ['pending_registration', 'registered', 'full', 'cancelled', 'available'],
+
+		execution: ['in_progress', 'delayed', 'paused', 'submitted_for_review', 'awaiting_evaluation'],
+
+		completion: ['graded', 'reviewed', 'archived', 'rejected_final']
+	}
+
+	const getStatusBadge = (status: TopicStatus) => {
+		const variants: Record<TopicStatus, { label: string; variant: BadgeVariant }> = {
+			// Phase 1
+			draft: { label: 'Nháp', variant: 'outline' },
+			submitted: { label: 'Đã nộp', variant: 'blue' },
+			under_review: { label: 'Đang xét duyệt', variant: 'lightBlue' },
+			approved: { label: 'Được duyệt', variant: 'success' },
+			rejected: { label: 'Bị từ chối', variant: 'destructive' },
+			// Phase 2
+			available: { label: 'Đang trống', variant: 'default' },
+			pending_registration: { label: 'Chờ đăng ký', variant: 'outline' },
+			registered: { label: 'Đã đăng ký', variant: 'registered' },
+			full: { label: 'Đã đầy', variant: 'gray' },
+			cancelled: { label: 'Đã hủy', variant: 'destructive' },
+			// Phase 3
+			in_progress: { label: 'Đang thực hiện', variant: 'blue' },
+			delayed: { label: 'Trễ tiến độ', variant: 'destructive' },
+			paused: { label: 'Tạm dừng', variant: 'secondary' },
+			submitted_for_review: { label: 'Nộp để xét duyệt', variant: 'lightBlue' },
+			awaiting_evaluation: { label: 'Chờ đánh giá', variant: 'outline' },
+			// Phase 4
+			graded: { label: 'Đã chấm', variant: 'success' },
+			reviewed: { label: 'Đã duyệt cuối', variant: 'success' },
+			archived: { label: 'Lưu trữ', variant: 'graybold' },
+			rejected_final: { label: 'Từ chối cuối', variant: 'destructive' }
 		}
 
-		const config = variants[status as keyof typeof variants]
+		const config = variants[status]
 		return <Badge variant={config.variant}>{config.label}</Badge>
 	}
 
-	const renderPhaseSpecificColumns = (topic: GeneralTopic) => {
-		switch (phase) {
-			case 'submit_topic':
-				return (
-					<>
-						<TableCell>{new Date(topic.submittedAt).toLocaleString('vi-VN')}</TableCell>
-						<TableCell className='min-w-32'>{getStatusBadge(topic.currentStatus)}</TableCell>
-					</>
+	const getTopicColumns = (phase: PhaseType): TableColumn<GeneralTopic>[] => {
+		const baseCols: TableColumn<GeneralTopic>[] = [
+			{
+				key: 'titleVN' as const,
+				title: 'Tên đề tài',
+				sortable: true,
+				searchable: true,
+				render: (title: string) => (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<span>{truncateText(title, 40)}</span>
+						</TooltipTrigger>
+						<TooltipContent>{title}</TooltipContent>
+					</Tooltip>
 				)
-			case 'open_registration':
-				return (
-					<>
-						<TableCell>{topic.students.map((student) => student.fullName).join(', ') || 'N/A'}</TableCell>
-						<TableCell>{topic.students.length || 0} sinh viên</TableCell>
-						<TableCell>{getStatusBadge(topic.currentStatus)}</TableCell>
-					</>
+			},
+			{
+				key: 'lecturers',
+				title: 'Giảng viên',
+				sortable: false,
+				render: (lecturers: GeneralTopic['lecturers']) => {
+					const text = lecturers?.map((l) => l.fullName).join(', ') ?? '—'
+					return (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<span>{truncateText(text, 30)}</span>
+							</TooltipTrigger>
+							<TooltipContent>{text}</TooltipContent>
+						</Tooltip>
+					)
+				},
+				searchable: true
+			},
+			{
+				key: 'currentStatus' as const,
+				title: 'Trạng thái',
+				sortable: false,
+				searchable: true,
+				render: (status: TopicStatus) => getStatusBadge(status),
+				renderSearchInput: ({ value, onChange }) => (
+					<select
+						className='w-full rounded border p-2 text-sm'
+						value={value?.value || ''}
+						onChange={(e) => onChange({ value: e.target.value })}
+					>
+						<option value=''>Tất cả</option>
+						{TopicStatusByPhase[phase].map((st) => (
+							<option key={st} value={st}>
+								{getLabelForStatus(st)}
+							</option>
+						))}
+					</select>
 				)
-			case 'execution':
-				return (
-					<>
-						<TableCell>{topic.students.map((student) => student.fullName).join(', ') || 'N/A'}</TableCell>
-						<TableCell>
-							<div className='flex items-center gap-2'>
-								<div className='h-2 w-full rounded-full bg-muted'>
-									<div className='h-2 rounded-full bg-primary transition-all'>
-										styl width: topic.progres
-									</div>
-								</div>
-								<span className='whitespace-nowrap text-sm text-muted-foreground'>topic.progres</span>
-							</div>
-						</TableCell>
-						<TableCell>{getStatusBadge(topic.currentStatus)}</TableCell>
-					</>
-				)
-			case 'completion':
-				return (
-					<>
-						<TableCell>{topic.students.map((student) => student.fullName).join(', ') || 'N/A'}</TableCell>
-						<TableCell className='font-semibold'>score</TableCell>
-						<TableCell>{getStatusBadge(topic.currentStatus)}</TableCell>
-					</>
-				)
-			default:
-				return null
+			},
+			{
+				key: phase === 'submit_topic' ? 'createdAt' : 'updatedAt',
+				title: phase === 'submit_topic' ? 'Ngày Nộp' : 'Ngày Cập Nhật ',
+				sortable: true,
+				render: (value: string) => (value ? new Date(value).toLocaleString('vi-VN') : '—')
+			}
+		]
+
+		if (phase === 'open_registration') {
+			return [
+				...baseCols,
+				{
+					key: 'maxStudents' as const,
+					title: 'Chỉ tiêu',
+					render: (v: number) => v.toString()
+				},
+				{
+					key: 'students' as const,
+					title: 'Sinh viên đăng ký',
+					render: (s: GeneralTopic['students']) =>
+						s?.approvedStudents?.length
+							? s.approvedStudents.map((x) => x.student.fullName).join(', ')
+							: '—',
+					searchable: true
+				}
+			]
 		}
+
+		if (phase === 'execution') {
+			return [
+				...baseCols,
+				{
+					key: 'students' as const,
+					title: 'Sinh viên đăng ký',
+					render: (s: GeneralTopic['students']) =>
+						s?.approvedStudents?.length
+							? s.approvedStudents.map((x) => x.student.fullName).join(', ')
+							: '—',
+					searchable: true
+				}
+			]
+		}
+
+		if (phase === 'completion') {
+			return [
+				...baseCols,
+				{
+					key: 'grade' as const,
+					title: 'Điểm',
+					render: (grade: GeneralTopic['grade']) => grade?.averageScore?.toString() ?? '—'
+				}
+			]
+		}
+
+		// Default submit_topic
+		return baseCols
 	}
 
-	const getPhaseHeaders = () => {
-		switch (phase) {
-			case 'submit_topic':
-				return (
-					<>
-						<TableHead>Thời gian nộp</TableHead>
-						<TableHead className='min-w-30'>Trạng thái</TableHead>
-					</>
-				)
-			case 'open_registration':
-				return (
-					<>
-						<TableHead>Sinh viên</TableHead>
-						<TableHead>Đăng ký</TableHead>
-						<TableHead>Trạng thái</TableHead>
-					</>
-				)
-			case 'execution':
-				return (
-					<>
-						<TableHead>Sinh viên</TableHead>
-						<TableHead>Tiến độ</TableHead>
-						<TableHead>Trạng thái</TableHead>
-					</>
-				)
-			case 'completion':
-				return (
-					<>
-						<TableHead>Sinh viên</TableHead>
-						<TableHead>Điểm TB</TableHead>
-						<TableHead>Trạng thái</TableHead>
-					</>
-				)
-			default:
-				return null
+	const getTopicActions = (phase: PhaseType): TableAction<GeneralTopic>[] => {
+		const baseActions: TableAction<GeneralTopic>[] = [
+			// Mở trang detail
+			{
+				icon: <Eye className='h-4 w-4' />,
+				label: 'Xem trang chi tiết',
+				onClick: (topic) => navigate(`/topic/${topic._id}`)
+			},
+			// Quick view modal
+			{
+				icon: <Eye className='h-4 w-4 text-blue-500' />,
+				label: 'Xem nhanh',
+				onClick: handleViewDetail
+			}
+		]
+
+		if (phase === 'submit_topic') {
+			return [
+				...baseActions,
+				{
+					label: 'Duyệt',
+					icon: <CheckCircle />,
+					onClick: (topic) => handleApprove(topic._id),
+					disabled: (topic) => topic.currentStatus !== 'submitted' || isLoadingApprove
+				},
+				{
+					label: 'Từ chối',
+					icon: <XCircle />,
+					onClick: (topic) => handleReject(topic._id),
+					disabled: (topic) => topic.currentStatus !== 'submitted' || isLoadingReject
+				}
+			]
 		}
+
+		if (phase === 'execution') {
+			return [
+				...baseActions,
+				{
+					label: 'Đang thực hiện',
+					icon: <CheckCircle />,
+					onClick: (topic) => console.log('Đang thực hiện', topic),
+					disabled: (topic) => topic.currentStatus !== 'paused'
+				},
+				{
+					label: 'Tạm dừng',
+					icon: <XCircle />,
+					onClick: (topic) => console.log('Tạm dừng', topic),
+					disabled: (topic) => topic.currentStatus !== 'in_progress'
+				},
+				{
+					label: 'Nộp đánh giá',
+					icon: <CheckCircle />,
+					onClick: (topic) => console.log('Nộp đánh giá', topic),
+					disabled: (topic) => topic.currentStatus !== 'in_progress'
+				}
+			]
+		}
+
+		if (phase === 'completion') {
+			return [
+				...baseActions,
+				{
+					label: 'Chỉnh sửa điểm',
+					icon: <Edit />,
+					onClick: (topic) => {
+						// Nếu đã vào Detail Page, bật edit mode
+						navigate(`/topic/${topic._id}?edit=true`)
+					}
+				}
+			]
+		}
+
+		return baseActions
 	}
+
+	const getTopicBulkActions =
+		(phase: PhaseType) =>
+		(selectedRows: GeneralTopic[]): TableBulkAction<GeneralTopic>[] => {
+			if (selectedRows.length === 0) return []
+
+			switch (phase) {
+				case 'submit_topic':
+					return [
+						{
+							label: 'Duyệt',
+							icon: <CheckCircle />,
+							onClick: (rows) => {
+								const toApprove = rows.filter((r) => r.currentStatus === 'submitted')
+								console.log('Bulk Duyệt:', toApprove)
+								// Gọi API approve từng topic hoặc batch
+							},
+							disabled: (rows) => !rows.some((r) => r.currentStatus === 'submitted')
+						},
+						{
+							label: 'Từ chối',
+							icon: <XCircle />,
+							onClick: (rows) => {
+								const toReject = rows.filter((r) => r.currentStatus === 'submitted')
+								console.log('Bulk Từ chối:', toReject)
+								// Gọi API reject
+							},
+							disabled: (rows) => !rows.some((r) => r.currentStatus === 'submitted')
+						}
+					]
+
+				case 'open_registration':
+					return [
+						{
+							label: 'Hủy đăng ký',
+							icon: <XCircle />,
+							onClick: (rows) => {
+								const cancellable = rows.filter((r) => r.currentStatus === 'registered')
+								console.log('Bulk Hủy đăng ký:', cancellable)
+							},
+							disabled: (rows) => !rows.some((r) => r.currentStatus === 'registered')
+						}
+					]
+
+				case 'execution':
+					return [
+						{
+							label: 'Đang thực hiện',
+							icon: <CheckCircle />,
+							onClick: (rows) => {
+								const pausedRows = rows.filter((r) => r.currentStatus === 'paused')
+								console.log('Bulk Đang thực hiện:', pausedRows)
+							},
+							disabled: (rows) => !rows.some((r) => r.currentStatus === 'paused')
+						},
+						{
+							label: 'Tạm dừng',
+							icon: <XCircle />,
+							onClick: (rows) => {
+								const inProgressRows = rows.filter((r) => r.currentStatus === 'in_progress')
+								console.log('Bulk Tạm dừng:', inProgressRows)
+							},
+							disabled: (rows) => !rows.some((r) => r.currentStatus === 'in_progress')
+						},
+						{
+							label: 'Nộp đánh giá',
+							icon: <CheckCircle />,
+							onClick: (rows) => {
+								const inProgressRows = rows.filter((r) => r.currentStatus === 'in_progress')
+								console.log('Bulk Nộp đánh giá:', inProgressRows)
+							},
+							disabled: (rows) => !rows.some((r) => r.currentStatus === 'in_progress')
+						}
+					]
+
+				case 'completion':
+					return [
+						{
+							label: 'Chỉnh sửa điểm',
+							icon: <Edit />,
+							onClick: (rows) => {
+								console.log('Bulk chỉnh sửa điểm:', rows)
+								// Có thể redirect đến trang edit hoặc mở modal
+							},
+							disabled: () => false // luôn enable
+						}
+					]
+
+				default:
+					return []
+			}
+		}
 
 	return (
-		<div className='space-y-4'>
-			<div className='flex items-center justify-between gap-4'>
-				<Input
-					placeholder='Tìm kiếm đề tài, giảng viên,...'
-					value={searchTerm}
-					onChange={(e) => handleSearchChange(e.target.value)}
-					className='max-w-md'
-				/>
-			</div>
+		<TooltipProvider>
+			<DataTable<GeneralTopic>
+				data={data?.data || []}
+				columns={getTopicColumns(phase.phase)}
+				actions={getTopicActions(phase.phase)}
+				bulkActions={getTopicBulkActions(phase.phase)}
+				isLoading={isLoading}
+				error={error}
+				searchFields={{
+					titleVN: 'Tên đề tài',
+					lecturers: 'Giảng viên',
+					currentStatus: 'Trạng thái'
+				}}
+				totalRecords={data?.meta.totalItems}
+				pageSize={queryParams.limit}
+				onQueryChange={(q) => setQueryParams(q)}
+			/>
 
-			<div className='rounded-md border bg-card'>
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead className='w-[100px]'>Mã ĐT</TableHead>
-							<TableHead>Tên đề tài</TableHead>
-							<TableHead>Giảng viên</TableHead>
-							{getPhaseHeaders()}
-							<TableHead className='w-[80px]'>Hành động</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{topics?.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={7} className='py-8 text-center text-muted-foreground'>
-									Không tìm thấy đề tài nào
-								</TableCell>
-							</TableRow>
-						) : (
-							topics?.map((topic, index) => (
-								<motion.tr
-									key={topic._id}
-									initial={{ opacity: 0 }}
-									animate={{ opacity: 1 }}
-									transition={{ delay: index * 0.05 }}
-									className='group hover:bg-muted/50'
-								>
-									<TableCell className='font-medium'>{topic._id}</TableCell>
-									<TableCell className='max-w-[500px]'>
-										<div
-											className='line-clamp-3 truncate text-wrap font-semibold'
-											title={topic.titleVN}
-										>
-											{topic.titleVN}
-										</div>
-										<div
-											className='line-clamp-3 truncate text-wrap text-gray-500'
-											title={topic.titleEng}
-										>
-											{topic.titleEng}
-										</div>
-									</TableCell>
-									<TableCell>
-										{topic.lecturers && topic.lecturers.length > 0
-											? topic.lecturers.map((lecturer, idx) => (
-													<span key={lecturer._id || idx} className='mr-2 font-semibold'>
-														{lecturer.title}
-														{'.'} {lecturer.fullName}
-														{idx < topic.lecturers.length - 1 && ','}
-													</span>
-												))
-											: 'N/A'}
-									</TableCell>
-									{renderPhaseSpecificColumns(topic)}
-									<TableCell>
-										<DropdownMenu>
-											<DropdownMenuTrigger asChild>
-												<Button variant='ghost' size='icon'>
-													<MoreVertical className='h-4 w-4' />
-												</Button>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent align='end'>
-												<DropdownMenuItem onClick={() => handleViewDetail(topic)}>
-													<Eye className='mr-2 h-4 w-4' />
-													Xem chi tiết
-												</DropdownMenuItem>
-												{phase === 'submit_topic' && topic.currentStatus === 'submitted' && (
-													<>
-														<DropdownMenuItem
-															onClick={() => actions.onApproveTopic(topic._id)}
-														>
-															<CheckCircle className='mr-2 h-4 w-4' />
-															Duyệt
-														</DropdownMenuItem>
-														<DropdownMenuItem
-															onClick={() => actions.onRejectTopic(topic._id)}
-														>
-															<XCircle className='mr-2 h-4 w-4' />
-															Từ chối
-														</DropdownMenuItem>
-													</>
-												)}
-												<DropdownMenuItem onClick={() => handleEdit(topic)}>
-													<Edit className='mr-2 h-4 w-4' />
-													Chỉnh sửa
-												</DropdownMenuItem>
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</TableCell>
-								</motion.tr>
-							))
-						)}
-					</TableBody>
-				</Table>
-			</div>
-
-			{/* Modals
-			<TopicDetailModal open={detailModalOpen} onOpenChange={setDetailModalOpen} topic={selectedTopic} /> */}
-			{/* <EditTopicModal open={editModalOpen} onOpenChange={setEditModalOpen} topic={selectedTopic} /> */}
-		</div>
+			<TopicDetailModal
+				isOpen={detailModalOpen}
+				onClose={() => setDetailModalOpen(false)}
+				topic={selectedTopic}
+			/>
+		</TooltipProvider>
 	)
 }

@@ -108,9 +108,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	// 	setSelectedFiles([])
 	// 	setFileNames([])
 
-	// 	setErrorMessage(null)
-	// }
-	const handleSave = (periodId?: string) => {
+	const handleSave = async (periodId?: string) => {
 		if (!selectedMajor) {
 			toast({
 				title: 'Lỗi',

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 export type SortOrder = 'asc' | 'desc'
 export interface QueryParams {
 	page: number
-	page_size: number
+	limit: number
 	search_by: string
 	query: string
 	sort_by: string
@@ -49,4 +49,12 @@ export interface DataTableProps<T> {
 	onQueryChange: (params: QueryParams) => void
 	emptyState?: { title: string; description: string }
 	toolbar?: ReactNode
+	bulkActions?: (selectedRows: T[]) => TableBulkAction<T>[]
+}
+
+export interface TableBulkAction<T> {
+	label: string
+	icon?: React.ReactNode
+	onClick?: (rows: T[]) => void
+	disabled?: (rows: T[]) => boolean
 }

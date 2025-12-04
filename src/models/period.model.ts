@@ -1,33 +1,11 @@
+import type { ElementType } from 'react'
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
+import type { TopicStatus } from './topic.model'
 
 export type PeriodStatus = 'ongoing' | 'completed'
 
 export type PhaseType = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion'
-
-export type TopicStatus =
-	// Pha 1 - Nộp đề tài
-	| 'draft'
-	| 'submitted'
-	| 'under_review'
-	| 'approved'
-	| 'rejected'
-	// Pha 2 - Mở đăng ký
-	| 'pending_registration'
-	| 'registered'
-	| 'full'
-	| 'cancelled'
-	// Pha 3 - Thực hiện đề tài
-	| 'in_progress'
-	| 'delayed'
-	| 'paused'
-	| 'submitted_for_review'
-	| 'awaiting_evaluation'
-	// Pha 4 - Hoàn tất
-	| 'graded'
-	| 'reviewed'
-	| 'archived'
-	| 'rejected_final'
 
 export interface Period {
 	_id: string
@@ -35,7 +13,7 @@ export interface Period {
 	faculty: GetFaculty
 	phases: PeriodPhase[]
 	status: string
-	currentPhase: string
+	currentPhase: PhaseType
 	startTime: Date
 	endTime: Date
 }
@@ -51,11 +29,16 @@ export interface CreatePeriodDto {
 }
 
 export interface PhaseStats {
-	status: string
+	status: TopicStatus | 'all'
 	label: string
 	value: number
-	variant?: 'default' | 'success' | 'warning' | 'destructive'
+	variant?: StatVariant
+	description?: string
+	icon?: ElementType
+	iconVariant?: StatVariant
 }
+
+export type StatVariant = 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'neutral' | 'purple' | 'orange'
 
 export interface PeriodBackend {
 	id: string
@@ -90,6 +73,7 @@ export interface GetCustomMiniPeriodInfoRequestDto {
 	currentPhaseDetail: PeriodPhase
 }
 
+
 export const PeriodPhaseName = {
 	EMPTY: 'empty',
 	SUBMIT_TOPIC: 'submit_topic',
@@ -97,3 +81,25 @@ export const PeriodPhaseName = {
 	EXECUTION: 'execution',
 	COMPLETION: 'completion'
 } as const
+
+export interface    CreatePhaseResponse {
+	success: boolean
+	message: string
+}
+
+export type CreatePhaseSubmitTopicDto = Omit<PeriodPhase, 'status'> & {
+	phase: 'submit-topic'
+}
+
+export type CreateExecutionPhaseDto = Omit<PeriodPhase, 'status'> & {
+	phase: 'execution'
+}
+
+export type CreateOpenRegPhaseDto = Omit<PeriodPhase, 'status'> & {
+	phase: 'open-registration'
+}
+
+export type CreateCompletionPhaseDto = Omit<PeriodPhase, 'status'> & {
+	phase: 'completion'
+}
+export type UpdatePeriodPhaseDto = Omit<PeriodPhase, 'status' | 'phase'>
