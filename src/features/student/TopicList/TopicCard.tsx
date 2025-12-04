@@ -28,7 +28,8 @@ export const TopicCard: React.FC<{
 	mode?: TopicCardMode
 	updateAfterAction?: (topic: Topic) => void
 }> = ({ topic, mode = 'all', updateAfterAction }) => {
-	const isFullSlot = topic.currentStatus == "full"
+	console.log('Render TopicCard:', topic)
+	const isFullSlot = topic.currentStatus == 'full'
 	const isDisabled = isFullSlot
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const [currentTopic, setCurrentTopic] = useState<Topic>(topic)
@@ -146,7 +147,9 @@ export const TopicCard: React.FC<{
 						<CardTitle className='text-lg leading-tight'>{currentTopic.titleVN}</CardTitle>
 						<CardTitle className='text-md font-normal'>{currentTopic.titleEng}</CardTitle>
 						{/* Trạng thái của đề tài */}
-						<Badge className={`${topicStatusLabels[currentTopic.currentStatus as keyof typeof topicStatusLabels].css}`}>
+						<Badge
+							className={`${topicStatusLabels[currentTopic.currentStatus as keyof typeof topicStatusLabels].css}`}
+						>
 							{'Trạng thái:  '}
 							{topicStatusLabels[currentTopic.currentStatus as keyof typeof topicStatusLabels].name}
 						</Badge>
@@ -228,13 +231,13 @@ export const TopicCard: React.FC<{
 					<div className='flex items-center gap-4 text-sm text-muted-foreground'>
 						<div className='flex items-center gap-1'>
 							<Users className='h-4 w-4' />
-							{currentTopic.students.length}/{currentTopic.maxStudents}
+							{currentTopic.studentsNum}/{currentTopic.maxStudents}
 						</div>
 						{isFullSlot ? (
 							<Badge variant='destructive'>Đã đủ</Badge>
 						) : (
 							<Badge variant='default'>
-								{currentTopic.maxStudents - currentTopic.students.length} chỗ trống
+								{currentTopic.maxStudents - currentTopic.studentsNum} chỗ trống
 							</Badge>
 						)}
 					</div>
@@ -278,7 +281,7 @@ export const TopicCard: React.FC<{
 				</Dialog>
 			</CardContent>
 			<CardFooter className='flex flex-row justify-between'>
-				<span className='text-[12px] font-medium text-gray-500'>{`Được tạo bởi  ${currentTopic.createByInfo.fullName}`}</span>
+				<span className='text-[12px] font-medium text-gray-500'>{`Được tạo bởi ${currentTopic.createByInfo.fullName}`}</span>
 				<span className='text-[12px] font-medium text-gray-500'>{`Cập nhật lúc ${new Date(currentTopic.createdAt).toLocaleString('vi-VN')}`}</span>
 			</CardFooter>
 		</Card>

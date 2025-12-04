@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAppDispatch } from '../../store'
 import { userApi } from '../../services/userApi'
+import NotificationPopover from '../NotificationPopover'
 
 interface HeaderProps {
 	user: AppUser | null
@@ -67,15 +68,7 @@ const Header = ({ user }: HeaderProps) => {
 					</Button>
 
 					{/* Notifications */}
-					<Button variant='ghost' size='icon' className='relative'>
-						<Bell className='h-6 w-8' />
-						<Badge
-							variant='destructive'
-							className='absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs'
-						>
-							3
-						</Badge>
-					</Button>
+					<NotificationPopover />
 
 					{/* User Menu */}
 					<Dropdown

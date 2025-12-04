@@ -24,7 +24,7 @@ const rawBaseQuery = fetchBaseQuery({
 })
 
 export const baseApi = createApi({
-	reducerPath: 'api',
+	reducerPath: 'api',	
 	baseQuery: async <T>(
 		args: Parameters<typeof rawBaseQuery>[0],
 		api: Parameters<typeof rawBaseQuery>[1],

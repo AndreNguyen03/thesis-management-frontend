@@ -12,6 +12,7 @@ import {
 	EyeOff,
 	File,
 	FileText,
+	History,
 	Layers,
 	Loader2,
 	Plus,
@@ -53,10 +54,14 @@ import RegistrationDetail from './modal/TopicRegistrationDetail'
 import CancelRegistrationConfirmModal from './modal/CancelRegistrationConfirmModal'
 import AddLecturerModal from './modal/AddLecturerModal'
 import AddStudentModal from './modal/AddStudentModal'
+import { PeriodPhaseName } from '@/models/period.model'
+import { PeriodPhaseStatus } from '@/models/period-phase.models'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
+	//lấy thông tin kì hiện tại
+	const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
 	const [isEditing, setIsEditing] = useState(false)
 	// Quản lý dialog quản lý file tìa liệu
 	const [openFileModal, setOpenFileModal] = useState(false)
@@ -371,6 +376,13 @@ export const TopicDetailContainer = () => {
 		setOpenAddStudentModal(false)
 		setModalRegisterModalOpen(true)
 	}
+	const isAbleInDraftOrSubmitPhase =
+		(currentPeriod?.currentPhase === PeriodPhaseName.EMPTY ||
+			currentPeriod?.currentPhase === PeriodPhaseName.SUBMIT_TOPIC) &&
+		currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
+	const isAbleInOpenRegistrationPhase =
+		currentPeriod?.currentPhase === PeriodPhaseName.OPEN_REGISTRATION &&
+		currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
 	return (
 		<Dialog open={true}>
 			<DialogContent hideClose={true} className='h-screen rounded-xl bg-[#F2F4FF] p-8 sm:min-w-full'>
@@ -529,151 +541,162 @@ export const TopicDetailContainer = () => {
 							<div className='relative gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
 								<span className='text-lg font-medium'>Lịch sử thay đổi trạng thái</span>
 								<div className='space-y-4'>
-									{topic.phaseHistories.map((history, idx) => {
-										if (
-											idx === 0 &&
-											user?.role === 'lecturer' &&
-											user.userId === history.actor._id
-										) {
-											return (
-												<div key={history._id}>
-													<div className='flex items-start gap-3'>
-														<div className='mt-1'>
-															<div className='h-2 w-2 rounded-full bg-primary' />
-														</div>
-														<div className='flex-1'>
-															<div className='mb-1 flex items-center gap-2'>
-																<PhaseBadge phase={history.phaseName} />
-																<StatusBadge status={history.status} />
-																{idx > 0 &&
-																	history.actor._id ===
-																		topic.phaseHistories[idx - 1].actor._id &&
-																	Math.abs(
-																		new Date(history.createdAt).getTime() -
-																			new Date(
-																				topic.phaseHistories[idx - 1].createdAt
-																			).getTime()
-																	) < 6000 && (
-																		<span className='ml-2 text-xs text-primary'>
-																			Đã tạo và nộp cùng lúc
-																		</span>
-																	)}
+									{topic.phaseHistories.slice(1).length > 0 ? (
+										topic.phaseHistories.map((history, idx) => {
+											if (
+												idx === 0 &&
+												user?.role === 'lecturer' &&
+												user.userId === history.actor._id
+											) {
+												return (
+													<div key={history._id}>
+														<div className='flex items-start gap-3'>
+															<div className='mt-1'>
+																<div className='h-2 w-2 rounded-full bg-primary' />
 															</div>
-															<div className='flex items-center gap-1'>
-																<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
-																	{history.actor.avatarUrl ? (
-																		<img
-																			src={history.actor.avatarUrl}
-																			alt={history.actor.fullName}
-																			className='h-4 w-4 rounded-full object-cover'
-																		/>
-																	) : (
-																		<User className='h-4 w-4 text-primary' />
-																	)}
+															<div className='flex-1'>
+																<div className='mb-1 flex items-center gap-2'>
+																	<PhaseBadge phase={history.phaseName} />
+																	<StatusBadge status={history.status} />
+																	{idx > 0 &&
+																		history.actor._id ===
+																			topic.phaseHistories[idx - 1].actor._id &&
+																		Math.abs(
+																			new Date(history.createdAt).getTime() -
+																				new Date(
+																					topic.phaseHistories[
+																						idx - 1
+																					].createdAt
+																				).getTime()
+																		) < 6000 && (
+																			<span className='ml-2 text-xs text-primary'>
+																				Đã tạo và nộp cùng lúc
+																			</span>
+																		)}
+																</div>
+																<div className='flex items-center gap-1'>
+																	<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
+																		{history.actor.avatarUrl ? (
+																			<img
+																				src={history.actor.avatarUrl}
+																				alt={history.actor.fullName}
+																				className='h-4 w-4 rounded-full object-cover'
+																			/>
+																		) : (
+																			<User className='h-4 w-4 text-primary' />
+																		)}
+																	</div>
+
+																	<p className='flex gap-2 text-sm text-muted-foreground'>
+																		<span className='flex gap-1'>
+																			{`${history.actor.title ? history.actor.title : ''} ${history.actor.fullName}`}{' '}
+																			{user?.role === 'lecturer' &&
+																				topic.isRegistered &&
+																				history.actor._id === user.userId && (
+																					<Badge variant='outlineBlue'>
+																						{' '}
+																						Bạn
+																					</Badge>
+																				)}
+																		</span>
+																		•{' '}
+																		{new Date(
+																			history.createdAt || ''
+																		).toLocaleString('vi-VN')}
+																	</p>
 																</div>
 
-																<p className='flex gap-2 text-sm text-muted-foreground'>
-																	<span className='flex gap-1'>
-																		{`${history.actor.title ? history.actor.title : ''} ${history.actor.fullName}`}{' '}
-																		{user?.role === 'lecturer' &&
-																			topic.isRegistered &&
-																			history.actor._id === user.userId && (
-																				<Badge variant='outlineBlue'>
-																					{' '}
-																					Bạn
-																				</Badge>
-																			)}
-																	</span>
-																	•{' '}
-																	{new Date(history.createdAt || '').toLocaleString(
-																		'vi-VN'
-																	)}
-																</p>
+																{history.notes && (
+																	<p className='mt-1 text-sm text-foreground'>
+																		{history.notes}
+																	</p>
+																)}
 															</div>
-
-															{history.notes && (
-																<p className='mt-1 text-sm text-foreground'>
-																	{history.notes}
-																</p>
-															)}
 														</div>
+														{idx < topic.phaseHistories.length - 1 && (
+															<div className='my-2 ml-1 h-6 w-0.5 bg-border' />
+														)}
 													</div>
-													{idx < topic.phaseHistories.length - 1 && (
-														<div className='my-2 ml-1 h-6 w-0.5 bg-border' />
-													)}
-												</div>
-											)
-										}
-										if (idx > 0)
-											return (
-												<div key={history._id}>
-													<div className='flex items-start gap-3'>
-														<div className='mt-1'>
-															<div className='h-2 w-2 rounded-full bg-primary' />
-														</div>
-														<div className='flex-1'>
-															<div className='mb-1 flex items-center gap-2'>
-																<PhaseBadge phase={history.phaseName} />
-																<StatusBadge status={history.status} />
-																{idx > 0 &&
-																	history.actor._id ===
-																		topic.phaseHistories[idx - 1].actor._id &&
-																	Math.abs(
-																		new Date(history.createdAt).getTime() -
-																			new Date(
-																				topic.phaseHistories[idx - 1].createdAt
-																			).getTime()
-																	) < 6000 && (
-																		<span className='ml-2 text-xs text-primary'>
-																			Đã tạo và nộp cùng lúc
-																		</span>
-																	)}
+												)
+											}
+											if (idx > 0)
+												return (
+													<div key={history._id}>
+														<div className='flex items-start gap-3'>
+															<div className='mt-1'>
+																<div className='h-2 w-2 rounded-full bg-primary' />
 															</div>
-															<div className='flex items-center gap-1'>
-																<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
-																	{history.actor.avatarUrl ? (
-																		<img
-																			src={history.actor.avatarUrl}
-																			alt={history.actor.fullName}
-																			className='h-4 w-4 rounded-full object-cover'
-																		/>
-																	) : (
-																		<User className='h-4 w-4 text-primary' />
-																	)}
+															<div className='flex-1'>
+																<div className='mb-1 flex items-center gap-2'>
+																	<PhaseBadge phase={history.phaseName} />
+																	<StatusBadge status={history.status} />
+																	{idx > 0 &&
+																		history.actor._id ===
+																			topic.phaseHistories[idx - 1].actor._id &&
+																		Math.abs(
+																			new Date(history.createdAt).getTime() -
+																				new Date(
+																					topic.phaseHistories[
+																						idx - 1
+																					].createdAt
+																				).getTime()
+																		) < 6000 && (
+																			<span className='ml-2 text-xs text-primary'>
+																				Đã tạo và nộp cùng lúc
+																			</span>
+																		)}
+																</div>
+																<div className='flex items-center gap-1'>
+																	<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
+																		{history.actor.avatarUrl ? (
+																			<img
+																				src={history.actor.avatarUrl}
+																				alt={history.actor.fullName}
+																				className='h-4 w-4 rounded-full object-cover'
+																			/>
+																		) : (
+																			<User className='h-4 w-4 text-primary' />
+																		)}
+																	</div>
+
+																	<p className='flex gap-2 text-sm text-muted-foreground'>
+																		<span className='flex gap-1'>
+																			{`${history.actor.title ? history.actor.title : ''} ${history.actor.fullName}`}{' '}
+																			{user?.role === 'lecturer' &&
+																				topic.isRegistered &&
+																				history.actor._id === user.userId && (
+																					<Badge variant='outlineBlue'>
+																						{' '}
+																						Bạn
+																					</Badge>
+																				)}
+																		</span>
+																		•{' '}
+																		{new Date(
+																			history.createdAt || ''
+																		).toLocaleString('vi-VN')}
+																	</p>
 																</div>
 
-																<p className='flex gap-2 text-sm text-muted-foreground'>
-																	<span className='flex gap-1'>
-																		{`${history.actor.title ? history.actor.title : ''} ${history.actor.fullName}`}{' '}
-																		{user?.role === 'lecturer' &&
-																			topic.isRegistered &&
-																			history.actor._id === user.userId && (
-																				<Badge variant='outlineBlue'>
-																					{' '}
-																					Bạn
-																				</Badge>
-																			)}
-																	</span>
-																	•{' '}
-																	{new Date(history.createdAt || '').toLocaleString(
-																		'vi-VN'
-																	)}
-																</p>
+																{history.notes && (
+																	<p className='mt-1 text-sm text-foreground'>
+																		{history.notes}
+																	</p>
+																)}
 															</div>
-
-															{history.notes && (
-																<p className='mt-1 text-sm text-foreground'>
-																	{history.notes}
-																</p>
-															)}
 														</div>
+														{idx < topic.phaseHistories.length - 1 && (
+															<div className='my-2 ml-1 h-6 w-0.5 bg-border' />
+														)}
 													</div>
-													{idx < topic.phaseHistories.length - 1 && (
-														<div className='my-2 ml-1 h-6 w-0.5 bg-border' />
-													)}
-												</div>
-											)
-									})}
+												)
+										})
+									) : (
+										<div className='flex flex-col items-center justify-center text-gray-400'>
+											<History className='text-gray-500' />
+											<p>Chưa có lịch sử thay đổi trạng thái nào.</p>
+										</div>
+									)}
 								</div>
 								{isEditing && (
 									<div className='absolute inset-0 z-10 flex items-center justify-center bg-white/60'>
@@ -826,7 +849,7 @@ export const TopicDetailContainer = () => {
 											</p>
 										</div>
 									)}
-									{user && user.role === 'lecturer' && (
+									{user && user.role === 'lecturer' && isAbleInDraftOrSubmitPhase && (
 										<div className='mt-2 flex items-center gap-2'>
 											<div
 												className='flex items-center rounded-sm px-2 py-2 hover:cursor-pointer hover:bg-blue-100'
@@ -842,7 +865,8 @@ export const TopicDetailContainer = () => {
 											switch (user.role) {
 												case 'lecturer':
 													return (
-														currentTopic.students.pendingStudents.length > 0 && (
+														currentTopic.students.pendingStudents.length > 0 &&
+														isAbleInOpenRegistrationPhase && (
 															<>
 																{/* Hiển thị yêu cầu đăng ký cần được duyệt */}
 																<div className='flex flex-col justify-between gap-3 border border-b border-yellow-300 bg-yellow-50/50 px-3 py-2 sm:flex-row sm:items-center'>
@@ -867,6 +891,7 @@ export const TopicDetailContainer = () => {
 													)
 												case 'student':
 													return (
+														isAbleInOpenRegistrationPhase &&
 														currentTopic.students.pendingStudents.length > 0 &&
 														currentTopic.students.pendingStudents.some(
 															(student) => student.student._id === user.userId
@@ -908,26 +933,28 @@ export const TopicDetailContainer = () => {
 													)
 											}
 										})()}
-									{user?.role === 'student' && !currentTopic.isRegistered && (
-										<>
-											<div className='flex flex-col justify-between gap-3 border border-b border-green-400 bg-green-50/60 px-3 py-1 sm:flex-row sm:items-center'>
-												<span className='flex items-center gap-2 text-[14px] font-normal text-green-800'>
-													Đề tài đang được mở đăng ký
-												</span>
-												<Button
-													disabled={isLoadingRegister || isLoadingUnregister}
-													variant='toggle_green'
-													className='w-fit'
-													onClick={() => {
-														toggleRegistration()
-													}}
-												>
-													{isLoadingRegister ? <Loader2 /> : null}
-													{'Đăng ký đề tài'}
-												</Button>
-											</div>
-										</>
-									)}
+									{isAbleInOpenRegistrationPhase &&
+										user?.role === 'student' &&
+										!currentTopic.isRegistered && (
+											<>
+												<div className='flex flex-col justify-between gap-3 border border-b border-green-400 bg-green-50/60 px-3 py-1 sm:flex-row sm:items-center'>
+													<span className='flex items-center gap-2 text-[14px] font-normal text-green-800'>
+														Đề tài đang được mở đăng ký
+													</span>
+													<Button
+														disabled={isLoadingRegister || isLoadingUnregister}
+														variant='toggle_green'
+														className='w-fit'
+														onClick={() => {
+															toggleRegistration()
+														}}
+													>
+														{isLoadingRegister ? <Loader2 /> : null}
+														{'Đăng ký đề tài'}
+													</Button>
+												</div>
+											</>
+										)}
 								</div>
 								{isEditing && (
 									<div className='absolute inset-0 z-10 flex items-center justify-center bg-white/80'>
@@ -975,17 +1002,20 @@ export const TopicDetailContainer = () => {
 											</div>
 										</div>
 									))}
-									{user && user.role === 'lecturer' && currentTopic.lecturers.length < 2 && (
-										<div className='flex items-center gap-2'>
-											<div
-												className='flex items-center rounded-sm px-2 py-2 hover:cursor-pointer hover:bg-blue-100'
-												onClick={() => setOpenAddLecturerModal(true)}
-											>
-												<Plus className='h-4 w-4 text-primary' />
-												<span className='ml-2 text-sm text-primary'>Thêm giảng viên</span>
+									{isAbleInDraftOrSubmitPhase &&
+										user &&
+										user.role === 'lecturer' &&
+										currentTopic.lecturers.length < 2 && (
+											<div className='flex items-center gap-2'>
+												<div
+													className='flex items-center rounded-sm px-2 py-2 hover:cursor-pointer hover:bg-blue-100'
+													onClick={() => setOpenAddLecturerModal(true)}
+												>
+													<Plus className='h-4 w-4 text-primary' />
+													<span className='ml-2 text-sm text-primary'>Thêm giảng viên</span>
+												</div>
 											</div>
-										</div>
-									)}
+										)}
 								</div>
 								{isEditing && (
 									<div className='absolute inset-0 z-10 flex items-center justify-center bg-white/80'>
