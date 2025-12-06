@@ -5,6 +5,7 @@ import {
 	type CreateExecutionPhaseDto,
 	type CreateOpenRegPhaseDto,
 	type CreatePeriodDto,
+	type CreatePeriodPayload,
 	type CreatePhaseResponse,
 	type CreatePhaseSubmitTopicDto,
 	type GetCustomMiniPeriodInfoRequestDto,
@@ -57,7 +58,7 @@ export const periodApi = baseApi.injectEndpoints({
 				result ? [{ type: 'PeriodDetail', id }] : [{ type: 'PeriodDetail', id: 'LIST' }]
 		}),
 
-		createPeriod: builder.mutation<{ message: string }, CreatePeriodDto>({
+		createPeriod: builder.mutation<{ message: string }, CreatePeriodPayload>({
 			query: (body) => ({
 				url: '/periods',
 				method: 'POST',
@@ -185,7 +186,7 @@ export const periodApi = baseApi.injectEndpoints({
 })
 
 export const {
-    useResolvePhaseMutation,
+	useResolvePhaseMutation,
 	useGetPeriodDetailQuery,
 	useCreateSubmitTopicPhaseMutation,
 	useCreateOpenRegPhaseMutation,

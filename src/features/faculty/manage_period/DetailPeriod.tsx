@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { PhaseSettingsModal } from './components/modals/PhaseSettingsModal'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { getNextPhase } from './utils'
+import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
 
 export default function DetailPeriodPage() {
 	const { id } = useParams()
@@ -25,14 +26,23 @@ export default function DetailPeriodPage() {
 	} = useGetPeriodDetailQuery(id!, {
 		skip: !id
 	})
+	const { data: lecturersByFaculty } = useGetAllLecturersComboboxQuery({ limit: 1000, page: 1, sort_order: 'desc' })
+
 	const [isSidebarHidden, setSidebarHidden] = useState(false)
 	const [currentChosenPhase, setCurrentChosenPhase] = useState<PhaseType>('empty')
 	const [phaseSettingOpen, setPhaseSettingsOpen] = useState<boolean>(false)
 
+	const typeLabels = {
+		khoaluan: 'Khóa luận',
+		nckh: 'Nghiên cứu khoa học'
+	} as const
+
+	const title = `Kì hiện tại: ${period?.year} • HK ${period?.semester} • ${typeLabels[period?.type ?? 'khoaluan']}`
+
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Quản lý đợt đăng ký', path: '/manage-period' },
-		{ label: period?.name ?? 'Đang tải', path: `/period/${period?._id}` }
+		{ label: title ?? 'Đang tải', path: `/period/${period?._id}` }
 	])
 
 	useEffect(() => {
@@ -60,7 +70,6 @@ export default function DetailPeriodPage() {
 		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
 	)
 
-    console.log('current phase detail  detail period:::', currentPhaseDetail)
 
 	return (
 		<div className='flex h-screen min-h-0'>
@@ -79,20 +88,22 @@ export default function DetailPeriodPage() {
 			<main className='min-h-0 flex-1 overflow-y-auto px-4 pt-12'>
 				<div className='h-full'>
 					{currentPhaseDetail ? (
-						<PhaseContent
-							phaseDetail={currentPhaseDetail}
-							currentPhase={period.currentPhase}
-							periodId={period._id}
-							completePhase={() => {
-								const nextPhase = getNextPhase(currentChosenPhase)
-								if (!nextPhase) {
-									console.log('Đã là pha cuối, không còn pha tiếp theo')
-									return
-								}
-								setCurrentChosenPhase(nextPhase)
-							}}
-							onPhaseSettingOpen={setPhaseSettingsOpen}
-						/>
+						<>
+							<PhaseContent
+								phaseDetail={currentPhaseDetail}
+								currentPhase={period.currentPhase}
+								periodId={period._id}
+								completePhase={() => {
+									const nextPhase = getNextPhase(currentChosenPhase)
+									if (!nextPhase) {
+										console.log('Đã là pha cuối, không còn pha tiếp theo')
+										return
+									}
+									setCurrentChosenPhase(nextPhase)
+								}}
+								onPhaseSettingOpen={setPhaseSettingsOpen}
+							/>
+						</>
 					) : (
 						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-2'>
 							<h2 className='text-2xl font-bold'>Pha {PhaseInfo[currentChosenPhase].label}</h2>
@@ -118,7 +129,8 @@ export default function DetailPeriodPage() {
 				phase={currentPhaseDetail}
 				currentPhase={currentChosenPhase}
 				periodId={period._id}
-                onSuccess={() => refetch()}
+				lecturers={lecturersByFaculty?.data ?? []}
+				onSuccess={() => refetch()}
 			/>
 		</div>
 	)

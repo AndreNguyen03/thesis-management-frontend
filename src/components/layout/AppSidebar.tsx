@@ -21,12 +21,9 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import type { Role } from '@/models'
-import { useGetCurrentPeriodInfoQuery } from '@/services/periodApi'
 import { useCountdown } from '@/hooks/count-down'
 import { useAppSelector } from '@/store'
-import { PeriodPhaseStatus } from '@/models/period-phase.models'
 import { PhaseInfo } from '@/utils/utils'
-import type { PhaseType } from '@/models/period.model'
 import { Badge } from '../ui'
 
 interface AppSidebarProps {
@@ -105,7 +102,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
 	const { currentPeriod, isLoading } = useAppSelector((state) => state.period)
-	const countdown = useCountdown(currentPeriod?.currentPhaseDetail.endTime!)
+	const countdown = useCountdown(currentPeriod?.currentPhaseDetail?.endTime)
 	function isActive(path: string) {
 		// Logic chính xác hơn cho active state của sub-item
 		if (path === '/' && currentPath === '/') return true
@@ -117,23 +114,45 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const handleMenuClick = (title: string) => {
 		setOpenMenus((prev) => (prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]))
 	}
-	const handlePeriodInfo = (period_info: MenuItem[]) => {
-		if (currentPeriod) {
-			period_info[0].title = `Kì hiện tại: ${currentPeriod.name}`
-			switch (userRole) {
-				case 'faculty_board':
-					period_info[0].url = `/period/${currentPeriod._id}`
-					break
-				case 'admin':
-					period_info[0].url = `/period/${currentPeriod._id}`
-					break
-				case 'lecturer':
-					period_info[0].url = `/period/${currentPeriod._id}`
-					break
+	// const handlePeriodInfo = (period_info: MenuItem[]) => {
+	// 	if (currentPeriod) {
+	// 		period_info[0].title = `Kì hiện tại: ${currentPeriod.name}`
+	// 		switch (userRole) {
+	// 			case 'faculty_board':
+	// 				period_info[0].url = `/period/${currentPeriod._id}`
+	// 				break
+	// 			case 'admin':
+	// 				period_info[0].url = `/period/${currentPeriod._id}`
+	// 				break
+	// 			case 'lecturer':
+	// 				period_info[0].url = `/period/${currentPeriod._id}`
+	// 				break
+	// 		}
+	// 		period_info[0].icon = BookOpen
+	// 	}
+	// 	return period_info
+	// }
+
+	const handlePeriodInfo = (periodInfo: MenuItem[]) => {
+		if (!currentPeriod) return periodInfo
+
+		const typeLabels = {
+			khoaluan: 'Khóa luận',
+			nckh: 'Nghiên cứu khoa học'
+		} as const
+
+		const title = `Kì hiện tại: ${currentPeriod.year} • HK ${currentPeriod.semester} • ${
+			typeLabels[currentPeriod.type]
+		}`
+
+		return [
+			{
+				...periodInfo[0],
+				title,
+				url: `/period/${currentPeriod?._id ?? ''}`,
+				icon: BookOpen
 			}
-			period_info[0].icon = BookOpen
-		}
-		return period_info
+		]
 	}
 	const renderMenuItems = (items: typeof menuItems.common) => {
 		return (
@@ -234,7 +253,11 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 										<span className='font-semibold'>{`${currentPeriod?.faculty.name}`}</span>
 									</div>
 									<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
-										<Badge>{`Đợt ${PhaseInfo[currentPeriod.currentPhaseDetail.phase].label}`}</Badge>
+										<Badge>
+											{currentPeriod.currentPhaseDetail.phase
+												? `Pha ${PhaseInfo[currentPeriod.currentPhaseDetail.phase].label}`
+												: 'Hiện chưa có pha nào'}
+										</Badge>
 									</div>
 									<div className='mb-2 flex gap-1 px-3 text-xs font-semibold text-gray-500'>
 										<span>{`Kết thúc ${countdown}`}</span>
