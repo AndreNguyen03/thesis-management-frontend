@@ -70,10 +70,37 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 	// Định nghĩa các cột
 	const columns: TableColumn<Period>[] = [
 		{
-			key: 'name',
-			title: 'Tên đợt',
-			sortable: false,
-			searchable: true
+			key: 'year',
+			title: 'Năm học',
+			sortable: true,
+			searchable: true,
+			render: (value) => <span className='font-medium'>{value}</span>
+		},
+		{
+			key: 'semester',
+			title: 'Học kỳ',
+			sortable: true,
+			render: (value) => <span>Học kỳ {value}</span>
+		},
+		{
+			key: 'type',
+			title: 'Loại đợt',
+			sortable: true,
+			searchable: true,
+			render: (value: 'khoaluan' | 'nckh') => (
+				<Badge variant='outline'>{value === 'khoaluan' ? 'Khóa luận' : 'Nghiên cứu khoa học'}</Badge>
+			),
+			renderSearchInput: ({ value, onChange }) => (
+				<select
+					className='w-full rounded border p-2 text-sm'
+					value={value?.value || ''}
+					onChange={(e) => onChange({ value: e.target.value })}
+				>
+					<option value=''>Tất cả</option>
+					<option value='khoaluan'>Khóa luận</option>
+					<option value='nckh'>Nghiên cứu khoa học</option>
+				</select>
+			)
 		},
 		{
 			key: 'startTime',
@@ -90,6 +117,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 			key: 'status',
 			title: 'Trạng thái',
 			sortable: false,
+			searchable: true,
 			render: (value: PeriodStatus) => getStatusBadge(value),
 			renderSearchInput: ({ value, onChange }) => (
 				<select
@@ -140,7 +168,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 
 	return (
 		<div className='flex h-full flex-col' role='main'>
-			<header className='mt-16 mb-6 flex items-center justify-between'>
+			<header className='mb-6 mt-16 flex items-center justify-between'>
 				<header className='flex flex-col items-start justify-between'>
 					<h1 className='text-2xl font-bold'>Quản lý Đợt Đăng Ký</h1>
 					<p className='mt-1 text-muted-foreground'>Quản lý các đợt đăng ký đề tài tốt nghiệp</p>

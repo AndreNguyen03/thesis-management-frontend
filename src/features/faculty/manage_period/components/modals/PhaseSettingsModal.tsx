@@ -2,13 +2,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Users, CheckSquare } from 'lucide-react'
+import { Calendar, Users } from 'lucide-react'
 import { useState, useEffect, type SetStateAction, type Dispatch } from 'react'
 import { Input } from '@/components/ui/input'
 import { PhaseInfo, PhaseStatusMap } from '@/utils/utils'
 import { LecturerMultiSelect } from '../LecturerMultiSelect'
 import type { PhaseType } from '@/models/period.model'
-import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import {
 	useCreateCompletionPhaseMutation,
@@ -18,6 +17,7 @@ import {
 } from '@/services/periodApi'
 import { toast } from '@/hooks/use-toast'
 import { toInputDateTime } from '../../utils'
+import type { ResponseMiniLecturerDto } from '@/models'
 
 interface Props {
 	open: boolean
@@ -26,9 +26,10 @@ interface Props {
 	currentPhase: PhaseType
 	periodId: string
 	onSuccess: () => void
+	lecturers: ResponseMiniLecturerDto[]
 }
 
-export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, periodId, onSuccess }: Props) {
+export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, periodId, onSuccess, lecturers }: Props) {
 	const [startTime, setStartTime] = useState(toInputDateTime(phase?.startTime) ?? '')
 	const [endTime, setEndTime] = useState(toInputDateTime(phase?.endTime) ?? '')
 
@@ -36,9 +37,6 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 	const [selectedLecturerIds, setSelectedLecturerIds] = useState<string[]>(
 		phase?.requiredLecturers?.map((lec) => lec._id) ?? []
 	)
-	const [allowManualApproval, setAllowManualApproval] = useState(phase?.allowManualApproval ?? false)
-
-	const { data: lecturersByFaculty } = useGetAllLecturersComboboxQuery({ limit: 1000, page: 1, sort_order: 'desc' })
 
 	const isPhase1 = currentPhase === 'empty' || currentPhase === 'submit_topic'
 	const isTimeInvalid = startTime && endTime ? new Date(endTime).getTime() <= new Date(startTime).getTime() : false
@@ -66,7 +64,6 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 		submit_topic: {
 			minTopicsPerLecturer: minTopics,
 			requiredLecturerIds: selectedLecturerIds,
-			allowManualApproval
 		},
 		execution: {},
 		open_registration: {},
@@ -78,7 +75,6 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 		setEndTime(toInputDateTime(phase?.endTime))
 		setMinTopics(phase?.minTopicsPerLecturer ?? 1)
 		setSelectedLecturerIds(phase?.requiredLecturers?.map((lec) => lec._id) ?? [])
-		setAllowManualApproval(phase?.allowManualApproval ?? false)
 	}, [isPhase1, phase])
 
 	const handleSave = async () => {
@@ -175,22 +171,10 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 
 							<div>
 								<LecturerMultiSelect
-									allLecturers={lecturersByFaculty?.data ?? []}
+									allLecturers={lecturers ?? []}
 									selected={selectedLecturerIds}
 									onChange={setSelectedLecturerIds}
 								/>
-							</div>
-
-							<div className='mt-2 flex items-center gap-2'>
-								<CheckSquare className='h-5 w-5 text-primary' />
-								<label className='flex select-none items-center gap-2'>
-									<input
-										type='checkbox'
-										checked={allowManualApproval}
-										onChange={(e) => setAllowManualApproval(e.target.checked)}
-									/>
-									Cho phép duyệt sinh viên (đề tài NCKH)
-								</label>
 							</div>
 						</section>
 					)}

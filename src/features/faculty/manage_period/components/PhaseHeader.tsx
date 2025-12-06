@@ -1,11 +1,48 @@
 import { useState, useEffect } from 'react'
-import { PeriodPhaseStatus, phaseLabels, type PendingAction, type PeriodPhase } from '@/models/period-phase.models'
+import { PeriodPhaseStatus, phaseLabels, type PeriodPhase } from '@/models/period-phase.models'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
-import { CalendarDays, Clock, Settings, Eye, Bell } from 'lucide-react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { SendNotificationModal } from './modals/SendNotificationModal'
+import { CalendarDays, Clock, Settings, Bell } from 'lucide-react'
+import { SendNotificationModal } from '@/components/NotificationModal'
+import type { ResponseMiniLecturerDto } from '@/models'
 
+const MOCK_TOTAL_STUDENTS = 150
+const MOCK_TOTAL_INSTRUCTORS = 25
+const MOCK_AVAILABLE_INSTRUCTORS: ResponseMiniLecturerDto[] = [
+	{
+		_id: 'gv1',
+		fullName: 'Nguyễn Văn An',
+		email: 'an.nv@hcmut.edu.vn',
+		phone: '0901xxx',
+		avatarUrl: '',
+		avatarName: '',
+		title: 'ThS',
+		facultyName: 'Công nghệ Thông tin',
+		roleInTopic: 'Supervisor'
+	},
+	{
+		_id: 'gv2',
+		fullName: 'Lê Thị Bình',
+		email: 'binh.lt@hcmut.edu.vn',
+		phone: '0902xxx',
+		avatarUrl: '',
+		avatarName: '',
+		title: 'TS',
+		facultyName: 'Kỹ thuật Máy tính',
+		roleInTopic: 'Reviewer'
+	},
+	{
+		_id: 'gv3',
+		fullName: 'Trần Văn Cường',
+		email: 'cuong.tv@hcmut.edu.vn',
+		phone: '0903xxx',
+		avatarUrl: '',
+		avatarName: '',
+		title: 'PGS.TS',
+		facultyName: 'Khoa học Máy tính',
+		roleInTopic: 'Supervisor'
+	}
+]
 interface PhaseHeader {
 	phase: PeriodPhase
 	onViewConfig?: () => void
@@ -41,26 +78,20 @@ const calculateTimeRemaining = (endDate: string) => {
 	return { expired: false, days, hours, minutes, seconds }
 }
 
-export function PhaseHeader({ phase, onViewConfig, onEditConfig }: PhaseHeader) {
+export function PhaseHeader({ phase, onViewConfig }: PhaseHeader) {
 	const [currentTime, setCurrentTime] = useState(new Date())
 	const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining(phase.endTime))
 
-	const [notifyTarget, setNotifyTarget] = useState<'student' | 'lecturer' | null>(null)
+	const [isModalOpen, setIsModalOpen] = useState(false)
 
-	// Số lượng người nhận mock (ví dụ)
-	const pendingAction: PendingAction = { label: '', count: 10 }
+	const handleOpenModal = () => setIsModalOpen(true)
+	const handleCloseModal = () => setIsModalOpen(false)
 
-	const handleNotifyClick = (target: 'student' | 'lecturer') => {
-		setNotifyTarget(target)
-	}
-
-	const handleCloseModal = () => setNotifyTarget(null)
-
-	const handleSendNotification = async () => {
-		// TODO: gọi API gửi thông báo cho nhóm notifyTarget
-		console.log('Gửi thông báo cho', notifyTarget)
-		// Ví dụ giả lập delay
-		await new Promise((resolve) => setTimeout(resolve, 1000))
+	const handleSendNotification = async (data: any) => {
+		console.log('Gửi Thông báo Thủ công Data:', data)
+		// TODO: Gọi API POST /api/v1/notifications/send với data JSON
+		await new Promise((resolve) => setTimeout(resolve, 1000)) // Giả lập delay
+		handleCloseModal() // Đóng sau khi gửi thành công
 	}
 
 	useEffect(() => {
@@ -96,23 +127,10 @@ export function PhaseHeader({ phase, onViewConfig, onEditConfig }: PhaseHeader) 
 						<Settings className='h-4 w-4' />
 					</Button>
 
-					{/* Gửi thông báo */}
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant='outline' size='sm'>
-								Thông báo
-								<Bell className='h-4 w-4' />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align='end'>
-							<DropdownMenuItem onClick={() => handleNotifyClick('student')}>
-								Thông báo sinh viên
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => handleNotifyClick('lecturer')}>
-								Thông báo giảng viên
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<Button variant='outline' size='sm' onClick={handleOpenModal}>
+						Thông báo
+						<Bell className='h-4 w-4' />
+					</Button>
 				</div>
 			</div>
 
@@ -133,9 +151,7 @@ export function PhaseHeader({ phase, onViewConfig, onEditConfig }: PhaseHeader) 
 				<div className='flex items-center gap-2 text-sm'>
 					<Clock className='h-4 w-4 text-primary' />
 					<span className='text-muted-foreground'>Thời gian hiện tại:</span>
-					<span className='font-mono font-medium text-foreground'>
-						{currentTime.toLocaleString('vi-VN')}
-					</span>
+					<span className='font-mono font-medium text-foreground'>{currentTime.toLocaleString('vi-VN')}</span>
 				</div>
 
 				<div className='flex items-center gap-2 text-sm'>
@@ -157,15 +173,14 @@ export function PhaseHeader({ phase, onViewConfig, onEditConfig }: PhaseHeader) 
 				</div>
 			</div>
 			{/* Modal gửi thông báo */}
-			{notifyTarget && (
-				<SendNotificationModal
-					open={!!notifyTarget}
-					onOpenChange={handleCloseModal}
-					action={{ ...pendingAction, label: `Gửi thông báo cho ${notifyTarget}` }}
-					phaseType={phase.phase}
-					onSend={handleSendNotification}
-				/>
-			)}
+			<SendNotificationModal
+				isOpen={isModalOpen}
+				onClose={handleCloseModal} // Hàm đóng modal
+				onSubmit={handleSendNotification} // Hàm xử lý gửi data
+				totalStudents={MOCK_TOTAL_STUDENTS}
+				totalLecturers={MOCK_TOTAL_INSTRUCTORS}
+				availableLecturers={MOCK_AVAILABLE_INSTRUCTORS} // Truyền data giảng viên
+			/>
 		</div>
 	)
 }
