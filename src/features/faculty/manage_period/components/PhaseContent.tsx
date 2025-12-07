@@ -103,7 +103,7 @@ export function PhaseContent({
 			<StatsCards stats={stats} onClick={setStatusFilter} />
 
 			{/* Phase Actions Box */}
-			{resolvePhaseData?.canTriggerNextPhase === false && phaseDetail.phase === currentPhase && (
+			{resolvePhaseData && phaseDetail.phase === currentPhase && (
 				<PhaseActionsBox
 					resolvePhaseData={resolvePhaseData}
 					phase={phaseDetail}

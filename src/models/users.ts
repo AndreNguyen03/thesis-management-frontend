@@ -27,6 +27,7 @@ export interface Publication {
 	year: string
 	type: string
 	citations: number
+	link?: string
 }
 
 // Research Project
@@ -81,18 +82,19 @@ export interface BaseUser {
 // Student user
 export interface StudentUser {
 	userId: string
+	studentCode: string
 	fullName: string
 	email: string
+	bio: string
 	phone?: string
+	facultyName?: string
+	introduction?: string
 	avatarUrl?: string
 	isActive: boolean
 	role: 'student'
 	class: string
 	major: string
-	introduction: string
 	skills: string[]
-	projects: StudentProject[]
-	subjects: string[]
 	interests: string[]
 }
 
@@ -101,6 +103,7 @@ export interface LecturerProfile {
 	userId: string
 	fullName: string
 	email: string
+	bio: string
 	phone?: string
 	avatarUrl?: string
 	title: AcademicTitle

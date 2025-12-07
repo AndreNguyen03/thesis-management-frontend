@@ -36,9 +36,24 @@ export const userApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<AppUser>) => response.data,
 			invalidatesTags: ['UserProfile']
-		})
+		}),
+		// cập nhật profile giảng viên (self)
+		updateLecturerProfile: builder.mutation<{ message: string }, { id: string; body: PatchLecturerDto }>({
+			query: ({ id, body }) => ({
+				url: `/users/lecturers/profile/${id}`,
+				method: 'PATCH',
+				body
+			}),
+			invalidatesTags: ['UserProfile']
+		}),
 	}),
 	overrideExisting: false
 })
 
-export const { useGetProfileQuery, useGetUserQuery, usePatchStudentMutation, usePatchLecturerMutation } = userApi
+export const {
+	useGetProfileQuery,
+	useGetUserQuery,
+	usePatchStudentMutation,
+	usePatchLecturerMutation,
+	useUpdateLecturerProfileMutation,
+} = userApi

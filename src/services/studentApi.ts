@@ -1,6 +1,7 @@
 import type { CreateStudentRequest, StudentTable } from '@/features/admin/manage_student/types'
+import type { PatchStudentDto } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
-import type { PaginatedMiniLecturer, PaginatedStudents } from '@/models/users'
+import type {  PaginatedStudents } from '@/models/users'
 import { baseApi } from '@/services/baseApi'
 import type { ApiResponse } from '@/services/baseApi'
 
@@ -61,6 +62,16 @@ export const studentApi = baseApi.injectEndpoints({
 			invalidatesTags: ['UserProfile', 'ListStudent']
 		}),
 
+		updateStudentProfile: builder.mutation<StudentTable, { id: string; data: PatchStudentDto }>({
+			query: ({ id, data }) => ({
+				url: `/users/students/profile/${id}`,
+				method: 'PATCH',
+				body: data
+			}),
+			transformResponse: (response: ApiResponse<StudentTable>) => response.data,
+			invalidatesTags: ['UserProfile', 'ListStudent']
+		}),
+
 		// 🧩 Xóa sinh viên
 		deleteStudent: builder.mutation<{ success: boolean; id: string }, string>({
 			query: (id) => ({
@@ -88,5 +99,6 @@ export const {
 	useUpdateStudentMutation,
 	useDeleteStudentMutation,
 	useCreateBatchStudentsMutation,
-	useGetStudentsComboboxQuery
+	useGetStudentsComboboxQuery,
+	useUpdateStudentProfileMutation
 } = studentApi
