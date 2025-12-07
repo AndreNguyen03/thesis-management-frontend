@@ -12,28 +12,38 @@ import {
 	type Phase1Response,
 	type Phase2Response,
 	type Phase3Response,
-	type ResolvePhaseResponse,
-	isResolved
+	type ResolvePhaseResponse
 } from '@/models/period-phase.models'
-// import { SendNotificationModal } from './modals/SendNotificationModal'
 
 interface PhaseActionsBoxProps {
 	resolvePhaseData: ResolvePhaseResponse
 	phase: PeriodPhase
 	onCompletePhase: () => void
 	isResolving: boolean
-    onGoProcess: () => void
+	onGoProcess: () => void
 }
 
-export function PhaseActionsBox({ phase, isResolving, onCompletePhase, resolvePhaseData, onGoProcess }: PhaseActionsBoxProps) {
-	const allCompleted = resolvePhaseData ? isResolved(resolvePhaseData) : false
+export function PhaseActionsBox({
+	phase,
+	isResolving,
+	onCompletePhase,
+	resolvePhaseData,
+	onGoProcess
+}: PhaseActionsBoxProps) {
+	const phaseCompleted = resolvePhaseData.canTriggerNextPhase
+
+	console.log(phaseCompleted)
 
 	let phaseContent = null
 	if (resolvePhaseData) {
 		switch (phase.phase) {
 			case 'submit_topic':
 				phaseContent = (
-					<Phase1Handler data={resolvePhaseData as Phase1Response} onCompletePhase={onCompletePhase} onProcess={onGoProcess}/>
+					<Phase1Handler
+						data={resolvePhaseData as Phase1Response}
+						onCompletePhase={onCompletePhase}
+						onProcess={onGoProcess}
+					/>
 				)
 				break
 			case 'open_registration':
@@ -50,14 +60,14 @@ export function PhaseActionsBox({ phase, isResolving, onCompletePhase, resolvePh
 	}
 
 	return (
-		<Card className='animate-slide-up px-0 pt-0 pb-6 shadow-card'>
+		<Card className='animate-slide-up px-0 pb-6 pt-0 shadow-card'>
 			<CardHeader>
 				<div className='flex items-center justify-between'>
 					<div>
 						<CardTitle className='text-lg font-semibold'>Xử lý tồn đọng</CardTitle>
 						<CardDescription>Pha: {phaseLabels[phase.phase]}</CardDescription>
 					</div>
-					{allCompleted && (
+					{phaseCompleted && (
 						<Badge variant='outline' className='border-success/20 bg-success/10 text-success'>
 							<CheckCircle2 className='mr-1 h-3 w-3' />
 							Đã xử lý xong
@@ -74,16 +84,6 @@ export function PhaseActionsBox({ phase, isResolving, onCompletePhase, resolvePh
 			) : (
 				<div className='mt-4'>{phaseContent}</div>
 			)}
-
-			{/* {selectedNotificationAction && (
-				<SendNotificationModal
-					open={notificationModalOpen}
-					onOpenChange={setNotificationModalOpen}
-					action={selectedNotificationAction}
-					phaseType={phase.phase}
-					onSend={handleSendNotification}
-				/>
-			)} */}
 		</Card>
 	)
 }

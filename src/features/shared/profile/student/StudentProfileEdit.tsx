@@ -3,109 +3,95 @@ import { ProfileSection } from '@/components/ui/ProfileSection'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { useState } from 'react'
 import type { StudentUser } from '@/models'
-import { usePatchStudentMutation } from '../../../../services/userApi'
-import { toast } from 'react-toastify'
+import { toast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 import { LoadingOverlay } from '@/components/ui'
-
-interface StudentProject {
-	title: string
-	description: string
-	technologies: string[]
-}
+import { useUpdateStudentProfileMutation } from '@/services/studentApi'
+import { useUploadAvatarMutation } from '@/services/uploadAvatarApi'
 
 export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Hồ sơ', path: '/profile' }, { label: 'Chỉnh sửa' }])
-
+	console.log('student :::', student)
 	const [form, setForm] = useState(student)
 	const [expandAll, setExpandAll] = useState(false)
 	const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
 		basic: true,
-		intro: false,
+		bio: false,
 		avatar: false,
 		interests: false,
-		skills: false,
-		projects: false,
-		additional: false
+		skills: false
 	})
 	const navigate = useNavigate()
 	// mutation hooks
-	const [patchStudent, { isLoading }] = usePatchStudentMutation()
+	const [updateStudent, { isLoading }] = useUpdateStudentProfileMutation()
+	const [uploadAvatar, { isLoading: isUploading }] = useUploadAvatarMutation()
 
 	const toggleSection = (key: string) => {
 		if (expandAll) return
 		setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
 	}
 
-	// --- interests ---
-	const addInterest = () => setForm((prev) => ({ ...prev, interests: [...(prev.interests || []), ''] }))
-
-	const updateInterest = (idx: number, value: string) =>
-		setForm((prev) => {
-			const newInterests = [...(prev.interests || [])]
-			newInterests[idx] = value
-			return { ...prev, interests: newInterests }
-		})
-
-	const removeInterest = (idx: number) =>
+	// ===== Generic helpers =====
+	const addItem = <T,>(field: keyof StudentUser, defaultValue: T) =>
 		setForm((prev) => ({
 			...prev,
-			interests: (prev.interests || []).filter((_, i) => i !== idx)
+			[field]: [...((prev[field] as T[]) || []), defaultValue]
 		}))
 
-	// --- skills ---
-	const addSkill = () => setForm((prev) => ({ ...prev, skills: [...(prev.skills || []), ''] }))
-
-	const updateSkill = (idx: number, value: string) =>
-		setForm((prev) => {
-			const newSkills = [...(prev.skills || [])]
-			newSkills[idx] = value
-			return { ...prev, skills: newSkills }
-		})
-
-	const removeSkill = (idx: number) =>
+	const updateItem = <T,>(field: keyof StudentUser, index: number, value: T) =>
 		setForm((prev) => ({
 			...prev,
-			skills: (prev.skills || []).filter((_, i) => i !== idx)
+			[field]: (prev[field] as T[])?.map((item, i) => (i === index ? value : item))
 		}))
 
-	// --- projects ---
-	const addProject = () =>
+	const removeItem = <T,>(field: keyof StudentUser, index: number) =>
 		setForm((prev) => ({
 			...prev,
-			projects: [...(prev.projects || []), { title: '', description: '', technologies: [] }]
+			[field]: (prev[field] as T[])?.filter((_, i) => i !== index)
 		}))
 
-	const updateProject = (index: number, updated: StudentProject) =>
-		setForm((prev) => ({
-			...prev,
-			projects: (prev.projects || []).map((p, i) => (i === index ? updated : p))
-		}))
+	const handleFieldChange = (field: keyof StudentUser, value: any) => setForm((prev) => ({ ...prev, [field]: value }))
 
-	const removeProject = (index: number) =>
-		setForm((prev) => ({
-			...prev,
-			projects: (prev.projects || []).filter((_, i) => i !== index)
-		}))
-	// --- handle field change ---
-	const handleFieldChange = (field: string, value: string) => {
-		setForm((prev) => ({ ...prev, [field]: value }))
-	}
-
+	// ===== Submit form =====
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		console.log('Submit data:', form)
+		const { userId, role, major, studentCode, facultyName, class: _class, ...patchData } = form
+		console.log('Submitting patch data:', patchData)
 		try {
-			await patchStudent({ id: form.id, body: form }).unwrap()
-			toast.success('Cập nhật hồ sơ thành công!')
+			await updateStudent({ id: form.userId, data: patchData }).unwrap()
+			toast({
+				title: 'Cập nhật hồ sơ thành công!'
+			})
 			navigate('/profile')
 		} catch (err) {
 			console.error(err)
-			toast.error('Có lỗi xảy ra, vui lòng thử lại!')
+			toast({
+				title: 'Đã có lỗi xảy ra',
+				description: `Lỗi khi cập nhật hồ sơ ${err}`
+			})
 		}
 	}
 
-	if (isLoading) return <LoadingOverlay />
+	// ===== Upload avatar =====
+	const handleAvatarChange = async (file: File) => {
+		try {
+			const formData = new FormData()
+			formData.append('file', file)
+			const res = await uploadAvatar(formData).unwrap()
+			handleFieldChange('avatarUrl', `${res.avatarUrl}?t=${Date.now()}`)
+			toast({
+				title: 'Cập nhật ảnh đại diện thành công!'
+			})
+		} catch (err) {
+			console.error(err)
+			toast({
+				title: 'Đã có lỗi xảy ra',
+				description: `Lỗi khi cập nhật hồ sơ ${err}`
+			})
+		}
+	}
+
+	if (isLoading || isUploading) return <LoadingOverlay />
 
 	return (
 		<form onSubmit={handleSubmit} className='space-y-6'>
@@ -172,7 +158,7 @@ export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 			>
 				<div className='flex items-center gap-4'>
 					<img
-						src={form.avatar || '/images/avatar-placeholder.png'} // fallback nếu chưa có avatar
+						src={form.avatarUrl || '/images/avatar-placeholder.png'} // fallback nếu chưa có avatar
 						alt='Avatar'
 						className='h-20 w-20 rounded-full border object-cover'
 					/>
@@ -182,12 +168,7 @@ export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 							accept='image/*'
 							onChange={(e) => {
 								const file = e.target.files?.[0]
-								if (file) {
-									const reader = new FileReader()
-									reader.onload = () =>
-										setForm((prev) => ({ ...prev, avatar: reader.result as string }))
-									reader.readAsDataURL(file)
-								}
+								if (file) handleAvatarChange(file)
 							}}
 						/>
 					</div>
@@ -197,14 +178,14 @@ export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 			{/* Introduction */}
 			<ProfileSection
 				title='Giới thiệu'
-				isOpen={expandAll || openSections.intro}
-				onToggle={() => toggleSection('intro')}
+				isOpen={expandAll || openSections.bio}
+				onToggle={() => toggleSection('bio')}
 			>
 				<ProfileField
 					label='Mô tả'
 					type='textarea'
-					value={form.introduction}
-					onChange={(e) => setForm((prev) => ({ ...prev, introduction: e.target.value }))}
+					value={form.bio}
+					onChange={(e) => handleFieldChange('bio', e.target.value)}
 					variant='medium'
 				/>
 			</ProfileSection>
@@ -223,20 +204,20 @@ export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 								<ProfileField
 									label={`Kỹ năng ${idx + 1}`}
 									value={skill}
-									onChange={(e) => updateSkill(idx, e.target.value)}
+									onChange={(e) => updateItem('skills', idx, e.target.value)}
 									variant='medium'
 								/>
 							</div>
 							<button
 								type='button'
-								onClick={() => removeSkill(idx)}
+								onClick={() => removeItem('skills', idx)}
 								className='flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200'
 							>
 								X
 							</button>
 						</div>
 					))}
-				<button type='button' onClick={addSkill} className='mt-2 text-blue-500'>
+				<button type='button' onClick={() => addItem('skills', '')} className='mt-2 text-blue-500'>
 					+ Thêm
 				</button>
 			</ProfileSection>
@@ -255,86 +236,22 @@ export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 								<ProfileField
 									label={`Quan tâm ${idx + 1}`}
 									value={interest || ''}
-									onChange={(e) => updateInterest(idx, e.target.value)}
+									onChange={(e) => updateItem('interests', idx, e.target.value)}
 									variant='medium'
 								/>
 							</div>
 							<button
 								type='button'
-								onClick={() => removeInterest(idx)}
+								onClick={() => removeItem('interests', idx)}
 								className='mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200'
 							>
 								X
 							</button>
 						</div>
 					))}
-				<button type='button' onClick={addInterest} className='text-blue-500'>
+				<button type='button' onClick={() => addItem('interests', '')} className='text-blue-500'>
 					+ Thêm
 				</button>
-			</ProfileSection>
-
-			{/* Projects */}
-			<ProfileSection
-				title='Dự án'
-				isOpen={expandAll || openSections.projects}
-				onToggle={() => toggleSection('projects')}
-			>
-				<div className='space-y-4'>
-					{form.projects &&
-						form.projects.length > 0 &&
-						form.projects.map((project, index) => (
-							<div key={index} className='rounded-lg border bg-white p-4 shadow-sm'>
-								<div className='mb-2 flex items-center justify-between'>
-									<h4 className='text-lg font-semibold'>
-										{project.title?.trim() || `Dự án ${index + 1}`}
-									</h4>
-									<button
-										type='button'
-										onClick={() => removeProject(index)}
-										className='text-sm text-red-500 hover:underline'
-									>
-										Xóa
-									</button>
-								</div>
-
-								<ProfileField
-									label='Tên dự án'
-									value={project.title || ''}
-									onChange={(e) => updateProject(index, { ...project, title: e.target.value })}
-									variant='large'
-									orientation='column'
-								/>
-
-								<ProfileField
-									label='Mô tả'
-									value={project.description || ''}
-									type='textarea'
-									onChange={(e) => updateProject(index, { ...project, description: e.target.value })}
-									variant='large'
-									orientation='column'
-								/>
-
-								<ProfileField
-									label='Công nghệ (cách nhau bởi dấu phẩy)'
-									value={project.technologies?.join(', ') || ''}
-									onChange={(e) =>
-										updateProject(index, {
-											...project,
-											technologies: e.target.value
-												.split(',')
-												.map((t) => t.trim())
-												.filter(Boolean)
-										})
-									}
-									variant='medium'
-									orientation='column'
-								/>
-							</div>
-						))}
-					<button onClick={addProject} className='mt-2 rounded-lg bg-primary px-4 py-2 text-white'>
-						+ Thêm dự án
-					</button>
-				</div>
 			</ProfileSection>
 
 			{/* Submit */}
