@@ -21,9 +21,12 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import type { Role } from '@/models'
+import { useGetCurrentPeriodInfoQuery } from '@/services/periodApi'
 import { useCountdown } from '@/hooks/count-down'
 import { useAppSelector } from '@/store'
+import { PeriodPhaseStatus } from '@/models/period-phase.models'
 import { PhaseInfo } from '@/utils/utils'
+import type { PhaseType } from '@/models/period.model'
 import { Badge } from '../ui'
 
 interface AppSidebarProps {
@@ -102,7 +105,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
 	const { currentPeriod, isLoading } = useAppSelector((state) => state.period)
-	const countdown = useCountdown(currentPeriod?.currentPhaseDetail?.endTime)
+	const countdown = useCountdown(currentPeriod?.currentPhaseDetail.endTime!)
 	function isActive(path: string) {
 		// Logic chính xác hơn cho active state của sub-item
 		if (path === '/' && currentPath === '/') return true
@@ -232,7 +235,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	return (
 		<div className={`border-r border-gray-200 bg-white ${isOpen ? 'w-50' : 'w-16'} transition-all duration-300`}>
 			<div
-				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit max-w-72' : 'w-16'} transition-all duration-300`}
+				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit max-w-72' : 'w-16'} h-[calc(100vh-4.3rem)] overflow-auto transition-all duration-300`}
 			>
 				<div className='px-3 py-1'>
 					<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
@@ -253,11 +256,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 										<span className='font-semibold'>{`${currentPeriod?.faculty.name}`}</span>
 									</div>
 									<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
-										<Badge>
-											{currentPeriod.currentPhaseDetail.phase
-												? `Pha ${PhaseInfo[currentPeriod.currentPhaseDetail.phase].label}`
-												: 'Hiện chưa có pha nào'}
-										</Badge>
+										<Badge>{`Đợt ${PhaseInfo[currentPeriod.currentPhaseDetail.phase].label}`}</Badge>
 									</div>
 									<div className='mb-2 flex gap-1 px-3 text-xs font-semibold text-gray-500'>
 										<span>{`Kết thúc ${countdown}`}</span>

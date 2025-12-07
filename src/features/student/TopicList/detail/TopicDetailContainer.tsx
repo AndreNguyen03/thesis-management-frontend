@@ -18,10 +18,12 @@ import {
 	Plus,
 	Save,
 	ShieldAlert,
+	Trash,
 	User,
 	X
 } from 'lucide-react'
 import {
+	useDeleteTopicsMutation,
 	useGetTopicByIdQuery,
 	useSaveTopicMutation,
 	useSetAllowManualApprovalMutation,
@@ -35,7 +37,7 @@ import { formatFileSize } from '@/utils/format-file-size'
 import { PhaseBadge } from '@/components/topic/phase-badege'
 import { StatusBadge } from '@/components/topic/status-badege'
 import { Label } from '@/components/ui/label'
-import { TopicTypeTransfer, type ITopicDetail, type TopicType } from '@/models/topic.model'
+import { TopicStatus, TopicTypeTransfer, type ITopicDetail, type TopicType } from '@/models/topic.model'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/hooks/use-toast'
 import { useCreateRegistrationMutation, useLeaveTopicMutation } from '@/services/registrationApi'
@@ -56,12 +58,16 @@ import AddLecturerModal from './modal/AddLecturerModal'
 import AddStudentModal from './modal/AddStudentModal'
 import { PeriodPhaseName } from '@/models/period.model'
 import { PeriodPhaseStatus } from '@/models/period-phase.models'
+import DeleteTopicModal from '@/features/lecturer/manage_topic/modal/delete-topic-modal'
+import { is } from 'date-fns/locale'
+import DeletedTopicContainter from './components/DeletedTopic'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
 	//lấy thông tin kì hiện tại
 	const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
+	console.log('Current Period in Topic Detail:', currentPeriod)
 	const [isEditing, setIsEditing] = useState(false)
 	// Quản lý dialog quản lý file tìa liệu
 	const [openFileModal, setOpenFileModal] = useState(false)
@@ -73,7 +79,7 @@ export const TopicDetailContainer = () => {
 		{ skip: !isEditing }
 	)
 	const [editedTopic, setEditedTopic] = useState<ITopicDetail>(topic as ITopicDetail)
-
+	const [openDeleteConfirmModal, setOpenDeleteConfirmModal] = useState(false)
 	const user = useAppSelector((state) => state.auth.user)
 	//Actions for registration adn saving
 	const [createRegistration, { isLoading: isLoadingRegister }] = useCreateRegistrationMutation()
@@ -83,6 +89,8 @@ export const TopicDetailContainer = () => {
 	const [updateTopic, { isSuccess: isSuccessUpdate, isLoading: isLoadingUpdate }] = useUpdateTopicMutation()
 	const [setAllowManualApproval, { isLoading: isLoadingManualApproval, isSuccess: isSuccessManualApproval }] =
 		useSetAllowManualApprovalMutation()
+	//Thực hiện việc xóa đề tài
+	const [deleteTopics, { isLoading: isLoadingDelete, isSuccess: isSuccessDelete }] = useDeleteTopicsMutation()
 	const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 	// modal
 	const [openConfirmModal, setOpenConfirmModal] = useState(false)
@@ -106,6 +114,9 @@ export const TopicDetailContainer = () => {
 	if (topic == null) {
 		return <div>Topic not found</div>
 	}
+	if (isSuccessDelete) {
+		navigate(-1)
+	}
 
 	const renderRelatedFile = (files: GetUploadedFileDto[]) => {
 		return (
@@ -120,15 +131,8 @@ export const TopicDetailContainer = () => {
 										href={`${baseUrl}/${file.fileUrl}`}
 										className='flex items-center gap-2 text-blue-600 hover:underline'
 										title='Xem tài liệu'
-										onClick={(e) => {
-											e.preventDefault()
-											const link = document.createElement('a')
-											link.href = `${baseUrl}/${file.fileUrl}`
-											link.download = file.fileNameBase
-											document.body.appendChild(link)
-											link.click()
-											document.body.removeChild(link)
-										}}
+										target='_blank'
+										rel='noopener noreferrer'
 									>
 										<FileText className='h-4 w-4' />
 										<span>{file.fileNameBase}</span>
@@ -229,6 +233,25 @@ export const TopicDetailContainer = () => {
 			})
 		}
 	}
+	const handleDeleteTopics = async () => {
+		try {
+			await deleteTopics({ topicIds: [topic._id] }).unwrap()
+			toast({
+				title: 'Thành công',
+				description: 'Xóa đề tài thành công!',
+				variant: 'success'
+			})
+			refetch()
+		} catch (error) {
+			toast({
+				title: 'Thất bại',
+
+				description: 'Xóa đề tài thất bại. Vui lòng thử lại sau.',
+				variant: 'destructive'
+			})
+		}
+		setOpenDeleteConfirmModal(false)
+	}
 
 	const renderActionsButtons = () => {
 		return (
@@ -269,10 +292,33 @@ export const TopicDetailContainer = () => {
 															</Button>
 														</>
 													) : (
-														<Button variant='default' onClick={handleEdit}>
-															<Edit2 className='h-4 w-4' />
-															<span className='ml-2'>Chỉnh sửa</span>
-														</Button>
+														<div className='flex gap-4'>
+															<Button
+																variant='default'
+																onClick={handleEdit}
+																className='group'
+															>
+																<Edit2 className='h-4 w-4' />
+																<span className='ml-2 hidden transition-transform duration-1000 group-hover:block'>
+																	Chỉnh sửa
+																</span>
+															</Button>
+															{currentTopic.currentStatus === TopicStatus.DRAFT && (
+																<div>
+																	<Button
+																		title='Xóa bản nháp'
+																		variant='destructive'
+																		onClick={() => setOpenDeleteConfirmModal(true)}
+																		className='group'
+																	>
+																		<Trash className='h-4 w-4' />
+																		<span className='ml-2 hidden transition-transform duration-1000 group-hover:block'>
+																			Xóa bản nháp
+																		</span>
+																	</Button>
+																</div>
+															)}
+														</div>
 													)}
 												</>
 											)}
@@ -541,7 +587,7 @@ export const TopicDetailContainer = () => {
 							<div className='relative gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
 								<span className='text-lg font-medium'>Lịch sử thay đổi trạng thái</span>
 								<div className='space-y-4'>
-									{topic.phaseHistories.slice(1).length > 0 ? (
+									{topic.phaseHistories && topic.phaseHistories.slice(1).length > 0 ? (
 										topic.phaseHistories.map((history, idx) => {
 											if (
 												idx === 0 &&
@@ -1118,6 +1164,12 @@ export const TopicDetailContainer = () => {
 						await toggleRegistration()
 						setOpenCancelRegistrationModal(false)
 					}}
+				/>
+				<DeleteTopicModal
+					open={openDeleteConfirmModal}
+					onClose={() => setOpenDeleteConfirmModal(false)}
+					onConfirm={() => handleDeleteTopics()}
+					isLoading={isLoadingDelete}
 				/>
 			</DialogContent>
 		</Dialog>

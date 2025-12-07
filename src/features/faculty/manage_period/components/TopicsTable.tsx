@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import type { PhaseType } from '@/models/period.model'
-import type { GeneralTopic, GetPhaseHistoryDto, TopicStatus } from '@/models/topic.model'
+import type { GeneralTopic, GetPhaseHistoryDto, PaginationTopicsQueryParams, TopicStatus } from '@/models/topic.model'
 import { DataTable } from '@/components/ui/DataTable'
 import { Badge, type BadgeVariant } from '@/components/ui/badge'
 import { Eye, CheckCircle, XCircle, Edit } from 'lucide-react'
@@ -16,7 +16,6 @@ import { useNavigate } from 'react-router-dom'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getLabelForStatus } from '../utils'
 import { toast } from '@/hooks/use-toast'
-import type { PaginationQueryParamsDto } from '@/models/query-params'
 
 interface TopicsTableProps {
 	phase: PeriodPhase
@@ -30,13 +29,14 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 
 	const navigate = useNavigate()
 
-	const [queryParams, setQueryParams] = useState<PaginationQueryParamsDto>({
+	const [queryParams, setQueryParams] = useState<PaginationTopicsQueryParams>({
 		page: 1,
 		limit: 10,
 		search_by: 'title',
 		query: '',
 		sort_by: 'createdAt',
-		sort_order: 'desc'
+		sort_order: 'desc',
+		status: statFilter ?? "all"
 	})
 
 	const { data, isLoading, error, refetch } = useGetTopicsInPhaseQuery(
@@ -54,9 +54,10 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 		if (statFilter !== 'all') {
 			setQueryParams((prev) => ({
 				...prev,
-				query: statFilter,
+				query: '',
 				page: 1,
-				search_by: 'lastStatusInPhaseHistory.status'
+				search_by: '',
+				status: statFilter
 			}))
 		} else {
 			setQueryParams((prev) => ({ ...prev, query: '', page: 1 }))

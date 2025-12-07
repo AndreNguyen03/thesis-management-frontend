@@ -1,11 +1,17 @@
 import { Badge, Button } from '@/components/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
-import { topicStatusLabels, TopicTypeTransfer, type GetFieldNameReponseDto, type SubmittedTopic } from '@/models'
+import {
+	TopicStatus,
+	topicStatusLabels,
+	TopicTypeTransfer,
+	type GetFieldNameReponseDto,
+	type SubmittedTopic
+} from '@/models'
 import { PeriodPhaseStatus } from '@/models/period-phase.models'
 import { stripHtml } from '@/utils/lower-case-html'
 import type { ColumnDef, Row } from '@tanstack/react-table'
-import { Eye, Loader2, UndoDot } from 'lucide-react'
+import { Copy, Eye, Loader2, UndoDot } from 'lucide-react'
 
 type ColumnsProps = {
 	isAbleInSubmitPhase: boolean
@@ -13,8 +19,11 @@ type ColumnsProps = {
 	showSelection: boolean
 	onManualApprovalChange?: (checked: boolean, topicId: string) => void
 	pendingId?: string | null
+	pendingCopyId?: string | null
 	pendingWithdrawId?: string | null
 	onWithdraw: (topic: SubmittedTopic) => void
+	onCopyToDraft: (topic: SubmittedTopic) => void
+	isCopySuccess?: boolean
 }
 interface NewSubmittedTopic extends SubmittedTopic {
 	index: number
@@ -25,9 +34,12 @@ export const getColumns = ({
 	showSelection,
 	onManualApprovalChange,
 	pendingId,
+	pendingCopyId,
 	pendingWithdrawId,
 	onWithdraw,
-	isAbleInSubmitPhase
+	onCopyToDraft,
+	isAbleInSubmitPhase,
+	isCopySuccess
 }: ColumnsProps): ColumnDef<NewSubmittedTopic>[] => [
 	{
 		accessorKey: 'index',
@@ -176,7 +188,8 @@ export const getColumns = ({
 							>
 								<Eye className='h-4 w-4' />
 							</Button>
-							{row.original.currentStatus === 'submitted' && isAbleInSubmitPhase && (
+							{/* Đã nộp nhưng muốn rút */}
+							{row.original.currentStatus === TopicStatus.SUBMITTED && isAbleInSubmitPhase && (
 								<Button
 									title='Rút'
 									variant='outline'
@@ -189,6 +202,23 @@ export const getColumns = ({
 										<Loader2 className='h-4 w-4 animate-spin' />
 									) : (
 										<UndoDot className='h-4 w-4' />
+									)}
+								</Button>
+							)}
+							{/* Đã bị từ chối và muốn sao chép thành 1 bản nháp mới */}
+							{row.original.currentStatus === TopicStatus.REJECTED && (
+								<Button
+									title='Sao chép'
+									variant='outline'
+									size='sm'
+									onClick={() => {
+										onCopyToDraft(row.original)
+									}}
+								>
+									{pendingCopyId === row.original._id ? (
+										<Loader2 className='h-4 w-4 animate-spin' />
+									) : (
+										<Copy className='h-4 w-4' />
 									)}
 								</Button>
 							)}

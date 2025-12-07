@@ -297,12 +297,7 @@ export function DataTable<T extends Record<string, any>>({
 			</section>
 
 			{/* Bảng dữ liệu */}
-			<div
-				ref={tableRef}
-				className='max-h-[calc(100vh-300px)] overflow-auto rounded-md border bg-white'
-				role='region'
-				aria-label='Bảng dữ liệu'
-			>
+			<div ref={tableRef} className='rounded-md border bg-white' role='region' aria-label='Bảng dữ liệu'>
 				<Table role='table'>
 					<TableHeader className='sticky top-0 z-10 bg-muted/50 shadow-sm'>
 						<TableRow role='row'>
@@ -341,7 +336,6 @@ export function DataTable<T extends Record<string, any>>({
 							{actions && <TableHead className='text-right'>Hành động</TableHead>}
 						</TableRow>
 					</TableHeader>
-
 					<TableBody>
 						{isLoading ? (
 							<TableRow>

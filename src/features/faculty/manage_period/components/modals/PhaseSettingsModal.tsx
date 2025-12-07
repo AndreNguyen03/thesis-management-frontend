@@ -63,7 +63,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 	const phasePayloadExtras: Record<string, any> = {
 		submit_topic: {
 			minTopicsPerLecturer: minTopics,
-			requiredLecturerIds: selectedLecturerIds,
+			requiredLecturerIds: selectedLecturerIds
 		},
 		execution: {},
 		open_registration: {},
@@ -109,11 +109,11 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 						Thiết lập pha '{PhaseInfo[phase?.phase ?? 'empty']?.label ?? 'Không xác định'}' :
 						<Badge
 							variant={
-								PhaseStatusMap[phase?.status ?? 'not_started']?.variant ??
+								PhaseStatusMap[phase?.status as keyof typeof PhaseStatusMap]?.variant ??
 								'bg-muted text-muted-foreground'
 							}
 						>
-							{PhaseStatusMap[phase?.status ?? 'not_started']?.text ?? 'Chưa xác định'}
+							{PhaseStatusMap[phase?.status as keyof typeof PhaseStatusMap]?.text ?? 'Chưa xác định'}
 						</Badge>
 					</DialogTitle>
 				</DialogHeader>

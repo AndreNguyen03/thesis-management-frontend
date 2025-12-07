@@ -13,7 +13,7 @@ export function ManagePeriodPage() {
 	])
 
 	return (
-		<div className='min-h-screen'>
+		<div className='h-[calc(100vh-10rem)] min-h-0 overflow-auto'>
 			{/* Header */}
 			<PeriodsTable onOpenModal={setAddModalOpen} />
 

@@ -4,7 +4,6 @@ import {
 	type CreateCompletionPhaseDto,
 	type CreateExecutionPhaseDto,
 	type CreateOpenRegPhaseDto,
-	type CreatePeriodDto,
 	type CreatePeriodPayload,
 	type CreatePhaseResponse,
 	type CreatePhaseSubmitTopicDto,
@@ -147,13 +146,7 @@ export const periodApi = baseApi.injectEndpoints({
 		}),
 
 		//getSubmissionStatus
-		getSubmissionStatus: builder.query<GetCustomPeriodDetailRequestDto, void>({
-			query: () => ({
-				url: '/periods/get-submission-status',
-				method: 'GET'
-			}),
-			transformResponse: (response: ApiResponse<GetCustomPeriodDetailRequestDto>) => response.data
-		}),
+	
 		//Lấy thông tin của kì hiện tại ở khoa của người dùng
 		getCurrentPeriodInfo: builder.query<GetCustomMiniPeriodInfoRequestDto | null, void>({
 			query: () => ({
@@ -195,7 +188,6 @@ export const {
 	useDeletePeriodMutation,
 	useGetPeriodsQuery,
 	useCreatePeriodMutation,
-	useGetSubmissionStatusQuery,
 	useGetCurrentPeriodInfoQuery,
 	useLecGetStatsPeriodQuery
 } = periodApi

@@ -32,7 +32,7 @@ function LayoutContent({ user, children }: { user: any; children: ReactNode }) {
 			{/* Header fixed at top */}
 			<Header user={user} />
 			{/* Main layout: sidebar fixed left, content scrollable right */}
-			<div className='mt-16 flex min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 pt-10'>
+			<div className='mt-16 flex w-full bg-gradient-to-br from-gray-50 to-gray-100 pt-10'>
 				{/* Sidebar fixed to left, below header */}
 				<div
 					className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r bg-white shadow-lg transition-all duration-300 ${sidebarWidth}`}
@@ -47,7 +47,7 @@ function LayoutContent({ user, children }: { user: any; children: ReactNode }) {
 							<Breadcrumbs />
 						</div>
 					</div>
-					<main className='min-h-[calc(100vh)] flex-1 overflow-y-auto'>
+					<main className='min-h-[calc(100vh-16rem)] flex-1 overflow-y-auto'>
 						<div className='px-4 py-2'>{children}</div>
 					</main>
 					<footer className='z-20 border-t bg-white py-2'>

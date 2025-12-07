@@ -7,9 +7,9 @@ import { setUser } from '@/features/shared/auth'
 import { LoadingOverlay } from '@/components/ui'
 import { Toaster as ToasterSonner } from 'sonner'
 import { Toaster } from './components/ui/toaster'
-import { connectSocket, disconnectSocket } from './store/slices/socketSlice'
+import { connectSocket, disconnectSocket } from './store/slices/socket-slice'
 import { useGetCurrentPeriodInfoQuery } from './services/periodApi'
-import { setCurrentPeriod, setCurrPeriodLoading } from './store/slices/periodSlice'
+import { setCurrentPeriod, setCurrPeriodLoading } from './store/slices/period-slice'
 
 const App = () => {
 	const user = useAppSelector((state) => state.auth.user)
@@ -37,6 +37,17 @@ const App = () => {
 			dispatch(setCurrPeriodLoading(false))
 		}
 	}, [periodInfoData])
+	useEffect(() => {
+		if (token) {
+			dispatch(connectSocket())
+		}
+		return () => {
+			dispatch(disconnectSocket())
+		}
+	}, [token])
+
+
+	
 	if (isLoading) return <LoadingOverlay />
 
 	return (

@@ -8,17 +8,18 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui'
 import { EditPeriodModal } from './modals/EditPeriodModal'
 import { DeletePeriodModal } from './modals/DeletePeriodModal'
-import type { Period, PeriodStatus, PhaseType } from '@/models/period.model'
+import type { Period, PeriodStatus, PeriodType, PhaseType } from '@/models/period.model'
 import { useDeletePeriodMutation, useGetPeriodsQuery } from '@/services/periodApi'
 import { toast } from '@/hooks/use-toast'
 import type { ApiError, PaginationTopicsQueryParams } from '@/models'
 import { PhaseInfo } from '@/utils/utils'
 
 const getStatusBadge = (status: PeriodStatus) => {
+	console.log('status :: ', status)
 	const variants = {
-		ongoing: { label: 'Đang diễn ra', variant: 'default' as const },
-		completed: { label: 'Đã kết thúc', variant: 'secondary' as const },
-		upcoming: { label: 'Sắp tới', variant: 'outline' as const }
+		active: { label: 'Đang diễn ra', variant: 'default' as const },
+		timeout: { label: 'Đã kết thúc', variant: 'secondary' as const },
+		pending: { label: 'Sắp diễn ra', variant: 'outline' as const }
 	}
 
 	const config = variants[status]
@@ -34,7 +35,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 		limit: 10,
 		search_by: 'name',
 		query: '',
-		sort_by: 'startDate',
+		sort_by: 'startTime',
 		sort_order: 'desc'
 	})
 
@@ -87,8 +88,8 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 			title: 'Loại đợt',
 			sortable: true,
 			searchable: true,
-			render: (value: 'khoaluan' | 'nckh') => (
-				<Badge variant='outline'>{value === 'khoaluan' ? 'Khóa luận' : 'Nghiên cứu khoa học'}</Badge>
+			render: (value: PeriodType) => (
+				<Badge variant='outline'>{value === 'thesis' ? 'Khóa luận' : 'Nghiên cứu khoa học'}</Badge>
 			),
 			renderSearchInput: ({ value, onChange }) => (
 				<select
@@ -97,8 +98,8 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 					onChange={(e) => onChange({ value: e.target.value })}
 				>
 					<option value=''>Tất cả</option>
-					<option value='khoaluan'>Khóa luận</option>
-					<option value='nckh'>Nghiên cứu khoa học</option>
+					<option value='thesis'>Khóa luận</option>
+					<option value='scientific_research'>Nghiên cứu khoa học</option>
 				</select>
 			)
 		},
@@ -167,15 +168,15 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 	]
 
 	return (
-		<div className='flex h-full flex-col' role='main'>
-			<header className='mb-6 mt-16 flex items-center justify-between'>
+		<div className='flex flex-col' role='main'>
+			<header className='mb-6 mt-6 flex items-center justify-between'>
 				<header className='flex flex-col items-start justify-between'>
 					<h1 className='text-2xl font-bold'>Quản lý Đợt Đăng Ký</h1>
 					<p className='mt-1 text-muted-foreground'>Quản lý các đợt đăng ký đề tài tốt nghiệp</p>
 				</header>
 			</header>
 
-			<section aria-label='Bảng quản lý đợt đăng ký'>
+			<section aria-label='Bảng quản lý đợt đăng ký' className=''>
 				<DataTable<Period>
 					data={response?.data || []}
 					// data={data || []}

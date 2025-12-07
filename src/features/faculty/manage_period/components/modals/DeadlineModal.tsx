@@ -42,15 +42,14 @@ export function DeadlineModal({ open, onOpenChange, onSend }: DeadlineModalProps
 			const mockResponse = {
 				message: `Thông báo đã được gửi thành công đến giảng viên!`
 			}
-
-			resetForm()
-			toast({
-				title: 'Thành công',
-				description: mockResponse.message
-			})
-
 			// Callback để parent xử lý
-			onSend(deadline)
+			await onSend(deadline)
+			resetForm()
+			// toast({
+			// 	title: 'Thành công',
+			// 	description: mockResponse.message
+			// })
+
 		} catch (error) {
 			// Mock error (20% chance)
 			if (Math.random() < 0.2) {
@@ -61,15 +60,15 @@ export function DeadlineModal({ open, onOpenChange, onSend }: DeadlineModalProps
 				})
 				return
 			}
-			const mockResponse = {
-				message: 'Thông báo đã được gửi thành công!'
-			}
-			resetForm()
-			toast({
-				title: 'Thành công',
-				description: mockResponse.message
-			})
-			onSend(deadline)
+			// const mockResponse = {
+			// 	message: 'Thông báo đã được gửi thành công!'
+			// }
+			//resetForm()
+			// toast({
+			// 	title: 'Thành công',
+			// 	description: mockResponse.message
+			// })
+			// onSend(deadline)
 		} finally {
 			setIsLoading(false)
 		}

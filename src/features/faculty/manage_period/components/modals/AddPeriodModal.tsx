@@ -121,8 +121,8 @@ export function AddPeriodModal({ open, onOpenChange }: AddPeriodModalProps) {
 											<SelectValue placeholder='Chọn' />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value='khoaluan'>Khóa luận</SelectItem>
-											<SelectItem value='nckh'>Nghiên cứu khoa học</SelectItem>
+											<SelectItem value='thesis'>Khóa luận</SelectItem>
+											<SelectItem value='scientific_research'>Nghiên cứu khoa học</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>

@@ -4,13 +4,14 @@ import { Switch } from '@/components/ui/switch'
 import { topicStatusLabels, TopicTypeTransfer, type DraftTopic, type GetFieldNameReponseDto } from '@/models'
 import { stripHtml } from '@/utils/lower-case-html'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Eye, Loader2 } from 'lucide-react'
+import { Eye, Loader2, Trash } from 'lucide-react'
 
 type ColumnsProps = {
 	onSeeDetail: (topicId: string) => void
 	showSelection: boolean
 	onManualApprovalChange?: (checked: boolean, topicId: string) => void
 	pendingId?: string | null
+	handleDeleteConfirmModal: (topicId: string) => void
 }
 interface NewDraftTopic extends DraftTopic {
 	index: number
@@ -21,7 +22,8 @@ export const getColumns = ({
 	onSeeDetail,
 	showSelection,
 	onManualApprovalChange,
-	pendingId
+	pendingId,
+	handleDeleteConfirmModal
 }: ColumnsProps): ColumnDef<NewDraftTopic>[] => [
 	...(showSelection
 		? [
@@ -182,6 +184,14 @@ export const getColumns = ({
 			<div className='flex w-fit flex-row flex-wrap justify-center gap-2 capitalize'>
 				<Button variant='outline' size='sm' onClick={() => onSeeDetail(row.original._id)}>
 					<Eye className='h-4 w-4' />
+				</Button>
+				<Button
+					variant='outline'
+					size='sm'
+					title='Xóa bản nháp'
+					onClick={() => handleDeleteConfirmModal(row.original._id)}
+				>
+					<Trash className='h-4 w-4' />
 				</Button>
 			</div>
 		)

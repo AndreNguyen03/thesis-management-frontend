@@ -5,7 +5,7 @@ import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod } from './period.model'
 import type { RelatedStudentInTopic } from './registration.model'
-import type { SortOrder } from './query-params'
+import { PaginationQueryParamsDto, type SortOrder } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto } from './users'
 export interface GetDetailGrade {
@@ -27,14 +27,6 @@ export interface GetPhaseHistoryDto {
 	createdAt: Date
 }
 
-export interface PaginationQueryParams {
-	limit?: number
-	page?: number
-	search_by?: string
-	query?: string
-	sort_by?: string
-	sort_order?: SortOrder
-}
 
 export interface DetailGrade {
 	score: number
@@ -227,6 +219,27 @@ export type TopicStatus =
 	| 'reviewed'
 	| 'archived'
 	| 'rejected_final'
+export const TopicStatus = {
+	DRAFT: 'draft',
+	SUBMITTED: 'submitted',
+	UNDER_REVIEW: 'under_review',
+	APPROVED: 'approved',
+	REJECTED: 'rejected',
+	AVAILABLE: 'available',
+	PENDING_REGISTRATION: 'pending_registration',
+	REGISTERED: 'registered',
+	FULL: 'full',
+	CANCELLED: 'cancelled',
+	IN_PROGRESS: 'in_progress',
+	DELAYED: 'delayed',
+	PAUSED: 'paused',
+	SUBMITTED_FOR_REVIEW: 'submitted_for_review',
+	AWAITING_EVALUATION: 'awaiting_evaluation',
+	GRADED: 'graded',
+	REVIEWED: 'reviewed',
+	ARCHIVED: 'archived',
+	REJECTED_FINAL: 'rejected_final'
+} as const
 
 export interface SavedUserRef {
 	userId: string
@@ -297,8 +310,9 @@ export interface UpdateTopicPayload {
 	requirementIds?: string[] | []
 	type?: string
 }
-
-export interface PaginationTopicsQueryParams extends PaginationQueryParams {
+//dùng cho search trong lấy topics theo phase của kì
+export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 	phase?: string
 	status?: string
 }
+
