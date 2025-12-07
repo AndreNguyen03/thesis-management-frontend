@@ -1,11 +1,14 @@
 // Phase1Handler.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Badge } from '@/components/ui'
-import { Bell, CheckCircle2 } from 'lucide-react'
+import { Bell, CheckCircle2, Clock } from 'lucide-react'
 import type { Phase1Response } from '@/models/period-phase.models'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
+import { DeadlineModal } from './modals/DeadlineModal'
+import { useSendRemainIssueNotiMutation } from '@/services/notificationApi'
 
 interface ActionDetail {
 	id: string
@@ -22,29 +25,63 @@ interface Action {
 	description: string
 	count: number
 	totalMissing?: number
-	severity: 'info' | 'warning' | 'critical'
-	type: 'send_reminder' | 'request_documents'
 	isSent?: boolean
 	targetDetails?: ActionDetail[]
+	actionType?: 'remind' | 'process' // Để phân biệt loại action
 }
 
-export function Phase1Handler({ data, onCompletePhase }: { data: Phase1Response; onCompletePhase: () => void }) {
+const STORAGE_KEY = 'phase1-actions-sent'
+
+export function Phase1Handler({
+	data,
+	onCompletePhase,
+	onProcess
+}: {
+	data: Phase1Response
+	onCompletePhase: () => void
+	onProcess: () => void
+}) {
 	const allDone = data.missingTopics.length === 0 && data.pendingTopics === 0
 	const [loading, setLoading] = useState(false)
-	const [confirmReminderOpen, setConfirmReminderOpen] = useState(false)
 	const [confirmNextPhaseOpen, setConfirmNextPhaseOpen] = useState(false)
 	const [expandedActions, setExpandedActions] = useState<Set<string>>(new Set())
+	const [deadlineModalOpen, setDeadlineModalOpen] = useState(false)
+	const [activeActionId, setActiveActionId] = useState<string>('') // Để biết action nào đang xử lý
+	const [sentActions, setSentActions] = useState<Set<string>>(new Set())
+
+	const [sendRemainNotification] = useSendRemainIssueNotiMutation()
+
+	// Load trạng thái sent từ localStorage khi mount
+	useEffect(() => {
+		const stored = localStorage.getItem(STORAGE_KEY)
+		if (stored) {
+			try {
+				const parsed = JSON.parse(stored) as Set<string>
+				setSentActions(new Set(parsed))
+			} catch (error) {
+				console.error('Lỗi load localStorage:', error)
+				localStorage.removeItem(STORAGE_KEY)
+			}
+		}
+	}, [])
+
+	useEffect(() => {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(sentActions)))
+	}, [sentActions])
 
 	// Map data.missingTopics sang action object
 	const actions: Action[] = []
 	if (data.missingTopics.length > 0) {
+		const isSent = sentActions.has('remind-lecturers')
 		actions.push({
 			id: 'remind-lecturers',
 			label: 'Giảng viên chưa nộp đủ đề tài',
-			description: 'Nhắc nhở các giảng viên chưa nộp đủ số lượng đề tài yêu cầu',
+			description: isSent
+				? 'Nhắc nhở đã được gửi (đang chờ phản hồi từ giảng viên)'
+				: 'Nhắc nhở các giảng viên chưa nộp đủ số lượng đề tài yêu cầu',
 			count: data.missingTopics.length,
-			severity: 'warning',
-			type: 'send_reminder',
+			isSent,
+			actionType: 'remind',
 			totalMissing: data.missingTopics.reduce((sum, lec) => sum + lec.missingTopicsCount, 0),
 			targetDetails: data.missingTopics.map((lec) => ({
 				id: lec.lecturerId,
@@ -63,18 +100,42 @@ export function Phase1Handler({ data, onCompletePhase }: { data: Phase1Response;
 			label: 'Đề tài chờ phê duyệt',
 			description: 'Các đề tài đã nộp nhưng chưa được xử lý',
 			count: data.pendingTopics,
-			severity: 'info',
-			type: 'send_reminder'
+			actionType: 'process'
 		})
 	}
 
-	const handleSendReminder = async () => {
+	// Handler khi gửi thành công từ modal (cho remind)
+	const handleNotificationSent = async (deadline: string) => {
+		if (!activeActionId) return
 		setLoading(true)
-		await new Promise((r) => setTimeout(r, 1200))
-		setLoading(false)
-		setConfirmReminderOpen(false)
-	}
 
+		// Gọi API gửi nhắc nhở
+		try {
+			await sendRemainNotification({
+				periodId: data.periodId,
+				phaseName: data.phase,
+				deadline: new Date(deadline)
+			}).unwrap()
+
+			// Cập nhật state sent
+			setSentActions((prev) => new Set([...prev, activeActionId]))
+			setDeadlineModalOpen(false)
+
+			toast({
+				title: 'Hoàn tất',
+				description: 'Nhắc nhở đã được gửi với deadline đã chọn.'
+			})
+		} catch (error) {
+			console.error(error)
+			toast({
+				title: 'Lỗi',
+				description: 'Gửi nhắc nhở thất bại.',
+				variant: 'destructive'
+			})
+		} finally {
+			setLoading(false)
+		}
+	}
 
 	if (allDone) {
 		return (
@@ -92,28 +153,63 @@ export function Phase1Handler({ data, onCompletePhase }: { data: Phase1Response;
 	}
 
 	return (
-		<div className='space-y-6'>
+		<div className='mx-auto w-[95%] space-y-6'>
 			{actions.map((action) => {
 				const isExpanded = expandedActions.has(action.id)
 				const hasDetails = action.targetDetails && action.targetDetails.length > 0
+				const isActionSent = action.isSent
+				const buttonText = action.actionType === 'remind' ? 'Gửi nhắc nhở' : 'Đi Xử lý '
 				return (
-					<div key={action.id} className='space-y-2 rounded-lg border p-4'>
-						<div className='flex items-center justify-between'>
-							<div className='flex-1'>
-								<p className='font-medium'>{action.label}</p>
-								<p className='text-sm text-muted-foreground'>{action.description}</p>
-								{action.totalMissing && action.totalMissing > 0 && (
-									<Badge variant='destructive'>Thiếu {action.totalMissing} đề tài</Badge>
+					<div
+						key={action.id}
+						className={`space-y-2 rounded-lg border p-4 ${isActionSent ? 'border-yellow-200 bg-yellow-50' : 'border-gray-200'}`}
+					>
+						<div className='flex items-center justify-between gap-4'>
+							<div
+								className={`rounded-lg border p-2.5 ${
+									isActionSent
+										? 'border-yellow bg-yellow-100 text-yellow-600'
+										: action.actionType === 'process'
+											? 'border-purple-400 bg-purple-50 text-purple-600'
+											: 'border-blue bg-blue-100 text-blue-600'
+								}`}
+							>
+								{action.actionType === 'process' ? (
+									<Clock className='h-5 w-5' />
+								) : (
+									<Bell className='h-5 w-5' />
 								)}
 							</div>
-							<Button
-								variant='secondary'
-								className='bg-info/10 text-info border-info/20'
-								onClick={() => setConfirmReminderOpen(true)}
-							>
-								<Bell className='mr-2 h-4 w-4' />
-								Gửi nhắc nhở
-							</Button>
+							<div className='flex-1'>
+								<div className='mb-1 flex items-center gap-4'>
+									<p className='font-semibold'>{action.label}</p>
+									{action.totalMissing && action.totalMissing > 0 && (
+										<Badge variant='destructive'>Thiếu {action.totalMissing} đề tài</Badge>
+									)}
+									{isActionSent && <Badge variant='secondary'>Đang chờ</Badge>}
+								</div>
+								<p className='text-sm text-muted-foreground'>{action.description}</p>
+							</div>
+							{isActionSent ? (
+								<Button variant='secondary' disabled>
+									Đã xử lý
+								</Button>
+							) : (
+								<Button
+									variant='default'
+									onClick={() => {
+										setActiveActionId(action.id)
+										if (action.actionType === 'remind') {
+											setDeadlineModalOpen(true)
+										} else if (action.actionType === 'process') {
+											onProcess()
+										}
+									}}
+									disabled={loading}
+								>
+									{loading ? 'Đang xử lý...' : buttonText}
+								</Button>
+							)}
 						</div>
 
 						{hasDetails && (
@@ -194,23 +290,11 @@ export function Phase1Handler({ data, onCompletePhase }: { data: Phase1Response;
 				)
 			})}
 
-			{/* Dialog nhắc nhở */}
-			<Dialog open={confirmReminderOpen} onOpenChange={setConfirmReminderOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Gửi nhắc nhở</DialogTitle>
-					</DialogHeader>
-					<p>Bạn có chắc muốn gửi nhắc nhở?</p>
-					<DialogFooter className='flex gap-2'>
-						<Button variant='secondary' onClick={() => setConfirmReminderOpen(false)}>
-							Hủy
-						</Button>
-						<Button disabled={loading} onClick={handleSendReminder}>
-							{loading ? 'Đang gửi...' : 'Gửi'}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<DeadlineModal
+				open={deadlineModalOpen}
+				onOpenChange={setDeadlineModalOpen}
+				onSend={handleNotificationSent}
+			/>
 
 			{/* Dialog chuyển pha */}
 			<Dialog open={confirmNextPhaseOpen} onOpenChange={setConfirmNextPhaseOpen}>

@@ -4,7 +4,7 @@ import { Edit2, Plus, Trash2 } from 'lucide-react'
 import { DialogHeader, Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
 import { DEFAULT_PASSWORD, type CreateStudentRequest, type StudentTable } from './types'
 import { DataTable } from '@/components/ui/DataTable'
-import type { QueryParams, TableColumn, TableAction } from '@/components/ui/DataTable/types'
+import type { TableColumn, TableAction } from '@/components/ui/DataTable/types'
 import { CustomBadge } from '@/components/ui/custom-badge'
 import { StudentForm } from './components/StudentForm'
 import {
@@ -27,14 +27,15 @@ import {
 	useGetStudentsQuery,
 	useUpdateStudentMutation
 } from '@/services/studentApi'
+import type { PaginationQueryParamsDto } from '@/models/query-params'
 
 export const ManageStudentPage = () => {
 	const searchFields = {
-        studentCode: 'Mã sinh viên',
+		studentCode: 'Mã sinh viên',
 		email: 'Email',
 		fullName: 'Họ và tên',
 		isActive: 'Trạng thái',
-		phone: 'Số điện thoại',
+		phone: 'Số điện thoại'
 	}
 
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Quản lý sinh viên' }])
@@ -44,9 +45,9 @@ export const ManageStudentPage = () => {
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 	const [selectedStudent, setSelectedStudent] = useState<StudentTable | null>(null)
 
-	const [queryParams, setQueryParams] = useState<QueryParams>({
+	const [queryParams, setQueryParams] = useState<PaginationQueryParamsDto>({
 		page: 1,
-		page_size: 10,
+		limit: 10,
 		search_by: 'fullName',
 		query: '',
 		sort_by: 'fullName',
@@ -140,7 +141,7 @@ export const ManageStudentPage = () => {
 	return (
 		<>
 			<div className='flex h-full flex-col' role='main'>
-				<header className='mt-16 mb-6 flex items-center justify-between'>
+				<header className='mb-6 mt-16 flex items-center justify-between'>
 					<h1 className='text-2xl font-bold'>Danh sách sinh viên</h1>
 				</header>
 
@@ -152,7 +153,7 @@ export const ManageStudentPage = () => {
 						isLoading={isLoading}
 						error={toErrorObject(error)}
 						totalRecords={data?.total_records || 0}
-						pageSize={queryParams.page_size}
+						pageSize={queryParams.limit}
 						searchFields={searchFields}
 						onQueryChange={setQueryParams}
 						emptyState={{
@@ -232,7 +233,7 @@ export const ManageStudentPage = () => {
 								updateStudent({ id: selectedStudent.id, data })
 									.unwrap()
 									.then(() => {
-                                        console.log(`update student data ::`, data)
+										console.log(`update student data ::`, data)
 										setIsEditDialogOpen(false)
 										toast({
 											title: 'Thành công',

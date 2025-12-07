@@ -587,7 +587,7 @@ export const TopicDetailContainer = () => {
 							<div className='relative gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
 								<span className='text-lg font-medium'>Lịch sử thay đổi trạng thái</span>
 								<div className='space-y-4'>
-									{topic.phaseHistories.slice(1).length > 0 ? (
+									{topic.phaseHistories && topic.phaseHistories.slice(1).length > 0 ? (
 										topic.phaseHistories.map((history, idx) => {
 											if (
 												idx === 0 &&

@@ -85,6 +85,7 @@ export const PhaseInfo: Record<PhaseType, { order: number; continue: string; con
 		}
 	}
 
+
 export const PhaseStatusMap: Record<
 	'not_started' | 'ongoing' | 'completed',
 	{ text: string; variant: 'gray' | 'lightBlue' | 'registered' }

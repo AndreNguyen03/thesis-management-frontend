@@ -5,7 +5,7 @@ import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod } from './period.model'
 import type { RelatedStudentInTopic } from './registration.model'
-import type { SortOrder } from './query-params'
+import type { PaginationQueryParamsDto, SortOrder } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto } from './users'
 export interface GetDetailGrade {
@@ -27,14 +27,6 @@ export interface GetPhaseHistoryDto {
 	createdAt: Date
 }
 
-export interface PaginationQueryParams {
-	limit?: number
-	page?: number
-	search_by?: string
-	query?: string
-	sort_by?: string
-	sort_order?: SortOrder
-}
 
 export interface DetailGrade {
 	score: number
@@ -319,7 +311,7 @@ export interface UpdateTopicPayload {
 	type?: string
 }
 
-export interface PaginationTopicsQueryParams extends PaginationQueryParams {
+export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 	phase?: string
 	status?: string
 }

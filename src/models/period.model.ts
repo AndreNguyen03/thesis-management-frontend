@@ -9,7 +9,9 @@ export type PhaseType = 'empty' | 'submit_topic' | 'open_registration' | 'execut
 
 export interface Period {
 	_id: string
-	name: string
+	year: string
+	semester: number
+	type: 'khoaluan' | 'nckh'
 	faculty: GetFaculty
 	phases: PeriodPhase[]
 	status: string
@@ -22,8 +24,10 @@ export interface MiniPeriod {
 	_id: string
 	name: string
 }
-export interface CreatePeriodDto {
-	name: string
+export interface CreatePeriodPayload {
+	year: string
+	semester: number
+	type: 'khoaluan' | 'nckh'
 	startTime: Date
 	endTime: Date
 }
@@ -63,7 +67,9 @@ export interface GetCustomPeriodDetailRequestDto {
 
 export interface GetCustomMiniPeriodInfoRequestDto {
 	_id: string
-	name: string
+	year: string
+	semester: number
+	type: 'khoaluan' | 'nckh'
 	faculty: GetFaculty
 	phases: PeriodPhase[]
 	status: string
@@ -73,7 +79,6 @@ export interface GetCustomMiniPeriodInfoRequestDto {
 	currentPhaseDetail: PeriodPhase
 }
 
-
 export const PeriodPhaseName = {
 	EMPTY: 'empty',
 	SUBMIT_TOPIC: 'submit_topic',
@@ -82,7 +87,7 @@ export const PeriodPhaseName = {
 	COMPLETION: 'completion'
 } as const
 
-export interface    CreatePhaseResponse {
+export interface CreatePhaseResponse {
 	success: boolean
 	message: string
 }
@@ -103,3 +108,9 @@ export type CreateCompletionPhaseDto = Omit<PeriodPhase, 'status'> & {
 	phase: 'completion'
 }
 export type UpdatePeriodPhaseDto = Omit<PeriodPhase, 'status' | 'phase'>
+
+export type SendRemainIssueNoti = {
+	periodId: string
+	phaseName: PhaseType
+	deadline: Date
+}

@@ -22,35 +22,18 @@ interface PhaseActionsBoxProps {
 	phase: PeriodPhase
 	onCompletePhase: () => void
 	isResolving: boolean
+    onGoProcess: () => void
 }
 
-export function PhaseActionsBox({ phase, isResolving, onCompletePhase, resolvePhaseData }: PhaseActionsBoxProps) {
-	// const [notificationModalOpen, setNotificationModalOpen] = useState(false)
-	// const [selectedNotificationAction, setSelectedNotificationAction] = useState<any>(null)
-
+export function PhaseActionsBox({ phase, isResolving, onCompletePhase, resolvePhaseData, onGoProcess }: PhaseActionsBoxProps) {
 	const allCompleted = resolvePhaseData ? isResolved(resolvePhaseData) : false
-
-	// const handleOpenNotificationModal = (action: any) => {
-	// 	setSelectedNotificationAction(action)
-	// 	setNotificationModalOpen(true)
-	// }
-
-	// const handleSendNotification = async () => {
-	// 	if (!selectedNotificationAction) return
-	// 	await new Promise((resolve) => setTimeout(resolve, 1500))
-	// 	toast({
-	// 		title: 'Thành công!',
-	// 		description: `Đã gửi thông báo tới ${selectedNotificationAction.count} người`
-	// 	})
-	// 	setNotificationModalOpen(false)
-	// }
 
 	let phaseContent = null
 	if (resolvePhaseData) {
 		switch (phase.phase) {
 			case 'submit_topic':
 				phaseContent = (
-					<Phase1Handler data={resolvePhaseData as Phase1Response} onCompletePhase={onCompletePhase} />
+					<Phase1Handler data={resolvePhaseData as Phase1Response} onCompletePhase={onCompletePhase} onProcess={onGoProcess}/>
 				)
 				break
 			case 'open_registration':
@@ -67,8 +50,8 @@ export function PhaseActionsBox({ phase, isResolving, onCompletePhase, resolvePh
 	}
 
 	return (
-		<Card className='animate-slide-up p-0 shadow-card'>
-			<CardHeader className='pb-4'>
+		<Card className='animate-slide-up px-0 pt-0 pb-6 shadow-card'>
+			<CardHeader>
 				<div className='flex items-center justify-between'>
 					<div>
 						<CardTitle className='text-lg font-semibold'>Xử lý tồn đọng</CardTitle>

@@ -213,7 +213,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	return (
 		<div className={`border-r border-gray-200 bg-white ${isOpen ? 'w-50' : 'w-16'} transition-all duration-300`}>
 			<div
-				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit max-w-72' : 'w-16'} h-screen overflow-auto transition-all duration-300`}
+				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit max-w-72' : 'w-16'} h-[calc(100vh-4.3rem)] overflow-auto transition-all duration-300`}
 			>
 				<div className='px-3 py-1'>
 					<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>

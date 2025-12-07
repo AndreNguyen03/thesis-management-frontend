@@ -2,7 +2,7 @@ import { StatsCards } from './StatsCards'
 import { getLabelForStatus, getPhaseStats } from '../utils'
 import { motion } from 'framer-motion'
 import { type PeriodPhase, type ResolvePhaseResponse } from '@/models/period-phase.models'
-import { useState, type SetStateAction, type Dispatch, useEffect } from 'react'
+import { useState, type SetStateAction, type Dispatch, useEffect, useRef } from 'react'
 import { type TopicStatus } from '@/models'
 import type { PhaseType } from '@/models/period.model'
 // import { toast } from '@/hooks/use-toast'
@@ -64,10 +64,24 @@ export function PhaseContent({
 	const handleResolve = async () => {
 		try {
 			const res = await resolvePhase({ periodId, phase: phaseDetail.phase }).unwrap()
+			console.log('resovle phase :::', res)
 			setResolvePhaseData(res)
 		} catch (err) {
 			console.error(err)
 		}
+	}
+
+	const topicsRef = useRef<HTMLDivElement>(null)
+
+	const scrollToTopics = () => {
+		setTimeout(() => {
+			topicsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+		}, 200)
+	}
+
+	const handleGoProcess = () => {
+		setStatusFilter('submitted')
+		scrollToTopics()
 	}
 
 	return (
@@ -89,15 +103,16 @@ export function PhaseContent({
 			<StatsCards stats={stats} onClick={setStatusFilter} />
 
 			{/* Phase Actions Box */}
-			{resolvePhaseData?.canTriggerNextPhase === true && phaseDetail.phase === currentPhase && (
+			{resolvePhaseData && phaseDetail.phase === currentPhase && (
 				<PhaseActionsBox
 					resolvePhaseData={resolvePhaseData}
 					phase={phaseDetail}
 					onCompletePhase={completePhase}
 					isResolving={isResolving}
+					onGoProcess={handleGoProcess}
 				/>
 			)}
-			<div className='pb-10'>
+			<div className='pb-10' ref={topicsRef}>
 				<h3 className='mb-4 text-lg font-semibold'>
 					{statusFilter && statusFilter !== 'all'
 						? `Danh sách các đề tài ${getLabelForStatus(statusFilter)}`

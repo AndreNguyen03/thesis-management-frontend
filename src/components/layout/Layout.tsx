@@ -47,7 +47,7 @@ function LayoutContent({ user, children }: { user: any; children: ReactNode }) {
 							<Breadcrumbs />
 						</div>
 					</div>
-					<main className='min-h-[calc(100vh)] flex-1 overflow-y-auto'>
+					<main className='flex-1 overflow-y-auto'>
 						<div className='px-4 py-2'>{children}</div>
 					</main>
 					<footer className='z-20 border-t bg-white py-2'>

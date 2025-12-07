@@ -1,20 +1,27 @@
-// import { baseApi, type ApiResponse } from './baseApi'
-// import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
-// import type { PaginatedMajor } from '@/models/major.model'
+import type { SendRemainIssueNoti } from '@/models/period.model'
+import { baseApi, type ApiResponse } from './baseApi'
+import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
+import type { PaginatedNotifications } from '@/models/notification.model'
 
-// export const majorApi = baseApi.injectEndpoints({
-//     endpoints: (builder) => ({
-//         getNotifications: builder.query<PaginatedMajor, PaginationQueryParamsDto>({
-//             query: (queries) => {
-//                 const queryString = buildQueryString(queries)
-//                 return {
-//                     url: `/majors?${queryString}`
-//                 }
-//             },
-//             transformResponse: (response: ApiResponse<PaginatedMajor>) => response.data
-//         }),
-       
-//     }),
-//     overrideExisting: false
-// })
-// export const { useGetMajorsQuery, useGetMajorsBySameFacultyIdQuery } = majorApi
+export const periodApi = baseApi.injectEndpoints({
+	endpoints: (builder) => ({
+		sendRemainIssueNoti: builder.mutation<void, SendRemainIssueNoti>({
+			query: (data) => ({
+				url: 'notifications/remain-issue',
+				method: 'POST',
+				body: data
+			})
+		}),
+		getNotifications: builder.query<PaginatedNotifications, PaginationQueryParamsDto>({
+			query: (queries) => {
+				const queryString = buildQueryString(queries)
+				return {
+					url: `/notifications/user?${queryString}`
+				}
+			},
+			transformResponse: (response: ApiResponse<PaginatedNotifications>) => response.data
+		})
+	})
+})
+
+export const { useSendRemainIssueNotiMutation, useGetNotificationsQuery } = periodApi

@@ -1,4 +1,4 @@
-import { MOCK_NOTIFICATIONS, type NotificationItem } from '@/models/notification.model'
+import { type NotificationItem } from '@/models/notification.model'
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { io, type Socket } from 'socket.io-client'
 
@@ -6,7 +6,7 @@ interface NotificationState {
 	notifications: NotificationItem[]
 }
 const initialState: NotificationState = {
-	notifications: MOCK_NOTIFICATIONS
+	notifications: []
 }
 const notificationSlice = createSlice({
 	name: 'notification',

@@ -28,7 +28,7 @@ const ManageSubmittedTopics = () => {
 		limit: 5,
 		search_by: 'titleVN,titleEng,lecturerName',
 		query: '',
-		sort_by: 'createdAt',
+		sort_by: 'submittedAt',
 		sort_order: 'desc',
 		filter: 'all',
 		filter_by: 'fieldIds'

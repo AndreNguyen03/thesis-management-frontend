@@ -9,16 +9,16 @@ import {
 	PaginationNext,
 	PaginationPrevious
 } from '@/components/ui/pagination'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { FilterX, ArrowUpDown, ChevronUp, ChevronDown, MoreVertical } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button, Input } from '@/components/ui'
 import { EmptyState } from '../EmptyState'
 import { LoadingState } from '../LoadingState'
-import type { DataTableProps, QueryParams, SearchValue, SortOrder, TableAction } from './types'
-import type { PaginationQueryParams } from '@/models'
-import type { PaginationQueryParamsDto } from '@/models/query-params'
+import { type DataTableProps, type SearchValue, type SortOrder, type TableAction } from './types'
+import { PaginationQueryParamsDto } from '@/models/query-params'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../dropdown-menu'
+import { useDebounceGeneric } from '@/hooks/useDebounce'
 
 export function DataTable<T extends Record<string, any>>({
 	data,
@@ -52,7 +52,8 @@ export function DataTable<T extends Record<string, any>>({
 	const searchFieldRef = useRef<HTMLButtonElement>(null)
 	const searchInputRef = useRef<HTMLInputElement>(null)
 
-	console.log(data)
+	const debouncedUpdateQuery = useDebounceGeneric<PaginationQueryParamsDto>(onQueryChange, 500)
+
 	useEffect(() => {
 		if (tableRef.current) {
 			const firstFocusable = tableRef.current.querySelector('input, button, [tabindex="0"]') as HTMLElement
@@ -105,7 +106,7 @@ export function DataTable<T extends Record<string, any>>({
 	}
 
 	const updateQuery = (updates: Partial<PaginationQueryParamsDto>) => {
-		onQueryChange({
+		const params = {
 			page,
 			limit: pageSize,
 			search_by: searchField,
@@ -113,7 +114,9 @@ export function DataTable<T extends Record<string, any>>({
 			sort_by: sortField,
 			sort_order: sortOrder,
 			...updates
-		})
+		}
+
+		debouncedUpdateQuery(params)
 	}
 
 	const getSortIcon = (field: string) => {
@@ -267,22 +270,18 @@ export function DataTable<T extends Record<string, any>>({
 									</DropdownMenuTrigger>
 
 									<DropdownMenuContent align='end'>
-										{bulkActions(data.filter((row) => selectedRows.has(row._id))).map(
-											(action) => (
-												<DropdownMenuItem
-													key={action.label}
-													onClick={() =>
-														action.onClick?.(
-															data.filter((row) => selectedRows.has(row._id))
-														)
-													}
-												>
-													<span className='flex items-center gap-2'>
-														{action.icon} {action.label}
-													</span>
-												</DropdownMenuItem>
-											)
-										)}
+										{bulkActions(data.filter((row) => selectedRows.has(row._id))).map((action) => (
+											<DropdownMenuItem
+												key={action.label}
+												onClick={() =>
+													action.onClick?.(data.filter((row) => selectedRows.has(row._id)))
+												}
+											>
+												<span className='flex items-center gap-2'>
+													{action.icon} {action.label}
+												</span>
+											</DropdownMenuItem>
+										))}
 									</DropdownMenuContent>
 								</DropdownMenu>
 								{/* Nút hủy chọn tất cả */}
