@@ -277,6 +277,19 @@ export const topicApi = baseApi.injectEndpoints({
 				method: 'PATCH',
 				body: { topicIds }
 			})
+		}),
+		copyToDraft: builder.mutation<{ message: string }, { topicId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/copy-to-draft/${topicId}`,
+				method: 'POST'
+			})
+		}),
+		deleteTopics: builder.mutation<{ message: string }, { topicIds: string[] }>({
+			query: ({ topicIds }) => ({
+				url: `/topics/delete/`,
+				method: 'DELETE',
+				body: topicIds // gửi mảng topicIds trong body
+			})
 		})
 	}),
 	overrideExisting: false
@@ -313,5 +326,7 @@ export const {
 	useScoringBoardGradeTopicMutation,
 	useScoringBoardRejectTopicMutation,
 	useMarkReviewedTopicMutation,
-	useArchiveTopicMutation
+	useArchiveTopicMutation,
+	useCopyToDraftMutation,
+	useDeleteTopicsMutation
 } = topicApi

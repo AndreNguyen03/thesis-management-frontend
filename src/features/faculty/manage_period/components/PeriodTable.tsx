@@ -15,10 +15,11 @@ import type { ApiError, PaginationTopicsQueryParams } from '@/models'
 import { PhaseInfo } from '@/utils/utils'
 
 const getStatusBadge = (status: PeriodStatus) => {
+	console.log('status :: ', status)
 	const variants = {
-		ongoing: { label: 'Đang diễn ra', variant: 'default' as const },
-		completed: { label: 'Đã kết thúc', variant: 'secondary' as const },
-		upcoming: { label: 'Sắp tới', variant: 'outline' as const }
+		active: { label: 'Đang diễn ra', variant: 'default' as const },
+		timeout: { label: 'Đã kết thúc', variant: 'secondary' as const },
+		pending: { label: 'Sắp diễn ra', variant: 'outline' as const }
 	}
 
 	const config = variants[status]
@@ -140,7 +141,7 @@ export function PeriodsTable({ onOpenModal }: { onOpenModal: (open: boolean) => 
 
 	return (
 		<div className='flex h-full flex-col' role='main'>
-			<header className='mt-16 mb-6 flex items-center justify-between'>
+			<header className='mb-6 mt-16 flex items-center justify-between'>
 				<header className='flex flex-col items-start justify-between'>
 					<h1 className='text-2xl font-bold'>Quản lý Đợt Đăng Ký</h1>
 					<p className='mt-1 text-muted-foreground'>Quản lý các đợt đăng ký đề tài tốt nghiệp</p>

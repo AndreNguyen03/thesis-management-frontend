@@ -3,7 +3,7 @@ import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
 import type { TopicStatus } from './topic.model'
 
-export type PeriodStatus = 'ongoing' | 'completed'
+export type PeriodStatus = 'timeout' | 'active' | 'pending'
 
 export type PhaseType = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion'
 

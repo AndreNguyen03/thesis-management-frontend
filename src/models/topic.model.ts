@@ -227,6 +227,27 @@ export type TopicStatus =
 	| 'reviewed'
 	| 'archived'
 	| 'rejected_final'
+export const TopicStatus = {
+	DRAFT: 'draft',
+	SUBMITTED: 'submitted',
+	UNDER_REVIEW: 'under_review',
+	APPROVED: 'approved',
+	REJECTED: 'rejected',
+	AVAILABLE: 'available',
+	PENDING_REGISTRATION: 'pending_registration',
+	REGISTERED: 'registered',
+	FULL: 'full',
+	CANCELLED: 'cancelled',
+	IN_PROGRESS: 'in_progress',
+	DELAYED: 'delayed',
+	PAUSED: 'paused',
+	SUBMITTED_FOR_REVIEW: 'submitted_for_review',
+	AWAITING_EVALUATION: 'awaiting_evaluation',
+	GRADED: 'graded',
+	REVIEWED: 'reviewed',
+	ARCHIVED: 'archived',
+	REJECTED_FINAL: 'rejected_final'
+} as const
 
 export interface SavedUserRef {
 	userId: string

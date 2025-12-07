@@ -1,5 +1,6 @@
 import { getColumns } from './Columns'
 import {
+	useCopyToDraftMutation,
 	useGetSubmittedTopicsQuery,
 	useSetAllowManualApprovalMutation,
 	useWithdrawSubmittedTopicsMutation
@@ -58,8 +59,10 @@ const ManageSubmittedTopics = () => {
 	const [withdrawSubmittedTopics, { isLoading: isWithdrawing }] = useWithdrawSubmittedTopicsMutation()
 	const [pendingWithdrawId, setPendingWithdrawId] = useState<string | null>(null)
 	const [pendingId, setPendingId] = useState<string | null>(null)
+	const [pendingCopyId, setPendingCopyId] = useState<string | null>(null)
 	const [selectedWithdrawTopics, setSelectedWithdrawTopics] = useState<SubmittedTopic[]>([])
 	const [showSelection, setShowSelection] = useState(false)
+	const [copyToDraftMutation] = useCopyToDraftMutation()
 	//lấy thông tin kì hiện tại
 	const { currentPeriod } = useAppSelector((state) => state.period)
 	const handleWithdraw = async (topic?: SubmittedTopic) => {
@@ -79,10 +82,25 @@ const ManageSubmittedTopics = () => {
 			toast('Rút đề tài thất bại. Vui lòng thử lại sau.')
 		}
 	}
+	const handleCopyTodraft = async (topic: SubmittedTopic) => {
+		try {
+			setPendingCopyId(topic._id)
+			await copyToDraftMutation({ topicId: topic._id })
+			setTimeout(() => {
+				setPendingCopyId(null)
+				toast('Sao chép đề tài thành công vào bản nháp.')
+			}, 1000)
+		} catch (err: any) {
+			setPendingCopyId(null)
+			toast('Sao chép đề tài thất bại. Vui lòng thử lại sau.')
+		}
+	}
 	const isAbleInSubmitPhase =
 		currentPeriod?.currentPhaseDetail.phase === PeriodPhaseName.SUBMIT_TOPIC &&
 		currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
 	const columns = getColumns({
+		onCopyToDraft: handleCopyTodraft,
+		pendingCopyId,
 		onSeeDetail: (topicId) => navigate(`/detail-topic/${topicId}`),
 		showSelection: showSelection,
 		onManualApprovalChange: handleManualApprovalChange,

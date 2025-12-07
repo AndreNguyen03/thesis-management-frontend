@@ -5,11 +5,14 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Button } from './ui'
 import { ScrollArea } from './ui/scroll-area'
 import { formatTimeAgo } from '@/utils/format-time-ago'
+import { useAppSelector } from '@/store'
+import { useDispatch } from 'react-redux'
+import { setNotifications } from '@/store/slices/notification-slice'
 
 export function NotificationPopover() {
-	const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS)
+	const notifications = useAppSelector((state) => state.notification.notifications)
 	const [isOpen, setIsOpen] = useState(false)
-
+	const dispatch = useDispatch()
 	// Đếm số chưa đọc
 	const unreadCount = notifications.filter((n) => !n.isRead).length
 
@@ -46,17 +49,35 @@ export function NotificationPopover() {
 	}
 
 	const handleMarkAllRead = () => {
-		setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+		dispatch(setNotifications(notifications.map((n) => ({ ...n, isRead: true }))))
 	}
 
 	const handleItemClick = (id: string, link?: string) => {
-		setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)))
+		dispatch(setNotifications(notifications.map((n) => (n._id === id ? { ...n, isRead: true } : n))))
 		if (link) {
 			console.log('Navigate to:', link)
 			setIsOpen(false)
 		}
 	}
+	// const handleNotificationClick = (noti: any) => {
+	// 	// Trường hợp 1: Chuyển trang kèm dữ liệu cho Banner
+	// 	if (noti.type === 'TOPIC_REJECTED') {
+	// 		navigate(`/topics/${noti.metadata.topicId}`, {
+	// 			state: {
+	// 				notiType: 'REJECTED',
+	// 				reason: noti.metadata.reason // Lý do backend gửi về
+	// 			}
+	// 		})
+	// 		return
+	// 	}
 
+	// 	// Trường hợp 2: Mở Sheet thông tin
+	// 	if (noti.type === 'GENERAL_INFO') {
+	// 		setSelectedNoti(noti) // Set state để mở Sheet
+	// 		setSheetOpen(true)
+	// 		return
+	// 	}
+	// }
 	return (
 		<div className='flex items-start justify-center'>
 			<Popover open={isOpen} onOpenChange={setIsOpen}>

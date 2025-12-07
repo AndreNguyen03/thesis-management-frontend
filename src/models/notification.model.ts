@@ -4,9 +4,9 @@ export const NotificationType = {
 	WARNING: 'WARNING',
 	ERROR: 'ERROR',
 	INFO: 'INFO'
-} as const;
+} as const
 
-export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
 
 export interface NotificationItem {
 	_id: string
@@ -15,7 +15,7 @@ export interface NotificationItem {
 	type: NotificationType // Sử dụng trực tiếp enum
 	createdAt: string
 	isRead: boolean
-	link?: string
+	link: string
 }
 
 export const MOCK_NOTIFICATIONS: NotificationItem[] = [
@@ -64,5 +64,24 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
 		createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
 		isRead: true,
 		link: '/periods/hk1_2025'
+	},
+	{
+		_id: '6',
+		type: NotificationType.SUCCESS,
+		title: 'Ban chủ nhiệm đã chấp thuận đề tài',
+		message: 'Đề tài "Ứng dụng IoT trong nông nghiệp" của bạn đã được Ban chủ nhiệm khoa chấp thuận.',
+		createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+		isRead: false,
+		link: '/topics/topic_999'
+	},
+	{
+		_id: '7',
+		type: NotificationType.ERROR,
+		title: 'Ban chủ nhiệm từ chối đề tài',
+		message:
+			'Đề tài "Phân tích dữ liệu lớn" của bạn đã bị Ban chủ nhiệm khoa từ chối. Lý do: Nội dung chưa phù hợp với định hướng khoa.',
+		createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+		isRead: false,
+		link: '/topics/topic_888'
 	}
 ]
