@@ -137,8 +137,8 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 		if (!currentPeriod) return periodInfo
 
 		const typeLabels = {
-			khoaluan: 'Khóa luận',
-			nckh: 'Nghiên cứu khoa học'
+			thesis: 'Khóa luận',
+			scientific_research: 'Nghiên cứu khoa học'
 		} as const
 
 		const title = `Kì hiện tại: ${currentPeriod.year} • HK ${currentPeriod.semester} • ${
