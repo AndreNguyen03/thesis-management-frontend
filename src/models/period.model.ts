@@ -27,7 +27,7 @@ export interface MiniPeriod {
 export interface CreatePeriodPayload {
 	year: string
 	semester: number
-	type: 'khoaluan' | 'nckh'
+	type: 'thesis' | 'scientific_research'
 	startTime: Date
 	endTime: Date
 }
@@ -69,7 +69,7 @@ export interface GetCustomMiniPeriodInfoRequestDto {
 	_id: string
 	year: string
 	semester: number
-	type: 'khoaluan' | 'nckh'
+	type: 'thesis' | 'scientific_research'
 	faculty: GetFaculty
 	phases: PeriodPhase[]
 	status: string

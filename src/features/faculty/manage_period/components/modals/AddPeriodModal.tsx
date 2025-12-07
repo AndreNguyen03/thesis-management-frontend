@@ -24,7 +24,7 @@ interface AddPeriodModalProps {
 export function AddPeriodModal({ open, onOpenChange }: AddPeriodModalProps) {
 	const [academicYear, setAcademicYear] = useState('')
 	const [semester, setSemester] = useState('')
-	const [periodType, setPeriodType] = useState<'khoaluan' | 'nckh'>('khoaluan')
+	const [periodType, setPeriodType] = useState<'thesis' | 'scientific_research'>('thesis')
 
 	const [startTime, setStartTime] = useState<string>('')
 	const [endTime, setEndTime] = useState<string>('')
@@ -34,7 +34,7 @@ export function AddPeriodModal({ open, onOpenChange }: AddPeriodModalProps) {
 	const resetForm = () => {
 		setAcademicYear('')
 		setSemester('')
-		setPeriodType('khoaluan')
+		setPeriodType('thesis')
 		setStartTime('')
 		setEndTime('')
 		onOpenChange(false)
@@ -86,13 +86,11 @@ export function AddPeriodModal({ open, onOpenChange }: AddPeriodModalProps) {
 								<div className='space-y-2'>
 									<Label>Năm học *</Label>
 									<input
-										type='number'
-										placeholder='VD: 2024'
+										type='text'
+										placeholder='VD: 2024-2025'
 										className='w-full rounded border px-3 py-2'
 										value={academicYear}
 										onChange={(e) => setAcademicYear(e.target.value)}
-										min={2000}
-										max={2100}
 									/>
 								</div>
 
@@ -115,7 +113,9 @@ export function AddPeriodModal({ open, onOpenChange }: AddPeriodModalProps) {
 									<Label>Loại đợt *</Label>
 									<Select
 										value={periodType}
-										onValueChange={(value) => setPeriodType(value as 'khoaluan' | 'nckh')}
+										onValueChange={(value) =>
+											setPeriodType(value as 'thesis' | 'scientific_research')
+										}
 									>
 										<SelectTrigger>
 											<SelectValue placeholder='Chọn' />
