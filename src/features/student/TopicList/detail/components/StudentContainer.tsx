@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useDebounce } from '@/hooks/useDebounce'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { cn } from '@/lib/utils'
-import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
+import { Check, ChevronsUpDown, Loader2, Plus} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Chip } from '@/features/lecturer/new_topic/components/Chip'
 import type { ResponseMiniStudentDto } from '@/models'

@@ -63,7 +63,7 @@ const menuItems: Record<Role | 'common' | 'footer' | 'period_info', MenuItem[]> 
 				//{ title: 'Đăng ký đề tài mới', url: '/topics/new-register', icon: FileText }
 			]
 		},
-		{ title: 'Gợi ý đề tài', url: '/suggestions', icon: Search },
+		{ title: 'Đăng kí đề tài', url: '/registration', icon: Search },
 		{ title: 'Nhóm của tôi', url: '/my-group', icon: Users },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp }
@@ -230,22 +230,20 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	}
 
 	return (
-		<div className={`border-r border-gray-200 bg-white ${isOpen ? 'w-50' : 'w-16'} transition-all duration-300`}>
-			<div
-				className={`sticky top-0 h-screen border-r border-gray-200 bg-white ${isOpen ? 'w-fit max-w-72' : 'w-16'} transition-all duration-300`}
-			>
-				<div className='px-3 py-1'>
-					<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
-						<ChevronLeft className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
-					</Button>
+		<>
+			<div className='px-3 py-1'>
+				<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
+					<ChevronLeft className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
+				</Button>
 
-					{/* Main Menu */}
-					<div className='mb-6 flex flex-col gap-1'>
-						{isOpen && <div className='mb-2 px-3 text-xs font-semibold text-gray-500'>Tổng quan</div>}
-						{renderMenuItems(menuItems.common)}
-					</div>
-					{/* Hiển thị thông tin kì */}
-					{currentPeriod && (
+				{/* Main Menu */}
+				<div className='mb-6 flex flex-col gap-1'>
+					{isOpen && <div className='mb-2 px-3 text-xs font-semibold text-gray-500'>Tổng quan</div>}
+					{renderMenuItems(menuItems.common)}
+				</div>
+				{/* Hiển thị thông tin kì */}
+				{isLoading ||
+					(currentPeriod && (
 						<div className='mb-6 flex flex-col gap-1'>
 							{isOpen && (
 								<div>
@@ -266,23 +264,23 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 							)}
 							{renderMenuItems(handlePeriodInfo(menuItems.period_info))}
 						</div>
+					))}
+
+				{/* Role-specific Menu */}
+				<div className='mb-6'>
+					{isOpen && (
+						<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
+							{userRole === 'student' && 'Sinh viên'}
+							{userRole === 'lecturer' && 'Giảng viên'}
+							{userRole === 'admin' && 'Quản trị'}
+							{userRole === 'faculty_board' && 'Ban chủ nhiệm khoa'}
+						</div>
 					)}
+					{renderMenuItems(menuItems[userRole])}
+				</div>
 
-					{/* Role-specific Menu */}
-					<div className='mb-6'>
-						{isOpen && (
-							<div className='mb-2 px-3 text-xs font-semibold text-gray-500'>
-								{userRole === 'student' && 'Sinh viên'}
-								{userRole === 'lecturer' && 'Giảng viên'}
-								{userRole === 'admin' && 'Quản trị'}
-								{userRole === 'faculty_board' && 'Ban chủ nhiệm khoa'}
-							</div>
-						)}
-						{renderMenuItems(menuItems[userRole])}
-					</div>
-
-					{/* AI Chat */}
-					{/* <div className='mb-6'>
+				{/* AI Chat */}
+				{/* <div className='mb-6'>
 						<NavLink
 							to='/ai-chat'
 							className={({ isActive }) =>
@@ -296,11 +294,10 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 						</NavLink>
 					</div> */}
 
-					{/* Footer Menu */}
-					<div className='mt-auto'>{renderMenuItems(menuItems.footer)}</div>
-				</div>
+				{/* Footer Menu */}
+				<div className='mt-auto'>{renderMenuItems(menuItems.footer)}</div>
 			</div>
-		</div>
+		</>
 	)
 }
 
