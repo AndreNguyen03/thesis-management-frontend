@@ -10,9 +10,9 @@ interface RichTextEditorProps {
 
 const RichTextEditor = ({ value, onChange, placeholder, disabled }: RichTextEditorProps) => {
 	return (
-		<div className='prose ck-content-wrapper w-full max-w-none'>
+		<div className='ck-content-wrapper prose w-full max-w-none'>
 			<CKEditor
-				editor={ClassicEditor}
+				editor={ClassicEditor as any}
 				data={value}
 				config={{
 					placeholder: placeholder,

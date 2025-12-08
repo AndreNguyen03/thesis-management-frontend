@@ -312,7 +312,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 							selectedRequirements={selectedRequirements}
 							onSelectionChange={setSelectedRequirements}
 						/>
-
+	
 						{/* Description */}
 						<div className='col-span-2 space-y-2'>
 							<Label htmlFor='description' className='text-base font-semibold'>

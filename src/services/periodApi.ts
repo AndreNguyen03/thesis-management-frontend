@@ -1,6 +1,7 @@
 import type { PaginatedResponse } from '@/models'
 import type { Phase1Response, Phase2Response, Phase3Response } from '@/models/period-phase.models'
 import {
+	PeriodTypeEnum,
 	type CreateCompletionPhaseDto,
 	type CreateExecutionPhaseDto,
 	type CreateOpenRegPhaseDto,
@@ -8,7 +9,6 @@ import {
 	type CreatePhaseResponse,
 	type CreatePhaseSubmitTopicDto,
 	type GetCustomMiniPeriodInfoRequestDto,
-	type GetCustomPeriodDetailRequestDto,
 	type Period,
 	type UpdatePeriodPhaseDto
 } from '@/models/period.model'
@@ -148,9 +148,9 @@ export const periodApi = baseApi.injectEndpoints({
 		//getSubmissionStatus
 	
 		//Lấy thông tin của kì hiện tại ở khoa của người dùng
-		getCurrentPeriodInfo: builder.query<GetCustomMiniPeriodInfoRequestDto | null, void>({
+		getCurrentThesisPeriodInfo: builder.query<GetCustomMiniPeriodInfoRequestDto | null, void>({
 			query: () => ({
-				url: '/periods/current-period/info',
+				url: `/periods/current-period/info?periodType=${PeriodTypeEnum.THESIS}`,
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<GetCustomMiniPeriodInfoRequestDto | null>) => response.data
@@ -188,6 +188,6 @@ export const {
 	useDeletePeriodMutation,
 	useGetPeriodsQuery,
 	useCreatePeriodMutation,
-	useGetCurrentPeriodInfoQuery,
+	useGetCurrentThesisPeriodInfoQuery,
 	useLecGetStatsPeriodQuery
 } = periodApi

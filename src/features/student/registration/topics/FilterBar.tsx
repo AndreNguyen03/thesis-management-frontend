@@ -2,40 +2,54 @@ import { useState, useEffect } from 'react'
 import { Search, X, Filter } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/Button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
-import type { FilterState } from '../types'
-import { mockAdvisors, mockFields } from '../mock'
+import { type GetFieldNameReponseDto, type PaginationTopicsQueryParams, type ResponseMiniLecturerDto } from '@/models'
+import LecturersContainer from '../combobox/LecturersContainer'
+import FieldsContainer from '../combobox/FieldsContainer'
 
 interface FilterBarProps {
-	filters: FilterState
-	onFiltersChange: (filters: FilterState) => void
+	selectedFields: GetFieldNameReponseDto[]
+	selectedLecturers: ResponseMiniLecturerDto[]
+	onQuery(val: string): void
+	onSelectionChangeFields(val: GetFieldNameReponseDto[]): void
+	onSelectionChangeLecturers(val: ResponseMiniLecturerDto[]): void
+	queryParams: PaginationTopicsQueryParams
+	onSetQueryParams(val: PaginationTopicsQueryParams): void
 }
 
-export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
-	const [searchValue, setSearchValue] = useState(filters.search)
+export function FilterBar({
+	selectedFields,
+	selectedLecturers,
+	queryParams,
+	onSetQueryParams,
+	onSelectionChangeLecturers,
+	onSelectionChangeFields
+}: FilterBarProps) {
+	const [searchValue, setSearchValue] = useState(queryParams.query)
 	const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
 	// Debounce search
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			onFiltersChange({ ...filters, search: searchValue })
+			onSetQueryParams({ ...queryParams, query: searchValue })
 		}, 400)
 		return () => clearTimeout(timer)
 	}, [searchValue])
 
 	// Chỉ tính filter active dựa trên advisor, field, status
-	const activeFilterCount = [filters.advisor, filters.field, filters.status !== 'all' ? filters.status : ''].filter(
-		Boolean
-	).length
+	const activeFilterCount = [
+		queryParams.lecturerIds,
+		queryParams.fieldIds,
+		queryParams.status !== 'all' ? queryParams.status : ''
+	].filter(Boolean).length
 
 	const clearFilters = () => {
 		setSearchValue('')
-		onFiltersChange({
-			search: '',
-			advisor: '',
-			field: '',
+		onSetQueryParams({
+			query: '',
+			lecturerIds: [],
+			fieldIds: [],
 			status: 'all'
 		})
 	}
@@ -43,9 +57,13 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
 	const FilterControls = () => (
 		<div className='flex flex-wrap gap-2'>
 			{/* Filter theo giảng viên */}
-			<Select
-				value={filters.advisor}
-				onValueChange={(value) => onFiltersChange({ ...filters, advisor: value === 'all' ? '' : value })}
+			{/* Hamf thay doi */}
+			<LecturersContainer selectedLecturers={selectedLecturers} onSelectionChange={onSelectionChangeLecturers} />
+			{/* <Select
+				value={queryParams.lecturerIds}
+				onValueChange={(value) =>
+					onSetQueryParams({ ...queryParams, lecturerIds: value === 'all' ? [] : [value] })
+				}
 			>
 				<SelectTrigger className='w-full min-w-[120px] border-border bg-card md:w-[160px]'>
 					<SelectValue placeholder='Giảng viên' />
@@ -58,10 +76,12 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
 						</SelectItem>
 					))}
 				</SelectContent>
-			</Select>
+			</Select> */}
 
 			{/* Filter theo lĩnh vực */}
-			<Select
+
+			<FieldsContainer selectedFields={selectedFields} onSelectionChange={onSelectionChangeFields} />
+			{/* <Select
 				value={filters.field}
 				onValueChange={(value) => onFiltersChange({ ...filters, field: value === 'all' ? '' : value })}
 			>
@@ -76,11 +96,13 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
 						</SelectItem>
 					))}
 				</SelectContent>
-			</Select>
+			</Select> */}
 
 			{/* Filter theo trạng thái */}
-			<Select
-				value={filters.status}
+			{/* Hamf thay doi */}
+
+			{/* <Select
+				value={queryParams.queryStatus[0]}
 				onValueChange={(value) => onFiltersChange({ ...filters, status: value as FilterState['status'] })}
 			>
 				<SelectTrigger className='w-full min-w-[100px] border-border bg-card md:w-[120px]'>
@@ -88,10 +110,10 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
 				</SelectTrigger>
 				<SelectContent className='border-border bg-popover'>
 					<SelectItem value='all'>Tất cả</SelectItem>
-					<SelectItem value='available'>Còn slot</SelectItem>
-					<SelectItem value='full'>Hết slot</SelectItem>
+					<SelectItem value={TopicStatus.PENDING_REGISTRATION}>Còn slot</SelectItem>
+					<SelectItem value={TopicStatus.FULL}>Hết slot</SelectItem>
 				</SelectContent>
-			</Select>
+			</Select> */}
 		</div>
 	)
 

@@ -10,20 +10,21 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useDebounce } from '@/hooks/useDebounce'
-import type { GetFieldNameReponseDto } from '@/models'
+import type { GetFieldNameReponseDto, ResponseMiniLecturerDto } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useGetFieldsQuery } from '@/services/fieldApi'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
 
 interface FieldsContainerProps {
-	// Danh sách các field ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
-	selectedFields: string[]
+	// Danh sách các lecturerId ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
+	selectedLecturers: string[]
 	onSelectionChange?: (val: string[]) => void
 }
 
-const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerProps) => {
+const LecturersCombobox = ({ selectedLecturers, onSelectionChange }: FieldsContainerProps) => {
 	const [open, setOpen] = useState(false)
 
 	const handleOpenModal = (boolean: boolean) => {
@@ -31,17 +32,15 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 		debounceFieldOnChange('')
 	}
 	//sử dụng để cộng dồn các lựa chọn khi bấm loadmore
-	const [selectableOptions, setSelectableOptions] = useState<GetFieldNameReponseDto[]>([])
+	const [selectableOptions, setSelectableOptions] = useState<ResponseMiniLecturerDto[]>([])
 	// State cho query tìm kiếm server-side
 	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'name',
+		search_by: 'fullName',
 		query: '',
-		sort_by: 'name',
-		sort_order: 'desc',
-		filter: selectedFields.join(','),
-		filter_by: '_id'
+		sort_by: 'fullName',
+		sort_order: 'asc',
 	})
 
 	// Debounce search
@@ -51,18 +50,18 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
 
 	// Fetch data
-	const { data: fieldPagingData, isLoading, isFetching } = useGetFieldsQuery(queriesField, { skip: !open })
+	const { data: lecturerPagingData, isLoading, isFetching } = useGetAllLecturersComboboxQuery(queriesField, { skip: !open })
 
 	// Logic chọn/bỏ chọn
-	const handleSelect = (fieldId: string) => {
-		const isSelected = selectedFields?.some((f) => f === fieldId)
+	const handleSelect = (lecturerId: string) => {
+		const isSelected = selectedLecturers?.some((f) => f === lecturerId)
 		let newSelected: string[]
 
 		if (isSelected) {
 			// Nếu đã chọn -> Bỏ chọn
-			newSelected = selectedFields.filter((f) => f !== fieldId)
+			newSelected = selectedLecturers.filter((f) => f !== lecturerId)
 		} else {
-			newSelected = [...selectedFields, fieldId]
+			newSelected = [...selectedLecturers, lecturerId]
 		}
 
 		// Gọi callback để parent update state
@@ -70,27 +69,27 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 	}
 
 	const handleLoadMore = () => {
-		if (fieldPagingData && fieldPagingData.meta.currentPage < fieldPagingData.meta.totalPages) {
+		if (lecturerPagingData && lecturerPagingData.meta.currentPage < lecturerPagingData.meta.totalPages) {
 			setQueriesField((prev) => ({ ...prev, page: (prev.page || 1) + 1 }))
 		}
 	}
 	useEffect(() => {
-		if (fieldPagingData?.data) {
+		if (lecturerPagingData?.data) {
 			if (queriesField.page === 1) {
 				// Trường hợp 1: Nếu là trang 1 (hoặc user mới search lại) -> Gán mới hoàn toàn
-				setSelectableOptions(fieldPagingData.data)
+				setSelectableOptions(lecturerPagingData.data)
 			} else {
 				// Trường hợp 2: Nếu là trang 2 trở đi (Load more) -> Cộng dồn vào mảng cũ
 				setSelectableOptions((prev) => {
 					// Mẹo: Lọc trùng lặp (nếu API trả về trùng) dựa trên _id
-					const newItems = fieldPagingData.data.filter(
+					const newItems = lecturerPagingData.data.filter(
 						(newItem) => !prev.some((prevItem) => prevItem._id === newItem._id)
 					)
 					return [...prev, ...newItems]
 				})
 			}
 		}
-	}, [fieldPagingData, queriesField.page])
+	}, [lecturerPagingData, queriesField.page])
 
 	return (
 		<div>
@@ -120,18 +119,18 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 								</div>
 							) : (
 								<>
-									{fieldPagingData?.data?.length === 0 && (
+									{lecturerPagingData?.data?.length === 0 && (
 										<CommandEmpty>Không tìm thấy lĩnh vực.</CommandEmpty>
 									)}
 
-									<CommandGroup heading='Danh sách lĩnh vực'>
-										{selectableOptions.map((field) => {
-											const isSelected = selectedFields.some((f) => f === field._id)
+									<CommandGroup heading='Danh sách giảng viên'>
+										{selectableOptions.map((lecturer) => {
+											const isSelected = selectedLecturers.some((f) => f === lecturer._id)
 											return (
 												<CommandItem
-													key={field._id}
-													value={field._id} // Lưu ý: value phải unique
-													onSelect={() => handleSelect(field._id)}
+													key={lecturer._id}
+													value={lecturer._id} // Lưu ý: value phải unique
+													onSelect={() => handleSelect(lecturer._id)}
 													className='cursor-pointer'
 												>
 													<Check
@@ -140,14 +139,14 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 															isSelected ? 'opacity-100' : 'opacity-0'
 														)}
 													/>
-													{field.name}
+													{lecturer.fullName}
 												</CommandItem>
 											)
 										})}
 									</CommandGroup>
 
-									{fieldPagingData &&
-										fieldPagingData.meta.currentPage < fieldPagingData.meta.totalPages && (
+									{lecturerPagingData &&
+										lecturerPagingData.meta.currentPage < lecturerPagingData.meta.totalPages && (
 											<>
 												<CommandSeparator />
 												<CommandGroup>
@@ -175,4 +174,4 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 	)
 }
 
-export default FieldsCombobox
+export default LecturersCombobox

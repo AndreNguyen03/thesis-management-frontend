@@ -21,7 +21,7 @@ import { ManageFacultyLecturerPage } from '@/features/faculty/manage_faculty_lec
 import DetailPeriodPage from '@/features/faculty/manage_period/DetailPeriod'
 import LecturerManageTopics from '@/features/lecturer/manage_topic'
 import RegistrationHistory from '@/features/student/TopicList/registered/children/RegistrationHistory'
-import TopicRegistration from '@/features/student/registration/Index'
+import TopicRegistration from '@/features/student/registration/index'
 import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_topic/ManageSubmittedTopics'
 // Mock user data

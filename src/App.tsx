@@ -7,7 +7,7 @@ import { setUser } from '@/features/shared/auth'
 import { LoadingOverlay } from '@/components/ui'
 import { Toaster as ToasterSonner } from 'sonner'
 import { Toaster } from './components/ui/toaster'
-import { useGetCurrentPeriodInfoQuery } from './services/periodApi'
+import { useGetCurrentThesisPeriodInfoQuery } from './services/periodApi'
 import { setCurrentPeriod, setCurrPeriodLoading } from './store/slices/period-slice'
 import { connectSocket, disconnectSocket } from './utils/socket-client'
 
@@ -17,7 +17,7 @@ const App = () => {
 	const { data: userData, isLoading } = useGetProfileQuery(undefined, {
 		skip: !token // chỉ skip khi chưa login
 	})
-	const { data: periodInfoData } = useGetCurrentPeriodInfoQuery()
+	const { data: periodInfoData } = useGetCurrentThesisPeriodInfoQuery()
 
 	const dispatch = useAppDispatch()
 
@@ -46,7 +46,6 @@ const App = () => {
 		}
 	}, [token])
 
-	
 	if (isLoading) return <LoadingOverlay />
 
 	return (

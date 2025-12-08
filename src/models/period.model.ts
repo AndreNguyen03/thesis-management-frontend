@@ -114,3 +114,8 @@ export type SendRemainIssueNoti = {
 	phaseName: PhaseType
 	deadline: Date
 }
+
+export const PeriodTypeEnum = {
+	THESIS: 'thesis',
+	SCIENCE_RESEARCH: 'scientific_research'
+} as const

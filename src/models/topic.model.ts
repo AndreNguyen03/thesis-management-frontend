@@ -27,7 +27,6 @@ export interface GetPhaseHistoryDto {
 	createdAt: Date
 }
 
-
 export interface DetailGrade {
 	score: number
 	note: string
@@ -314,5 +313,8 @@ export interface UpdateTopicPayload {
 export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 	phase?: string
 	status?: string
+	rulesPagination?: number
+	lecturerIds?: string[]
+	fieldIds?: string[]
+	queryStatus?: string[]
 }
-

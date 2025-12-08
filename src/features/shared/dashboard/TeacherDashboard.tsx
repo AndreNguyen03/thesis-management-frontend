@@ -1,4 +1,3 @@
-import { useGetCurrentPeriodInfoQuery } from '@/services/periodApi'
 import { useAppSelector } from '@/store'
 import { LecturerSubmissionCard } from './component/LecturerSubmissionCard'
 

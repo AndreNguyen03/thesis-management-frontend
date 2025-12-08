@@ -9,14 +9,7 @@ export const lecturerApi = baseApi.injectEndpoints({
 		// 🧩 Lấy danh sách giảng viên
 		getLecturers: builder.query<
 			{ datas: LecturerTable[]; total_records: number },
-			{
-				page: number
-				page_size: number
-				search_by?: string
-				query?: string
-				sort_by?: string
-				sort_order?: string
-			}
+			PaginationQueryParamsDto
 		>({
 			query: (params) => ({
 				url: '/users/lecturers',
@@ -70,7 +63,7 @@ export const lecturerApi = baseApi.injectEndpoints({
 		getAllLecturersCombobox: builder.query<PaginatedMiniLecturer, PaginationQueryParamsDto>({
 			query: (queries) => {
 				const query = buildQueryString(queries)
-				return `/users/lec/get-all-lecturers/combobox?${query}`
+				return `/users/get-all-lecturers/combobox?${query}`
 			},
 			transformResponse: (response: ApiResponse<PaginatedMiniLecturer>) => response.data
 		})
