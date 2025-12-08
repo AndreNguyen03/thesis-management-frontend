@@ -1,30 +1,39 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePageBreadcrumb } from '@/hooks'
-import ManageTopicDraft from './draft/ManageDraftTopic'
-import ManageSubmittedTopics from './submitted_topic/ManageSubmittedTopics'
+import { useNavigate, useLocation, Outlet } from 'react-router-dom'
+
+const tabValues = ['draft', 'submitted'] as const
 
 const LecturerManageTopics = () => {
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Quản lý đề tài', path: '/manage-topic' }
 	])
+	const navigate = useNavigate()
+	const location = useLocation()
+	const lastPath = location.pathname.split('/').pop()
+	const currentTab = tabValues.includes(lastPath as any) ? lastPath : 'draft'
+
+	const handleTabChange = (value: string) => {
+		navigate(`/manage-topics/${value}`)
+	}
+
 	return (
-		<div className='max-h-[calc(100vh)] flex-1 overflow-auto mt-10'>
-			<Tabs defaultValue='topic-draft' className='h-full w-full'>
-				<TabsList variant='underline' defaultValue='topic-draft'>
-					<TabsTrigger variant='underline' value='topic-draft'>
+		<div className='mt-10 max-h-[calc(100vh)] flex-1 overflow-auto'>
+			<Tabs value={currentTab} onValueChange={handleTabChange} className='h-full w-full'>
+				<TabsList variant='underline'>
+					<TabsTrigger variant='underline' value='draft'>
 						Các bản nháp đề tài
 					</TabsTrigger>
-					<TabsTrigger variant='underline' value='submitted-topics'>
+					<TabsTrigger variant='underline' value='submitted'>
 						Các đề tài đã nộp
 					</TabsTrigger>
 				</TabsList>
-
-				<TabsContent value='topic-draft'>
-					<ManageTopicDraft />
+				<TabsContent value='draft'>
+					<Outlet />
 				</TabsContent>
-				<TabsContent value='submitted-topics'>
-					<ManageSubmittedTopics />
+				<TabsContent value='submitted'>
+					<Outlet />
 				</TabsContent>
 			</Tabs>
 		</div>

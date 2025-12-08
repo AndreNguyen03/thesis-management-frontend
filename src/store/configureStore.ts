@@ -2,17 +2,19 @@ import { authSlice } from '@/features/shared/auth'
 import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux'
 import { baseApi } from '@/services/baseApi'
-import periodSlice from './slices/periodSlice'
+import periodSlice from './slices/period-slice'
+import socketSlice from './slices/socket-slice'
 import { uploadApi } from '@/services/uploadAvatarApi'
 
 export const store = configureStore({
 	reducer: {
 		[baseApi.reducerPath]: baseApi.reducer,
-		[uploadApi.reducerPath]: uploadApi.reducer,
+		socket: socketSlice.reducer,
 		period: periodSlice.reducer,
-		auth: authSlice.reducer
+		auth: authSlice.reducer,
+		[uploadApi.reducerPath]: uploadApi.reducer
 	},
-	middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware).concat(uploadApi.middleware)
+	middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware)
 })
 
 export type RootState = ReturnType<typeof store.getState>

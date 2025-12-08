@@ -22,6 +22,8 @@ import DetailPeriodPage from '@/features/faculty/manage_period/DetailPeriod'
 import LecturerManageTopics from '@/features/lecturer/manage_topic'
 import RegistrationHistory from '@/features/student/TopicList/registered/children/RegistrationHistory'
 import TopicRegistration from '@/features/student/registration/Index'
+import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
+import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_topic/ManageSubmittedTopics'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -62,6 +64,7 @@ export const router = createBrowserRouter([
 				path: 'registration',
 				element: <TopicRegistration />
 			},
+
 			{
 				path: 'detail-topic/:id',
 				element: <TopicDetailContainer />
@@ -76,7 +79,15 @@ export const router = createBrowserRouter([
 			},
 			// Giảng viên
 			{ path: 'create-topic', element: <CreateTopic /> },
-			{ path: 'manage-topic', element: <LecturerManageTopics /> },
+			{
+				path: 'manage-topics',
+				element: <LecturerManageTopics />,
+				children: [
+					{ index: true, element: <ManageTopicDraft /> },
+					{ path: 'draft', element: <ManageTopicDraft />},
+					{ path: 'submitted', element: <ManageSubmittedTopics /> }
+				]
+			},
 			{
 				path: 'manage-ai',
 				element: (

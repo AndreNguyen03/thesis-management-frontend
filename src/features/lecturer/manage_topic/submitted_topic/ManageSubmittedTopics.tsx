@@ -1,5 +1,6 @@
 import { getColumns } from './Columns'
 import {
+	useCopyToDraftMutation,
 	useGetSubmittedTopicsQuery,
 	useSetAllowManualApprovalMutation,
 	useWithdrawSubmittedTopicsMutation
@@ -19,6 +20,7 @@ import type { SubmittedTopic } from '@/models'
 import { useAppSelector } from '@/store'
 import { PeriodPhaseName } from '@/models/period.model'
 import { PeriodPhaseStatus } from '@/models/period-phase.models'
+import { FlashBanner } from '@/components/banner/flash-banner'
 
 const ManageSubmittedTopics = () => {
 	const navigate = useNavigate()
@@ -27,7 +29,7 @@ const ManageSubmittedTopics = () => {
 		limit: 5,
 		search_by: 'titleVN,titleEng,lecturerName',
 		query: '',
-		sort_by: 'createdAt',
+		sort_by: 'submittedAt',
 		sort_order: 'desc',
 		filter: 'all',
 		filter_by: 'fieldIds'
@@ -58,8 +60,10 @@ const ManageSubmittedTopics = () => {
 	const [withdrawSubmittedTopics, { isLoading: isWithdrawing }] = useWithdrawSubmittedTopicsMutation()
 	const [pendingWithdrawId, setPendingWithdrawId] = useState<string | null>(null)
 	const [pendingId, setPendingId] = useState<string | null>(null)
+	const [pendingCopyId, setPendingCopyId] = useState<string | null>(null)
 	const [selectedWithdrawTopics, setSelectedWithdrawTopics] = useState<SubmittedTopic[]>([])
 	const [showSelection, setShowSelection] = useState(false)
+	const [copyToDraftMutation] = useCopyToDraftMutation()
 	//lấy thông tin kì hiện tại
 	const { currentPeriod } = useAppSelector((state) => state.period)
 	const handleWithdraw = async (topic?: SubmittedTopic) => {
@@ -79,10 +83,25 @@ const ManageSubmittedTopics = () => {
 			toast('Rút đề tài thất bại. Vui lòng thử lại sau.')
 		}
 	}
+	const handleCopyTodraft = async (topic: SubmittedTopic) => {
+		try {
+			setPendingCopyId(topic._id)
+			await copyToDraftMutation({ topicId: topic._id })
+			setTimeout(() => {
+				setPendingCopyId(null)
+				toast('Sao chép đề tài thành công vào bản nháp.')
+			}, 1000)
+		} catch (err: any) {
+			setPendingCopyId(null)
+			toast('Sao chép đề tài thất bại. Vui lòng thử lại sau.')
+		}
+	}
 	const isAbleInSubmitPhase =
 		currentPeriod?.currentPhaseDetail.phase === PeriodPhaseName.SUBMIT_TOPIC &&
 		currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
 	const columns = getColumns({
+		onCopyToDraft: handleCopyTodraft,
+		pendingCopyId,
 		onSeeDetail: (topicId) => navigate(`/detail-topic/${topicId}`),
 		showSelection: showSelection,
 		onManualApprovalChange: handleManualApprovalChange,
@@ -98,7 +117,7 @@ const ManageSubmittedTopics = () => {
 		})) || []
 
 	return (
-		<div className='flex max-h-[740px] flex-col gap-4 px-4 py-2'>
+		<div className='flex flex-col gap-4 px-4 py-2'>
 			<div className='relative flex flex-1 items-center gap-5'>
 				<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
 				<Input

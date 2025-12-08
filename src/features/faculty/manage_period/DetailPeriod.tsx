@@ -33,12 +33,11 @@ export default function DetailPeriodPage() {
 	const [phaseSettingOpen, setPhaseSettingsOpen] = useState<boolean>(false)
 
 	const typeLabels = {
-		khoaluan: 'Khóa luận',
-		nckh: 'Nghiên cứu khoa học'
+		thesis: 'Khóa luận',
+		scientific_research: 'Nghiên cứu khoa học'
 	} as const
 
-	const title = `Kì hiện tại: ${period?.year} • HK ${period?.semester} • ${typeLabels[period?.type ?? 'khoaluan']}`
-
+	const title = `Kì hiện tại: ${period?.year} • HK ${period?.semester} • ${typeLabels[period?.type ?? 'thesis']}`
 	usePageBreadcrumb([
 		{ label: 'Trang chủ', path: '/' },
 		{ label: 'Quản lý đợt đăng ký', path: '/manage-period' },
@@ -70,9 +69,8 @@ export default function DetailPeriodPage() {
 		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
 	)
 
-
 	return (
-		<div className='flex h-screen min-h-0'>
+		<div className='flex h-[calc(100vh-10rem)] min-h-0 overflow-auto'>
 			{/* Sidebar */}
 			<aside className={cn('h-fit transition-all duration-300', isSidebarHidden ? 'w-12' : 'w-24')}>
 				<PhaseStepBar

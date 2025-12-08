@@ -1,6 +1,11 @@
 import { DataTable } from './DataTable'
 import { getColumns } from './Columns'
-import { useGetDraftTopicsQuery, useSetAllowManualApprovalMutation, useSubmitTopicMutation } from '@/services/topicApi'
+import {
+	useDeleteTopicsMutation,
+	useGetDraftTopicsQuery,
+	useSetAllowManualApprovalMutation,
+	useSubmitTopicMutation
+} from '@/services/topicApi'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { CreateTopic } from '../../new_topic'
 import { Eye, Pointer, Search, X } from 'lucide-react'
@@ -13,6 +18,8 @@ import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { CustomPagination } from '@/components/PaginationBar'
 import { useAppSelector } from '@/store'
+import DeleteTopicModal from '../modal/delete-topic-modal'
+import { getPeriodTitle } from '@/utils/utils'
 
 const ManageTopicDraft = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
@@ -37,10 +44,12 @@ const ManageTopicDraft = () => {
 		setSearchTerm(val)
 		debounceOnChange(val)
 	}
+	const [selectedTopicId, setSelectedTopicId] = useState<string[] | null>(null)
 
 	const [showSelection, setShowSelection] = useState(false)
+	const [openDeleteConfirmModal, setOpenDeleteConfirmModal] = useState(false)
 	//lấ thong tin của kì
-	const {currentPeriod, isLoading} = useAppSelector((state) => state.period)
+	const { currentPeriod, isLoading } = useAppSelector((state) => state.period)
 	const countdown = useCountdown(currentPeriod?.endTime ? new Date(currentPeriod.endTime) : null)
 	const [submitTopic, { isLoading: isSubmitting, isSuccess: isSubmitSuccess, error: submitError }] =
 		useSubmitTopicMutation()
@@ -70,11 +79,38 @@ const ManageTopicDraft = () => {
 			setPendingId(null)
 		}
 	}
+	const [deleteTopics] = useDeleteTopicsMutation()
+	const handleDeleteTopics = async () => {
+		if (!selectedTopicId || selectedTopicId.length === 0) return
+		try {
+			await deleteTopics({ topicIds: selectedTopicId }).unwrap()
+			toast({
+				title: 'Thành công',
+				description: 'Xóa đề tài thành công!',
+				variant: 'success'
+			})
+			refetch()
+		} catch (error) {
+			toast({
+				title: 'Thất bại',
+
+				description: 'Xóa đề tài thất bại. Vui lòng thử lại sau.',
+				variant: 'destructive'
+			})
+		}
+		setOpenDeleteConfirmModal(false)
+		setSelectedTopicId(null)
+	}
+	const handleOpenDeleteConfirmModal = (topicId: string) => {
+		setOpenDeleteConfirmModal(true)
+		setSelectedTopicId([topicId])
+	}
 	const columns = getColumns({
 		onSeeDetail: (topicId) => navigate(`/detail-topic/${topicId}`),
 		showSelection,
 		onManualApprovalChange: handleManualApprovalChange,
-		pendingId
+		pendingId,
+		handleDeleteConfirmModal: handleOpenDeleteConfirmModal
 	})
 	const data =
 		draftTopics?.data.map((topic, index) => ({
@@ -94,6 +130,7 @@ const ManageTopicDraft = () => {
 			})
 		}
 	}, [submitError])
+
 	return (
 		<div className='h-screen max-h-[740px] p-2'>
 			<ResizablePanelGroup direction='vertical' className='h-full rounded-lg border'>
@@ -105,7 +142,7 @@ const ManageTopicDraft = () => {
 								<>
 									<div className='m-2 flex flex-col gap-2 rounded-md bg-blue-100 p-2 lg:flex-row'>
 										<span className='font-semibold'>
-											<span>{`Kì hiện tại: ${currentPeriod.name}`}</span>
+											<span>{getPeriodTitle(currentPeriod)}</span>
 										</span>
 										<span className='ml-auto mr-4 font-normal'>
 											Thời gian còn lại:{' '}
@@ -155,6 +192,12 @@ const ManageTopicDraft = () => {
 					<CreateTopic refetchDraftTopics={refetch} />
 				</ResizablePanel>
 			</ResizablePanelGroup>
+			<DeleteTopicModal
+				open={openDeleteConfirmModal}
+				onClose={() => setOpenDeleteConfirmModal(false)}
+				onConfirm={() => handleDeleteTopics()}
+				isLoading={false}
+			/>
 		</div>
 	)
 }

@@ -21,10 +21,9 @@ export const phaseLabels = {
 }
 export type PeriodPhaseName = 'empty' | 'submit_topic' | 'open_registration' | 'execution' | 'completion'
 export const PeriodPhaseStatus = {
-	NOT_STARTED: 'not_started',
+	PENDING: 'pending',
 	ACTIVE: 'active',
-	COMPLETED: 'completed',
-	END: 'end'
+	TIMEOUT: 'timeout'
 }
 
 export const phaseStatusLabels = {
@@ -34,7 +33,6 @@ export const phaseStatusLabels = {
 	end: 'Kết thúc'
 }
 export type PeriodPhaseStatus = (typeof PeriodPhaseStatus)[keyof typeof PeriodPhaseStatus]
-
 
 export interface Phase1Response {
 	periodId: string

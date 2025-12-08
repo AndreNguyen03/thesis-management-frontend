@@ -10,14 +10,7 @@ export const studentApi = baseApi.injectEndpoints({
 		// 🧩 Lấy danh sách sinh viên
 		getStudents: builder.query<
 			{ datas: StudentTable[]; total_records: number },
-			{
-				page: number
-				page_size: number
-				search_by?: string
-				query?: string
-				sort_by?: string
-				sort_order?: string
-			}
+			PaginationQueryParamsDto
 		>({
 			query: (params) => ({
 				url: '/users/students',
