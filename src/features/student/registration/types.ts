@@ -31,10 +31,9 @@ export interface PaginatedTopics {
 	availableTopics: number
 }
 export interface FilterState {
-	search: string
-	advisor: string
-	field: string
-	status: 'all' | 'available' | 'full'
+	lecturerIds: string[]
+	fieldIds: string[]
+	status: string[] // full / registered / pending_registration
 }
 
 // Registration phase types

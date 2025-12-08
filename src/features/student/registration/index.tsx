@@ -11,12 +11,11 @@ import { RegisteredTopicCard } from './topics/RegisteredTopicCard'
 import { NoRegistrationCard } from './topics/NoRegistrationCard'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import {  List, FileCheck } from 'lucide-react'
+import { List, FileCheck } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { usePageBreadcrumb } from '@/hooks'
 import { CurrentTime } from './topics/CurrentTime'
-import type { Topic, FilterState, RegistrationPeriod, RegisteredTopic } from './types'
-import { generateMockTopics } from './mock'
+import type { FilterState, RegistrationPeriod, RegisteredTopic } from './types'
 import {
 	Pagination,
 	PaginationContent,
@@ -25,88 +24,85 @@ import {
 	PaginationNext,
 	PaginationPrevious
 } from '@/components/ui/pagination'
-
-const ITEMS_PER_PAGE = 8
+import type {
+	GeneralTopic,
+	GetFieldNameReponseDto,
+	PaginationTopicsQueryParams,
+	ResponseMiniLecturerDto
+} from '@/models'
+import { useGetTopicsInPhaseQuery } from '@/services/topicApi'
+import { useAppSelector } from '@/store'
+import { PeriodPhaseName } from '@/models/period.model'
+import { getPeriodTitle } from '@/utils/utils'
+import { useCreateRegistrationMutation, useLeaveTopicMutation } from '@/services/registrationApi'
 
 export default function TopicRegistration() {
 	// ------------------ PAGINATION STATE ------------------
-	const [page, setPage] = useState(1)
-	const [topics, setTopics] = useState<Topic[]>([])
-	const [totalItems, setTotalItems] = useState(0)
-	const [totalPages, setTotalPages] = useState(1)
-	const [isLoading, setIsLoading] = useState(true)
 
-	// ------------------ FILTER STATE ------------------
-	const [filters, setFilters] = useState<FilterState>({
-		search: '',
-		advisor: '',
-		field: '',
-		status: 'all'
+	const [queryParams, setQueryParams] = useState<PaginationTopicsQueryParams>({
+		page: 1,
+		limit: 10,
+		search_by: 'titleVN,titleEng',
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		status: 'all',
+		rulesPagination: 99,
+		lecturerIds: [],
+		fieldIds: [],
+		queryStatus: [],
+		phase: PeriodPhaseName.OPEN_REGISTRATION || ''
 	})
-
+	// ------------------ FILTER STATE ------------------
+	// Mock period
+	const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
+	const {
+		data: paginated,
+		refetch: refetchTopics,
+		isLoading: isLoadingTopics
+	} = useGetTopicsInPhaseQuery(
+		{
+			periodId: currentPeriod?._id!,
+			queries: queryParams
+		},
+		{ skip: !currentPeriod?._id }
+	)
 	// ------------------ OTHER STATES ------------------
-	const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
+	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
 	const [isPanelOpen, setIsPanelOpen] = useState(false)
 	const [activeTab, setActiveTab] = useState('list')
-	const [registeredTopic, setRegisteredTopic] = useState<RegisteredTopic | null>(null)
-	const [topicToRegister, setTopicToRegister] = useState<Topic | null>(null)
+	const [registeredTopic, setRegisteredTopic] = useState<GeneralTopic | null>(null)
+	const [topicToRegister, setTopicToRegister] = useState<GeneralTopic | null>(null)
+	const [selectedFields, setSelectedFields] = useState<GetFieldNameReponseDto[]>([])
+	const [selectedLecturers, setSelectedLecturers] = useState<ResponseMiniLecturerDto[]>([])
 	const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 	const [isRegistering, setIsRegistering] = useState(false)
 	const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
 	const [isCancelling, setIsCancelling] = useState(false)
-
-	// Mock period
-	const [period] = useState<RegistrationPeriod>({
-		phase: 'open',
-		startDate: new Date(),
-		endDate: new Date(Date.now() + 5 * 24 * 3600 * 1000),
-		name: 'Đợt đăng ký đề tài HK1'
-	})
-
+	//handle registration
+	const [createRegistration] = useCreateRegistrationMutation()
+	const [leaveTopic] = useLeaveTopicMutation()
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng kí đề tài' }])
 
 	// ------------------ FETCH TOPICS (PAGINATION) ------------------
-	const fetchTopics = useCallback(async () => {
-		setIsLoading(true)
-
-		// ❗ Đây là mock API — bạn thay bằng API thật
-		setTimeout(() => {
-			const filtered = mockFilter(filters)
-
-			const start = (page - 1) * ITEMS_PER_PAGE
-			const paginated = filtered.slice(start, start + ITEMS_PER_PAGE)
-
-			setTopics(paginated)
-			setTotalItems(filtered.length)
-			setTotalPages(Math.ceil(filtered.length / ITEMS_PER_PAGE))
-
-			setIsLoading(false)
-		}, 500)
-	}, [page, filters])
-
 	useEffect(() => {
-		fetchTopics()
-	}, [page, filters])
+		refetchTopics()
+	}, [queryParams])
 
 	// ------------------ HANDLERS ------------------
 
 	const handlePageChange = (newPage: number) => {
-		if (newPage > 0 && newPage <= totalPages) {
-			setPage(newPage)
+		if (newPage > 0 && newPage <= queryParams.page!) {
+			setQueryParams((prev) => ({ ...prev, page: newPage }))
 		}
 	}
 
-	const handleFiltersChange = (newFilters: FilterState) => {
-		setFilters(newFilters)
-		setPage(1) // reset page
-	}
-
-	const handleTopicClick = (topic: Topic) => {
+	const handleTopicClick = (topic: GeneralTopic) => {
 		setSelectedTopic(topic)
 		setIsPanelOpen(true)
 	}
 
-	const handleRegisterClick = (topic: Topic) => {
+	const handleRegisterClick = async (topic: GeneralTopic) => {
 		if (registeredTopic) {
 			toast({
 				title: 'Bạn đã đăng ký đề tài',
@@ -115,7 +111,8 @@ export default function TopicRegistration() {
 			})
 			return
 		}
-		setTopicToRegister(topic)
+		await createRegistration({ topicId: topic._id })
+		//setTopicToRegister(topic)
 		setIsConfirmOpen(true)
 	}
 
@@ -124,10 +121,7 @@ export default function TopicRegistration() {
 		setIsRegistering(true)
 		await new Promise((r) => setTimeout(r, 1000))
 
-		setRegisteredTopic({
-			topic: topicToRegister,
-			registeredAt: new Date()
-		})
+		setRegisteredTopic(topicToRegister!)
 
 		setIsRegistering(false)
 		setIsConfirmOpen(false)
@@ -139,7 +133,7 @@ export default function TopicRegistration() {
 		if (!registeredTopic) return
 		setIsCancelling(true)
 		await new Promise((r) => setTimeout(r, 1000))
-
+		await leaveTopic({ topicId: registeredTopic._id })
 		setRegisteredTopic(null)
 		setIsCancelling(false)
 		setIsCancelModalOpen(false)
@@ -147,8 +141,20 @@ export default function TopicRegistration() {
 	}
 
 	// ------------------ UI ------------------
-	const canRegister = period.phase === 'open' && !registeredTopic
-
+	const canRegister = currentPeriod?.currentPhase === PeriodPhaseName.OPEN_REGISTRATION && !registeredTopic
+	const handleOnQuery = (val: string) => {
+		setQueryParams((prev) => ({ ...prev, query: val, page: 1 }))
+	}
+	const handleSelectionChangeFields = useCallback((newFields: GetFieldNameReponseDto[]) => {
+		setSelectedFields(newFields)
+		const fieldIds = newFields.map((field) => field._id)
+		setQueryParams((prev) => ({ ...prev, fieldIds, page: 1 }))
+	}, [])
+	const handleSelectionChangeLecturers = useCallback((newLecturers: ResponseMiniLecturerDto[]) => {
+		setSelectedLecturers(newLecturers)
+		const lecturerIds = newLecturers.map((lecturer) => lecturer._id)
+		setQueryParams((prev) => ({ ...prev, lecturerIds, page: 1 }))
+	}, [])
 	return (
 		<div className='max-h-[calc(100vh)] overflow-y-auto bg-background'>
 			{/* HEADER */}
@@ -156,7 +162,7 @@ export default function TopicRegistration() {
 				<div className='container py-4'>
 					<h1 className='text-xl font-bold'>Đăng ký đề tài</h1>
 					<p className='mt-1 text-xs'>
-						{period.name} | hiện tại: <CurrentTime />
+						{getPeriodTitle(currentPeriod!)} | hiện tại: <CurrentTime />
 					</p>
 				</div>
 			</header>
@@ -183,41 +189,49 @@ export default function TopicRegistration() {
 				<>
 					{/* FILTER BAR */}
 					<div className='sticky top-10 z-10 bg-card'>
-						<FilterBar filters={filters} onFiltersChange={handleFiltersChange} />
+						<FilterBar
+							selectedFields={selectedFields}
+							selectedLecturers={selectedLecturers}
+							queryParams={queryParams}
+							onSetQueryParams={setQueryParams}
+							onSelectionChangeFields={setSelectedFields}
+							onSelectionChangeLecturers={setSelectedLecturers}
+							onQuery={handleOnQuery}
+						/>
 					</div>
 
 					<main className='container py-4'>
-						{isLoading ? (
+						{isLoadingTopics ? (
 							<SkeletonLoader count={6} />
-						) : topics.length === 0 ? (
+						) : paginated?.data.length === 0 ? (
 							<EmptyState
 								onClearFilters={() =>
-									handleFiltersChange({
-										search: '',
-										advisor: '',
-										field: '',
-										status: 'all'
+									setQueryParams({
+										query: '',
+										lecturerIds: [],
+										fieldIds: [],
+										queryStatus: []
 									})
 								}
 							/>
 						) : (
 							<div className='overflow-hidden rounded-lg border bg-card shadow-sm'>
-								{topics.map((topic) => (
+								{paginated?.data.map((topic) => (
 									<TopicListItem
-										key={topic.id}
+										key={topic._id}
 										topic={topic}
 										onClick={() => handleTopicClick(topic)}
 										onRegister={() => handleRegisterClick(topic)}
-										isRegistering={isRegistering && topicToRegister?.id === topic.id}
+										isRegistering={isRegistering && topicToRegister?._id === topic._id}
 										disabled={!canRegister}
-										isRegistered={registeredTopic?.topic.id === topic.id}
+										isRegistered={registeredTopic?._id === topic._id}
 									/>
 								))}
 							</div>
 						)}
 
 						{/* PAGINATION */}
-						{totalPages > 1 && (
+						{paginated?.meta.totalPages! > 1 && (
 							<nav aria-label='Phân trang' className='relative z-[100] pt-4'>
 								<Pagination>
 									<PaginationContent className='gap-1'>
@@ -229,10 +243,12 @@ export default function TopicRegistration() {
 												href='#'
 												onClick={(e) => {
 													e.preventDefault()
-													handlePageChange(page - 1)
+													handlePageChange(queryParams.page! - 1)
 												}}
 												className={
-													page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+													queryParams.page! <= 1
+														? 'pointer-events-none opacity-50'
+														: 'cursor-pointer'
 												}
 											/>
 										</PaginationItem>
@@ -244,20 +260,20 @@ export default function TopicRegistration() {
 													e.preventDefault()
 													handlePageChange(1)
 												}}
-												isActive={page === 1}
+												isActive={queryParams.page === 1}
 												className='pointer-events-auto cursor-pointer ring-0'
 											>
 												1
 											</PaginationLink>
 										</PaginationItem>
 										{/* Left dots */}
-										{page > 3 && (
+										{queryParams.page! > 3 && (
 											<PaginationItem>
 												<span className='px-2 text-muted-foreground'>...</span>
 											</PaginationItem>
 										)}
-										{[page - 1, page, page + 1].map((p) => {
-											if (p <= 1 || p >= totalPages) return null
+										{[queryParams.page! - 1, queryParams.page!, queryParams.page! + 1].map((p) => {
+											if (p <= 1 || p >= paginated?.meta.totalPages!) return null
 											return (
 												<PaginationItem key={p}>
 													<PaginationLink
@@ -266,7 +282,7 @@ export default function TopicRegistration() {
 															e.preventDefault()
 															handlePageChange(p)
 														}}
-														isActive={page === p}
+														isActive={queryParams.page === p}
 														className='pointer-events-auto cursor-pointer ring-0'
 													>
 														{p}
@@ -274,23 +290,23 @@ export default function TopicRegistration() {
 												</PaginationItem>
 											)
 										})}
-										{page < totalPages - 2 && (
+										{queryParams.page! < paginated?.meta.totalPages! - 2 && (
 											<PaginationItem>
 												<span className='px-2 text-muted-foreground'>...</span>
 											</PaginationItem>
 										)}
-										{totalPages > 1 && (
+										{paginated?.meta.totalPages! > 1 && (
 											<PaginationItem>
 												<PaginationLink
 													href='#'
 													onClick={(e) => {
 														e.preventDefault()
-														handlePageChange(totalPages)
+														handlePageChange(paginated?.meta.totalPages!)
 													}}
-													isActive={page === totalPages}
+													isActive={queryParams.page === paginated?.meta.totalPages!}
 													className='pointer-events-auto cursor-pointer ring-0'
 												>
-													{totalPages}
+													{paginated?.meta.totalPages!}
 												</PaginationLink>
 											</PaginationItem>
 										)}
@@ -300,10 +316,10 @@ export default function TopicRegistration() {
 												href='#'
 												onClick={(e) => {
 													e.preventDefault()
-													handlePageChange(page + 1)
+													handlePageChange(queryParams.page! + 1)
 												}}
 												className={
-													page >= totalPages
+													queryParams.page! >= paginated?.meta.totalPages!
 														? 'pointer-events-none opacity-50'
 														: 'cursor-pointer'
 												}
@@ -317,16 +333,16 @@ export default function TopicRegistration() {
 				</>
 			) : (
 				<main className='container py-6'>
-					{registeredTopic ? (
+					{/* {registeredTopic ? (
 						<RegisteredTopicCard
 							registeredTopic={registeredTopic}
-							phase={period.phase}
+							phase={currentPeriod?.currentPhase}
 							onCancel={() => setIsCancelModalOpen(true)}
 							isCancelling={isCancelling}
 						/>
 					) : (
-						<NoRegistrationCard phase={period.phase} />
-					)}
+						<NoRegistrationCard phase={currentPeriod?.currentPhase} />
+					)} */}
 				</main>
 			)}
 
@@ -338,7 +354,7 @@ export default function TopicRegistration() {
 				isRegistering={isRegistering}
 			/>
 
-			<ConfirmModal
+			{/* <ConfirmModal
 				isOpen={isConfirmOpen}
 				topic={topicToRegister}
 				onConfirm={handleConfirmRegister}
@@ -352,7 +368,7 @@ export default function TopicRegistration() {
 				onConfirm={handleCancelRegistration}
 				onClose={() => setIsCancelModalOpen(false)}
 				isLoading={isCancelling}
-			/>
+			/> */}
 		</div>
 	)
 }
@@ -360,14 +376,3 @@ export default function TopicRegistration() {
 // ---------------------------------------------------------------
 // MOCK FILTER (bạn thay bằng API thật)
 // ---------------------------------------------------------------
-function mockFilter(filters: FilterState): Topic[] {
-	const ALL = generateMockTopics(132) // nếu bạn đang có mock này
-	return ALL.filter((t) => {
-		if (filters.search && !t.title.toLowerCase().includes(filters.search.toLowerCase())) return false
-		if (filters.advisor && t.advisor.id !== filters.advisor) return false
-		if (filters.field && t.field !== filters.field) return false
-		if (filters.status === 'available' && t.status === 'full') return false
-		if (filters.status === 'full' && t.status !== 'full') return false
-		return true
-	})
-}

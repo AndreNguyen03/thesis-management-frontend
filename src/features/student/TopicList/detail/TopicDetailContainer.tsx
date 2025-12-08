@@ -855,7 +855,8 @@ export const TopicDetailContainer = () => {
 									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.students.approvedStudents.length}/${topic.maxStudents})`}</h4>
 								</div>
 								<div className='flex flex-col gap-4'>
-									{currentTopic.students.approvedStudents.length > 0 ? (
+									{currentTopic.students.approvedStudents.length > 0 &&
+									isAbleInOpenRegistrationPhase ? (
 										currentTopic.students.approvedStudents.map((student) => (
 											<div key={student._id} className='flex items-start gap-3'>
 												<div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>

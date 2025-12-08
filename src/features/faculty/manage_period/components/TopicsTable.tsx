@@ -36,14 +36,13 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
-		status: statFilter ?? "all"
+		status: statFilter ?? 'all',
 	})
 
 	const { data, isLoading, error, refetch } = useGetTopicsInPhaseQuery(
 		{
 			periodId,
-			queries: queryParams,
-			phase: phase.phase
+			queries: queryParams
 		},
 		{ skip: !periodId }
 	)

@@ -54,7 +54,7 @@ export const TopicRegisteredChildren = () => {
 		debounceOnChange(val)
 	}
 
-	const emptyList = registerTopics?.data.length === 0 && queries.query === '' && queries.filter?.includes('all')
+	const emptyList = registerTopics?.data.length === 0 && queries.query === ''
 
 	return (
 		<div className='flex w-full flex-col justify-center space-y-4'>

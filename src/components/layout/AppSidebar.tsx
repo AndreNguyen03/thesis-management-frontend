@@ -21,12 +21,9 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import type { Role } from '@/models'
-import { useGetCurrentPeriodInfoQuery } from '@/services/periodApi'
 import { useCountdown } from '@/hooks/count-down'
 import { useAppSelector } from '@/store'
-import { PeriodPhaseStatus } from '@/models/period-phase.models'
 import { PhaseInfo } from '@/utils/utils'
-import type { PhaseType } from '@/models/period.model'
 import { Badge } from '../ui'
 
 interface AppSidebarProps {

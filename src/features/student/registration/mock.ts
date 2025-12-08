@@ -115,36 +115,36 @@ function getRandomInt(min: number, max: number): number {
 	return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-export function generateMockTopics(count: number = 50): Topic[] {
-	const topics: Topic[] = []
+// export function generateMockTopics(count: number = 50): Topic[] {
+// 	const topics: Topic[] = []
 
-	for (let i = 0; i < count; i++) {
-		const maxSlots = getRandomInt(2, 5)
-		const currentSlots = getRandomInt(0, maxSlots)
-		const remainingSlots = maxSlots - currentSlots
+// 	for (let i = 0; i < count; i++) {
+// 		const maxSlots = getRandomInt(2, 5)
+// 		const currentSlots = getRandomInt(0, maxSlots)
+// 		const remainingSlots = maxSlots - currentSlots
 
-		let status: Topic['status'] = 'available'
-		if (remainingSlots === 0) status = 'full'
+// 		let status: Topic['status'] = 'available'
+// 		if (remainingSlots === 0) status = 'full'
 
-		const registeredStudents = getRandomItems(mockStudents, currentSlots)
+// 		const registeredStudents = getRandomItems(mockStudents, currentSlots)
 
-		topics.push({
-			id: `topic-${i + 1}`,
-			title: topicTitles[i % topicTitles.length],
-			description: descriptions[i % descriptions.length],
-			advisor: advisors[i % advisors.length],
-			requirements: getRandomItems(allSkills, getRandomInt(3, 6)),
-			currentSlots,
-			maxSlots,
-			field: fields[i % fields.length],
-			status,
-			registeredStudents,
-			createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-		})
-	}
+// 		topics.push({
+// 			id: `topic-${i + 1}`,
+// 			title: topicTitles[i % topicTitles.length],
+// 			description: descriptions[i % descriptions.length],
+// 			advisor: advisors[i % advisors.length],
+// 			requirements: getRandomItems(allSkills, getRandomInt(3, 6)),
+// 			currentSlots,
+// 			maxSlots,
+// 			field: fields[i % fields.length],
+// 			status,
+// 			registeredStudents,
+// 			createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
+// 		})
+// 	}
 
-	return topics
-}
+// 	return topics
+// }
 
 export const mockAdvisors = advisors
 export const mockFields = fields

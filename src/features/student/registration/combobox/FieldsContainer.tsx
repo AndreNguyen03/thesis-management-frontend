@@ -19,11 +19,13 @@ import { useEffect, useState } from 'react'
 
 interface FieldsContainerProps {
 	// Danh sách các field ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
-	selectedFields: string[]
-	onSelectionChange?: (val: string[]) => void
+	selectedFields: GetFieldNameReponseDto[]
+	isEditing?: boolean
+	// Hàm callback để update ngược lại parent
+	onSelectionChange?: (newFields: GetFieldNameReponseDto[]) => void
 }
 
-const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerProps) => {
+const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }: FieldsContainerProps) => {
 	const [open, setOpen] = useState(false)
 
 	const handleOpenModal = (boolean: boolean) => {
@@ -39,9 +41,7 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 		search_by: 'name',
 		query: '',
 		sort_by: 'name',
-		sort_order: 'desc',
-		filter: selectedFields.join(','),
-		filter_by: '_id'
+		sort_order: 'asc'
 	})
 
 	// Debounce search
@@ -51,21 +51,27 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
 
 	// Fetch data
-	const { data: fieldPagingData, isLoading, isFetching } = useGetFieldsQuery(queriesField, { skip: !open })
+	const {
+		data: fieldPagingData,
+		isLoading,
+		isFetching
+	} = useGetFieldsQuery(queriesField, { skip: !isEditing || !open })
 
 	// Logic chọn/bỏ chọn
-	const handleSelect = (fieldId: string) => {
-		const isSelected = selectedFields?.some((f) => f === fieldId)
-		let newSelected: string[]
+	const handleSelect = (field: GetFieldNameReponseDto) => {
+		const isSelected = selectedFields.some((f) => f._id === field._id)
+		let newSelected: GetFieldNameReponseDto[]
 
 		if (isSelected) {
-			// Nếu đã chọn -> Bỏ chọn
-			newSelected = selectedFields.filter((f) => f !== fieldId)
+			newSelected = selectedFields.filter((f) => f._id !== field._id)
 		} else {
-			newSelected = [...selectedFields, fieldId]
+			newSelected = [...selectedFields, field]
 		}
+		onSelectionChange?.(newSelected)
+	}
 
-		// Gọi callback để parent update state
+	const handleRemove = (id: string) => {
+		const newSelected = selectedFields.filter((f) => f._id !== id)
 		onSelectionChange?.(newSelected)
 	}
 
@@ -91,24 +97,39 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 			}
 		}
 	}, [fieldPagingData, queriesField.page])
+	// CHẾ ĐỘ XEM (VIEW MODE)
+	if (!isEditing) {
+		return (
+			<div className='rounded-md'>
+				<h4 className='mb-2 text-lg font-semibold text-gray-800'>Lĩnh vực</h4>
+				{selectedFields.length > 0 ? (
+					<div className='flex flex-wrap gap-2'>
+						{selectedFields.map((field) => (
+							<Badge key={field._id} variant='blue' className='text-md px-3 py-1'>
+								{field.name}
+							</Badge>
+						))}
+					</div>
+				) : (
+					<p className='text-sm text-gray-500'>Chưa cập nhật lĩnh vực</p>
+				)}
+			</div>
+		)
+	}
 
+	// CHẾ ĐỘ CHỈNH SỬA (EDIT MODE)
 	return (
 		<div>
+			{/* 2. Combobox tìm kiếm & chọn */}
 			<Popover open={open} onOpenChange={handleOpenModal}>
 				<PopoverTrigger asChild>
-					<Button
-						variant='outline'
-						role='combobox'
-						aria-expanded={open}
-						className='w-full justify-between text-left font-normal'
-					>
+					<Button variant='outline' role='combobox' className='w-full justify-between text-left font-normal'>
 						<span>Thêm lĩnh vực...</span>
 						<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
 					</Button>
 				</PopoverTrigger>
-
 				<PopoverContent className='w-[400px] p-0'>
-					<Command shouldFilter={false}>
+					<Command>
 						<CommandInput placeholder='Tìm kiếm lĩnh vực...' onValueChange={debounceFieldOnChange} />
 						<CommandList
 							className='h-fit max-h-60 overflow-y-auto'
@@ -126,13 +147,14 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 
 									<CommandGroup heading='Danh sách lĩnh vực'>
 										{selectableOptions.map((field) => {
-											const isSelected = selectedFields.some((f) => f === field._id)
+											const isSelected = selectedFields.some((f) => f._id === field._id)
 											return (
 												<CommandItem
 													key={field._id}
 													value={field._id} // Lưu ý: value phải unique
-													onSelect={() => handleSelect(field._id)}
+													onSelect={() => handleSelect(field)}
 													className='cursor-pointer'
+													onPointerDown={(e) => e.preventDefault()} // Thêm dòng này để ngăn Popover đóng
 												>
 													<Check
 														className={cn(
@@ -175,4 +197,4 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 	)
 }
 
-export default FieldsCombobox
+export default FieldsContainer

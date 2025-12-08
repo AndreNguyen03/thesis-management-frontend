@@ -1,4 +1,3 @@
-
 export type SortOrder = 'asc' | 'desc'
 export class PaginationQueryParamsDto {
 	limit?: number = 10
@@ -9,7 +8,7 @@ export class PaginationQueryParamsDto {
 	sort_order?: SortOrder
 	startDate?: string
 	endDate?: string
-	filter?: string 
+	filter?: string
 	filter_by?: string
 }
 
@@ -18,6 +17,13 @@ export function buildQueryString(params: PaginationQueryParamsDto): string {
 		.filter(
 			([_, value]) => value !== undefined && value !== null && value !== ' ' && value !== ',' && value !== 'all'
 		)
-		.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value as string)}`)
+		.flatMap(([key, value]) => {
+			if (Array.isArray(value)) {
+				return value
+					.filter((v) => v !== undefined && v !== null && v !== '' && v !== 'all')
+					.map((v) => `${encodeURIComponent(key)}[]=${encodeURIComponent(v)}`)
+			}
+			return [`${encodeURIComponent(key)}=${encodeURIComponent(value as string)}`]
+		})
 		.join('&')
 }
