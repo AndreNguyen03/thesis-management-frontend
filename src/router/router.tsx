@@ -21,6 +21,8 @@ import { ManageFacultyLecturerPage } from '@/features/faculty/manage_faculty_lec
 import DetailPeriodPage from '@/features/faculty/manage_period/DetailPeriod'
 import LecturerManageTopics from '@/features/lecturer/manage_topic'
 import RegistrationHistory from '@/features/student/TopicList/registered/children/RegistrationHistory'
+import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
+import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_topic/ManageSubmittedTopics'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -39,7 +41,7 @@ export const router = createBrowserRouter([
 			{ index: true, element: <Navigate to='dashboard' replace /> },
 			// { index: true, element: <Navigate to='manage-period' replace /> },
 			{ path: 'dashboard', element: <Dashboard /> },
-			{	
+			{
 				path: 'profile',
 				element: <Profile /> // tạm thời dùng mockUser
 			},
@@ -57,7 +59,7 @@ export const router = createBrowserRouter([
 					{ index: true, element: <TopicRegisteredChildren /> }
 				]
 			},
-	
+
 			{
 				path: 'detail-topic/:id',
 				element: <TopicDetailContainer />
@@ -72,7 +74,15 @@ export const router = createBrowserRouter([
 			},
 			// Giảng viên
 			{ path: 'create-topic', element: <CreateTopic /> },
-			{ path: 'manage-topic', element: <LecturerManageTopics /> },
+			{
+				path: 'manage-topics',
+				element: <LecturerManageTopics />,
+				children: [
+					{ index: true, element: <ManageTopicDraft /> },
+					{ path: 'draft', element: <ManageTopicDraft />},
+					{ path: 'submitted', element: <ManageSubmittedTopics /> }
+				]
+			},
 			{
 				path: 'manage-ai',
 				element: (

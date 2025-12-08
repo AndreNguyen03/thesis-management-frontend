@@ -1,4 +1,4 @@
-import type { PhaseType } from '@/models/period.model'
+import type { GetCustomMiniPeriodInfoRequestDto, PhaseType } from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -85,7 +85,6 @@ export const PhaseInfo: Record<PhaseType, { order: number; continue: string; con
 		}
 	}
 
-
 export const PhaseStatusMap: Record<
 	'not_started' | 'ongoing' | 'completed',
 	{ text: string; variant: 'gray' | 'lightBlue' | 'registered' }
@@ -94,3 +93,12 @@ export const PhaseStatusMap: Record<
 	ongoing: { text: 'Đang diễn ra', variant: 'lightBlue' as const },
 	completed: { text: 'Đã hoàn thành', variant: 'registered' as const }
 }
+
+const typeLabels = {
+	thesis: 'Khóa luận',
+	scientific_research: 'Nghiên cứu khoa học'
+} as const
+
+export const getPeriodTitle = (period: GetCustomMiniPeriodInfoRequestDto) =>
+	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type]}`
+	

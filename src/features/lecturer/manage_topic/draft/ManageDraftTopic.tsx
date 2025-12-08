@@ -19,6 +19,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { CustomPagination } from '@/components/PaginationBar'
 import { useAppSelector } from '@/store'
 import DeleteTopicModal from '../modal/delete-topic-modal'
+import { getPeriodTitle } from '@/utils/utils'
 
 const ManageTopicDraft = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
@@ -141,7 +142,7 @@ const ManageTopicDraft = () => {
 								<>
 									<div className='m-2 flex flex-col gap-2 rounded-md bg-blue-100 p-2 lg:flex-row'>
 										<span className='font-semibold'>
-											<span>{`Kì hiện tại: ${currentPeriod.name}`}</span>
+											<span>{getPeriodTitle(currentPeriod)}</span>
 										</span>
 										<span className='ml-auto mr-4 font-normal'>
 											Thời gian còn lại:{' '}

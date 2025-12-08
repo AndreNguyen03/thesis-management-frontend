@@ -59,8 +59,7 @@ import AddStudentModal from './modal/AddStudentModal'
 import { PeriodPhaseName } from '@/models/period.model'
 import { PeriodPhaseStatus } from '@/models/period-phase.models'
 import DeleteTopicModal from '@/features/lecturer/manage_topic/modal/delete-topic-modal'
-import { is } from 'date-fns/locale'
-import DeletedTopicContainter from './components/DeletedTopic'
+import { RejectionBanner } from './components/RejectionBanner'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
@@ -756,6 +755,8 @@ export const TopicDetailContainer = () => {
 							className='col-span-2 flex flex-col gap-4 overflow-y-auto'
 							style={{ maxHeight: 'calc(100vh - 110px)' }}
 						>
+							<RejectionBanner />
+
 							<div className='h-fit space-y-4 rounded-md border border-gray-300 bg-white p-8'>
 								<h4 className='mb-2 text-lg font-semibold text-gray-800'>Thông tin cơ bản</h4>
 								<div>
@@ -911,8 +912,7 @@ export const TopicDetailContainer = () => {
 											switch (user.role) {
 												case 'lecturer':
 													return (
-														currentTopic.students.pendingStudents.length > 0 &&
-														isAbleInOpenRegistrationPhase && (
+														currentTopic.students.pendingStudents.length > 0 && (
 															<>
 																{/* Hiển thị yêu cầu đăng ký cần được duyệt */}
 																<div className='flex flex-col justify-between gap-3 border border-b border-yellow-300 bg-yellow-50/50 px-3 py-2 sm:flex-row sm:items-center'>

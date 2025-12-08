@@ -20,6 +20,7 @@ import type { SubmittedTopic } from '@/models'
 import { useAppSelector } from '@/store'
 import { PeriodPhaseName } from '@/models/period.model'
 import { PeriodPhaseStatus } from '@/models/period-phase.models'
+import { FlashBanner } from '@/components/banner/flash-banner'
 
 const ManageSubmittedTopics = () => {
 	const navigate = useNavigate()
@@ -116,7 +117,7 @@ const ManageSubmittedTopics = () => {
 		})) || []
 
 	return (
-		<div className='flex max-h-[740px] flex-col gap-4 px-4 py-2'>
+		<div className='flex flex-col gap-4 px-4 py-2'>
 			<div className='relative flex flex-1 items-center gap-5'>
 				<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
 				<Input

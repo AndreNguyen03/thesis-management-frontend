@@ -5,17 +5,32 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Button } from './ui'
 import { ScrollArea } from './ui/scroll-area'
 import { formatTimeAgo } from '@/utils/format-time-ago'
-import { useAppSelector } from '@/store'
 import { useDispatch } from 'react-redux'
-import { setNotifications } from '@/store/slices/notification-slice'
 import { useNavigate } from 'react-router-dom'
+import {
+	useGetNotificationsQuery,
+	useMarkAllNotificationsReadMutation,
+	useMarkNotificationReadMutation
+} from '@/services/notificationApi'
 
 export function NotificationPopover() {
-	const notifications = useAppSelector((state) => state.notification.notifications)
+	const {
+		data: notifications,
+		isLoading,
+		refetch
+	} = useGetNotificationsQuery({
+		page: 1,
+		limit: 10,
+		sort_by: 'createdAt',
+		sort_order: 'desc'
+	})
+	//api đánh dấu là đã đọc
+	const [markAllNotificationsRead] = useMarkAllNotificationsReadMutation()
+	const [markNotificationRead] = useMarkNotificationReadMutation()
 	const [isOpen, setIsOpen] = useState(false)
 	const dispatch = useDispatch()
 	// Đếm số chưa đọc
-	const unreadCount = notifications.filter((n) => !n.isRead).length
+	const unreadCount = notifications?.data.filter((n) => !n.isRead).length || 0
 	const navigate = useNavigate()
 	// Hàm lấy Icon theo Type
 	const getIcon = (type: NotificationType) => {
@@ -49,15 +64,16 @@ export function NotificationPopover() {
 		}
 	}
 
-	const handleMarkAllRead = () => {
-		dispatch(setNotifications(notifications.map((n) => ({ ...n, isRead: true }))))
+	const handleMarkAllRead = async () => {
+		await markAllNotificationsRead()
+		await refetch()
+		//dispatch(setNotifications(notifications.map((n) => ({ ...n, isRead: true }))))
 	}
 
-	const handleItemClick = (notification: NotificationItem) => {
-		dispatch(setNotifications(notifications.map((n) => (n._id === notification._id ? { ...n, isRead: true } : n))))
-		setIsOpen(false)
+	const handleItemClick = async (notification: NotificationItem) => {
+		console.log('Clicked notification:', notification)
+		await markNotificationRead(notification._id)
 		const { type, metadata } = notification
-
 		// Lưu ý: Backend cần đảm bảo metadata có chứa topicId cho các loại thông báo này
 		// Nếu metadata rỗng {} như trong JSON mẫu bạn gửi cho type SUCCESS,
 		// bạn cần fix backend để gửi kèm topicId nhé.
@@ -66,14 +82,28 @@ export function NotificationPopover() {
 		switch (type) {
 			// Trường hợp 1: Bị từ chối -> Vào xem chi tiết + Hiện Banner Đỏ
 			case NotificationType.ERROR: // Tương ứng TOPIC_REJECTED
-				if (topicId) {
-					navigate(`/detail-topic/${topicId}`, {
-						state: {
-							notiType: 'REJECTED',
-							reason: metadata?.reason || notification.message, // Lấy lý do từ metadata hoặc fallback về message
-							message: notification.message
-						}
-					})
+				if (metadata && metadata.actionUrl) {
+					if (metadata.rejectedBy) {
+						//nếu là thông báo từ chối đăng ký
+						navigate(metadata.actionUrl, {
+							state: {
+								notiType: 'REJECTED',
+								message: notification.message,
+								rejectedBy: metadata.rejectedBy,
+								reasonSub: metadata.reasonSub
+							}
+						})
+					} //từ chối đề tài
+					else
+						navigate(metadata.actionUrl, {
+							state: {
+								// Dữ liệu này sẽ được gửi sang trang đích
+								flashType: 'ERROR',
+								message: notification.message,
+								reasonSub: metadata.reasonSub, // Lý do quan trọng nhất,
+								actionUrl: `/detail-topic/${topicId}`
+							}
+						})
 				}
 				break
 
@@ -91,7 +121,7 @@ export function NotificationPopover() {
 
 			// Trường hợp 3: Nhắc nhở -> Vào trang quản lý của tôi + Hiện Banner Vàng
 			case NotificationType.WARNING: // Tương ứng REMINDER
-				navigate(`/manage-topic`, {
+				navigate(`/manage-topics`, {
 					state: {
 						notiType: 'REMINDER',
 						message: notification.message
@@ -103,7 +133,14 @@ export function NotificationPopover() {
 			case NotificationType.SYSTEM:
 				// Nếu có link trong metadata thì đi, khôg thì thôi
 				if (metadata?.actionUrl) {
-					navigate(metadata.actionUrl)
+					navigate(metadata.actionUrl, {
+						state: {
+							// Dữ liệu này sẽ được gửi sang trang đích
+							flashType: 'ERROR',
+							message: 'Đăng ký đề tài bị từ chối',
+							description: 'No' // Lý do quan trọng nhất
+						}
+					})
 				}
 				break
 
@@ -112,26 +149,9 @@ export function NotificationPopover() {
 				console.log('No action for this notification type')
 				break
 		}
+		setIsOpen(false)
 	}
-	// const handleNotificationClick = (noti: any) => {
-	// 	// Trường hợp 1: Chuyển trang kèm dữ liệu cho Banner
-	// 	if (noti.type === 'TOPIC_REJECTED') {
-	// 		navigate(`/topics/${noti.metadata.topicId}`, {
-	// 			state: {
-	// 				notiType: 'REJECTED',
-	// 				reason: noti.metadata.reason // Lý do backend gửi về
-	// 			}
-	// 		})
-	// 		return
-	// 	}
 
-	// 	// Trường hợp 2: Mở Sheet thông tin
-	// 	if (noti.type === 'GENERAL_INFO') {
-	// 		setSelectedNoti(noti) // Set state để mở Sheet
-	// 		setSheetOpen(true)
-	// 		return
-	// 	}
-	// }
 	return (
 		<div className='flex items-start justify-center'>
 			<Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -165,10 +185,10 @@ export function NotificationPopover() {
 					</div>
 
 					{/* List */}
-					<ScrollArea className='h-[calc(100vh-10rem)] h-fit max-h-[400px] bg-white'>
-						{notifications.length > 0 ? (
+					<ScrollArea className='h-[calc(100vh-10rem)] h-fit max-h-[400px] overflow-auto bg-white'>
+						{notifications && notifications?.data.length > 0 ? (
 							<div className='divide-y divide-slate-100'>
-								{notifications.map((item) => (
+								{notifications.data.map((item) => (
 									<div
 										key={item._id}
 										onClick={() => handleItemClick(item)}
@@ -200,7 +220,7 @@ export function NotificationPopover() {
 											</p>
 
 											<p className='text-xs font-medium text-slate-400'>
-												{formatTimeAgo(item.createdAt.toISOString())}
+												{formatTimeAgo(new Date(item.createdAt).toISOString())}
 											</p>
 										</div>
 									</div>
@@ -216,7 +236,7 @@ export function NotificationPopover() {
 
 					{/* Footer */}
 					<div className='rounded-b-md border-t bg-slate-50 p-2'>
-						{notifications.length > 0 && (
+						{notifications && notifications?.data.length > 0 && (
 							<Button variant='ghost' className='h-8 w-full text-xs text-slate-500 hover:text-slate-900'>
 								Xem các thông báo trước đó
 							</Button>
