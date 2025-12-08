@@ -1,4 +1,4 @@
-import { Bell, LogOut, MessageCircle, Search, Settings, User2 } from 'lucide-react'
+import {  LogOut, MessageCircle, Search, Settings, User2 } from 'lucide-react'
 import { Button, Dropdown, DropdownItem, DropdownLabel, DropdownSeparator, Input, LoadingOverlay, Badge } from '../ui'
 import uitLogo from '../../assets/uit.png'
 import type { ApiError, AppUser } from '../../models'
