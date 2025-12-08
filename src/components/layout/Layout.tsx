@@ -7,6 +7,7 @@ import { Breadcrumbs } from '../ui/Breadcrumbs'
 import { BreadcrumbProvider } from '../../contexts/BreadcrumbContext'
 import { useAppSelector } from '../../store'
 import { AIAssistant } from '../ai-assistant/AIAssistant'
+import { FlashBanner } from '../banner/flash-banner'
 
 interface LayoutProps {
 	children: ReactNode
@@ -47,6 +48,9 @@ function LayoutContent({ user, children }: { user: any; children: ReactNode }) {
 							<Breadcrumbs />
 						</div>
 					</div>
+
+					<FlashBanner />
+
 					<main className='min-h-[calc(100vh-16rem)] flex-1 overflow-y-auto'>
 						<div className='px-4 py-2'>{children}</div>
 					</main>

@@ -1,6 +1,7 @@
 import { CustomPagination } from '@/components/PaginationBar'
 import { Card, Input } from '@/components/ui'
 import { useDebounce } from '@/hooks/useDebounce'
+import { tranferToRejectionReasonType, type IStudentRegistration } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useGetRegistrationsHistoryQuery } from '@/services/registrationApi'
 import { Eye, Trash2 } from 'lucide-react'
@@ -39,6 +40,16 @@ const RegistrationHistory = () => {
 		debounceOnChange(val)
 	}
 	const navigate = useNavigate()
+	const handleGoDetail = (registration: IStudentRegistration) => {
+		navigate(`/detail-topic/${registration.topicId}`, {
+			state: {
+				notiType: 'REJECTED',
+				message: `Đăng ký đề tài của bạn đã bị từ chối với lý do chính: "${tranferToRejectionReasonType[registration.rejectionReasonType as keyof typeof tranferToRejectionReasonType] || 'Lý do khác'}".`,
+				rejectedBy: registration.processedBy.fullName,
+				reasonSub: registration.lecturerResponse
+			}
+		})
+	}
 	return (
 		<Card className='space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
 			<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
@@ -99,7 +110,7 @@ const RegistrationHistory = () => {
 								<td className='px-3 py-2 text-center'>
 									<button
 										className='rounded-full p-2 transition-colors hover:bg-gray-100'
-										onClick={() => navigate(`/detail-topic/${hic.topicId}`)}
+										onClick={() => handleGoDetail(hic)}
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>

@@ -13,7 +13,10 @@ export interface IStudentRegistration {
 	registeredAt: Date
 	lecturers: ResponseMiniLecturerDto[]
 	periodName: string
-	periodId: string	
+	periodId: string
+	lecturerResponse: string
+	rejectionReasonType: string
+	processedBy: ResponseMiniLecturerDto
 }
 
 export interface PaginatedStudentRegistration extends GetPaginatedObject {
@@ -50,4 +53,11 @@ export const RejectionReasonType = {
 	GPA_LOW: 'gpa_low',
 	SKILL_MISMATCH: 'skill_mismatch',
 	OTHER: 'other'
+}
+
+export const tranferToRejectionReasonType = {
+	full_slot: 'Đã đủ số lượng thành viên',
+	gpa_low: 'Điểm trung bình chưa đạt yêu cầu',
+	skill_mismatch: 'Kỹ năng chưa phù hợp',
+	other: 'Lý do khác'
 }

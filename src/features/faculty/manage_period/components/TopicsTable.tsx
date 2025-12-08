@@ -190,7 +190,7 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 				)
 			},
 			{
-				key: phase === 'submit_topic' ? 'createdAt' : 'updatedAt',
+				key: phase === 'submit_topic' ? 'submittedAt' : 'updatedAt',
 				title: phase === 'submit_topic' ? 'Ngày Nộp' : 'Ngày Cập Nhật ',
 				sortable: true,
 				render: (value: string) => (value ? new Date(value).toLocaleString('vi-VN') : '—')

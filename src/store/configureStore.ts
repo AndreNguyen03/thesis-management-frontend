@@ -4,7 +4,6 @@ import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux
 import { baseApi } from '@/services/baseApi'
 import periodSlice from './slices/period-slice'
 import socketSlice from './slices/socket-slice'
-import notificationSlice from './slices/notification-slice'
 import { uploadApi } from '@/services/uploadAvatarApi'
 
 export const store = configureStore({
@@ -13,7 +12,6 @@ export const store = configureStore({
 		socket: socketSlice.reducer,
 		period: periodSlice.reducer,
 		auth: authSlice.reducer,
-		notification: notificationSlice.reducer,
 		[uploadApi.reducerPath]: uploadApi.reducer
 	},
 	middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware)
