@@ -1,14 +1,9 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { FilterBar } from './topics/FilterBar'
 import { TopicListItem } from './topics/TopicListItem'
 import { TopicDetailPanel } from './topics/TopicDetailPanel'
-import { ConfirmModal } from './topics/ConfirmModal'
-import { CancelConfirmModal } from './topics/CancelConfirmModal'
 import { SkeletonLoader } from './topics/SkeletonLoader'
 import { EmptyState } from './topics/EmptyState'
-// import { BeforePhaseNotice } from './topics/BeforePhaseNotice'
-import { RegisteredTopicCard } from './topics/RegisteredTopicCard'
-import { NoRegistrationCard } from './topics/NoRegistrationCard'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { List, FileCheck } from 'lucide-react'
@@ -25,6 +20,7 @@ import {
 	PaginationPrevious
 } from '@/components/ui/pagination'
 import type {
+    ApiError,
 	GeneralTopic,
 	GetFieldNameReponseDto,
 	PaginationTopicsQueryParams,
@@ -35,9 +31,11 @@ import { useAppSelector } from '@/store'
 import { PeriodPhaseName } from '@/models/period.model'
 import { getPeriodTitle } from '@/utils/utils'
 import { useCreateRegistrationMutation, useLeaveTopicMutation } from '@/services/registrationApi'
+import { LoadingState } from '@/components/ui/LoadingState'
 
 export default function TopicRegistration() {
-	// ------------------ PAGINATION STATE ------------------
+	// ------------------ SHARED STATE ------------------
+	const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
 
 	const [queryParams, setQueryParams] = useState<PaginationTopicsQueryParams>({
 		page: 1,
@@ -51,110 +49,250 @@ export default function TopicRegistration() {
 		lecturerIds: [],
 		fieldIds: [],
 		queryStatus: [],
-		phase: PeriodPhaseName.OPEN_REGISTRATION || ''
+		phase: PeriodPhaseName.OPEN_REGISTRATION
 	})
-	// ------------------ FILTER STATE ------------------
-	// Mock period
-	const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
-	const {
-		data: paginated,
-		refetch: refetchTopics,
-		isLoading: isLoadingTopics
-	} = useGetTopicsInPhaseQuery(
+
+	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
+	const [isPanelOpen, setIsPanelOpen] = useState(false)
+	const [activeTab, setActiveTab] = useState<'list' | 'registered'>('list')
+	const [registeredTopic, setRegisteredTopic] = useState<GeneralTopic | null>(null)
+
+	// ------------------ REGISTRATION MUTATIONS ------------------
+	const [createRegistration] = useCreateRegistrationMutation()
+	const [leaveTopic] = useLeaveTopicMutation()
+
+	// ------------------ QUERY HOOK ------------------
+	const { data: paginated, isLoading: isLoadingTopics } = useGetTopicsInPhaseQuery(
 		{
-			periodId: currentPeriod?._id!,
+			periodId: currentPeriod!._id,
 			queries: queryParams
 		},
 		{ skip: !currentPeriod?._id }
 	)
-	// ------------------ OTHER STATES ------------------
-	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
-	const [isPanelOpen, setIsPanelOpen] = useState(false)
-	const [activeTab, setActiveTab] = useState('list')
-	const [registeredTopic, setRegisteredTopic] = useState<GeneralTopic | null>(null)
-	const [topicToRegister, setTopicToRegister] = useState<GeneralTopic | null>(null)
-	const [selectedFields, setSelectedFields] = useState<GetFieldNameReponseDto[]>([])
-	const [selectedLecturers, setSelectedLecturers] = useState<ResponseMiniLecturerDto[]>([])
-	const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-	const [isRegistering, setIsRegistering] = useState(false)
-	const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
-	const [isCancelling, setIsCancelling] = useState(false)
-	//handle registration
-	const [createRegistration] = useCreateRegistrationMutation()
-	const [leaveTopic] = useLeaveTopicMutation()
+
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng kí đề tài' }])
 
-	// ------------------ FETCH TOPICS (PAGINATION) ------------------
-	useEffect(() => {
-		refetchTopics()
-	}, [queryParams])
+	// ------------------ SHARED HANDLERS ------------------
+	const handlePageChange = useCallback(
+		(newPage: number) => {
+			if (newPage > 0 && newPage <= (paginated?.meta.totalPages ?? 0)) {
+				setQueryParams((prev) => ({ ...prev, page: newPage }))
+			}
+		},
+		[paginated?.meta.totalPages]
+	)
 
-	// ------------------ HANDLERS ------------------
-
-	const handlePageChange = (newPage: number) => {
-		if (newPage > 0 && newPage <= queryParams.page!) {
-			setQueryParams((prev) => ({ ...prev, page: newPage }))
-		}
-	}
-
-	const handleTopicClick = (topic: GeneralTopic) => {
+	const handleTopicClick = useCallback((topic: GeneralTopic) => {
 		setSelectedTopic(topic)
 		setIsPanelOpen(true)
-	}
+	}, [])
 
-	const handleRegisterClick = async (topic: GeneralTopic) => {
-		if (registeredTopic) {
+	const canRegister = currentPeriod?.currentPhase === PeriodPhaseName.OPEN_REGISTRATION && !registeredTopic
+
+	
+	// ------------------ REGISTRATION HANDLERS ------------------
+	const handleRegisterClick = useCallback(
+		async (topic: GeneralTopic) => {
+			if (registeredTopic) {
+				toast({
+					title: 'Bạn đã đăng ký đề tài',
+					description: 'Hãy hủy đề tài hiện tại trước khi đăng ký đề tài mới.',
+					variant: 'destructive'
+				})
+				return
+			}
+
+			try {
+				await createRegistration({ topicId: topic._id }).unwrap()
+				setRegisteredTopic(topic)
+				setActiveTab('registered')
+				toast({ title: 'Đăng ký thành công!' })
+			} catch (error) {
+				toast({
+					title: 'Đăng ký thất bại',
+					description: `Vui lòng thử lại sau. ${(error as ApiError)?.data?.message ?? ''}`,
+					variant: 'destructive'
+				})
+			}
+		},
+		[registeredTopic, createRegistration]
+	)
+
+	const handleCancelRegistration = useCallback(async () => {
+		if (!registeredTopic) return
+
+		try {
+			await leaveTopic({ topicId: registeredTopic._id }).unwrap()
+			setRegisteredTopic(null)
+			setActiveTab('list')
+			toast({ title: 'Hủy đăng ký thành công!' })
+		} catch (error) {
 			toast({
-				title: 'Bạn đã đăng ký đề tài',
-				description: 'Hãy hủy đề tài hiện tại trước khi đăng ký đề tài mới.',
+				title: 'Hủy thất bại',
+				description: `Vui lòng thử lại sau. ${(error as ApiError)?.data?.message ?? ''}`,
 				variant: 'destructive'
 			})
-			return
 		}
-		await createRegistration({ topicId: topic._id })
-		//setTopicToRegister(topic)
-		setIsConfirmOpen(true)
+	}, [registeredTopic, leaveTopic])
+
+	// ------------------ PAGINATION RENDERER ------------------
+	const renderPagination = () => {
+		const currentPage = queryParams.page ?? 1
+		const totalPages = paginated?.meta.totalPages ?? 0
+
+		if (totalPages <= 1) return null
+
+		const pagesToShow = [currentPage - 1, currentPage, currentPage + 1].filter((p) => p >= 1 && p <= totalPages)
+
+		return (
+			<nav aria-label='Phân trang' className='relative z-[100] pt-4'>
+				<Pagination>
+					<PaginationContent className='gap-1'>
+						{/* Previous */}
+						<PaginationItem>
+							<PaginationPrevious
+								href='#'
+								onClick={(e) => {
+									e.preventDefault()
+									handlePageChange(currentPage - 1)
+								}}
+								className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+							/>
+						</PaginationItem>
+
+						{/* First page */}
+						<PaginationItem>
+							<PaginationLink
+								href='#'
+								onClick={(e) => {
+									e.preventDefault()
+									handlePageChange(1)
+								}}
+								isActive={currentPage === 1}
+								className='pointer-events-auto cursor-pointer ring-0'
+							>
+								1
+							</PaginationLink>
+						</PaginationItem>
+
+						{/* Left dots */}
+						{currentPage > 3 && (
+							<PaginationItem>
+								<span className='px-2 text-muted-foreground'>...</span>
+							</PaginationItem>
+						)}
+
+						{/* Nearby pages */}
+						{pagesToShow.map((p) => (
+							<PaginationItem key={p}>
+								<PaginationLink
+									href='#'
+									onClick={(e) => {
+										e.preventDefault()
+										handlePageChange(p)
+									}}
+									isActive={currentPage === p}
+									className='pointer-events-auto cursor-pointer ring-0'
+								>
+									{p}
+								</PaginationLink>
+							</PaginationItem>
+						))}
+
+						{/* Right dots */}
+						{currentPage < totalPages - 2 && (
+							<PaginationItem>
+								<span className='px-2 text-muted-foreground'>...</span>
+							</PaginationItem>
+						)}
+
+						{/* Last page */}
+						{totalPages > 1 && currentPage !== totalPages && (
+							<PaginationItem>
+								<PaginationLink
+									href='#'
+									onClick={(e) => {
+										e.preventDefault()
+										handlePageChange(totalPages)
+									}}
+									isActive={currentPage === totalPages}
+									className='pointer-events-auto cursor-pointer ring-0'
+								>
+									{totalPages}
+								</PaginationLink>
+							</PaginationItem>
+						)}
+
+						{/* Next */}
+						<PaginationItem>
+							<PaginationNext
+								href='#'
+								onClick={(e) => {
+									e.preventDefault()
+									handlePageChange(currentPage + 1)
+								}}
+								className={
+									currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+								}
+							/>
+						</PaginationItem>
+					</PaginationContent>
+				</Pagination>
+			</nav>
+		)
 	}
 
-	const handleConfirmRegister = async () => {
-		if (!topicToRegister) return
-		setIsRegistering(true)
-		await new Promise((r) => setTimeout(r, 1000))
-
-		setRegisteredTopic(topicToRegister!)
-
-		setIsRegistering(false)
-		setIsConfirmOpen(false)
-		setIsPanelOpen(false)
-		setActiveTab('registered')
+	// ------------------ LOADING & EMPTY STATE ------------------
+	if (isLoadingTopics || !paginated) {
+		return <LoadingState message='Đang tải dữ liệu' />
 	}
 
-	const handleCancelRegistration = async () => {
-		if (!registeredTopic) return
-		setIsCancelling(true)
-		await new Promise((r) => setTimeout(r, 1000))
-		await leaveTopic({ topicId: registeredTopic._id })
-		setRegisteredTopic(null)
-		setIsCancelling(false)
-		setIsCancelModalOpen(false)
-		setActiveTab('list')
+	if (paginated.data.length === 0) {
+		return (
+			<div className='max-h-[calc(100vh)] overflow-y-auto bg-background'>
+				{/* HEADER */}
+				<header className='border-b bg-card'>
+					<div className='container py-4'>
+						<h1 className='text-xl font-bold'>Đăng ký đề tài</h1>
+						<p className='mt-1 text-xs'>
+							{getPeriodTitle(currentPeriod!)} | hiện tại: <CurrentTime />
+						</p>
+					</div>
+				</header>
+
+				{/* TABS */}
+				<div className='sticky top-0 z-20 border-b bg-card'>
+					<div className='container'>
+						<Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'list' | 'registered')}>
+							<TabsList className='h-10'>
+								<TabsTrigger value='list'>
+									<List className='mr-1 h-4 w-4' /> Danh sách
+								</TabsTrigger>
+								<TabsTrigger value='registered'>
+									<FileCheck className='mr-1 h-4 w-4' /> Đã đăng ký
+									{registeredTopic && <Badge className='ml-1 h-4 px-1 text-[10px]'>1</Badge>}
+								</TabsTrigger>
+							</TabsList>
+						</Tabs>
+					</div>
+				</div>
+
+				<EmptyState
+					onClearFilters={() =>
+						setQueryParams({
+							...queryParams,
+							query: '',
+							lecturerIds: [],
+							fieldIds: [],
+							queryStatus: []
+						})
+					}
+				/>
+			</div>
+		)
 	}
 
-	// ------------------ UI ------------------
-	const canRegister = currentPeriod?.currentPhase === PeriodPhaseName.OPEN_REGISTRATION && !registeredTopic
-	const handleOnQuery = (val: string) => {
-		setQueryParams((prev) => ({ ...prev, query: val, page: 1 }))
-	}
-	const handleSelectionChangeFields = useCallback((newFields: GetFieldNameReponseDto[]) => {
-		setSelectedFields(newFields)
-		const fieldIds = newFields.map((field) => field._id)
-		setQueryParams((prev) => ({ ...prev, fieldIds, page: 1 }))
-	}, [])
-	const handleSelectionChangeLecturers = useCallback((newLecturers: ResponseMiniLecturerDto[]) => {
-		setSelectedLecturers(newLecturers)
-		const lecturerIds = newLecturers.map((lecturer) => lecturer._id)
-		setQueryParams((prev) => ({ ...prev, lecturerIds, page: 1 }))
-	}, [])
+	// ------------------ RENDER ------------------
 	return (
 		<div className='max-h-[calc(100vh)] overflow-y-auto bg-background'>
 			{/* HEADER */}
@@ -170,7 +308,7 @@ export default function TopicRegistration() {
 			{/* TABS */}
 			<div className='sticky top-0 z-20 border-b bg-card'>
 				<div className='container'>
-					<Tabs value={activeTab} onValueChange={setActiveTab}>
+					<Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'list' | 'registered')}>
 						<TabsList className='h-10'>
 							<TabsTrigger value='list'>
 								<List className='mr-1 h-4 w-4' /> Danh sách
@@ -184,195 +322,42 @@ export default function TopicRegistration() {
 				</div>
 			</div>
 
-			{/* CONTENT */}
 			{activeTab === 'list' ? (
 				<>
 					{/* FILTER BAR */}
 					<div className='sticky top-10 z-10 bg-card'>
 						<FilterBar
-							selectedFields={selectedFields}
-							selectedLecturers={selectedLecturers}
 							queryParams={queryParams}
 							onSetQueryParams={setQueryParams}
-							onSelectionChangeFields={setSelectedFields}
-							onSelectionChangeLecturers={setSelectedLecturers}
-							onQuery={handleOnQuery}
 						/>
 					</div>
 
 					<main className='container py-4'>
-						{isLoadingTopics ? (
-							<SkeletonLoader count={6} />
-						) : paginated?.data.length === 0 ? (
-							<EmptyState
-								onClearFilters={() =>
-									setQueryParams({
-										query: '',
-										lecturerIds: [],
-										fieldIds: [],
-										queryStatus: []
-									})
-								}
-							/>
-						) : (
-							<div className='overflow-hidden rounded-lg border bg-card shadow-sm'>
-								{paginated?.data.map((topic) => (
-									<TopicListItem
-										key={topic._id}
-										topic={topic}
-										onClick={() => handleTopicClick(topic)}
-										onRegister={() => handleRegisterClick(topic)}
-										isRegistering={isRegistering && topicToRegister?._id === topic._id}
-										disabled={!canRegister}
-										isRegistered={registeredTopic?._id === topic._id}
-									/>
-								))}
-							</div>
-						)}
+						<div className='overflow-hidden rounded-lg border bg-card shadow-sm'>
+							{paginated.data.map((topic) => (
+								<TopicListItem
+									key={topic._id}
+									topic={topic}
+									onClick={() => handleTopicClick(topic)}
+									onRegister={() => handleRegisterClick(topic)}
+									disabled={!canRegister}
+									isRegistered={registeredTopic?._id === topic._id}
+								/>
+							))}
+						</div>
 
-						{/* PAGINATION */}
-						{paginated?.meta.totalPages! > 1 && (
-							<nav aria-label='Phân trang' className='relative z-[100] pt-4'>
-								<Pagination>
-									<PaginationContent className='gap-1'>
-										{' '}
-										{/* ⭐ FIX QUAN TRỌNG */}
-										{/* Previous */}
-										<PaginationItem>
-											<PaginationPrevious
-												href='#'
-												onClick={(e) => {
-													e.preventDefault()
-													handlePageChange(queryParams.page! - 1)
-												}}
-												className={
-													queryParams.page! <= 1
-														? 'pointer-events-none opacity-50'
-														: 'cursor-pointer'
-												}
-											/>
-										</PaginationItem>
-										{/* First page */}
-										<PaginationItem>
-											<PaginationLink
-												href='#'
-												onClick={(e) => {
-													e.preventDefault()
-													handlePageChange(1)
-												}}
-												isActive={queryParams.page === 1}
-												className='pointer-events-auto cursor-pointer ring-0'
-											>
-												1
-											</PaginationLink>
-										</PaginationItem>
-										{/* Left dots */}
-										{queryParams.page! > 3 && (
-											<PaginationItem>
-												<span className='px-2 text-muted-foreground'>...</span>
-											</PaginationItem>
-										)}
-										{[queryParams.page! - 1, queryParams.page!, queryParams.page! + 1].map((p) => {
-											if (p <= 1 || p >= paginated?.meta.totalPages!) return null
-											return (
-												<PaginationItem key={p}>
-													<PaginationLink
-														href='#'
-														onClick={(e) => {
-															e.preventDefault()
-															handlePageChange(p)
-														}}
-														isActive={queryParams.page === p}
-														className='pointer-events-auto cursor-pointer ring-0'
-													>
-														{p}
-													</PaginationLink>
-												</PaginationItem>
-											)
-										})}
-										{queryParams.page! < paginated?.meta.totalPages! - 2 && (
-											<PaginationItem>
-												<span className='px-2 text-muted-foreground'>...</span>
-											</PaginationItem>
-										)}
-										{paginated?.meta.totalPages! > 1 && (
-											<PaginationItem>
-												<PaginationLink
-													href='#'
-													onClick={(e) => {
-														e.preventDefault()
-														handlePageChange(paginated?.meta.totalPages!)
-													}}
-													isActive={queryParams.page === paginated?.meta.totalPages!}
-													className='pointer-events-auto cursor-pointer ring-0'
-												>
-													{paginated?.meta.totalPages!}
-												</PaginationLink>
-											</PaginationItem>
-										)}
-										{/* Next */}
-										<PaginationItem>
-											<PaginationNext
-												href='#'
-												onClick={(e) => {
-													e.preventDefault()
-													handlePageChange(queryParams.page! + 1)
-												}}
-												className={
-													queryParams.page! >= paginated?.meta.totalPages!
-														? 'pointer-events-none opacity-50'
-														: 'cursor-pointer'
-												}
-											/>
-										</PaginationItem>
-									</PaginationContent>
-								</Pagination>
-							</nav>
-						)}
+						{renderPagination()}
 					</main>
 				</>
 			) : (
 				<main className='container py-6'>
-					{/* {registeredTopic ? (
-						<RegisteredTopicCard
-							registeredTopic={registeredTopic}
-							phase={currentPeriod?.currentPhase}
-							onCancel={() => setIsCancelModalOpen(true)}
-							isCancelling={isCancelling}
-						/>
-					) : (
-						<NoRegistrationCard phase={currentPeriod?.currentPhase} />
-					)} */}
+					{/* Render registered or no registration state here if needed */}
 				</main>
 			)}
 
-			<TopicDetailPanel
-				topic={selectedTopic}
-				isOpen={isPanelOpen}
-				onClose={() => setIsPanelOpen(false)}
-				onRegister={handleConfirmRegister}
-				isRegistering={isRegistering}
-			/>
+			<TopicDetailPanel topic={selectedTopic} isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />
 
-			{/* <ConfirmModal
-				isOpen={isConfirmOpen}
-				topic={topicToRegister}
-				onConfirm={handleConfirmRegister}
-				onClose={() => setIsConfirmOpen(false)}
-				isLoading={isRegistering}
-			/>
-
-			<CancelConfirmModal
-				registeredTopic={registeredTopic}
-				isOpen={isCancelModalOpen}
-				onConfirm={handleCancelRegistration}
-				onClose={() => setIsCancelModalOpen(false)}
-				isLoading={isCancelling}
-			/> */}
+			{/* Add Cancel button in registered tab or modal if needed */}
 		</div>
 	)
 }
-
-// ---------------------------------------------------------------
-// MOCK FILTER (bạn thay bằng API thật)
-// ---------------------------------------------------------------

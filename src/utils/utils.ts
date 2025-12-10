@@ -100,5 +100,5 @@ const typeLabels = {
 } as const
 
 export const getPeriodTitle = (period: GetCustomMiniPeriodInfoRequestDto) =>
-	`Kì hiện tại: {period.year} • HK {period.semester} • {typeLabels[period.type]}`
+	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type]}`
 	

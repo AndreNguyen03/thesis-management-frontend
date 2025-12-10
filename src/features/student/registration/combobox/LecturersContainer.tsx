@@ -19,23 +19,23 @@ import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
 
 interface LecturerContainerProps {
 	// Danh sách các field ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
-	selectedLecturers: ResponseMiniLecturerDto[]
+	selectedLecturerIds: string[]
 	isEditing?: boolean
 	// Hàm callback để update ngược lại parent
-	onSelectionChange?: (newLecturers: ResponseMiniLecturerDto[]) => void
+	onSelectionChange?: (ids: string[]) => void
 }
 
-const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionChange }: LecturerContainerProps) => {
+const LecturersContainer = ({ selectedLecturerIds, isEditing = true, onSelectionChange }: LecturerContainerProps) => {
 	const [open, setOpen] = useState(false)
 
 	const handleOpenModal = (boolean: boolean) => {
 		setOpen(boolean)
-		debounceFieldOnChange('')
+		debounceLecturerOnChange('')
 	}
 	//sử dụng để cộng dồn các lựa chọn khi bấm loadmore
 	const [selectableOptions, setSelectableOptions] = useState<ResponseMiniLecturerDto[]>([])
 	// State cho query tìm kiếm server-side
-	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
+	const [lecturerQuery, setLecturerQuery] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
 		search_by: 'name',
@@ -45,61 +45,64 @@ const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionCh
 	})
 
 	// Debounce search
-	const setQueriesFieldSearch = (query: string) => {
-		setQueriesField((prev) => ({ ...prev, query, page: 1 })) // Reset về trang 1 khi search
+	const setLecturerQuerySearch = (query: string) => {
+		setLecturerQuery((prev) => ({ ...prev, query, page: 1 })) // Reset về trang 1 khi search
 	}
-	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
+	const debounceLecturerOnChange = useDebounce({ onChange: setLecturerQuerySearch, duration: 300 })
 
 	// Fetch data
 	const {
-		data: fieldPagingData,
+		data: lecturerPagingData,
 		isLoading,
 		isFetching
-	} = useGetAllLecturersComboboxQuery(queriesField, { skip: !isEditing || !open })
+	} = useGetAllLecturersComboboxQuery(lecturerQuery, { skip: !isEditing || !open })
 
 	// Logic chọn/bỏ chọn
 	const handleSelect = (lecturer: ResponseMiniLecturerDto) => {
-		const isSelected = selectedLecturers.some((f) => f._id === lecturer._id)
-		let newSelected: ResponseMiniLecturerDto[]
+		const isSelected = selectedLecturerIds.some((id) => id === lecturer._id)
+		let newSelected: string[]
 
 		if (isSelected) {
 			// Nếu đã chọn -> Bỏ chọn
-			newSelected = selectedLecturers.filter((f) => f._id !== lecturer._id)
+			newSelected = selectedLecturerIds.filter((id) => id !== lecturer._id)
 		} else {
-			newSelected = [...selectedLecturers, lecturer]
+			newSelected = [...selectedLecturerIds, lecturer._id]
 		}
 
 		// Gọi callback để parent update state
 		onSelectionChange?.(newSelected)
 	}
 
-	const handleRemove = (id: string) => {
-		const newSelected = selectedLecturers.filter((f) => f._id !== id)
+	const handleRemove = (lecturerId: string) => {
+		const newSelected = selectedLecturerIds.filter((id) => id !== lecturerId)
 		onSelectionChange?.(newSelected)
 	}
 
 	const handleLoadMore = () => {
-		if (fieldPagingData && fieldPagingData.meta.currentPage < fieldPagingData.meta.totalPages) {
-			setQueriesField((prev) => ({ ...prev, page: (prev.page || 1) + 1 }))
+		if (lecturerPagingData && lecturerPagingData.meta.currentPage < lecturerPagingData.meta.totalPages) {
+			setLecturerQuery((prev) => ({ ...prev, page: (prev.page || 1) + 1 }))
 		}
 	}
 	useEffect(() => {
-		if (fieldPagingData?.data) {
-			if (queriesField.page === 1) {
+		if (lecturerPagingData?.data) {
+			if (lecturerQuery.page === 1) {
 				// Trường hợp 1: Nếu là trang 1 (hoặc user mới search lại) -> Gán mới hoàn toàn
-				setSelectableOptions(fieldPagingData.data)
+				setSelectableOptions(lecturerPagingData.data)
 			} else {
 				// Trường hợp 2: Nếu là trang 2 trở đi (Load more) -> Cộng dồn vào mảng cũ
 				setSelectableOptions((prev) => {
 					// Mẹo: Lọc trùng lặp (nếu API trả về trùng) dựa trên _id
-					const newItems = fieldPagingData.data.filter(
+					const newItems = lecturerPagingData.data.filter(
 						(newItem) => !prev.some((prevItem) => prevItem._id === newItem._id)
 					)
 					return [...prev, ...newItems]
 				})
 			}
 		}
-	}, [fieldPagingData, queriesField.page])
+	}, [lecturerPagingData, lecturerQuery.page])
+
+	const selectedLecturers = selectableOptions.filter((lec) => selectedLecturerIds.includes(lec._id))
+
 	// CHẾ ĐỘ XEM (VIEW MODE)
 	if (!isEditing) {
 		return (
@@ -157,7 +160,7 @@ const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionCh
 				</PopoverTrigger>
 				<PopoverContent className='w-[400px] p-0'>
 					<Command shouldFilter={false}>
-						<CommandInput placeholder='Tìm kiếm giảng viên...' onValueChange={debounceFieldOnChange} />
+						<CommandInput placeholder='Tìm kiếm giảng viên...' onValueChange={debounceLecturerOnChange} />
 						<CommandList
 							className='h-fit max-h-60 overflow-y-auto'
 							style={{ overscrollBehavior: 'contain' }}
@@ -168,13 +171,13 @@ const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionCh
 								</div>
 							) : (
 								<>
-									{fieldPagingData?.data?.length === 0 && (
+									{lecturerPagingData?.data?.length === 0 && (
 										<CommandEmpty>Không tìm thấy giảng viên.</CommandEmpty>
 									)}
 
 									<CommandGroup heading='Danh sách giảng viên'>
-										{selectableOptions.map((lecturer) => {
-											const isSelected = selectedLecturers.some((l) => l._id === lecturer._id)
+										{selectableOptions.map((lecturer: ResponseMiniLecturerDto) => {
+											const isSelected = selectedLecturerIds.some((id) => id === lecturer._id)
 											return (
 												<CommandItem
 													key={lecturer._id}
@@ -194,8 +197,8 @@ const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionCh
 										})}
 									</CommandGroup>
 
-									{fieldPagingData &&
-										fieldPagingData.meta.currentPage < fieldPagingData.meta.totalPages && (
+									{lecturerPagingData &&
+										lecturerPagingData.meta.currentPage < lecturerPagingData.meta.totalPages && (
 											<>
 												<CommandSeparator />
 												<CommandGroup>

@@ -14,18 +14,18 @@ import type { GetFieldNameReponseDto } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useGetFieldsQuery } from '@/services/fieldApi'
 import { cn } from '@/lib/utils'
-import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
+import { Check, ChevronsUpDown, Loader2, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface FieldsContainerProps {
 	// Danh sách các field ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
-	selectedFields: GetFieldNameReponseDto[]
+	selectedFieldIds: string[]
 	isEditing?: boolean
 	// Hàm callback để update ngược lại parent
-	onSelectionChange?: (newFields: GetFieldNameReponseDto[]) => void
+	onSelectionChange?: (val: string[]) => void
 }
 
-const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }: FieldsContainerProps) => {
+const FieldsContainer = ({ selectedFieldIds, isEditing = true, onSelectionChange }: FieldsContainerProps) => {
 	const [open, setOpen] = useState(false)
 
 	const handleOpenModal = (boolean: boolean) => {
@@ -59,14 +59,14 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 
 	// Logic chọn/bỏ chọn
 	const handleSelect = (field: GetFieldNameReponseDto) => {
-		const isSelected = selectedFields.some((f) => f._id === field._id)
+		const isSelected = selectedFieldIds.some((id) => id === field._id)
 		let newSelected: GetFieldNameReponseDto[]
 
 		if (isSelected) {
-			newSelected = selectedFields.filter((f) => f._id !== field._id)
+			newSelected = selectedFieldIds.filter((id) => id !== field._id)
 		} else {
 			newSelected = [...selectedFields, field]
-		}
+		}                                                                                                                                                                                                                          
 		onSelectionChange?.(newSelected)
 	}
 

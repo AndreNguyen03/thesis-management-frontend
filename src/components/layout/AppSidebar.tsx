@@ -102,7 +102,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
 	const { currentPeriod, isLoading } = useAppSelector((state) => state.period)
-	const countdown = useCountdown(currentPeriod?.currentPhaseDetail.endTime!)
+	const countdown = useCountdown(currentPeriod?.currentPhaseDetail?.endTime)
 	function isActive(path: string) {
 		// Logic chính xác hơn cho active state của sub-item
 		if (path === '/' && currentPath === '/') return true
@@ -114,24 +114,6 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const handleMenuClick = (title: string) => {
 		setOpenMenus((prev) => (prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]))
 	}
-	// const handlePeriodInfo = (period_info: MenuItem[]) => {
-	// 	if (currentPeriod) {
-	// 		period_info[0].title = `Kì hiện tại: ${currentPeriod.name}`
-	// 		switch (userRole) {
-	// 			case 'faculty_board':
-	// 				period_info[0].url = `/period/${currentPeriod._id}`
-	// 				break
-	// 			case 'admin':
-	// 				period_info[0].url = `/period/${currentPeriod._id}`
-	// 				break
-	// 			case 'lecturer':
-	// 				period_info[0].url = `/period/${currentPeriod._id}`
-	// 				break
-	// 		}
-	// 		period_info[0].icon = BookOpen
-	// 	}
-	// 	return period_info
-	// }
 
 	const handlePeriodInfo = (periodInfo: MenuItem[]) => {
 		if (!currentPeriod) return periodInfo
@@ -141,9 +123,11 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 			scientific_research: 'Nghiên cứu khoa học'
 		} as const
 
-		const title = `Kì hiện tại: ${currentPeriod.year} • HK ${currentPeriod.semester} • ${
-			typeLabels[currentPeriod.type]
-		}`
+		// Fix undefined bằng cách dùng fallback
+		const year = currentPeriod.year ?? 'N/A'
+		const semester = currentPeriod.semester ?? 'N/A'
+
+		const title = `Kì hiện tại: ${year} • HK ${semester} • ${typeLabels[currentPeriod.type as keyof typeof typeLabels] ?? 'N/A'}`
 
 		return [
 			{
@@ -154,6 +138,38 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 			}
 		]
 	}
+
+	// Render riêng cho period info để control wrap tốt hơn (không dùng chung renderMenuItems)
+	const renderPeriodItem = (item: MenuItem) => {
+		if (item.children) return null // Không có children cho period
+
+		return (
+			<div className='w-full max-w-64'>
+				{' '}
+				{/* Giới hạn width max 256px để tránh stretch sidebar */}
+				<NavLink
+					key={item.title}
+					to={item.url}
+					end={item.url === '/'}
+					className={({ isActive }) =>
+						`flex w-full items-start gap-3 rounded-md px-3 py-2 text-[13px] transition-colors ${
+							isActive
+								? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
+								: 'hover:bg-gray-100'
+						}`
+					}
+				>
+					<item.icon className='mt-0.5 h-4 w-4 flex-shrink-0 flex-grow-0' />
+					{isOpen && (
+						<div className='line-clamp-3 min-w-0 flex-1 overflow-hidden hyphens-auto whitespace-normal break-words text-xs leading-tight'>
+							{item.title}
+						</div>
+					)}
+				</NavLink>
+			</div>
+		)
+	}
+
 	const renderMenuItems = (items: typeof menuItems.common) => {
 		return (
 			<div className='space-y-1'>
@@ -174,7 +190,11 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 								>
 									<div className='flex items-center gap-3'>
 										<item.icon className='h-4 w-4' />
-										{isOpen && <span>{item.title}</span>}
+										{isOpen && (
+											<span className='block w-full whitespace-normal break-words'>
+												{item.title}
+											</span>
+										)}
 									</div>
 									{isOpen && (
 										<ChevronDown
@@ -198,7 +218,9 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 												}
 											>
 												<sub.icon className='h-3 w-3' />
-												<span>{sub.title}</span>
+												<span className='block w-full whitespace-normal break-words'>
+													{sub.title}
+												</span>
 											</NavLink>
 										))}
 									</div>
@@ -213,15 +235,19 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 							to={item.url}
 							end={item.url === '/'}
 							className={({ isActive }) =>
-								`flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors ${
+								`flex w-full items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors ${
 									isActive
 										? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
 										: 'hover:bg-gray-100'
 								}`
 							}
 						>
-							<item.icon className='h-4 w-4' />
-							{isOpen && <span>{item.title}</span>}
+							<item.icon className='h-4 w-4 flex-shrink-0' />
+							{isOpen && (
+								<span className='line-clamp-2 min-w-0 flex-1 overflow-hidden whitespace-normal break-words text-sm leading-snug'>
+									{item.title}
+								</span>
+							)}
 						</NavLink>
 					)
 				})}
@@ -231,11 +257,12 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 
 	return (
 		<>
-			<div className='px-3 py-1'>
+			<div className={`px-3 py-1 ${isOpen ? 'w-56' : 'w-14'}`}>
+				{' '}
+				{/* Fixed width cho sidebar: 256px khi open, 56px khi collapsed */}
 				<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-4 w-fit'>
 					<ChevronLeft className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
 				</Button>
-
 				{/* Main Menu */}
 				<div className='mb-6 flex flex-col gap-1'>
 					{isOpen && <div className='mb-2 px-3 text-xs font-semibold text-gray-500'>Tổng quan</div>}
@@ -258,10 +285,9 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 									</div>
 								</div>
 							)}
-							{renderMenuItems(handlePeriodInfo(menuItems.period_info))}
+							{isOpen && renderPeriodItem(handlePeriodInfo(menuItems.period_info)[0])}
 						</div>
 					))}
-
 				{/* Role-specific Menu */}
 				<div className='mb-6'>
 					{isOpen && (
@@ -274,7 +300,6 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 					)}
 					{renderMenuItems(menuItems[userRole])}
 				</div>
-
 				{/* AI Chat */}
 				{/* <div className='mb-6'>
 						<NavLink
@@ -289,7 +314,6 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 							{isOpen && <span>Hỏi AI Assistant</span>}
 						</NavLink>
 					</div> */}
-
 				{/* Footer Menu */}
 				<div className='mt-auto'>{renderMenuItems(menuItems.footer)}</div>
 			</div>

@@ -4,14 +4,13 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/Button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
-import { type GetFieldNameReponseDto, type PaginationTopicsQueryParams, type ResponseMiniLecturerDto } from '@/models'
+import { TopicStatus, type GetFieldNameReponseDto, type PaginationTopicsQueryParams, type ResponseMiniLecturerDto } from '@/models'
 import LecturersContainer from '../combobox/LecturersContainer'
 import FieldsContainer from '../combobox/FieldsContainer'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
+import type { FilterState } from '../types'
 
 interface FilterBarProps {
-	selectedFields: GetFieldNameReponseDto[]
-	selectedLecturers: ResponseMiniLecturerDto[]
-	onQuery(val: string): void
 	onSelectionChangeFields(val: GetFieldNameReponseDto[]): void
 	onSelectionChangeLecturers(val: ResponseMiniLecturerDto[]): void
 	queryParams: PaginationTopicsQueryParams
@@ -19,12 +18,8 @@ interface FilterBarProps {
 }
 
 export function FilterBar({
-	selectedFields,
-	selectedLecturers,
 	queryParams,
 	onSetQueryParams,
-	onSelectionChangeLecturers,
-	onSelectionChangeFields
 }: FilterBarProps) {
 	const [searchValue, setSearchValue] = useState(queryParams.query)
 	const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
@@ -58,7 +53,10 @@ export function FilterBar({
 		<div className='flex flex-wrap gap-2'>
 			{/* Filter theo giảng viên */}
 			{/* Hamf thay doi */}
-			<LecturersContainer selectedLecturers={selectedLecturers} onSelectionChange={onSelectionChangeLecturers} />
+			<LecturersContainer selectedLecturerIds={queryParams.lecturerIds ?? []} onSelectionChange={(newIds) => onSetQueryParams({
+                ...queryParams,
+                lecturerIds: newIds
+            })} />
 			{/* <Select
 				value={queryParams.lecturerIds}
 				onValueChange={(value) =>
@@ -80,7 +78,10 @@ export function FilterBar({
 
 			{/* Filter theo lĩnh vực */}
 
-			<FieldsContainer selectedFields={selectedFields} onSelectionChange={onSelectionChangeFields} />
+			<FieldsContainer selectedFieldIds={queryParams.fieldIds ?? []} onSelectionChange={(newIds) => onSetQueryParams({
+                ...queryParams,
+                fieldIds: newIds
+            })} />
 			{/* <Select
 				value={filters.field}
 				onValueChange={(value) => onFiltersChange({ ...filters, field: value === 'all' ? '' : value })}
@@ -100,8 +101,8 @@ export function FilterBar({
 
 			{/* Filter theo trạng thái */}
 			{/* Hamf thay doi */}
-
-			{/* <Select
+{/* 
+			<Select
 				value={queryParams.queryStatus[0]}
 				onValueChange={(value) => onFiltersChange({ ...filters, status: value as FilterState['status'] })}
 			>
