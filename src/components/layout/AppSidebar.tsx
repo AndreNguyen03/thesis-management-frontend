@@ -43,7 +43,8 @@ const menuItems: Record<Role | 'common' | 'footer' | 'period_info', MenuItem[]> 
 			title: 'Dashboard',
 			url: '/',
 			icon: LayoutDashboard
-		}
+		},
+		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users }
 	],
 	period_info: [
 		{
@@ -102,7 +103,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
 	const { currentPeriod, isLoading } = useAppSelector((state) => state.period)
-	const countdown = useCountdown(currentPeriod?.currentPhaseDetail.endTime!)
+	const countdown = useCountdown(currentPeriod?.currentPhaseDetail!.endTime)
 	function isActive(path: string) {
 		// Logic chính xác hơn cho active state của sub-item
 		if (path === '/' && currentPath === '/') return true

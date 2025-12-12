@@ -1,6 +1,6 @@
 export default {
 	darkMode: ['class'],
-	content: ['./index.html', './src/**/*.{ts,tsx,css}'],
+	content: ['./pages/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
 	prefix: '',
 	theme: {
 		container: {
@@ -19,13 +19,11 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))',
-					hover: 'hsl(var(--primary-hover))'
+					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))',
-					hover: 'hsl(var(--secondary-hover))'
+					foreground: 'hsl(var(--secondary-foreground))'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -47,6 +45,18 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					foreground: 'hsl(var(--info-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -57,70 +67,50 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				chart: {
-					1: 'hsl(var(--chart-1))',
-					2: 'hsl(var(--chart-2))',
-					3: 'hsl(var(--chart-3))',
-					4: 'hsl(var(--chart-4))',
-					5: 'hsl(var(--chart-5))'
+				chat: {
+					DEFAULT: 'hsl(var(--chat-background))',
+					foreground: 'hsl(var(--chat-foreground))',
+					'bubble-user': 'hsl(var(--chat-bubble-user))',
+					'bubble-user-foreground': 'hsl(var(--chat-bubble-user-foreground))',
+					'bubble-other': 'hsl(var(--chat-bubble-other))',
+					'bubble-other-foreground': 'hsl(var(--chat-bubble-other-foreground))'
 				},
-				success: {
-					DEFAULT: '#22c55e', // xanh lá chuẩn
-					50: '#ecfdf5',
-					100: '#d1fae5',
-					200: '#a7f3d0',
-					300: '#6ee7b7',
-					400: '#34d399',
-					500: '#22c55e', // dùng làm bg-success/80
-					600: '#16a34a',
-					700: '#15803d',
-					800: '#166534',
-					900: '#14532d'
+				work: {
+					DEFAULT: 'hsl(var(--work-background))',
+					foreground: 'hsl(var(--work-foreground))',
+					header: 'hsl(var(--work-header))'
 				}
-			},
-			backgroundImage: {
-				'gradient-primary': 'var(--gradient-primary)',
-				'gradient-accent': 'var(--gradient-accent)',
-				'gradient-background': 'var(--gradient-background)'
-			},
-			boxShadow: {
-				sm: 'var(--shadow-sm)',
-				md: 'var(--shadow-md)',
-				lg: 'var(--shadow-lg)',
-				xl: 'var(--shadow-xl)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
-			transitionDuration: {
-				fast: 'var(--transition-fast)',
-				smooth: 'var(--transition-smooth)'
-			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+				'slide-in-right': {
+					from: { transform: 'translateX(100%)', opacity: '0' },
+					to: { transform: 'translateX(0)', opacity: '1' }
+				},
+				'fade-in': {
+					from: { opacity: '0' },
+					to: { opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'slide-in-right': 'slide-in-right 0.3s ease-out',
+				'fade-in': 'fade-in 0.2s ease-out'
 			}
 		}
 	},
-	plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')]
+	plugins: [require('tailwindcss-animate')]
 }
