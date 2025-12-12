@@ -24,6 +24,7 @@ import RegistrationHistory from '@/features/student/TopicList/registered/childre
 import TopicRegistration from '@/features/student/registration/index'
 import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_topic/ManageSubmittedTopics'
+import { GroupWorkspacePage } from '@/features/shared/workspace'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -101,6 +102,7 @@ export const router = createBrowserRouter([
 			{ path: 'period/:id', element: <DetailPeriodPage /> },
 			{ path: 'manage-faculty-student', element: <ManageFacultyStudentPage /> },
 			{ path: 'manage-faculty-lecturer', element: <ManageFacultyLecturerPage /> },
+			{ path: 'group-workspace', element: <GroupWorkspacePage /> },
 			//   { path: 'manage-thesis', element: <ManageThesis /> },
 			//   { path: 'approve-registrations', element: <ApproveRegistrations /> },
 			//   { path: 'plagiarism-check', element: <PlagiarismCheck /> },
