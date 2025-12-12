@@ -24,6 +24,7 @@ import RegistrationHistory from '@/features/student/TopicList/registered/childre
 import TopicRegistration from '@/features/student/registration/index'
 import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_topic/ManageSubmittedTopics'
+import { LibraryPage } from '@/features/page/LibraryPage'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -84,7 +85,7 @@ export const router = createBrowserRouter([
 				element: <LecturerManageTopics />,
 				children: [
 					{ index: true, element: <ManageTopicDraft /> },
-					{ path: 'draft', element: <ManageTopicDraft />},
+					{ path: 'draft', element: <ManageTopicDraft /> },
 					{ path: 'submitted', element: <ManageSubmittedTopics /> }
 				]
 			},
@@ -106,7 +107,7 @@ export const router = createBrowserRouter([
 			//   { path: 'plagiarism-check', element: <PlagiarismCheck /> },
 			//   { path: 'my-groups', element: <MyGroups /> },
 			//   { path: 'group-workspace/:id', element: <GroupWorkspace /> },
-			//   { path: 'library', element: <LibraryPage /> },
+			{ path: 'library', element: <LibraryPage /> },
 			//   { path: 'ai-chat', element: <AIChatPage /> },
 			{
 				path: 'settings',

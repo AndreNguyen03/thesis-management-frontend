@@ -43,7 +43,13 @@ export const notificationApi = baseApi.injectEndpoints({
 					// 4. Bắt đầu lắng nghe
 					socket.on('notification:new', listener)
 					socket.on('notification:marked-read', markNoti)
-
+					socket.on('notification:mark-read-all', () => {
+						updateCachedData((draft) => {
+							draft.data.forEach((n) => {
+								n.isRead = true
+							})
+						})
+					})
 					// 5. Dọn dẹp: Khi user chuyển trang khác, tắt lắng nghe để tránh memory leak
 					await cacheEntryRemoved
 					socket.off('notification:new', listener)
