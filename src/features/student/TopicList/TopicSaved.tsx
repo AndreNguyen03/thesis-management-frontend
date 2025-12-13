@@ -1,26 +1,24 @@
 import { Input } from '@/components/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui'
 import { Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useGetSavedTopicsQuery } from '../../../services/topicApi'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import type { Topic } from '@/models'
 import { TopicCard } from './TopicCard'
 import { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useGetFieldsQuery } from '@/services/fieldApi'
 import { CustomPagination } from '@/components/PaginationBar'
 
-
 export const SavedTopics = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'titleVN,titleEng',
+		search_by: ['titleVN', 'titleEng'],
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
-		filter: 'all',
+		filter: undefined,
 		filter_by: 'fieldIds'
 	})
 	//lấy đề tài đã lưu
@@ -34,7 +32,7 @@ export const SavedTopics = () => {
 	})
 
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Danh sách đề tài' }, { label: 'Đề tài đã lưu' }])
-	
+
 	// search input handler
 	const [searchTerm, setSearchTerm] = useState('')
 	const setQuery = (query: string) => {
@@ -51,7 +49,7 @@ export const SavedTopics = () => {
 		if (fieldId === 'none') {
 			setQueries((prev) => ({ ...prev, filter: undefined }))
 		} else {
-			setQueries((prev) => ({ ...prev, filter: fieldId }))
+			setQueries((prev) => ({ ...prev, filter: [fieldId] }))
 		}
 	}
 	return (
@@ -72,7 +70,7 @@ export const SavedTopics = () => {
 							onChange={(e) => onEdit(e.target.value)}
 						/>
 					</div>
-					<Select value={queries.filter} onValueChange={setFieldString}>
+					<Select value={queries.filter ? queries.filter[0] : 'all'} onValueChange={setFieldString}>
 						<SelectTrigger className='w-full sm:w-[200px]'>
 							<SelectValue />
 						</SelectTrigger>
@@ -102,8 +100,10 @@ export const SavedTopics = () => {
 			{/* Results */}
 			<div className='space-y-4'>
 				<div className='flex items-center justify-between'>
-					{queries.query === '' && queries.filter === 'all' ? (
-						<p className='text-md font-bold text-muted-foreground'>Bạn đã lưu {savedTopicsData?.data.length} đề tài</p>
+					{queries.query === '' && (queries.filter === undefined || queries.filter[0] === 'all') ? (
+						<p className='text-md font-bold text-muted-foreground'>
+							Bạn đã lưu {savedTopicsData?.data.length} đề tài
+						</p>
 					) : (
 						<p className='text-md font-bold text-muted-foreground'>
 							Tìm thấy {savedTopicsData?.data.length} đề tài có liên quan

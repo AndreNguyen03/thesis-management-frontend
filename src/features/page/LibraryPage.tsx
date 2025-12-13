@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import {
 	Search,
 	Filter,
@@ -6,19 +6,11 @@ import {
 	Download,
 	Eye,
 	BookOpen,
-	Calendar,
 	User,
-	Layers,
-	Globe,
-	GraduationCap,
 	FileText,
 	Github,
 	Database,
-	X,
-	ChevronRight,
-	ArrowUpRight,
-	LayoutGrid,
-	List
+	ArrowUpRight
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
@@ -34,10 +26,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePageBreadcrumb } from '@/hooks'
 import { useAdvanceSearchTopicsInLibraryQuery } from '@/services/topicVectorApi'
 import type { RequestGetTopicsInAdvanceSearch } from '@/models/topicVector.model'
-import { set } from 'zod'
-import { preview } from 'vite'
 import { useDebounce } from '@/hooks/useDebounce'
 import type { GeneralTopic, TopicInLibrary } from '@/models'
+import { stripHtml } from '@/utils/lower-case-html'
+import { useGetMajorComboboxQuery, useGetYearComboboxQuery } from '@/services/topicApi'
 
 // --- TYPES ---
 interface DocumentLinks {
@@ -111,34 +103,63 @@ const MAJORS = ['Tất cả', 'Kỹ thuật Phần mềm', 'Trí tuệ Nhân t�
 const YEARS = ['Tất cả', '2024', '2023', '2022', '2021']
 
 // --- HELPER: Color Generator ---
-const getMajorColor = (idx: number) => {
-	switch (idx) {
-		case 1:
+// Hash function to convert majorId to consistent color index
+const hashMajorId = (majorId: string): number => {
+	let hash = 0
+	for (let i = 0; i < majorId.length; i++) {
+		hash = majorId.charCodeAt(i) + ((hash << 5) - hash)
+	}
+	return Math.abs(hash) % 10 // 10 colors
+}
+
+const getMajorColor = (majorId: string) => {
+	const colorIndex = hashMajorId(majorId)
+	switch (colorIndex) {
+		case 0:
 			return 'bg-blue-50 text-blue-700 border-blue-200'
-		case 2:
+		case 1:
 			return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-		case 3:
+		case 2:
 			return 'bg-orange-50 text-orange-700 border-orange-200'
+		case 3:
+			return 'bg-purple-50 text-purple-700 border-purple-200'
+		case 4:
+			return 'bg-pink-50 text-pink-700 border-pink-200'
+		case 5:
+			return 'bg-indigo-50 text-indigo-700 border-indigo-200'
+		case 6:
+			return 'bg-teal-50 text-teal-700 border-teal-200'
+		case 7:
+			return 'bg-cyan-50 text-cyan-700 border-cyan-200'
+		case 8:
+			return 'bg-amber-50 text-amber-700 border-amber-200'
+		case 9:
+			return 'bg-rose-50 text-rose-700 border-rose-200'
 		default:
 			return 'bg-slate-50 text-slate-700 border-slate-200'
 	}
 }
-const getStripColor = (idx: number) => {
-	if (idx === 1) {
-		return 'bg-blue-500'
+
+const getStripColor = (indx: number) => {
+	switch (indx) {
+		case 0:
+			return 'bg-blue-500'
+		default:
+			return 'bg-green-500'
 	}
-	return 'bg-emerald-500'
 }
 // --- COMPONENT: LIBRARY CARD ---
 const LibraryCard = ({ thesis, index }: { thesis: TopicInLibrary; index: number }) => {
 	return (
 		<Card className='group flex h-full flex-col border-slate-200 p-0 transition-all duration-300 hover:shadow-lg'>
 			{/* Header Strip */}
-			<div className={`h-2 w-full rounded-t-xl ${getStripColor(Math.floor(index / 2))}`} />
+			<div
+				className={`h-2 w-full rounded-t-xl ${index <= 4 ? getStripColor(index) : getStripColor(Math.floor(index / 2))}`}
+			/>
 
 			<CardHeader className='pb-3 pt-5'>
 				<div className='mb-2 flex items-start justify-between'>
-					<Badge variant='outline' className={`${getMajorColor(Math.floor(index / 4))} font-medium`}>
+					<Badge variant='outline' className={`${getMajorColor(thesis.major._id)} font-medium`}>
 						{thesis.major.name}
 					</Badge>
 					<span className='rounded bg-slate-50 px-2 py-1 font-mono text-xs text-slate-400'>
@@ -157,7 +178,7 @@ const LibraryCard = ({ thesis, index }: { thesis: TopicInLibrary; index: number 
 
 			<CardContent className='flex-1 space-y-4'>
 				{/* Abstract snippet */}
-				<p className='line-clamp-3 text-sm leading-relaxed text-slate-600'>{thesis.description}</p>
+				<p className='line-clamp-3 text-sm leading-relaxed text-slate-600'>{stripHtml(thesis.description)}</p>
 
 				{/* Tags */}
 				<div className='flex flex-wrap gap-1.5'>
@@ -175,10 +196,10 @@ const LibraryCard = ({ thesis, index }: { thesis: TopicInLibrary; index: number 
 				{/* Authors */}
 				<div className='flex items-center gap-3 border-t border-slate-50 pt-2'>
 					<div className='flex -space-x-2'>
-						{thesis.students.approvedStudents.map((st, idx) => (
+						{thesis.studentsRegistered.map((st, idx) => (
 							<Avatar key={idx} className='h-6 w-6 border-2 border-white ring-1 ring-slate-100'>
 								<AvatarFallback className='bg-slate-200 text-[9px] text-slate-600'>
-									{st.student.fullName.charAt(0)}
+									{st.fullName.charAt(0)}
 								</AvatarFallback>
 							</Avatar>
 						))}
@@ -216,7 +237,7 @@ const LibraryCard = ({ thesis, index }: { thesis: TopicInLibrary; index: number 
 							Chi tiết <ArrowUpRight className='ml-1 h-3.5 w-3.5' />
 						</Button>
 					</DialogTrigger>
-					<DetailDialogContent thesis={thesis} />
+					{/* <DetailDialogContent thesis={thesis} /> */}
 				</Dialog>
 			</CardFooter>
 		</Card>
@@ -224,122 +245,122 @@ const LibraryCard = ({ thesis, index }: { thesis: TopicInLibrary; index: number 
 }
 
 // --- COMPONENT: DETAIL DIALOG CONTENT ---
-const DetailDialogContent = ({ thesis }: { thesis: TopicInLibrary }) => {
-	return (
-		<DialogContent className='flex max-h-[90vh] max-w-4xl flex-col gap-0 overflow-hidden p-0'>
-			<div className='grid h-full grid-cols-12'>
-				Left Column: Info
-				<div className='col-span-12 h-full max-h-[90vh] overflow-y-auto bg-white p-6 md:col-span-8 md:p-8'>
-					<div className='mb-6'>
-						<Badge variant='outline' className='mb-3'>
-							{thesis.major.name} • {thesis.year}
-						</Badge>
-						<h2 className='mb-2 text-2xl font-bold text-slate-900'>{thesis.titleVN}</h2>
-						<h3 className='text-lg font-medium italic text-slate-500'>{thesis.titleEng}</h3>
-					</div>
+// const DetailDialogContent = ({ thesis }: { thesis: TopicInLibrary }) => {
+// 	return (
+// 		<DialogContent className='flex max-h-[90vh] max-w-4xl flex-col gap-0 overflow-hidden p-0'>
+// 			<div className='grid h-full grid-cols-12'>
+// 				Left Column: Info
+// 				<div className='col-span-12 h-full max-h-[90vh] overflow-y-auto bg-white p-6 md:col-span-8 md:p-8'>
+// 					<div className='mb-6'>
+// 						<Badge variant='outline' className='mb-3'>
+// 							{thesis.major.name} • {thesis.year}
+// 						</Badge>
+// 						<h2 className='mb-2 text-2xl font-bold text-slate-900'>{thesis.titleVN}</h2>
+// 						<h3 className='text-lg font-medium italic text-slate-500'>{thesis.titleEng}</h3>
+// 					</div>
 
-					<Tabs defaultValue='abstract' className='w-full'>
-						<TabsList className='mb-4'>
-							<TabsTrigger value='abstract'>Tóm tắt</TabsTrigger>
-							<TabsTrigger value='reviews'>Đánh giá ('thesis.stats.reviews')</TabsTrigger>
-						</TabsList>
+// 					<Tabs defaultValue='abstract' className='w-full'>
+// 						<TabsList className='mb-4'>
+// 							<TabsTrigger value='abstract'>Tóm tắt</TabsTrigger>
+// 							<TabsTrigger value='reviews'>Đánh giá ('thesis.stats.reviews')</TabsTrigger>
+// 						</TabsList>
 
-						<TabsContent value='abstract' className='space-y-6'>
-							<div className='prose prose-sm max-w-none text-slate-600'>
-								<p>{thesis.description}</p>
-								<p>
-									Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-									incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-									exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-								</p>
-							</div>
+// 						<TabsContent value='abstract' className='space-y-6'>
+// 							<div className='prose prose-sm max-w-none text-slate-600'>
+// 								<p>{thesis.description}</p>
+// 								<p>
+// 									Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+// 									incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+// 									exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+// 								</p>
+// 							</div>
 
-							<div className='rounded-lg border border-slate-100 bg-slate-50 p-4'>
-								<h4 className='mb-3 flex items-center gap-2 text-sm font-semibold'>
-									<User className='h-4 w-4' /> Thông tin tác giả
-								</h4>
-								<div className='grid grid-cols-2 gap-4 text-sm'>
-									<div>
-										<p className='mb-1 text-slate-500'>Sinh viên thực hiện:</p>
-										<ul className='list-inside list-disc font-medium text-slate-800'>
-											{thesis.students.approvedStudents.map((s) => (
-												<li key={s.student._id}>{s.student.fullName}</li>
-											))}
-										</ul>
-									</div>
-									<div>
-										<p className='mb-1 text-slate-500'>Giảng viên hướng dẫn:</p>
-										<p className='font-medium text-slate-800'>
-											{thesis.lecturers.map((l) => l.fullName).join(', ')}
-										</p>
-									</div>
-								</div>
-							</div>
-						</TabsContent>
+// 							<div className='rounded-lg border border-slate-100 bg-slate-50 p-4'>
+// 								<h4 className='mb-3 flex items-center gap-2 text-sm font-semibold'>
+// 									<User className='h-4 w-4' /> Thông tin tác giả
+// 								</h4>
+// 								<div className='grid grid-cols-2 gap-4 text-sm'>
+// 									<div>
+// 										<p className='mb-1 text-slate-500'>Sinh viên thực hiện:</p>
+// 										<ul className='list-inside list-disc font-medium text-slate-800'>
+// 											{thesis.students.approvedStudents.map((s) => (
+// 												<li key={s.student._id}>{s.student.fullName}</li>
+// 											))}
+// 										</ul>
+// 									</div>
+// 									<div>
+// 										<p className='mb-1 text-slate-500'>Giảng viên hướng dẫn:</p>
+// 										<p className='font-medium text-slate-800'>
+// 											{thesis.lecturers.map((l) => l.fullName).join(', ')}
+// 										</p>
+// 									</div>
+// 								</div>
+// 							</div>
+// 						</TabsContent>
 
-						<TabsContent value='reviews'>
-							<div className='py-10 text-center text-slate-500'>Chưa có đánh giá nào cho đề tài này.</div>
-						</TabsContent>
-					</Tabs>
-				</div>
-				{/* Right Column: Meta & Actions */}
-				<div className='col-span-12 flex h-full max-h-[90vh] flex-col gap-6 overflow-y-auto border-l border-slate-200 bg-slate-50/80 p-6 md:col-span-4'>
-					{/* Actions Box */}
-					<div className='space-y-3'>
-						<h4 className='flex items-center gap-2 font-bold text-slate-900'>
-							<Download className='h-4 w-4' /> Tài liệu
-						</h4>
-						<Button className='w-full justify-start' variant='default'>
-							<FileText className='mr-2 h-4 w-4' /> Báo cáo toàn văn (.pdf)
-						</Button>
-						{thesis.finalProduct.sourceCodeUrl && (
-							<Button className='w-full justify-start' variant='outline'>
-								<Github className='mr-2 h-4 w-4' /> Source Code (Git)
-							</Button>
-						)}
-						{thesis.finalProduct.thesisReport && (
-							<Button className='w-full justify-start' variant='outline'>
-								<Database className='mr-2 h-4 w-4' /> Dataset
-							</Button>
-						)}
-					</div>
+// 						<TabsContent value='reviews'>
+// 							<div className='py-10 text-center text-slate-500'>Chưa có đánh giá nào cho đề tài này.</div>
+// 						</TabsContent>
+// 					</Tabs>
+// 				</div>
+// 				{/* Right Column: Meta & Actions */}
+// 				<div className='col-span-12 flex h-full max-h-[90vh] flex-col gap-6 overflow-y-auto border-l border-slate-200 bg-slate-50/80 p-6 md:col-span-4'>
+// 					{/* Actions Box */}
+// 					<div className='space-y-3'>
+// 						<h4 className='flex items-center gap-2 font-bold text-slate-900'>
+// 							<Download className='h-4 w-4' /> Tài liệu
+// 						</h4>
+// 						<Button className='w-full justify-start' variant='default'>
+// 							<FileText className='mr-2 h-4 w-4' /> Báo cáo toàn văn (.pdf)
+// 						</Button>
+// 						{thesis.finalProduct.sourceCodeUrl && (
+// 							<Button className='w-full justify-start' variant='outline'>
+// 								<Github className='mr-2 h-4 w-4' /> Source Code (Git)
+// 							</Button>
+// 						)}
+// 						{thesis.finalProduct.thesisReport && (
+// 							<Button className='w-full justify-start' variant='outline'>
+// 								<Database className='mr-2 h-4 w-4' /> Dataset
+// 							</Button>
+// 						)}
+// 					</div>
 
-					<Separator />
+// 					<Separator />
 
-					{/* Metadata Box */}
-					<div className='space-y-4 text-sm'>
-						<h4 className='font-bold text-slate-900'>Thông tin chi tiết</h4>
+// 					{/* Metadata Box */}
+// 					<div className='space-y-4 text-sm'>
+// 						<h4 className='font-bold text-slate-900'>Thông tin chi tiết</h4>
 
-						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
-							<span className='text-slate-500'>Mã đề tài</span>
-							<span className='font-mono font-medium'>{thesis._id.toUpperCase()}</span>
-						</div>
-						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
-							<span className='text-slate-500'>Lượt xem</span>
-							<span className='font-medium'>{thesis.stats.views}</span>
-						</div>
-						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
-							<span className='text-slate-500'>Tải xuống</span>
-							<span className='font-medium'>{thesis.stats.downloads}</span>
-						</div>
-						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
-							<span className='text-slate-500'>Đánh giá</span>
-							<div className='flex items-center gap-1 font-medium text-amber-600'>
-								{thesis.stats.averageRating} <Star className='h-3 w-3 fill-current' />
-							</div>
-						</div>
-					</div>
+// 						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
+// 							<span className='text-slate-500'>Mã đề tài</span>
+// 							<span className='font-mono font-medium'>{thesis._id.toUpperCase()}</span>
+// 						</div>
+// 						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
+// 							<span className='text-slate-500'>Lượt xem</span>
+// 							<span className='font-medium'>{thesis.stats.views}</span>
+// 						</div>
+// 						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
+// 							<span className='text-slate-500'>Tải xuống</span>
+// 							<span className='font-medium'>{thesis.stats.downloads}</span>
+// 						</div>
+// 						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
+// 							<span className='text-slate-500'>Đánh giá</span>
+// 							<div className='flex items-center gap-1 font-medium text-amber-600'>
+// 								{thesis.stats.averageRating} <Star className='h-3 w-3 fill-current' />
+// 							</div>
+// 						</div>
+// 					</div>
 
-					<div className='mt-auto'>
-						<p className='text-center text-xs text-slate-400'>
-							Tài liệu được lưu trữ & bảo vệ bản quyền bởi Khoa CNTT.
-						</p>
-					</div>
-				</div>
-			</div>
-		</DialogContent>
-	)
-}
+// 					<div className='mt-auto'>
+// 						<p className='text-center text-xs text-slate-400'>
+// 							Tài liệu được lưu trữ & bảo vệ bản quyền bởi Khoa CNTT.
+// 						</p>
+// 					</div>
+// 				</div>
+// 			</div>
+// 		</DialogContent>
+// 	)
+// }
 
 // --- MAIN PAGE ---
 export const LibraryPage = () => {
@@ -347,9 +368,10 @@ export const LibraryPage = () => {
 		limit: 20,
 		page: 1,
 		query: '',
-		search_by: ['titleVN', 'titleEng'],
+		rulesPagination: 99,
+		search_by: ['titleVN', 'titleEng', 'description'],
 		majorIds: [],
-		year: -1
+		year: 'Tất cả'
 	})
 	const { data: topicsInLibrary, isLoading, error } = useAdvanceSearchTopicsInLibraryQuery({ queries: queries })
 
@@ -368,9 +390,22 @@ export const LibraryPage = () => {
 	const handleYear = (year: string) => {
 		setQueries((prev) => ({
 			...prev,
-			year: year === 'Tất cả' ? -1 : Number(year)
+			year: year
 		}))
 	}
+
+	const handleSelectSort = (sortBy: string) => {
+		setQueries((prev) => ({
+			...prev,
+			sort_by: sortBy === 'rel' ? undefined : sortBy === 'new' ? 'defenseDate' : 'averageRating',
+			sort_order: sortBy === 'rel' ? undefined : sortBy === 'new' ? 'desc' : 'desc'
+		}))
+	}
+	//Lấy metaData
+	//Ngành
+	const { data: majorOptions, isLoading: isLoadingMajors } = useGetMajorComboboxQuery()
+	//Năm bảo vệ
+	const { data: yearOptions, isLoading: isLoadingYears } = useGetYearComboboxQuery()
 	const searchDebounce = useDebounce({ onChange: handleSearch, duration: 300 })
 
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Thư viện số' }])
@@ -439,14 +474,15 @@ export const LibraryPage = () => {
 							<div className='space-y-3'>
 								<label className='text-sm font-semibold text-slate-700'>Năm bảo vệ</label>
 								<Select
-									value={queries.year?.toString() ?? 'Tất cả'}
+									value={queries.year === undefined ? 'Tất cả' : queries.year}
 									onValueChange={(value) => handleYear(value)}
 								>
 									<SelectTrigger className='w-full bg-slate-50'>
 										<SelectValue placeholder='Chọn năm' />
 									</SelectTrigger>
 									<SelectContent>
-										{YEARS.map((y) => (
+										<SelectItem value='Tất cả'>Tất cả</SelectItem>
+										{yearOptions?.map((y) => (
 											<SelectItem key={y} value={y}>
 												{y}
 											</SelectItem>
@@ -461,28 +497,34 @@ export const LibraryPage = () => {
 							<div className='space-y-3'>
 								<label className='text-sm font-semibold text-slate-700'>Chuyên ngành</label>
 								<div className='space-y-2'>
-									{MAJORS.slice(1).map((major) => (
-										<div key={major} className='flex items-center space-x-2'>
-											<Checkbox
-												id={major}
-												checked={queries.majorIds?.includes(major) ?? false}
-												onCheckedChange={(c) => {
-													if (c) {
-														//truyền majorId
-														selectMajor(major)
-													} else {
-														selectMajor('Tất cả')
-													}
-												}}
-											/>
-											<label
-												htmlFor={major}
-												className='cursor-pointer text-sm font-medium leading-none text-slate-600 peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+									{majorOptions &&
+										majorOptions.map((major) => (
+											<div
+												key={major._id}
+												className='flex items-center space-x-2'
+												title={major.facultyName}
 											>
-												{major}
-											</label>
-										</div>
-									))}
+												<Checkbox
+													id={major._id}
+													checked={queries.majorIds?.includes(major._id) ?? false}
+													onCheckedChange={(c) => {
+														if (c) {
+															//truyền majorId
+															selectMajor(major._id)
+														} else {
+															selectMajor('Tất cả')
+														}
+													}}
+												/>
+												<label
+													htmlFor={major.name}
+													className='cursor-pointer text-sm font-medium leading-none text-slate-600 peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+												>
+													{major.name}
+												</label>
+												<span className='text-xs text-slate-500'>({major.count})</span>
+											</div>
+										))}
 								</div>
 							</div>
 
@@ -514,7 +556,7 @@ export const LibraryPage = () => {
 							</h2>
 							<div className='flex items-center gap-2'>
 								<span className='text-sm text-slate-500'>Sắp xếp theo:</span>
-								<Select defaultValue='rel'>
+								<Select defaultValue='rel' onValueChange={handleSelectSort}>
 									<SelectTrigger className='h-9 w-[140px]'>
 										<SelectValue />
 									</SelectTrigger>

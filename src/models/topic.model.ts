@@ -4,10 +4,10 @@ import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod } from './period.model'
-import type { RelatedStudentInTopic } from './registration.model'
+import type { RegistrationDto, RelatedStudentInTopic } from './registration.model'
 import { PaginationQueryParamsDto, type SortOrder } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto } from './users'
+import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -88,26 +88,7 @@ export interface GeneralTopic extends AbstractTopic {
 	year: number
 	// file
 }
-//#Đề tài trong thư viện số
-//Đánh giá bên trong đề tài được lưu trữ trong thư viện số
-interface TopicStatsDto {
-	views: number // Số lượt xem
-	downloads: number // Số lượt tải
-	averageRating: number // Điểm đánh giá trung bình (4.5)
-	reviewCount: number // Tổng số đánh giá (12)
-}
-interface FileSnapshotDto {
-	fileId: string // Reference gốc để quản lý xóa/sửa
-	fileName: string // VD: "Bao_cao_final_v2.pdf"
-	fileUrl: string // URL từ S3/MinIO/Local để download trực tiếp
-	size: number
-}
 
-interface FinalProduct {
-	thesisReport: FileSnapshotDto
-	sourceCodeUrl?: string
-	sourceCodeZip?: FileSnapshotDto[]
-}
 //Định nghĩa đề tài trong thư viện số
 export interface TopicInLibrary extends AbstractTopic {
 	createByInfo: MiniActorInforDto
@@ -115,6 +96,8 @@ export interface TopicInLibrary extends AbstractTopic {
 	stats: TopicStatsDto
 	year: number
 	finalProduct: FinalProduct
+	studentsRegistered: ResponseMiniStudentDto[]
+	defenseResult: DefenseResult
 }
 export interface PaginatedTopicsInLibrary extends GetPaginatedObject {
 	data: TopicInLibrary[]
@@ -351,4 +334,40 @@ export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 	lecturerIds?: string[]
 	fieldIds?: string[]
 	queryStatus?: string[]
+}
+
+//#Đề tài trong thư viện số
+//Đánh giá bên trong đề tài được lưu trữ trong thư viện số
+interface TopicStatsDto {
+	views: number // Số lượt xem
+	downloads: number // Số lượt tải
+	averageRating: number // Điểm đánh giá trung bình (4.5)
+	reviewCount: number // Tổng số đánh giá (12)
+}
+interface FileSnapshotDto {
+	fileId: string // Reference gốc để quản lý xóa/sửa
+	fileName: string // VD: "Bao_cao_final_v2.pdf"
+	fileUrl: string // URL từ S3/MinIO/Local để download trực tiếp
+	size: number
+}
+
+interface FinalProduct {
+	thesisReport: FileSnapshotDto
+	sourceCodeUrl?: string
+	sourceCodeZip?: FileSnapshotDto[]
+}
+interface CouncilMemberSnapshot {
+	fullName: string
+	role: string // "Chủ tịch", "Thư ký"...
+	score: number
+	note: string
+}
+
+interface DefenseResult {
+	defenseDate: Date // Dùng để lọc theo "Năm bảo vệ"
+	periodName: string // Lưu tên đợt: "HK1 23-24" (để hiển thị nhanh)
+	finalScore: number // Điểm số: 9.5
+	gradeText: string // Xếp loại: "Xuất sắc"
+	councilMembers: CouncilMemberSnapshot[]
+	councilName: string // VD: "Hội đồng CNPM 01"
 }

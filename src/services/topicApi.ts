@@ -13,6 +13,7 @@ import type {
 	RequestGradeTopicDto,
 	PaginationTopicsQueryParams
 } from '@/models'
+import type { GetMajorLibraryCombox, GetMajorMiniDto } from '@/models/major.model'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
 export const topicApi = baseApi.injectEndpoints({
@@ -291,6 +292,20 @@ export const topicApi = baseApi.injectEndpoints({
 				method: 'DELETE',
 				body: topicIds // gửi mảng topicIds trong body
 			})
+		}),
+		getMajorCombobox: builder.query<GetMajorLibraryCombox[], void>({
+			query: () => ({
+				url: 'topics/library/majors-combobox',
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<GetMajorLibraryCombox[]>) => response.data
+		}),
+		getYearCombobox: builder.query<string[], void>({
+			query: () => ({
+				url: 'topics/library/years-combobox',
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<string[]>) => response.data
 		})
 	}),
 	overrideExisting: false
@@ -329,5 +344,7 @@ export const {
 	useMarkReviewedTopicMutation,
 	useArchiveTopicMutation,
 	useCopyToDraftMutation,
-	useDeleteTopicsMutation
+	useDeleteTopicsMutation,
+	useGetMajorComboboxQuery,
+	useGetYearComboboxQuery
 } = topicApi

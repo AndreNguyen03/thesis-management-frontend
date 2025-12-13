@@ -10,11 +10,18 @@ export const topicVectorApi = baseApi.injectEndpoints({
 			PaginatedGeneralTopics,
 			{ periodId: string; queries: RequestGetTopicsInAdvanceSearch }
 		>({
-			query: ({ periodId, queries }) => `/advance/registering-topics/${periodId}?${buildQueryString(queries)}`,
+			query: ({ periodId, queries }) =>
+				`/topic-search/advance/registering-topics/${periodId}?${buildQueryString(queries)}`,
 			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data
 		}),
-		advanceSearchTopicsInLibrary: builder.query<PaginatedTopicsInLibrary, {queries: RequestGetTopicsInAdvanceSearch}>({
-			query: (queries) => `/advance/topics-in-library?${buildQueryString(queries)}`,
+		advanceSearchTopicsInLibrary: builder.query<
+			PaginatedTopicsInLibrary,
+			{ queries: RequestGetTopicsInAdvanceSearch }
+		>({
+			query: ({ queries }) => {
+				const queriesString = buildQueryString(queries)
+				return `/topic-search/advance/topics-in-library?${queriesString}`
+			},
 			transformResponse: (response: ApiResponse<PaginatedTopicsInLibrary>) => response.data
 		})
 	}),
