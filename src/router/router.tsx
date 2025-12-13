@@ -13,7 +13,6 @@ import { ManageStudentPage } from '@/features/admin/manage_student'
 import Unauthorized from '@/features/shared/authorize/Unauthorized'
 import ManageAI from '@/features/admin/manage_ai/ManageAI'
 import { RequireAuth } from './RequireAuth'
-
 import { CreateTopic } from '@/features/lecturer/new_topic'
 import { ManagePeriodPage } from '@/features/faculty/manage_period'
 import { ManageFacultyStudentPage } from '@/features/faculty/manage_faculty_student'

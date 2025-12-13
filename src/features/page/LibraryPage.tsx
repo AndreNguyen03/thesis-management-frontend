@@ -32,6 +32,12 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/Dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePageBreadcrumb } from '@/hooks'
+import { useAdvanceSearchTopicsInLibraryQuery } from '@/services/topicVectorApi'
+import type { RequestGetTopicsInAdvanceSearch } from '@/models/topicVector.model'
+import { set } from 'zod'
+import { preview } from 'vite'
+import { useDebounce } from '@/hooks/useDebounce'
+import type { GeneralTopic, TopicInLibrary } from '@/models'
 
 // --- TYPES ---
 interface DocumentLinks {
@@ -105,31 +111,34 @@ const MAJORS = ['Tất cả', 'Kỹ thuật Phần mềm', 'Trí tuệ Nhân t�
 const YEARS = ['Tất cả', '2024', '2023', '2022', '2021']
 
 // --- HELPER: Color Generator ---
-const getMajorColor = (code: string) => {
-	switch (code) {
-		case 'SE':
+const getMajorColor = (idx: number) => {
+	switch (idx) {
+		case 1:
 			return 'bg-blue-50 text-blue-700 border-blue-200'
-		case 'AI':
+		case 2:
 			return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-		case 'IS':
+		case 3:
 			return 'bg-orange-50 text-orange-700 border-orange-200'
 		default:
 			return 'bg-slate-50 text-slate-700 border-slate-200'
 	}
 }
-
+const getStripColor = (idx: number) => {
+	if (idx === 1) {
+		return 'bg-blue-500'
+	}
+	return 'bg-emerald-500'
+}
 // --- COMPONENT: LIBRARY CARD ---
-const LibraryCard = ({ thesis }: { thesis: Thesis }) => {
+const LibraryCard = ({ thesis, index }: { thesis: TopicInLibrary; index: number }) => {
 	return (
 		<Card className='group flex h-full flex-col border-slate-200 p-0 transition-all duration-300 hover:shadow-lg'>
 			{/* Header Strip */}
-			<div
-				className={`h-2 w-full rounded-t-xl ${thesis.major.code === 'SE' ? 'bg-blue-500' : 'bg-emerald-500'}`}
-			/>
+			<div className={`h-2 w-full rounded-t-xl ${getStripColor(Math.floor(index / 2))}`} />
 
 			<CardHeader className='pb-3 pt-5'>
 				<div className='mb-2 flex items-start justify-between'>
-					<Badge variant='outline' className={`${getMajorColor(thesis.major.code)} font-medium`}>
+					<Badge variant='outline' className={`${getMajorColor(Math.floor(index / 4))} font-medium`}>
 						{thesis.major.name}
 					</Badge>
 					<span className='rounded bg-slate-50 px-2 py-1 font-mono text-xs text-slate-400'>
@@ -148,17 +157,17 @@ const LibraryCard = ({ thesis }: { thesis: Thesis }) => {
 
 			<CardContent className='flex-1 space-y-4'>
 				{/* Abstract snippet */}
-				<p className='line-clamp-3 text-sm leading-relaxed text-slate-600'>{thesis.abstract}</p>
+				<p className='line-clamp-3 text-sm leading-relaxed text-slate-600'>{thesis.description}</p>
 
 				{/* Tags */}
 				<div className='flex flex-wrap gap-1.5'>
 					{thesis.fields.map((field) => (
 						<Badge
-							key={field}
+							key={field.name}
 							variant='secondary'
 							className='bg-slate-100 text-[10px] font-normal text-slate-600 hover:bg-slate-200'
 						>
-							#{field}
+							#{field.name}
 						</Badge>
 					))}
 				</div>
@@ -166,16 +175,19 @@ const LibraryCard = ({ thesis }: { thesis: Thesis }) => {
 				{/* Authors */}
 				<div className='flex items-center gap-3 border-t border-slate-50 pt-2'>
 					<div className='flex -space-x-2'>
-						{thesis.students.map((st, idx) => (
+						{thesis.students.approvedStudents.map((st, idx) => (
 							<Avatar key={idx} className='h-6 w-6 border-2 border-white ring-1 ring-slate-100'>
 								<AvatarFallback className='bg-slate-200 text-[9px] text-slate-600'>
-									{st.charAt(0)}
+									{st.student.fullName.charAt(0)}
 								</AvatarFallback>
 							</Avatar>
 						))}
 					</div>
 					<span className='text-xs text-slate-500'>
-						HD: <span className='font-medium text-slate-700'>{thesis.supervisor.name}</span>
+						HD:{' '}
+						<span className='font-medium text-slate-700'>
+							{thesis.lecturers.map((l) => ` ${l.fullName}`).join(', ')}
+						</span>
 					</span>
 				</div>
 			</CardContent>
@@ -190,11 +202,10 @@ const LibraryCard = ({ thesis }: { thesis: Thesis }) => {
 						<Download className='h-3.5 w-3.5' /> {thesis.stats.downloads}
 					</div>
 					<div className='flex items-center gap-1 text-amber-500'>
-						<Star className='h-3.5 w-3.5 fill-current' /> {thesis.stats.rating.toFixed(1)}
+						<Star className='h-3.5 w-3.5 fill-current' /> {thesis.stats.averageRating.toFixed(1)}
 					</div>
 				</div>
-
-				{/* Actions */}
+				Actions
 				<Dialog>
 					<DialogTrigger asChild>
 						<Button
@@ -213,11 +224,11 @@ const LibraryCard = ({ thesis }: { thesis: Thesis }) => {
 }
 
 // --- COMPONENT: DETAIL DIALOG CONTENT ---
-const DetailDialogContent = ({ thesis }: { thesis: Thesis }) => {
+const DetailDialogContent = ({ thesis }: { thesis: TopicInLibrary }) => {
 	return (
 		<DialogContent className='flex max-h-[90vh] max-w-4xl flex-col gap-0 overflow-hidden p-0'>
 			<div className='grid h-full grid-cols-12'>
-				{/* Left Column: Info */}
+				Left Column: Info
 				<div className='col-span-12 h-full max-h-[90vh] overflow-y-auto bg-white p-6 md:col-span-8 md:p-8'>
 					<div className='mb-6'>
 						<Badge variant='outline' className='mb-3'>
@@ -230,12 +241,12 @@ const DetailDialogContent = ({ thesis }: { thesis: Thesis }) => {
 					<Tabs defaultValue='abstract' className='w-full'>
 						<TabsList className='mb-4'>
 							<TabsTrigger value='abstract'>Tóm tắt</TabsTrigger>
-							<TabsTrigger value='reviews'>Đánh giá ({thesis.stats.reviews})</TabsTrigger>
+							<TabsTrigger value='reviews'>Đánh giá ('thesis.stats.reviews')</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value='abstract' className='space-y-6'>
 							<div className='prose prose-sm max-w-none text-slate-600'>
-								<p>{thesis.abstract}</p>
+								<p>{thesis.description}</p>
 								<p>
 									Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
 									incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
@@ -251,14 +262,16 @@ const DetailDialogContent = ({ thesis }: { thesis: Thesis }) => {
 									<div>
 										<p className='mb-1 text-slate-500'>Sinh viên thực hiện:</p>
 										<ul className='list-inside list-disc font-medium text-slate-800'>
-											{thesis.students.map((s) => (
-												<li key={s}>{s}</li>
+											{thesis.students.approvedStudents.map((s) => (
+												<li key={s.student._id}>{s.student.fullName}</li>
 											))}
 										</ul>
 									</div>
 									<div>
 										<p className='mb-1 text-slate-500'>Giảng viên hướng dẫn:</p>
-										<p className='font-medium text-slate-800'>{thesis.supervisor.name}</p>
+										<p className='font-medium text-slate-800'>
+											{thesis.lecturers.map((l) => l.fullName).join(', ')}
+										</p>
 									</div>
 								</div>
 							</div>
@@ -269,7 +282,6 @@ const DetailDialogContent = ({ thesis }: { thesis: Thesis }) => {
 						</TabsContent>
 					</Tabs>
 				</div>
-
 				{/* Right Column: Meta & Actions */}
 				<div className='col-span-12 flex h-full max-h-[90vh] flex-col gap-6 overflow-y-auto border-l border-slate-200 bg-slate-50/80 p-6 md:col-span-4'>
 					{/* Actions Box */}
@@ -280,12 +292,12 @@ const DetailDialogContent = ({ thesis }: { thesis: Thesis }) => {
 						<Button className='w-full justify-start' variant='default'>
 							<FileText className='mr-2 h-4 w-4' /> Báo cáo toàn văn (.pdf)
 						</Button>
-						{thesis.documents.sourceCode && (
+						{thesis.finalProduct.sourceCodeUrl && (
 							<Button className='w-full justify-start' variant='outline'>
 								<Github className='mr-2 h-4 w-4' /> Source Code (Git)
 							</Button>
 						)}
-						{thesis.documents.dataset && (
+						{thesis.finalProduct.thesisReport && (
 							<Button className='w-full justify-start' variant='outline'>
 								<Database className='mr-2 h-4 w-4' /> Dataset
 							</Button>
@@ -300,7 +312,7 @@ const DetailDialogContent = ({ thesis }: { thesis: Thesis }) => {
 
 						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
 							<span className='text-slate-500'>Mã đề tài</span>
-							<span className='font-mono font-medium'>{thesis.id.toUpperCase()}</span>
+							<span className='font-mono font-medium'>{thesis._id.toUpperCase()}</span>
 						</div>
 						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
 							<span className='text-slate-500'>Lượt xem</span>
@@ -313,7 +325,7 @@ const DetailDialogContent = ({ thesis }: { thesis: Thesis }) => {
 						<div className='flex justify-between border-b border-dashed border-slate-200 py-1'>
 							<span className='text-slate-500'>Đánh giá</span>
 							<div className='flex items-center gap-1 font-medium text-amber-600'>
-								{thesis.stats.rating} <Star className='h-3 w-3 fill-current' />
+								{thesis.stats.averageRating} <Star className='h-3 w-3 fill-current' />
 							</div>
 						</div>
 					</div>
@@ -331,19 +343,37 @@ const DetailDialogContent = ({ thesis }: { thesis: Thesis }) => {
 
 // --- MAIN PAGE ---
 export const LibraryPage = () => {
-	const [searchTerm, setSearchTerm] = useState('')
-	const [selectedMajor, setSelectedMajor] = useState('Tất cả')
-	const [selectedYear, setSelectedYear] = useState('Tất cả')
+	const [queries, setQueries] = useState<RequestGetTopicsInAdvanceSearch>({
+		limit: 20,
+		page: 1,
+		query: '',
+		search_by: ['titleVN', 'titleEng'],
+		majorIds: [],
+		year: -1
+	})
+	const { data: topicsInLibrary, isLoading, error } = useAdvanceSearchTopicsInLibraryQuery({ queries: queries })
+
+	const handleSearch = (searchTerm: string) => {
+		setQueries((prev) => ({
+			...prev,
+			query: searchTerm
+		}))
+	}
+	const selectMajor = (majorId: string) => {
+		setQueries((prev) => ({
+			...prev,
+			majorIds: majorId === 'Tất cả' ? [] : [majorId]
+		}))
+	}
+	const handleYear = (year: string) => {
+		setQueries((prev) => ({
+			...prev,
+			year: year === 'Tất cả' ? -1 : Number(year)
+		}))
+	}
+	const searchDebounce = useDebounce({ onChange: handleSearch, duration: 300 })
+
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Thư viện số' }])
-	// Filter Logic (Simple)
-	const filteredData = useMemo(() => {
-		return MOCK_DATA.filter((t) => {
-			const matchSearch = t.titleVN.toLowerCase().includes(searchTerm.toLowerCase())
-			const matchMajor = selectedMajor === 'Tất cả' || t.major.name === selectedMajor
-			const matchYear = selectedYear === 'Tất cả' || t.year.toString() === selectedYear
-			return matchSearch && matchMajor && matchYear
-		})
-	}, [searchTerm, selectedMajor, selectedYear])
 
 	return (
 		<div className='min-h-screen bg-white'>
@@ -373,8 +403,8 @@ export const LibraryPage = () => {
 						<Input
 							placeholder='Nhập tên đề tài, tác giả, hoặc từ khóa chuyên ngành...'
 							className='h-14 rounded-full border-0 bg-white pl-12 pr-4 text-lg text-slate-900 shadow-xl focus-visible:ring-2 focus-visible:ring-blue-500'
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
+							value={queries.query}
+							onChange={(e) => handleSearch(e.target.value)}
 						/>
 						<Button className='absolute right-2 top-2 h-10 rounded-full bg-blue-600 px-6 hover:bg-blue-700'>
 							Tìm kiếm
@@ -408,7 +438,10 @@ export const LibraryPage = () => {
 							{/* Năm học */}
 							<div className='space-y-3'>
 								<label className='text-sm font-semibold text-slate-700'>Năm bảo vệ</label>
-								<Select value={selectedYear} onValueChange={setSelectedYear}>
+								<Select
+									value={queries.year?.toString() ?? 'Tất cả'}
+									onValueChange={(value) => handleYear(value)}
+								>
 									<SelectTrigger className='w-full bg-slate-50'>
 										<SelectValue placeholder='Chọn năm' />
 									</SelectTrigger>
@@ -432,8 +465,15 @@ export const LibraryPage = () => {
 										<div key={major} className='flex items-center space-x-2'>
 											<Checkbox
 												id={major}
-												checked={selectedMajor === major}
-												onCheckedChange={(c) => setSelectedMajor(c ? major : 'Tất cả')}
+												checked={queries.majorIds?.includes(major) ?? false}
+												onCheckedChange={(c) => {
+													if (c) {
+														//truyền majorId
+														selectMajor(major)
+													} else {
+														selectMajor('Tất cả')
+													}
+												}}
 											/>
 											<label
 												htmlFor={major}
@@ -470,7 +510,7 @@ export const LibraryPage = () => {
 					<div className='flex-1'>
 						<div className='mb-6 flex items-center justify-between'>
 							<h2 className='text-xl font-bold text-slate-800'>
-								Kết quả tìm kiếm ({filteredData.length})
+								Kết quả tìm kiếm ({topicsInLibrary?.data.length})
 							</h2>
 							<div className='flex items-center gap-2'>
 								<span className='text-sm text-slate-500'>Sắp xếp theo:</span>
@@ -487,10 +527,10 @@ export const LibraryPage = () => {
 							</div>
 						</div>
 
-						{filteredData.length > 0 ? (
+						{topicsInLibrary && topicsInLibrary.data.length > 0 ? (
 							<div className='grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3'>
-								{filteredData.map((thesis) => (
-									<LibraryCard key={thesis.id} thesis={thesis} />
+								{topicsInLibrary?.data.map((topic, index) => (
+									<LibraryCard key={topic._id} thesis={topic} index={index} />
 								))}
 							</div>
 						) : (
@@ -503,9 +543,9 @@ export const LibraryPage = () => {
 								<Button
 									variant='link'
 									onClick={() => {
-										setSearchTerm('')
-										setSelectedMajor('Tất cả')
-										setSelectedYear('Tất cả')
+										handleSearch('')
+										selectMajor('Tất cả')
+										handleYear('Tất cả')
 									}}
 								>
 									Xóa bộ lọc
@@ -514,7 +554,7 @@ export const LibraryPage = () => {
 						)}
 
 						{/* Pagination (Mock) */}
-						{filteredData.length > 0 && (
+						{topicsInLibrary && topicsInLibrary.data.length > 0 && (
 							<div className='mt-10 flex justify-center'>
 								<Button variant='outline' className='mx-auto w-40'>
 									Xem thêm

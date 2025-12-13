@@ -85,11 +85,45 @@ export interface GeneralTopic extends AbstractTopic {
 	lastStatusInPhaseHistory: GetPhaseHistoryDto
 	createByInfo: MiniActorInforDto
 	periodInfo: MiniPeriod
+	year: number
 	// file
 }
+//#Đề tài trong thư viện số
+//Đánh giá bên trong đề tài được lưu trữ trong thư viện số
+interface TopicStatsDto {
+	views: number // Số lượt xem
+	downloads: number // Số lượt tải
+	averageRating: number // Điểm đánh giá trung bình (4.5)
+	reviewCount: number // Tổng số đánh giá (12)
+}
+interface FileSnapshotDto {
+	fileId: string // Reference gốc để quản lý xóa/sửa
+	fileName: string // VD: "Bao_cao_final_v2.pdf"
+	fileUrl: string // URL từ S3/MinIO/Local để download trực tiếp
+	size: number
+}
+
+interface FinalProduct {
+	thesisReport: FileSnapshotDto
+	sourceCodeUrl?: string
+	sourceCodeZip?: FileSnapshotDto[]
+}
+//Định nghĩa đề tài trong thư viện số
+export interface TopicInLibrary extends AbstractTopic {
+	createByInfo: MiniActorInforDto
+	periodInfo: MiniPeriod
+	stats: TopicStatsDto
+	year: number
+	finalProduct: FinalProduct
+}
+export interface PaginatedTopicsInLibrary extends GetPaginatedObject {
+	data: TopicInLibrary[]
+}
+
 export interface PaginatedSubmittedTopics extends GetPaginatedObject {
 	data: SubmittedTopic[]
 }
+//Lấy từ kho tri thức
 export interface PaginatedGeneralTopics extends GetPaginatedObject {
 	data: GeneralTopic[]
 }
