@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner'
 import TaskCard from './Task'
 import { DeleteModal } from './modal/DeleteModal'
+import { useAppSelector } from '@/store'
 
 interface Milestone {
 	id: number
@@ -26,8 +27,12 @@ interface ProgressPanelProps {
 }
 
 export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps) => {
+	const group = useAppSelector((state) => state.group)
 	// Lấy dữ liệu từ API
-	const { data: tasksData, isLoading } = useGetStaskQuery({ groupId: '6578f1a1e4b0d1c2a3b4c5f1' })
+	const { data: tasksData, isLoading } = useGetStaskQuery(
+		{ groupId: group.activeGroup?._id ?? '' },
+		{ skip: !group.activeGroup?._id }
+	)
 
 	// Khởi tạo với initialTasks, sau đó merge với data từ API
 	const [tasks, setTasks] = useState<Task[]>([])
@@ -44,7 +49,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 		}
 	}, [tasksData])
 	const [newTask, setNewTask] = useState<CreateTaskPayload>({
-		groupId: '6578f1a1e4b0d1c2a3b4c5f1',
+		groupId: group.activeGroup?._id || '',
 		title: '',
 		description: ''
 	})

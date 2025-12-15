@@ -8,12 +8,14 @@ import { useGetGroupDetailQuery, useGetPaginateGroupsQuery } from '@/services/gr
 import { LoadingState } from '@/components/ui/LoadingState'
 import type { ApiError } from '@/models'
 import { useBreadcrumb } from '@/hooks'
+import { useAppDispatch, useAppSelector } from '@/store'
+import { setActiveGroup } from '@/store/slices/group-workspace'
 export const GroupWorkspacePage = () => {
-	const [selectedGroupId, setSelectedGroupId] = useState<string>('')
+	const group = useAppSelector((state) => state.group)
 	const [milestones, setMilestones] = useState<any[]>([]) // Empty array ban đầu, thay bằng real data sau
 
 	const { setHidden } = useBreadcrumb()
-
+	const dispatch = useAppDispatch()
 	useEffect(() => {
 		setHidden(true)
 		return () => setHidden(false)
@@ -24,15 +26,18 @@ export const GroupWorkspacePage = () => {
 		return paginatedGroups?.data ?? []
 	}, [paginatedGroups])
 
-	const activeGroup = groups.find((g) => g._id === selectedGroupId)
+	const activeGroup = groups.find((g) => g._id === group.activeGroup?._id)
 
-	useEffect(() => {
-		if (groups.length > 0 && !selectedGroupId) {
-			setSelectedGroupId(groups[0]._id)
-		}
-	}, [groups, selectedGroupId])
+	// useEffect(() => {
+	// 	if (groups.length > 0 && !group.activeGroupId) {
+	// 		setActiveGroupId(groups[0]._id)
+	// 	}
+	// }, [groups, group.activeGroupId])
 
-	const { data: groupDetail } = useGetGroupDetailQuery({ groupId: selectedGroupId }, { skip: !selectedGroupId })
+	const { data: groupDetail } = useGetGroupDetailQuery(
+		{ groupId: group.activeGroup?._id ?? '' },
+		{ skip: !group.activeGroup?._id }
+	)
 
 	// Update milestone function (giữ nguyên, nhưng sẽ không dùng nếu empty)
 	const updateMilestone = (
@@ -75,7 +80,7 @@ export const GroupWorkspacePage = () => {
 	}, [milestones])
 
 	const handleSelectGroup = (id: string) => {
-		setSelectedGroupId(id)
+		dispatch(setActiveGroup(groups.find((g) => g._id === id) || null))
 		// TODO: Fetch milestones/tasks cho group này (e.g., useQuery dựa trên id)
 	}
 
@@ -99,7 +104,7 @@ export const GroupWorkspacePage = () => {
 			{/* Sidebar */}
 			<GroupSidebar
 				groups={groups}
-				selectedGroupId={selectedGroupId}
+				selectedGroupId={group.activeGroup?._id}
 				onSelectGroup={handleSelectGroup}
 				participants={groupDetail?.participants ?? []}
 			/>
@@ -109,14 +114,14 @@ export const GroupWorkspacePage = () => {
 				<ResizablePanelGroup direction='horizontal' className='max-h-[100dvh]'>
 					{/* Chat Panel */}
 					<ResizablePanel defaultSize={50} minSize={40} maxSize={40}>
-						{selectedGroupId ? (
+						{group.activeGroup ? (
 							<ChatPanel
 								groupName={activeGroup?.titleVN || ''}
-								groupId={selectedGroupId}
+								groupId={group.activeGroup._id}
 								participants={groupDetail?.participants ?? []}
 							/>
 						) : (
-							<div className='flex h-full items-center justify-center bg-gray-50'>
+							<div className='h-100dvh flex items-center justify-center bg-gray-50'>
 								<p className='text-center text-sm text-gray-500'>Hãy chọn nhóm để xem</p>
 							</div>
 						)}
@@ -126,14 +131,16 @@ export const GroupWorkspacePage = () => {
 
 					{/* Work Panel */}
 					<ResizablePanel defaultSize={50} minSize={50}>
-						{!selectedGroupId ? (
+						{!group.activeGroup ? (
 							<div className='flex h-full items-center justify-center bg-gray-50'>
 								<div className='text-center'>
 									<h2 className='mb-2 text-lg font-medium text-gray-900'>
-										{selectedGroupId ? 'Chưa có dữ liệu công việc' : 'Hãy chọn nhóm để xem'}
+										{group.activeGroup ? 'Chưa có dữ liệu công việc' : 'Hãy chọn nhóm để xem'}
 									</h2>
 									<p className='text-sm text-gray-500'>
-										{selectedGroupId ? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm' : ''}
+										{group.activeGroup
+											? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm'
+											: ''}
 									</p>
 								</div>
 							</div>

@@ -13,7 +13,7 @@ interface Participant {
 
 interface GroupSidebarProps {
 	groups: Group[]
-	selectedGroupId: string
+	selectedGroupId?: string 
 	onSelectGroup: (id: string) => void
 	participants: Participant[]
 }

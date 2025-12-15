@@ -27,6 +27,7 @@ import { Button } from '@/components/ui'
 import { DeleteDocumentModal } from './modal/DeleteDocument'
 import Editting from './Editting'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useAppSelector } from '@/store'
 
 export const getFileIcon = (type: GetUploadedFileDto['type']) => {
 	switch (type) {
@@ -55,8 +56,12 @@ const getFileTypeLabel = (type: GetUploadedFileDto['type']) => {
 }
 
 export const DocumentsPanel = () => {
+	const group = useAppSelector((state) => state.group)
 	const [selectedDraftFiles, setSelectedDraftFiles] = useState<File[]>([])
-	const { data: documentsData, refetch } = useGetDocumentsOfTopicQuery({ topicId: '6929587de5895217082a2c78' })
+	const { data: documentsData, refetch } = useGetDocumentsOfTopicQuery(
+		{ topicId: group.activeGroup?.topicId || '' },
+		{ skip: !group.activeGroup?.topicId }
+	)
 	const [documents, setDocuments] = useState<GetUploadedFileDto[]>([])
 	const [isDeleteModal, setIsOpenDeleteModal] = useState(false)
 	const [deletingDocumentIds, setDeletingDocumentIds] = useState<string[]>([])
@@ -115,7 +120,7 @@ export const DocumentsPanel = () => {
 	const handleUpload = async () => {
 		try {
 			const res = await lecturerUploadFiles({
-				topicId: '6929587de5895217082a2c78',
+				topicId: group.activeGroup?.topicId || '',
 				files: selectedDraftFiles
 			}).unwrap()
 			setDocuments(res)
@@ -137,7 +142,7 @@ export const DocumentsPanel = () => {
 
 	const handleDeleteConfirm = async () => {
 		try {
-			await lecturerDeleteFiles({ topicId: '6929587de5895217082a2c78', fileIds: deletingDocumentIds }).then(
+			await lecturerDeleteFiles({ topicId: group.activeGroup?.topicId || '', fileIds: deletingDocumentIds }).then(
 				() => {
 					setDocuments((prev) => prev.filter((doc) => !deletingDocumentIds.includes(doc._id)))
 					setDeletingDocumentIds([])
@@ -185,7 +190,7 @@ export const DocumentsPanel = () => {
 	}
 	const handleDownloadAllFiles = async () => {
 		try {
-			const blob = await downloadZip({ topicId: '6929587de5895217082a2c78' }).unwrap()
+			const blob = await downloadZip({ topicId: group.activeGroup?.topicId || '' }).unwrap()
 
 			// Tạo URL và trigger download
 			const url = window.URL.createObjectURL(blob)
@@ -296,9 +301,9 @@ export const DocumentsPanel = () => {
 						{filter.label} ({filter.count})
 					</button>
 				))}
-					<Button className='h-fit px-2 py-1' onClick={handleDownloadAllFiles} title='Tải file zip'>
-							{isDownloading ? <Loader2 className='animate-spin' /> : <Download className='h-4 w-4' />}
-						</Button>
+				<Button className='h-fit px-2 py-1' onClick={handleDownloadAllFiles} title='Tải file zip'>
+					{isDownloading ? <Loader2 className='animate-spin' /> : <Download className='h-4 w-4' />}
+				</Button>
 			</div>
 
 			{/* Documents List */}
