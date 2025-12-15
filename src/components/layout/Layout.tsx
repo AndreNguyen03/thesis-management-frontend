@@ -45,7 +45,14 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 			{/* Header fixed at top */}
 			<Header user={user} />
 			{/* Main layout: sidebar fixed left, content scrollable right */}
-			<div className='mt-16 flex max-h-[calc(100vh-4rem)] w-full overflow-auto bg-gradient-to-br from-gray-50 to-gray-100 pt-10'>
+			<div
+				className={cn(
+					'flex w-full bg-gradient-to-br from-gray-50 to-gray-100',
+					hidden
+						? 'mt-16 h-[calc(100vh-4rem)] overflow-hidden' // WORKSPACE MODE
+						: 'mt-16 min-h-screen pt-10' // NORMAL MODE
+				)}
+			>
 				{/* Sidebar fixed to left, below header */}
 				<div
 					className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r bg-white shadow-lg transition-all duration-300 ${sidebarWidth}`}
