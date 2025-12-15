@@ -1,4 +1,4 @@
-import {  LogOut, MessageCircle, Search, Settings, User2 } from 'lucide-react'
+import { LogOut, MessageCircle, Search, Settings, User2 } from 'lucide-react'
 import { Button, Dropdown, DropdownItem, DropdownLabel, DropdownSeparator, Input, LoadingOverlay, Badge } from '../ui'
 import uitLogo from '../../assets/uit.png'
 import type { ApiError, AppUser } from '../../models'
@@ -79,9 +79,17 @@ const Header = ({ user }: HeaderProps) => {
 								variant='ghost'
 								className='relative flex h-9 w-9 items-center justify-center rounded-full p-0'
 							>
-								<div className='flex h-full w-full items-center justify-center rounded-full bg-blue-500'>
-									<User2 className='h-4 w-4 text-white' />
-								</div>
+								{user?.avatarUrl ? (
+									<img
+										src={user.avatarUrl}
+										alt={user.fullName || 'User Avatar'}
+										className='h-full w-full rounded-full object-cover'
+									/>
+								) : (
+									<div className='flex h-full w-full items-center justify-center rounded-full bg-blue-500'>
+										<User2 className='h-4 w-4 text-white' />
+									</div>
+								)}
 							</Button>
 						}
 					>

@@ -53,10 +53,10 @@ export const AIAssistant = () => {
 			<Dialog open={isOpen} onOpenChange={setIsOpen}>
 				<DialogTrigger asChild>
 					<Button
-						className='fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-primary shadow-xl transition-all duration-300 hover:shadow-2xl'
+						className='fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary shadow-xl transition-all duration-300 hover:shadow-2xl'
 						size='icon'
 					>
-						<MessageCircle className='h-6 w-6' />
+						<MessageCircle className='h-6 w-6 text-primary-foreground' />
 						<div className='absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent'>
 							<Sparkles className='h-2 w-2 text-accent-foreground' />
 						</div>
@@ -66,8 +66,8 @@ export const AIAssistant = () => {
 				<DialogContent className='flex max-h-[80vh] flex-col sm:max-w-2xl'>
 					<DialogHeader>
 						<DialogTitle className='flex items-center gap-2'>
-							<div className='flex h-8 w-8 items-center justify-center rounded-full bg-gradient-primary'>
-								<Sparkles className='h-4 w-4 text-primary-foreground' />
+							<div className='bg-gradient-primary flex h-8 w-8 items-center justify-center rounded-full'>
+								<Sparkles className='h-4 w-4 text-accent-foreground' />
 							</div>
 							{chatbotVersions ? chatbotVersions.name : 'AI Assistant - UIT Thesis Management'}
 						</DialogTitle>
@@ -122,7 +122,7 @@ export const AIAssistant = () => {
 												<div key={index} onClick={() => handleQuestionClick(question.content)}>
 													<Badge
 														variant='outline'
-														className='cursor-pointer text-xs hover:bg-muted'
+														className='cursor-pointer text-xs hover:bg-muted/10'
 													>
 														{question.content}
 													</Badge>
