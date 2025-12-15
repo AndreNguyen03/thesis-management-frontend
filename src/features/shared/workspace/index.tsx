@@ -1,98 +1,43 @@
-import React, { useState, useMemo } from 'react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useMemo, useEffect } from 'react'
 import { GroupSidebar } from './components/GroupSidebar'
 import { ChatPanel } from './components/ChatPanel'
 import { WorkPanel } from './components/WorkPanel'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
-
-// Mock Data
-const mockGroups = [
-	{ id: 1, name: 'Nhóm Dự án Web E-commerce', lastMessage: 'Họp vào 10h sáng mai.' },
-	{ id: 2, name: 'Nhóm Xử lý Ngôn ngữ Tự nhiên', lastMessage: 'Đã nộp báo cáo tuần 2.' },
-	{ id: 3, name: 'Nhóm Thiết kế UI/UX App', lastMessage: 'Cần phản hồi về wireframe.' }
-]
-
-const initialMilestones = [
-	{
-		id: 101,
-		title: 'Phân tích Yêu cầu',
-		dueDate: '2025-10-15',
-		progress: 100,
-		status: 'Đã Hoàn thành',
-		submission: {
-			date: '2025-10-14',
-			files: [{ name: 'YeuCau_Final.docx', size: '1.2MB' }],
-			score: 9.5,
-			feedback: 'Phân tích rất chi tiết, đáp ứng yêu cầu.'
-		}
-	},
-	{
-		id: 102,
-		title: 'Xây dựng Prototype (MVP)',
-		dueDate: '2025-11-01',
-		progress: 75,
-		status: 'Đang Chờ Duyệt',
-		submission: {
-			date: '2025-11-01',
-			files: [
-				{ name: 'Prototype_v1.zip', size: '50MB' },
-				{ name: 'DemoVideo.mp4', size: '12MB' }
-			],
-			score: null,
-			feedback: ''
-		}
-	},
-	{
-		id: 103,
-		title: 'Kiểm thử và Tối ưu',
-		dueDate: '2025-11-20',
-		progress: 0,
-		status: 'Đang Tiến hành',
-		submission: null
-	},
-	{
-		id: 104,
-		title: 'Báo cáo Cuối kỳ',
-		dueDate: '2025-12-05',
-		progress: 0,
-		status: 'Quá Hạn',
-		submission: null
-	}
-]
-
-const initialTasks = [
-	{
-		id: 'TASK-1',
-		title: 'Thiết kế Wireframe Trang chủ',
-		subtasks: [
-			{ id: 1, title: 'Nghiên cứu UI/UX', status: 'Todo' as const },
-			{ id: 2, title: 'Vẽ bản nháp cơ bản', status: 'In Progress' as const },
-			{ id: 3, title: 'Thêm tương tác cơ bản', status: 'Done' as const }
-		]
-	},
-	{
-		id: 'TASK-2',
-		title: 'Cài đặt Database PostgreSQL',
-		subtasks: [
-			{ id: 4, title: 'Chọn dịch vụ Hosting', status: 'Done' as const },
-			{ id: 5, title: 'Tạo Schema ban đầu', status: 'Done' as const },
-			{ id: 6, title: 'Kết nối API với DB', status: 'In Progress' as const }
-		]
-	},
-	{
-		id: 'TASK-3',
-		title: 'Viết API cho Đăng nhập/Đăng ký',
-		subtasks: [{ id: 7, title: 'Thiết kế Endpoint', status: 'Todo' as const }]
-	}
-]
+import { useGetGroupDetailQuery, useGetPaginateGroupsQuery } from '@/services/groupApi'
+import { LoadingState } from '@/components/ui/LoadingState'
+import type { ApiError } from '@/models'
+import { useBreadcrumb } from '@/hooks'
 
 export const GroupWorkspacePage = () => {
-	const [selectedGroupId, setSelectedGroupId] = useState(mockGroups[0].id)
-	const [milestones, setMilestones] = useState(initialMilestones)
-	const [tasks, setTasks] = useState(initialTasks)
+	const [selectedGroupId, setSelectedGroupId] = useState<string>('')
+	const [milestones, setMilestones] = useState<any[]>([]) // Empty array ban đầu, thay bằng real data sau
+	const [tasks, setTasks] = useState<any[]>([]) // Empty array ban đầu, thay bằng real data sau
 
-	const activeGroup = mockGroups.find((g) => g.id === selectedGroupId)
+	const { setHidden } = useBreadcrumb()
 
-	// Update milestone function
+	useEffect(() => {
+		setHidden(true)
+		return () => setHidden(false)
+	}, [setHidden])
+
+	const { data: paginatedGroups, isLoading, error } = useGetPaginateGroupsQuery()
+
+	const groups = useMemo(() => {
+		return paginatedGroups?.data ?? []
+	}, [paginatedGroups])
+
+	const activeGroup = groups.find((g) => g._id === selectedGroupId)
+
+	useEffect(() => {
+		if (groups.length > 0 && !selectedGroupId) {
+			setSelectedGroupId(groups[0]._id)
+		}
+	}, [groups, selectedGroupId])
+
+	const { data: groupDetail } = useGetGroupDetailQuery({ groupId: selectedGroupId }, { skip: !selectedGroupId })
+
+	// Update milestone function (giữ nguyên, nhưng sẽ không dùng nếu empty)
 	const updateMilestone = (
 		id: number,
 		newProgress: number,
@@ -125,41 +70,85 @@ export const GroupWorkspacePage = () => {
 		)
 	}
 
-	// Calculate total progress
+	// Calculate total progress (fallback 0 nếu empty)
 	const totalProgress = useMemo(() => {
 		if (milestones.length === 0) return 0
 		const completedProgress = milestones.reduce((sum, m) => sum + m.progress, 0)
 		return Math.round(completedProgress / milestones.length)
 	}, [milestones])
 
-	const handleSelectGroup = (id: number) => {
+	const handleSelectGroup = (id: string) => {
 		setSelectedGroupId(id)
+		// TODO: Fetch milestones/tasks cho group này (e.g., useQuery dựa trên id)
+	}
+
+	if (isLoading) return <LoadingState message='Đang tải dữ liệu' />
+	if (error) return <div>Lỗi: {(error as ApiError).data?.message}</div>
+
+	// Empty state cho groups (nếu chưa có group nào)
+	if (groups.length === 0) {
+		return (
+			<div className='flex h-full w-full items-center justify-center bg-gray-50'>
+				<div className='text-center'>
+					<h2 className='mb-2 text-lg font-medium text-gray-900'>Chưa có nhóm nào</h2>
+					<p className='text-sm text-gray-500'>Hãy tạo nhóm mới để bắt đầu</p>
+				</div>
+			</div>
+		)
 	}
 
 	return (
-		<div className='flex  w-full overflow-hidden'>
+		<div className='flex h-full w-full overflow-hidden'>
 			{/* Sidebar */}
-			<GroupSidebar groups={mockGroups} selectedGroupId={selectedGroupId} onSelectGroup={handleSelectGroup} />
+			<GroupSidebar
+				groups={groups}
+				selectedGroupId={selectedGroupId}
+				onSelectGroup={handleSelectGroup}
+				participants={groupDetail?.participants ?? []}
+			/>
 
 			{/* Main Content - Resizable Panels */}
 			<div className='h-full flex-1'>
 				<ResizablePanelGroup direction='horizontal' className='h-full'>
 					{/* Chat Panel */}
-					<ResizablePanel defaultSize={40} minSize={25} maxSize={60}>
-						<ChatPanel groupName={activeGroup?.name || ''} />
+					<ResizablePanel defaultSize={50} minSize={40} maxSize={40}>
+						{selectedGroupId ? (
+							<ChatPanel
+								groupName={activeGroup?.topic.titleVN || ''}
+								groupId={selectedGroupId}
+								participants={groupDetail?.participants ?? []}
+							/>
+						) : (
+							<div className='flex h-full items-center justify-center bg-gray-50'>
+								<p className='text-center text-sm text-gray-500'>Hãy chọn nhóm để xem</p>
+							</div>
+						)}
 					</ResizablePanel>
 
 					<ResizableHandle withHandle />
 
 					{/* Work Panel */}
-					<ResizablePanel defaultSize={60} minSize={40}>
-						<WorkPanel
-							milestones={milestones}
-							tasks={tasks}
-							setTasks={setTasks}
-							totalProgress={totalProgress}
-							updateMilestone={updateMilestone}
-						/>
+					<ResizablePanel defaultSize={50} minSize={50}>
+						{milestones.length === 0 || tasks.length === 0 ? (
+							<div className='flex h-full items-center justify-center bg-gray-50'>
+								<div className='text-center'>
+									<h2 className='mb-2 text-lg font-medium text-gray-900'>
+										{selectedGroupId ? 'Chưa có dữ liệu công việc' : 'Hãy chọn nhóm để xem'}
+									</h2>
+									<p className='text-sm text-gray-500'>
+										{selectedGroupId ? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm' : ''}
+									</p>
+								</div>
+							</div>
+						) : (
+							<WorkPanel
+								milestones={milestones}
+								tasks={tasks}
+								setTasks={setTasks}
+								totalProgress={totalProgress}
+								updateMilestone={updateMilestone}
+							/>
+						)}
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			</div>

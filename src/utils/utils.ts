@@ -1,3 +1,4 @@
+import type { AppUser } from '@/models'
 import type { GetCustomMiniPeriodInfoRequestDto, PhaseType } from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
@@ -100,5 +101,37 @@ const typeLabels = {
 } as const
 
 export const getPeriodTitle = (period: GetCustomMiniPeriodInfoRequestDto) =>
-	`Kì hiện tại: {period.year} • HK {period.semester} • {typeLabels[period.type]}`
-	
+	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type]}`
+
+export const getUserIdFromAppUser = (user: AppUser | null): string => {
+	if (!user) return ''
+
+	// Student / Lecturer / Faculty board
+	if ('userId' in user) {
+		return user.userId
+	}
+
+	// Admin
+	if ('_id' in user) {
+		return user._id
+	}
+
+	return ''
+}
+
+
+export const formatDateLabel = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return 'Hôm nay';
+  if (date.toDateString() === yesterday.toDateString()) return 'Hôm qua';
+  return date.toLocaleDateString('vi-VN');
+};
+
+export const isSameDay = (d1: string, d2: string) => {
+  if (!d1 || !d2) return false;
+  return new Date(d1).toDateString() === new Date(d2).toDateString();
+};

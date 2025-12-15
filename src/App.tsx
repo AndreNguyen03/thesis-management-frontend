@@ -9,7 +9,8 @@ import { Toaster as ToasterSonner } from 'sonner'
 import { Toaster } from './components/ui/toaster'
 import { useGetCurrentThesisPeriodInfoQuery } from './services/periodApi'
 import { setCurrentPeriod, setCurrPeriodLoading } from './store/slices/period-slice'
-import { connectSocket, disconnectSocket } from './utils/socket-client'
+// import { connectSocket, disconnectSocket } from './utils/socket-client'
+import { ChatProvider } from './contexts/ChatSocketContext'
 
 const App = () => {
 	const user = useAppSelector((state) => state.auth.user)
@@ -37,23 +38,32 @@ const App = () => {
 			dispatch(setCurrPeriodLoading(false))
 		}
 	}, [periodInfoData])
-	useEffect(() => {
-		if (token) {
-			connectSocket(token)
-		}
-		return () => {
-			disconnectSocket()
-		}
-	}, [token])
+
+	// useEffect(() => {
+	// 	if (token) {
+	// 		connectSocket(token)
+	// 	}
+	// 	return () => {
+	// 		disconnectSocket()
+	// 	}
+	// }, [token])
 
 	if (isLoading) return <LoadingOverlay />
 
+	if (!userData) {
+		return null
+	}
+
+	const userId = 'userId' in userData ? userData.userId : userData._id
+
 	return (
-		<Layout>
-			<Outlet />
-			<Toaster />
-			<ToasterSonner />
-		</Layout>
+		<ChatProvider userId={userId}>
+			<Layout>
+				<Outlet />
+				<Toaster />
+				<ToasterSonner />
+			</Layout>
+		</ChatProvider>
 	)
 }
 
