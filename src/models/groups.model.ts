@@ -46,3 +46,19 @@ export interface GroupResponseDto {
 	unreadCounts: Record<string, number>
 	lastSeenAtByUser: Record<string, string>
 }
+
+export interface MessageDto {
+    _id: string
+    groupId: string
+    senderId: {
+        _id: string
+        fullName: string
+        avatarUrl: string
+    }
+    content: string
+    type: 'text' | 'file' | 'image'
+    attachments?: string[]
+    replyTo?: string | null
+    createdAt: string
+    status?: 'sending' | 'sent' | 'delivered' | 'seen'
+}

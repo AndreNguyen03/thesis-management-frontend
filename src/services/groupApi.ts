@@ -1,5 +1,5 @@
 import { baseApi, type ApiResponse } from './baseApi'
-import type { GroupResponseDto, PaginatedGroup } from '@/models/groups.model'
+import type { GroupResponseDto, MessageDto, PaginatedGroup } from '@/models/groups.model'
 
 export const groupApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -17,8 +17,32 @@ export const groupApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<GroupResponseDto>) => response.data
+		}),
+		// ===== GET MESSAGES =====
+		getGroupMessages: builder.query<MessageDto[], { groupId: string; limit?: number; before?: string }>({
+			query: ({ groupId, limit, before }) => ({
+				url: `/groups/${groupId}/messages`,
+				method: 'GET',
+				params: { limit, before }
+			}),
+			transformResponse: (response: ApiResponse<MessageDto[]>) => response.data
+		}),
+
+		// ===== SEARCH MESSAGES =====
+		searchGroupMessages: builder.query<MessageDto[], { groupId: string; keyword: string; limit?: number }>({
+			query: ({ groupId, keyword, limit }) => ({
+				url: `/groups/${groupId}/search`,
+				method: 'GET',
+				params: { keyword, limit }
+			}),
+			transformResponse: (response: ApiResponse<MessageDto[]>) => response.data
 		})
 	})
 })
 
-export const { useGetPaginateGroupsQuery, useGetGroupDetailQuery } = groupApi
+export const {
+	useGetPaginateGroupsQuery,
+	useGetGroupDetailQuery,
+	useGetGroupMessagesQuery,
+	useSearchGroupMessagesQuery
+} = groupApi

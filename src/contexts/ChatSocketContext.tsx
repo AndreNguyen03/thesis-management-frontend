@@ -2,6 +2,8 @@
 // context/ChatContext.tsx
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { socketService } from '@/services/socket.service'
+import type { MessageDto } from '@/models/groups.model'
+import { groupApi } from '@/services/groupApi'
 
 const CHAT_NS = '/chat'
 
@@ -56,6 +58,11 @@ interface ChatContextValue {
 
 	sendTyping: (groupId: string, isTyping: boolean) => void
 	markGroupSeen: (groupId: string) => void
+
+	fetchGroupMessages: (groupId: string, limit?: number, before?: string) => Promise<ChatMessage[]>
+	searchGroupMessages: (groupId: string, keyword: string, limit?: number) => Promise<ChatMessage[]>
+
+	markAllMessagesAsSeenLocal: (groupId: string) => void
 }
 
 /* ================= CONTEXT ================= */
@@ -72,6 +79,9 @@ const ChatProvider: React.FC<{
 	const [onlineUsersByGroup, setOnlineUsersByGroup] = useState<Record<string, string[]>>({})
 	const [typingUsersByGroup, setTypingUsersByGroup] = useState<Record<string, string[]>>({})
 
+	/* ====== RTK Query lazy hook ====== */
+	const [triggerFetchGroupMessages] = groupApi.useLazyGetGroupMessagesQuery()
+	const [triggerSearchGroupMessages] = groupApi.useLazySearchGroupMessagesQuery()
 	/* ========== CONNECT SOCKET ========== */
 	useEffect(() => {
 		if (!userId) return
@@ -228,7 +238,7 @@ const ChatProvider: React.FC<{
 			replyTo: data.replyTo,
 			createdAt: new Date().toISOString(),
 			status: 'sending',
-            lastSeenAtByUser: {}
+			lastSeenAtByUser: {}
 		}
 
 		// 1️⃣ Optimistic push
@@ -253,6 +263,96 @@ const ChatProvider: React.FC<{
 		socketService.emit(CHAT_NS, 'group_message_seen', { groupId })
 	}
 
+	// ================= ACTIONS =================
+	/* ========== On-demand fetch group messages ====== */
+	const fetchGroupMessages = async (groupId: string, limit?: number, before?: string) => {
+		try {
+			const result = await triggerFetchGroupMessages({ groupId, limit, before }).unwrap()
+
+			const newMessages: ChatMessage[] = result.map((m: MessageDto) => ({
+				_id: m._id,
+				groupId: m.groupId,
+				senderId: m.senderId._id,
+				content: m.content,
+				type: m.type,
+				attachments: m.attachments ?? [],
+				replyTo: m.replyTo ?? undefined,
+				createdAt: m.createdAt,
+				status: m.status ?? 'sent',
+				lastSeenAtByUser: { [userId]: new Date().toISOString() } // lấy info từ server nếu có
+			}))
+
+			setMessagesByGroup((prev) => {
+				const existing = prev[groupId] ?? []
+
+				// Merge: nếu message đã có, giữ lastSeenAtByUser cũ, nếu mới thì thêm
+				const merged = [
+					...newMessages
+						.filter((m) => !existing.some((e) => e._id === m._id))
+						.map((m) => ({
+							...m,
+							lastSeenAtByUser: {
+								[userId]: new Date().toISOString(), // đánh dấu đã seen cho user hiện tại
+								...m.lastSeenAtByUser
+							}
+						})),
+					...existing
+				]
+
+				return {
+					...prev,
+					[groupId]: merged
+				}
+			})
+
+			return newMessages
+		} catch (error) {
+			console.error('Failed to fetch messages', error)
+			return []
+		}
+	}
+
+	/* ========== On-demand search messages ====== */
+	const searchGroupMessages: ChatContextValue['searchGroupMessages'] = async (groupId, keyword, limit) => {
+		try {
+			const result = await triggerSearchGroupMessages({ groupId, keyword, limit }).unwrap()
+			const messages: ChatMessage[] = result.map((m: MessageDto) => ({
+				_id: m._id,
+				groupId: m.groupId,
+				senderId: m.senderId._id,
+				content: m.content,
+				type: m.type,
+				attachments: m.attachments ?? [],
+				replyTo: m.replyTo ?? undefined,
+				createdAt: m.createdAt,
+				status: m.status ?? 'sent',
+				lastSeenAtByUser: { [userId]: new Date().toISOString() }
+			}))
+			return messages
+		} catch (error) {
+			console.error('Failed to search messages', error)
+			return []
+		}
+	}
+
+	const markAllMessagesAsSeenLocal = (groupId: string) => {
+		setMessagesByGroup((prev) => {
+			const list = prev[groupId] ?? []
+			const now = new Date().toISOString()
+			return {
+				...prev,
+				[groupId]: list.map((m) => ({
+					...m,
+					status: 'seen',
+					lastSeenAtByUser: {
+						...m.lastSeenAtByUser,
+						[userId]: now
+					}
+				}))
+			}
+		})
+	}
+
 	const value = useMemo(
 		() => ({
 			messagesByGroup,
@@ -260,7 +360,10 @@ const ChatProvider: React.FC<{
 			sendGroupMessage,
 			sendTyping,
 			typingUsersByGroup,
-			markGroupSeen
+			markGroupSeen,
+			fetchGroupMessages,
+			searchGroupMessages,
+			markAllMessagesAsSeenLocal
 		}),
 		[messagesByGroup, onlineUsersByGroup, typingUsersByGroup]
 	)

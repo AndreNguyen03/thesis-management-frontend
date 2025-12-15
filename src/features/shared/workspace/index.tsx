@@ -100,13 +100,18 @@ export const GroupWorkspacePage = () => {
 	return (
 		<div className='flex h-full w-full overflow-hidden'>
 			{/* Sidebar */}
-			<GroupSidebar groups={groups} selectedGroupId={selectedGroupId} onSelectGroup={handleSelectGroup} />
+			<GroupSidebar
+				groups={groups}
+				selectedGroupId={selectedGroupId}
+				onSelectGroup={handleSelectGroup}
+				participants={groupDetail?.participants ?? []}
+			/>
 
 			{/* Main Content - Resizable Panels */}
 			<div className='h-full flex-1'>
 				<ResizablePanelGroup direction='horizontal' className='h-full'>
 					{/* Chat Panel */}
-					<ResizablePanel defaultSize={40} minSize={25} maxSize={60}>
+					<ResizablePanel defaultSize={50} minSize={40} maxSize={40}>
 						{selectedGroupId ? (
 							<ChatPanel
 								groupName={activeGroup?.topic.titleVN || ''}
@@ -123,7 +128,7 @@ export const GroupWorkspacePage = () => {
 					<ResizableHandle withHandle />
 
 					{/* Work Panel */}
-					<ResizablePanel defaultSize={60} minSize={40}>
+					<ResizablePanel defaultSize={50} minSize={50}>
 						{milestones.length === 0 || tasks.length === 0 ? (
 							<div className='flex h-full items-center justify-center bg-gray-50'>
 								<div className='text-center'>

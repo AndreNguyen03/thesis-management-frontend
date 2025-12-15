@@ -69,8 +69,8 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 							</div>
 						</div>
 					)}
-					<main className='flex flex-1 overflow-hidden'>
-						<div className='flex h-full overflow-hidden'>{children}</div>
+					<main className='flex flex-1 w-full overflow-hidden'>
+						<div className='flex h-full w-full overflow-hidden'>{children}</div>
 						<FlashBanner />
 					</main>
 				</div>

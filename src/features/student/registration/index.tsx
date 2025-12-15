@@ -62,7 +62,7 @@ export default function TopicRegistration() {
 		isLoading: isLoadingTopics
 	} = useGetTopicsInPhaseQuery(
 		{
-			periodId: currentPeriod?._id!,
+			periodId: currentPeriod!._id,
 			queries: queryParams
 		},
 		{ skip: !currentPeriod?._id }
@@ -156,7 +156,7 @@ export default function TopicRegistration() {
 		setQueryParams((prev) => ({ ...prev, lecturerIds, page: 1 }))
 	}, [])
 	return (
-		<div className='max-h-[calc(100vh)] overflow-y-auto bg-background'>
+		<div className='max-h-[calc(100vh)] overflow-y-auto bg-background w-full'>
 			{/* HEADER */}
 			<header className='border-b bg-card'>
 				<div className='container py-4'>

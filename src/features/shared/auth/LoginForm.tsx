@@ -7,7 +7,6 @@ import { useLoginMutation } from '../../../services/authApi'
 import { getDeviceInfo } from '@/utils/utils'
 import type { ApiError } from '@/models/api'
 import { toast } from 'react-toastify'
-import { useGetProfileQuery } from '@/services/userApi'
 
 type LoginFormValues = {
 	email: string
@@ -29,16 +28,12 @@ function LoginForm() {
 	const onSubmit = async (data: LoginFormValues) => {
 		try {
 			const { email, password } = data
-
 			await login({ email, password, deviceInfo }).unwrap()
-
 			toast.success('Đăng nhập thành công!')
 			navigate('/dashboard')
 		} catch (err) {
 			const error = err as ApiError
-			console.log('Login error:', error)
 			methods.setValue('password', '')
-
 			toast.error(error?.data?.message || 'Đăng nhập thất bại')
 		}
 	}
@@ -48,12 +43,12 @@ function LoginForm() {
 			<form onSubmit={methods.handleSubmit(onSubmit)} className='space-y-4'>
 				{/* Email Field */}
 				<div className='space-y-2'>
-					<label htmlFor='email' className='font-semibold'>
+					<label htmlFor='email' className='font-semibold text-foreground'>
 						Email UIT
 					</label>
 					<FormInput<LoginFormValues>
 						name='email'
-						icon={<MailIcon size={18} />}
+						icon={<MailIcon size={18} className='text-muted-foreground' />}
 						placeholder='student@gm.uit.edu.vn'
 						rules={{ required: 'Email is required' }}
 						control={methods.control}
@@ -62,7 +57,7 @@ function LoginForm() {
 
 				{/* Password Field */}
 				<div className='space-y-2'>
-					<label htmlFor='password' className='font-semibold'>
+					<label htmlFor='password' className='font-semibold text-foreground'>
 						Mật khẩu
 					</label>
 					<PasswordInput<LoginFormValues> name='password' control={methods.control} />
@@ -78,7 +73,7 @@ function LoginForm() {
 				{/* Login Button */}
 				<Button
 					type='submit'
-					className='bg-gradient-primary hover:bg-primary-hover w-full'
+					className='w-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60'
 					disabled={isLoading}
 				>
 					{isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
