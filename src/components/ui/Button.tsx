@@ -8,7 +8,7 @@ const buttonVariants = cva(
 	'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
 	{
 		variants: {
-				variant: {
+			variant: {
 				default: 'bg-primary text-primary-foreground hover:opacity-90',
 				destructive: 'bg-destructive/80 text-destructive-foreground hover:bg-destructive',
 				outline: 'border border-input bg-background hover:bg-muted hover:text-foreground transition-colors',
@@ -32,7 +32,8 @@ const buttonVariants = cva(
 				config: 'bg-purple-600 text-white text-wrap text-[13px] max-w-[120px] hover:bg-purple-700 p-0',
 				toggle_green: 'border border-green-500 bg-white text-green-600 hover:bg-green-600 hover:text-white',
 				toggle_orange:
-					'border hover:border-none border-yellow-500  bg-yellow-300 text-yellow-800 hover:bg-red-500 hover:text-white'
+					'border hover:border-none border-yellow-500  bg-yellow-300 text-yellow-800 hover:bg-red-500 hover:text-white',
+				mini: 'bg-primary text-primary-foreground hover:opacity-90 text-xs px-2 py-1 rounded'
 			},
 			size: {
 				default: 'h-10 px-4 py-2 ',
@@ -49,8 +50,7 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-	extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-		VariantProps<typeof buttonVariants> {
+	extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
 	asChild?: boolean
 }
 

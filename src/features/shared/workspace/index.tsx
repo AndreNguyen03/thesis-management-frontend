@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { GroupSidebar } from './components/GroupSidebar'
 import { ChatPanel } from './components/ChatPanel'
 import { WorkPanel } from './components/WorkPanel'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
+import { useGetStaskQuery } from '@/services/todolistApi'
+import type { Task } from '@/models/todolist.model'
 
 // Mock Data
 const mockGroups = [
@@ -59,36 +61,155 @@ const initialMilestones = [
 	}
 ]
 
-const initialTasks = [
-	{
-		id: 'TASK-1',
-		title: 'Thiết kế Wireframe Trang chủ',
-		subtasks: [
-			{ id: 1, title: 'Nghiên cứu UI/UX', status: 'Todo' as const },
-			{ id: 2, title: 'Vẽ bản nháp cơ bản', status: 'In Progress' as const },
-			{ id: 3, title: 'Thêm tương tác cơ bản', status: 'Done' as const }
-		]
-	},
-	{
-		id: 'TASK-2',
-		title: 'Cài đặt Database PostgreSQL',
-		subtasks: [
-			{ id: 4, title: 'Chọn dịch vụ Hosting', status: 'Done' as const },
-			{ id: 5, title: 'Tạo Schema ban đầu', status: 'Done' as const },
-			{ id: 6, title: 'Kết nối API với DB', status: 'In Progress' as const }
-		]
-	},
-	{
-		id: 'TASK-3',
-		title: 'Viết API cho Đăng nhập/Đăng ký',
-		subtasks: [{ id: 7, title: 'Thiết kế Endpoint', status: 'Todo' as const }]
-	}
-]
+// const initialTasks: Task[] = [
+// 	{
+// 		groupId: 'GROUP-001',
+// 		title: 'Thiết kế Wireframe Trang chủ',
+// 		description: 'Tạo wireframe chi tiết cho trang chủ của ứng dụng E-commerce',
+// 		columns: [
+// 			{
+// 				title: 'Todo',
+// 				color: '#ef4444',
+// 				items: [
+// 					{ title: 'Nghiên cứu UI/UX các trang tương tự', isCompleted: false },
+// 					{ title: 'Xác định các thành phần chính', isCompleted: false }
+// 				]
+// 			},
+// 			{
+// 				title: 'In Progress',
+// 				color: '#f59e0b',
+// 				items: [
+// 					{ title: 'Vẽ bản nháp cơ bản trên Figma', isCompleted: false },
+// 					{ title: 'Thiết kế responsive cho mobile', isCompleted: false }
+// 				]
+// 			},
+// 			{
+// 				title: 'Done',
+// 				color: '#10b981',
+// 				items: [
+// 					{ title: 'Thêm tương tác cơ bản', isCompleted: true },
+// 					{ title: 'Review với nhóm', isCompleted: true }
+// 				]
+// 			}
+// 		]
+// 	},
+// 	{
+// 		groupId: 'GROUP-001',
+// 		title: 'Cài đặt Database PostgreSQL',
+// 		description: 'Thiết lập và cấu hình database cho hệ thống',
+// 		columns: [
+// 			{
+// 				title: 'Todo',
+// 				color: '#ef4444',
+// 				items: [{ title: 'Viết migration scripts', isCompleted: false }]
+// 			},
+// 			{
+// 				title: 'In Progress',
+// 				color: '#f59e0b',
+// 				items: [
+// 					{ title: 'Kết nối API với DB', isCompleted: false },
+// 					{ title: 'Test CRUD operations', isCompleted: false }
+// 				]
+// 			},
+// 			{
+// 				title: 'Done',
+// 				color: '#10b981',
+// 				items: [
+// 					{ title: 'Chọn dịch vụ Hosting (Supabase)', isCompleted: true },
+// 					{ title: 'Tạo Schema ban đầu', isCompleted: true },
+// 					{ title: 'Setup connection pooling', isCompleted: true }
+// 				]
+// 			}
+// 		]
+// 	},
+// 	{
+// 		groupId: 'GROUP-001',
+// 		title: 'Viết API cho Đăng nhập/Đăng ký',
+// 		description: 'Phát triển authentication endpoints với JWT',
+// 		columns: [
+// 			{
+// 				title: 'Todo',
+// 				color: '#ef4444',
+// 				items: [
+// 					{ title: 'Thiết kế API Endpoint', isCompleted: false },
+// 					{ title: 'Viết validation middleware', isCompleted: false },
+// 					{ title: 'Implement JWT token refresh', isCompleted: false },
+// 					{ title: 'Viết unit tests', isCompleted: false }
+// 				]
+// 			},
+// 			{
+// 				title: 'In Progress',
+// 				color: '#f59e0b',
+// 				items: []
+// 			},
+// 			{
+// 				title: 'Done',
+// 				color: '#10b981',
+// 				items: []
+// 			}
+// 		]
+// 	},
+// 	{
+// 		groupId: 'GROUP-001',
+// 		title: 'Xây dựng Trang sản phẩm',
+// 		description: 'Tạo giao diện hiển thị danh sách và chi tiết sản phẩm',
+// 		columns: [
+// 			{
+// 				title: 'Todo',
+// 				color: '#ef4444',
+// 				items: [
+// 					{ title: 'Design product card component', isCompleted: false },
+// 					{ title: 'Implement filter & search', isCompleted: false }
+// 				]
+// 			},
+// 			{
+// 				title: 'In Progress',
+// 				color: '#f59e0b',
+// 				items: [
+// 					{ title: 'Code product listing page', isCompleted: false },
+// 					{ title: 'Add pagination', isCompleted: false }
+// 				]
+// 			},
+// 			{
+// 				title: 'Done',
+// 				color: '#10b981',
+// 				items: [{ title: 'Setup routing', isCompleted: true }]
+// 			}
+// 		]
+// 	},
+// 	{
+// 		groupId: 'TOPIC-001',
+// 		title: 'Tích hợp Thanh toán Online',
+// 		description: 'Kết nối với cổng thanh toán VNPay/Momo',
+// 		columns: [
+// 			{
+// 				title: 'Todo',
+// 				color: '#ef4444',
+// 				items: [
+// 					{ title: 'Đăng ký tài khoản sandbox VNPay', isCompleted: false },
+// 					{ title: 'Đọc tài liệu API', isCompleted: false },
+// 					{ title: 'Tạo payment flow diagram', isCompleted: false },
+// 					{ title: 'Implement payment callback handler', isCompleted: false },
+// 					{ title: 'Test với sandbox', isCompleted: false }
+// 				]
+// 			},
+// 			{
+// 				title: 'In Progress',
+// 				color: '#f59e0b',
+// 				items: []
+// 			},
+// 			{
+// 				title: 'Done',
+// 				color: '#10b981',
+// 				items: []
+// 			}
+// 		]
+// 	}
+// ]
 
 export const GroupWorkspacePage = () => {
 	const [selectedGroupId, setSelectedGroupId] = useState(mockGroups[0].id)
 	const [milestones, setMilestones] = useState(initialMilestones)
-	const [tasks, setTasks] = useState(initialTasks)
 
 	const activeGroup = mockGroups.find((g) => g.id === selectedGroupId)
 
@@ -137,13 +258,13 @@ export const GroupWorkspacePage = () => {
 	}
 
 	return (
-		<div className='flex  w-full overflow-hidden'>
+		<div className='flex w-full overflow-hidden'>
 			{/* Sidebar */}
 			<GroupSidebar groups={mockGroups} selectedGroupId={selectedGroupId} onSelectGroup={handleSelectGroup} />
 
 			{/* Main Content - Resizable Panels */}
-			<div className='h-full flex-1'>
-				<ResizablePanelGroup direction='horizontal' className='h-full'>
+			<div className='h-100dvh flex-1'>
+				<ResizablePanelGroup direction='horizontal' className='max-h-[100dvh]'>
 					{/* Chat Panel */}
 					<ResizablePanel defaultSize={40} minSize={25} maxSize={60}>
 						<ChatPanel groupName={activeGroup?.name || ''} />
@@ -155,8 +276,6 @@ export const GroupWorkspacePage = () => {
 					<ResizablePanel defaultSize={60} minSize={40}>
 						<WorkPanel
 							milestones={milestones}
-							tasks={tasks}
-							setTasks={setTasks}
 							totalProgress={totalProgress}
 							updateMilestone={updateMilestone}
 						/>

@@ -65,7 +65,7 @@ const menuItems: Record<Role | 'common' | 'footer' | 'period_info', MenuItem[]> 
 			]
 		},
 		{ title: 'Đăng kí đề tài', url: '/registration', icon: Search },
-		{ title: 'Nhóm của tôi', url: '/my-group', icon: Users },
+		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp }
 	],
@@ -73,7 +73,7 @@ const menuItems: Record<Role | 'common' | 'footer' | 'period_info', MenuItem[]> 
 		{ title: 'Đăng đề tài', url: '/create-topic', icon: PlusCircle },
 		{ title: 'Quản lý đề tài', url: '/manage-topics', icon: FileText },
 		{ title: 'Xét duyệt đăng ký', url: '/approve-registrations', icon: UserCheck },
-		{ title: 'Nhóm của tôi', url: '/my-groups', icon: Users },
+		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp },
 		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }

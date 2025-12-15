@@ -13,6 +13,7 @@ import type {
 	RequestGradeTopicDto,
 	PaginationTopicsQueryParams
 } from '@/models'
+import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox, GetMajorMiniDto } from '@/models/major.model'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -233,7 +234,7 @@ export const topicApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),
-		lecturerUploadFiles: builder.mutation<{ message: string }, { topicId: string; files: File[] }>({
+		lecturerUploadFiles: builder.mutation<GetUploadedFileDto[], { topicId: string; files: File[] }>({
 			query: ({ topicId, files }) => {
 				const formData = new FormData()
 				files.forEach((file) => formData.append('files', file))
@@ -242,7 +243,8 @@ export const topicApi = baseApi.injectEndpoints({
 					method: 'POST',
 					body: formData
 				}
-			}
+			},
+			transformResponse: (response: ApiResponse<GetUploadedFileDto[]>) => response.data
 		}),
 		lecturerDeleteFiles: builder.mutation<{ message: string }, { topicId: string; fileIds: string[] }>({
 			query: ({ topicId, fileIds }) => ({
@@ -306,6 +308,17 @@ export const topicApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<string[]>) => response.data
+		}),
+		getDocumentsOfTopic: builder.query<GetUploadedFileDto[], { topicId: string }>({
+			query: ({ topicId }) => `/topics/${topicId}/documents`,
+			transformResponse: (response: ApiResponse<GetUploadedFileDto[]>) => response.data
+		}),
+		downloadTopicFilesZip: builder.mutation<Blob, { topicId: string }>({
+			query: ({ topicId }) => ({
+				url: `/topics/${topicId}/download-zip`,
+				method: 'GET',
+				responseHandler: (response) => response.blob()
+			})
 		})
 	}),
 	overrideExisting: false
@@ -346,5 +359,7 @@ export const {
 	useCopyToDraftMutation,
 	useDeleteTopicsMutation,
 	useGetMajorComboboxQuery,
-	useGetYearComboboxQuery
+	useGetYearComboboxQuery,
+	useGetDocumentsOfTopicQuery,
+	useDownloadTopicFilesZipMutation
 } = topicApi
