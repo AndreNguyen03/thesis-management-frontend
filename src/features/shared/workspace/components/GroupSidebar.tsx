@@ -1,69 +1,72 @@
-import { Users, Settings, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-interface Group {
-  id: number;
-  name: string;
-  lastMessage: string;
-}
+import { Settings, Plus } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { Group } from '@/models/groups.model'
 
 interface GroupSidebarProps {
-  groups: Group[];
-  selectedGroupId: number;
-  onSelectGroup: (id: number) => void;
+	groups: Group[]
+	selectedGroupId: string
+	onSelectGroup: (id: string) => void
+}
+
+const formatTime = (createdAt: string): string => {
+	if (!createdAt) return ''
+	const date = new Date(createdAt)
+	return date.toLocaleString('vi-VN', {
+		hour: '2-digit',
+		minute: '2-digit',
+		day: '2-digit',
+		month: '2-digit'
+	})
 }
 
 export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup }: GroupSidebarProps) => {
-  return (
-    <div className="w-64 h-full bg-sidebar flex flex-col border-r border-sidebar-border">
-      {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <Users className="w-5 h-5 text-sidebar-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-sidebar-foreground">Quản lý Nhóm</h1>
-            <p className="text-xs text-sidebar-foreground/60">Jane Doe</p>
-          </div>
-        </div>
-      </div>
+	return (
+		<div className='flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar'>
+			{/* Groups List */}
+			<nav className='flex-1 space-y-1 overflow-y-auto p-2'>
+				{groups.map((group) => {
+					const lastMsg = group.lastMessage
+					const senderName = lastMsg?.sender?.fullName || 'Unknown'
+					const content = lastMsg?.content || 'Chưa có tin nhắn'
+					const time = formatTime(lastMsg?.createdAt)
 
-      {/* Groups List */}
-      <nav className="flex-1 overflow-y-auto p-2 space-y-1">
-        {groups.map((group) => (
-          <div
-            key={group.id}
-            onClick={() => onSelectGroup(group.id)}
-            className={cn(
-              'sidebar-item',
-              selectedGroupId === group.id && 'sidebar-item-active'
-            )}
-          >
-            <div className="w-8 h-8 rounded-lg bg-sidebar-accent flex items-center justify-center shrink-0">
-              <span className="text-xs font-bold text-sidebar-accent-foreground">
-                {group.name.charAt(0)}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium truncate">{group.name}</p>
-              <p className="text-xs truncate opacity-60">{group.lastMessage}</p>
-            </div>
-          </div>
-        ))}
-      </nav>
+					return (
+						<div
+							key={group._id}
+							onClick={() => onSelectGroup(group._id)}
+							className={cn(
+								'sidebar-item group cursor-pointer rounded-md px-3 py-2 transition-colors',
+								'hover:bg-sidebar-accent/60', // 👈 hover đậm nhẹ
+								selectedGroupId === group._id && 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/15' // 👈 selected xanh nhạt
+							)}
+						>
+							<div className='min-w-0 flex-1'>
+								<p className='truncate text-sm font-medium'>{group.topic.titleVN}</p>
+								<div className='flex items-center justify-between text-xs opacity-60'>
+									<div className='flex min-w-0 gap-1'>
+										<p className='max-w-[120px] truncate'>{senderName}</p>
+										<span>-</span>
+										<p className='max-w-[120px] truncate'>{content}</p>
+									</div>
+									<span className='ml-2 whitespace-nowrap text-right'>{time}</span>
+								</div>
+							</div>
+						</div>
+					)
+				})}
+			</nav>
 
-      {/* Footer Actions */}
-      <div className="p-3 border-t border-sidebar-border space-y-1">
-        <button className="sidebar-item w-full">
-          <Plus className="w-4 h-4" />
-          <span className="text-sm">Tạo nhóm mới</span>
-        </button>
-        <button className="sidebar-item w-full">
-          <Settings className="w-4 h-4" />
-          <span className="text-sm">Cài đặt</span>
-        </button>
-      </div>
-    </div>
-  );
-};
+			{/* Footer Actions */}
+			<div className='space-y-1 border-t border-sidebar-border p-3'>
+				<button className='sidebar-item w-full'>
+					<Plus className='h-4 w-4' />
+					<span className='text-sm'>Tạo nhóm mới</span>
+				</button>
+				<button className='sidebar-item w-full'>
+					<Settings className='h-4 w-4' />
+					<span className='text-sm'>Cài đặt</span>
+				</button>
+			</div>
+		</div>
+	)
+}

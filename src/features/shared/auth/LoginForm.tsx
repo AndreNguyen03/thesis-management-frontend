@@ -7,6 +7,7 @@ import { useLoginMutation } from '../../../services/authApi'
 import { getDeviceInfo } from '@/utils/utils'
 import type { ApiError } from '@/models/api'
 import { toast } from 'react-toastify'
+import { useGetProfileQuery } from '@/services/userApi'
 
 type LoginFormValues = {
 	email: string
@@ -30,6 +31,7 @@ function LoginForm() {
 			const { email, password } = data
 
 			await login({ email, password, deviceInfo }).unwrap()
+
 			toast.success('Đăng nhập thành công!')
 			navigate('/dashboard')
 		} catch (err) {
@@ -76,7 +78,7 @@ function LoginForm() {
 				{/* Login Button */}
 				<Button
 					type='submit'
-					className='w-full bg-gradient-primary hover:bg-primary-hover'
+					className='bg-gradient-primary hover:bg-primary-hover w-full'
 					disabled={isLoading}
 				>
 					{isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
