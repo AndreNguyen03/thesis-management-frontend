@@ -10,7 +10,6 @@ import { useRenameFilesMutation } from '@/services/uploadfilesApi'
 import { formatFileSize } from '@/utils/format-file-size'
 import { Download, FileText, FolderPen, Loader2, User, X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import { file } from 'zod'
 
 interface ManageUploadFileModalProps {
 	topicId: string
@@ -25,8 +24,7 @@ const ManageUploadFileModal = ({
 	openFileModal,
 	setOpenFileModal,
 	files,
-	onRefetch,
-	isEditing
+	onRefetch
 }: ManageUploadFileModalProps) => {
 	const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 

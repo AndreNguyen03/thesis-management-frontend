@@ -1,4 +1,3 @@
-
 import { cn } from '@/lib/utils'
 import type { Group } from '@/models/groups.model'
 import { useChat } from '@/hooks'
@@ -14,7 +13,7 @@ interface Participant {
 
 interface GroupSidebarProps {
 	groups: Group[]
-	selectedGroupId: string
+	selectedGroupId?: string 
 	onSelectGroup: (id: string) => void
 	participants: Participant[]
 }
@@ -44,6 +43,7 @@ export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup, participa
 	}, [participants])
 
 	const handleSelectGroup = (groupId: string) => {
+		console.log('Selecting group:', groupId)
 		onSelectGroup(groupId)
 		markGroupSeen?.(groupId) // 🔹 mark seen ngay khi mở group
 	}
@@ -80,7 +80,7 @@ export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup, participa
 						>
 							<div className='flex min-w-0 items-center justify-between'>
 								<div className='min-w-0 flex-1'>
-									<p className='truncate text-sm font-medium'>{group.topic.titleVN}</p>
+									<p className='truncate text-sm font-medium'>{group.titleVN}</p>
 									<div className='flex items-center justify-between text-xs opacity-60'>
 										<div className='flex min-w-0 gap-1'>
 											<p className='max-w-[120px] truncate'>{senderName}</p>

@@ -9,12 +9,12 @@ export const UploadFileTypes = {
 export interface GetUploadedFileDto {
 	_id: string
 	fileNameBase: string
-	fileUrl: string
-	mimeType: string
+	fileUrl?: string
+	type: 'pdf' | 'doc' | 'image' | 'other'
 	fileType: string
 	size: number
 	actor: ResponseMiniLecturerDto
-	created_at: Date
+	created_at: string
 }
 
 export interface RenameFilesBody {

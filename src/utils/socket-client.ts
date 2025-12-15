@@ -19,7 +19,6 @@ export const disconnectSocket = () => {
 	}
 }
 
-// Hàm quan trọng: Đợi socket sẵn sàng để RTK Query sử dụng
 export const waitForSocket = (interval = 500, maxAttempts = 10): Promise<Socket | null> => {
 	return new Promise((resolve) => {
 		let attempts = 0

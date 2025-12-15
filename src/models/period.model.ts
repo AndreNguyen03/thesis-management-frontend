@@ -23,6 +23,7 @@ export interface Period {
 export interface MiniPeriod {
 	_id: string
 	name: string
+	faculty: GetFaculty
 }
 export interface CreatePeriodPayload {
 	year: string

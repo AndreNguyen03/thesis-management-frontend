@@ -9,3 +9,10 @@ export interface GetMajorMiniDto {
 export interface PaginatedMajor extends GetPaginatedObject {
 	data: GetMajorMiniDto[]
 }
+export interface GetMajorLibraryCombox {
+	_id: string
+	name: string
+	facultyName: string
+	count: number
+}
+
