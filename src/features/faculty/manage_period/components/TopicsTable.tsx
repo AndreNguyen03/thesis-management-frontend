@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react'
 import type { PeriodPhase } from '@/models/period-phase.models'
 import type { PhaseType } from '@/models/period.model'
 import type { GeneralTopic, GetPhaseHistoryDto, PaginationTopicsQueryParams, TopicStatus } from '@/models/topic.model'
@@ -21,24 +21,15 @@ interface TopicsTableProps {
 	phase: PeriodPhase
 	periodId: string
 	statFilter: TopicStatus | 'all'
+	queryParams: PaginationTopicsQueryParams
+	setQueryParams:  Dispatch<SetStateAction<PaginationTopicsQueryParams>>
 }
 
-export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
+export function TopicsTable({ phase, statFilter, periodId, queryParams, setQueryParams }: TopicsTableProps) {
 	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
 	const [detailModalOpen, setDetailModalOpen] = useState(false)
 
 	const navigate = useNavigate()
-
-	const [queryParams, setQueryParams] = useState<PaginationTopicsQueryParams>({
-		page: 1,
-		limit: 10,
-		search_by: 'title',
-		query: '',
-		sort_by: 'createdAt',
-		sort_order: 'desc',
-		status: statFilter ?? 'all',
-		phase: phase.phase
-	})
 
 	const { data, isLoading, error, refetch } = useGetTopicsInPhaseQuery(
 		{
@@ -56,9 +47,9 @@ export function TopicsTable({ phase, statFilter, periodId }: TopicsTableProps) {
 				...prev,
 				query: '',
 				page: 1,
-				search_by: '',
+				search_by: [],
 				status: statFilter
-			}))
+			} as PaginationTopicsQueryParams))
 		} else {
 			setQueryParams((prev) => ({ ...prev, query: '', page: 1 }))
 		}

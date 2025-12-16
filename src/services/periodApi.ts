@@ -10,9 +10,10 @@ import {
 	type CreatePhaseSubmitTopicDto,
 	type GetCustomMiniPeriodInfoRequestDto,
 	type Period,
+	type UpdatePeriodDto,
 	type UpdatePeriodPhaseDto
 } from '@/models/period.model'
-import { type PaginationQueryParamsDto } from '@/models/query-params'
+import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 import type { GetStatiticInPeriod } from '@/models/statistic.model'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
 
@@ -21,18 +22,7 @@ export const periodApi = baseApi.injectEndpoints({
 		// lấy tất cả period
 		getPeriods: builder.query<PaginatedResponse<Period>, PaginationQueryParamsDto>({
 			query: (params) => {
-				const queryString = new URLSearchParams(
-					Object.entries(params).reduce(
-						(acc, [key, value]) => {
-							if (value !== undefined && value !== null && value !== '') {
-								acc[key] = String(value)
-							}
-							return acc
-						},
-						{} as Record<string, string>
-					)
-				).toString()
-
+				const queryString = buildQueryString(params)
 				return {
 					url: `/periods/get-all?${queryString}`,
 					method: 'GET'
@@ -146,7 +136,7 @@ export const periodApi = baseApi.injectEndpoints({
 		}),
 
 		//getSubmissionStatus
-	
+
 		//Lấy thông tin của kì hiện tại ở khoa của người dùng
 		getCurrentThesisPeriodInfo: builder.query<GetCustomMiniPeriodInfoRequestDto | null, void>({
 			query: () => ({
@@ -174,6 +164,15 @@ export const periodApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<Phase1Response | Phase2Response | Phase3Response>) =>
 				response.data,
 			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
+		}),
+		adjustPeriod: builder.mutation<Period, { periodId: string; body: UpdatePeriodDto }>({
+			query: ({ periodId, body }) => ({
+				url: `/periods/adjust-period/${periodId}`,
+				method: 'PATCH',
+				body
+			}),
+			transformResponse: (response: ApiResponse<Period>) => response.data,
+			invalidatesTags: ['Periods', 'PeriodDetail']
 		})
 	})
 })
@@ -189,5 +188,6 @@ export const {
 	useGetPeriodsQuery,
 	useCreatePeriodMutation,
 	useGetCurrentThesisPeriodInfoQuery,
-	useLecGetStatsPeriodQuery
+	useLecGetStatsPeriodQuery,
+	useAdjustPeriodMutation
 } = periodApi

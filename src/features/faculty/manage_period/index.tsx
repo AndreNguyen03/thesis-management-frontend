@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
 import { AddPeriodModal } from './components/modals/AddPeriodModal'
-import { PeriodsTable } from './components/PeriodTable'
 import { usePageBreadcrumb } from '@/hooks'
+import PeriodDataTable from './components/datatables/PeriodDataTable'
 
 export function ManagePeriodPage() {
 	const [addModalOpen, setAddModalOpen] = useState(false)
@@ -13,10 +13,17 @@ export function ManagePeriodPage() {
 	])
 
 	return (
-		<div className='h-[calc(100vh-10rem)] min-h-0 overflow-auto'>
+		<div className='mx-10 h-[calc(100vh-10rem)] min-h-0 w-full overflow-auto'>
 			{/* Header */}
-			<PeriodsTable onOpenModal={setAddModalOpen} />
-
+			<div className='flex flex-col' role='main'>
+				<header className='mb-6 mt-6 flex items-center justify-between px-2'>
+					<header className='flex flex-col items-start justify-between'>
+						<h1 className='text-2xl font-bold'>Quản lý Đợt Đăng Ký</h1>
+						<p className='mt-1 text-muted-foreground'>Quản lý các đợt đăng ký đề tài tốt nghiệp</p>
+					</header>
+				</header>
+				<PeriodDataTable onOpenChange={() => setAddModalOpen(true)} />
+			</div>
 			{/* Add Period Modal */}
 			<AddPeriodModal open={addModalOpen} onOpenChange={setAddModalOpen} />
 		</div>

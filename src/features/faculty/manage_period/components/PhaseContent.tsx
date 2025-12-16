@@ -3,13 +3,18 @@ import { getLabelForStatus, getPhaseStats } from '../utils'
 import { motion } from 'framer-motion'
 import { type PeriodPhase, type ResolvePhaseResponse } from '@/models/period-phase.models'
 import { useState, type SetStateAction, type Dispatch, useEffect, useRef } from 'react'
-import { type TopicStatus } from '@/models'
+import { type PaginationTopicsQueryParams, type TopicStatus } from '@/models'
 import type { PhaseType } from '@/models/period.model'
 // import { toast } from '@/hooks/use-toast'
 import { useLecGetStatsPeriodQuery, useResolvePhaseMutation } from '@/services/periodApi'
 import { PhaseHeader } from './PhaseHeader'
 import { PhaseActionsBox } from './PhaseActionsBox'
-import { TopicsTable } from './TopicsTable'
+import PhaseDataTable from './DataTable'
+import { useGetTopicsInPhaseQuery } from '@/services/topicApi'
+import { useDebounce } from '@/hooks/useDebounce'
+import { Card, Input } from '@/components/ui'
+import { CustomPagination } from '@/components/PaginationBar'
+// import { TopicsTable } from './TopicsTable'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
 	currentPhase: PhaseType
@@ -37,6 +42,37 @@ export function PhaseContent({
 
 	const [resolvePhaseData, setResolvePhaseData] = useState<ResolvePhaseResponse | null>(null)
 
+	const [searchTerm, setSearchTerm] = useState('')
+	const setQuery = (query: string) => {
+		setQueryParams((prev) => ({ ...prev, query }))
+	}
+	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 400 })
+	const onEdit = (val: string) => {
+		setSearchTerm(val)
+		debounceOnChange(val)
+	}
+	const [queryParams, setQueryParams] = useState<PaginationTopicsQueryParams>({
+		limit: 10,
+		page: 1,
+		search_by: ['titleVN', 'titleEng', 'lecturers.fullName', 'periodName'],
+		query: '',
+		sort_by: 'createdAt',
+		sort_order: 'desc',
+		phase: phaseDetail.phase,
+		status: statusFilter
+	})
+	const {
+		data: topicInPhaseData,
+		isLoading,
+		error,
+		refetch
+	} = useGetTopicsInPhaseQuery(
+		{
+			periodId,
+			queries: queryParams
+		},
+		{ skip: !periodId }
+	)
 	useEffect(() => {
 		if (!phaseDetail) return
 
@@ -100,7 +136,7 @@ export function PhaseContent({
 				}}
 			/>
 
-			<StatsCards stats={stats} onClick={setStatusFilter} />
+			<StatsCards stats={stats} onClick={(status) => setQueryParams((prev) => ({ ...prev, status }))} />
 
 			{/* Phase Actions Box */}
 			{resolvePhaseData && phaseDetail.phase === currentPhase && (
@@ -118,7 +154,32 @@ export function PhaseContent({
 						? `Danh sách các đề tài ${getLabelForStatus(statusFilter)}`
 						: 'Danh sách đề tài đã nộp'}
 				</h3>
-				<TopicsTable phase={phaseDetail} statFilter={statusFilter} periodId={periodId} />
+				{/* <TopicsTable
+					phase={phaseDetail}
+					statFilter={statusFilter}
+					periodId={periodId}
+					queryParams={queryParams}
+					setQueryParams={setQueryParams}
+				/> */}
+				<Card className='space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
+					<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
+					<p className='mb-6 text-sm text-gray-500'>Tổng quan về tất cả các đợt bạn đã tham gia.</p>
+					<div className='mb-4 flex flex-col gap-4 sm:flex-row sm:items-center'>
+						<Input
+							placeholder='Tìm kiếm theo Đợt, Đề tài, hoặc Giảng viên...'
+							value={searchTerm}
+							onChange={(e) => onEdit(e.target.value)}
+							className='sm:w-[350px]'
+						/>
+					</div>
+					<PhaseDataTable data={topicInPhaseData} refetch={refetch} phaseId={phaseDetail._id} />
+					{topicInPhaseData?.meta && topicInPhaseData?.meta.totalPages > 1 && (
+						<CustomPagination
+							meta={topicInPhaseData?.meta}
+							onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
+						/>
+					)}
+				</Card>
 			</div>
 		</motion.div>
 	)

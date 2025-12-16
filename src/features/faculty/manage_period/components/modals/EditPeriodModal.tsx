@@ -1,13 +1,4 @@
-import { Button, Input } from '@/components/ui'
-import { Calendar } from '@/components/ui/calendar'
-import { Label } from '@/components/ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
-import { CalendarIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { format } from 'date-fns'
-import { vi } from 'date-fns/locale'
-import type { Period } from '@/models/period.model'
+import { useState } from 'react'
 import {
 	Dialog,
 	DialogContent,
@@ -16,119 +7,159 @@ import {
 	DialogHeader,
 	DialogTitle
 } from '@/components/ui/Dialog'
+import { Button } from '@/components/ui/Button'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { format } from 'date-fns'
+import { toast } from '@/hooks/use-toast'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { useCreatePeriodMutation } from '@/services/periodApi'
+import type { ApiError } from '@/models'
+import type { Period, UpdatePeriodDto } from '@/models/period.model'
 
 interface EditPeriodModalProps {
+	data: Period
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	period: Period | null
-	onSubmit: (data: { id: string; name: string; startDate: Date; endDate: Date }) => void
+	onSubmit: (updatedPeriod: UpdatePeriodDto) => void
+	isLoading: boolean
 }
 
-export function EditPeriodModal({ open, onOpenChange, period, onSubmit }: EditPeriodModalProps) {
-	const [name, setName] = useState('')
-	const [startDate, setStartDate] = useState<Date>()
-	const [endDate, setEndDate] = useState<Date>()
+export function EditPeriodModal({ data, open, onSubmit, isLoading, onOpenChange }: EditPeriodModalProps) {
+	const [academicYear, setAcademicYear] = useState(data.year)
+	const [semester, setSemester] = useState(String(data.semester))
+	const [periodType, setPeriodType] = useState<'thesis' | 'scientific_research'>(data.type)
 
-	// Khi period thay đổi thì set state
-	useEffect(() => {
-		if (period) {
-			setName(period.name)
+	const [startTime, setStartTime] = useState<string>(format(new Date(data.startTime), "yyyy-MM-dd'T'HH:mm"))
+	const [endTime, setEndTime] = useState<string>(format(new Date(data.endTime), "yyyy-MM-dd'T'HH:mm"))
 
-			setStartDate(period.startTime ? new Date(period.startTime) : undefined)
-
-			setEndDate(period.endTime ? new Date(period.endTime) : undefined)
-		}
-	}, [period])
-
-	const handleSubmit = () => {
-		if (period && name && startDate && endDate) {
-			onSubmit({
-				id: period._id,
-				name,
-				startDate,
-				endDate
-			})
-			onOpenChange(false)
-		}
+	const resetForm = () => {
+		setAcademicYear('')
+		setSemester('')
+		setPeriodType('thesis')
+		setStartTime('')
+		setEndTime('')
+		onOpenChange(false)
 	}
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='sm:max-w-[600px]'>
-				<DialogHeader>
-					<DialogTitle>Chỉnh sửa đợt đăng ký</DialogTitle>
-					<DialogDescription>Chỉ chỉnh sửa được tên, mô tả và thời gian đợt đăng ký</DialogDescription>
-				</DialogHeader>
+			<DialogContent className='sm:max-w-[650px]'>
+				{isLoading ? (
+					<LoadingState message='Đang tạo đợt đăng ký...' />
+				) : (
+					<>
+						<DialogHeader>
+							<DialogTitle>Chỉnh sửa đợt/kì</DialogTitle>
+							<DialogDescription>
+								Chỉnh sửa một đợt đăng ký khóa luận / NCKH cho sinh viên
+							</DialogDescription>
+						</DialogHeader>
 
-				<div className='space-y-6 py-4'>
-					{/* Tên đợt */}
-					<div className='space-y-2'>
-						<Label htmlFor='name'>Tên đợt đăng ký *</Label>
-						<Input id='name' value={name} onChange={(e) => setName(e.target.value)} />
-					</div>
-
-					{/* Thời gian */}
-					<div className='grid grid-cols-2 gap-4'>
-						{/* Ngày bắt đầu */}
-						<div className='space-y-2'>
-							<Label>Ngày bắt đầu *</Label>
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button
-										variant='outline'
-										className={cn(
-											'w-full justify-start text-left font-normal',
-											!startDate && 'text-muted-foreground'
-										)}
-									>
-										<CalendarIcon className='mr-2 h-4 w-4' />
-										{startDate ? format(startDate, 'dd/MM/yyyy', { locale: vi }) : 'Chọn ngày'}
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className='w-auto p-0' align='start'>
-									<Calendar mode='single' selected={startDate} onSelect={setStartDate} initialFocus />
-								</PopoverContent>
-							</Popover>
-						</div>
-
-						{/* Ngày kết thúc */}
-						<div className='space-y-2'>
-							<Label>Ngày kết thúc *</Label>
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button
-										variant='outline'
-										className={cn(
-											'w-full justify-start text-left font-normal',
-											!endDate && 'text-muted-foreground'
-										)}
-									>
-										<CalendarIcon className='mr-2 h-4 w-4' />
-										{endDate ? format(endDate, 'dd/MM/yyyy', { locale: vi }) : 'Chọn ngày'}
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className='w-auto p-0' align='start'>
-									<Calendar
-										mode='single'
-										selected={endDate}
-										onSelect={setEndDate}
-										initialFocus
-										disabled={(date: Date) => (startDate ? date < startDate : false)}
+						<div className='space-y-6 py-4'>
+							{/* 3 trường trên cùng 1 dòng */}
+							<div className='grid grid-cols-3 gap-4'>
+								{/* Năm học */}
+								<div className='space-y-2'>
+									<Label>Năm học *</Label>
+									<input
+										type='text'
+										placeholder='VD: 2024-2025'
+										className='w-full rounded border px-3 py-2'
+										value={academicYear}
+										onChange={(e) => setAcademicYear(e.target.value)}
 									/>
-								</PopoverContent>
-							</Popover>
-						</div>
-					</div>
-				</div>
+								</div>
 
-				<DialogFooter>
-					<Button variant='outline' onClick={() => onOpenChange(false)}>
-						Hủy
-					</Button>
-					<Button onClick={handleSubmit} disabled={!name || !startDate || !endDate}>
-						Lưu thay đổi
-					</Button>
-				</DialogFooter>
+								{/* Học kỳ */}
+								<div className='space-y-2'>
+									<Label>Học kỳ *</Label>
+									<Select value={semester} onValueChange={setSemester}>
+										<SelectTrigger>
+											<SelectValue placeholder='Chọn' />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value='1'>Học kỳ 1</SelectItem>
+											<SelectItem value='2'>Học kỳ 2</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+
+								{/* Loại đợt */}
+								<div className='space-y-2'>
+									<Label>Loại đợt *</Label>
+									<Select
+										value={periodType}
+										onValueChange={(value) =>
+											setPeriodType(value as 'thesis' | 'scientific_research')
+										}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder='Chọn' />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value='thesis'>Khóa luận</SelectItem>
+											<SelectItem value='scientific_research'>Nghiên cứu khoa học</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+							</div>
+
+							{/* Ngày bắt đầu + kết thúc */}
+							<div className='grid grid-cols-2 gap-4'>
+								{/* Start DateTime */}
+								<div className='space-y-2'>
+									<Label>Ngày giờ bắt đầu *</Label>
+									<input
+										type='datetime-local'
+										className='w-full rounded border px-3 py-2'
+										value={startTime}
+										onChange={(e) => setStartTime(e.target.value)}
+									/>
+								</div>
+
+								{/* End DateTime */}
+								<div className='space-y-2'>
+									<Label>Ngày giờ kết thúc *</Label>
+									<input
+										type='datetime-local'
+										className='w-full rounded border px-3 py-2'
+										value={endTime}
+										onChange={(e) => setEndTime(e.target.value)}
+										min={startTime ? format(startTime, "yyyy-MM-dd'T'HH:mm") : undefined}
+									/>
+								</div>
+							</div>
+						</div>
+
+						<DialogFooter>
+							<Button variant='outline' onClick={() => onOpenChange(false)}>
+								Hủy
+							</Button>
+							<Button
+								onClick={() =>
+									onSubmit({
+										year: academicYear,
+										semester: Number(semester),
+										type: periodType,
+										startTime: startTime,
+										endTime: endTime
+									} as UpdatePeriodDto)
+								}
+								disabled={
+									(!academicYear || !semester || !periodType || !startTime || !endTime) ||
+									(academicYear === data.year &&
+										semester === String(data.semester) &&
+										periodType === data.type &&
+										startTime === format(new Date(data.startTime), "yyyy-MM-dd'T'HH:mm") &&
+										endTime === format(new Date(data.endTime), "yyyy-MM-dd'T'HH:mm"))
+								}
+							>
+								Chỉnh sửa
+							</Button>
+						</DialogFooter>
+					</>
+				)}
 			</DialogContent>
 		</Dialog>
 	)

@@ -319,6 +319,22 @@ export const topicApi = baseApi.injectEndpoints({
 				method: 'GET',
 				responseHandler: (response) => response.blob()
 			})
+		}),
+		facuBoardApproveTopics: builder.mutation<{ message: string }, { topicIds: string[]; phaseId: string }>({
+			query: ({ topicIds }) => ({
+				url: `/topics/faculty-board/approve-topics`,
+				method: 'PATCH',
+				body: { topicIds }
+			}),
+			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+		}),
+
+		facuBoardRejectTopics: builder.mutation<{ message: string }, { topicIds: string[] }>({
+			query: ({ topicIds }) => ({
+				url: `/topics/faculty-board/reject-topics`,
+				method: 'PATCH',
+				body: { topicIds }
+			})
 		})
 	}),
 	overrideExisting: false
@@ -361,5 +377,7 @@ export const {
 	useGetMajorComboboxQuery,
 	useGetYearComboboxQuery,
 	useGetDocumentsOfTopicQuery,
-	useDownloadTopicFilesZipMutation
+	useDownloadTopicFilesZipMutation,
+	useFacuBoardApproveTopicsMutation,
+	useFacuBoardRejectTopicsMutation
 } = topicApi

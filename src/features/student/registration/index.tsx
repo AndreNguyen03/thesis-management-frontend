@@ -15,7 +15,7 @@ import { List, FileCheck } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { usePageBreadcrumb } from '@/hooks'
 import { CurrentTime } from './topics/CurrentTime'
-import type { FilterState, RegistrationPeriod, RegisteredTopic } from './types'
+
 import {
 	Pagination,
 	PaginationContent,
@@ -42,7 +42,7 @@ export default function TopicRegistration() {
 	const [queryParams, setQueryParams] = useState<PaginationTopicsQueryParams>({
 		page: 1,
 		limit: 10,
-		search_by: 'titleVN,titleEng',
+		search_by: ['titleVN','titleEng'],
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
@@ -150,11 +150,7 @@ export default function TopicRegistration() {
 		const fieldIds = newFields.map((field) => field._id)
 		setQueryParams((prev) => ({ ...prev, fieldIds, page: 1 }))
 	}, [])
-	const handleSelectionChangeLecturers = useCallback((newLecturers: ResponseMiniLecturerDto[]) => {
-		setSelectedLecturers(newLecturers)
-		const lecturerIds = newLecturers.map((lecturer) => lecturer._id)
-		setQueryParams((prev) => ({ ...prev, lecturerIds, page: 1 }))
-	}, [])
+
 	return (
 		<div className='max-h-[calc(100vh)] overflow-y-auto bg-background w-full'>
 			{/* HEADER */}
