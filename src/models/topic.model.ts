@@ -331,7 +331,7 @@ export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 	phase?: string
 	status?: string
 	rulesPagination?: number
-	lecturerIds?: string[]
+	lecturerIds?: string[]	
 	fieldIds?: string[]
 	queryStatus?: string[]
 }

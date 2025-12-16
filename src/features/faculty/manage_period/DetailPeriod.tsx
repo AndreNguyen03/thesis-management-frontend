@@ -70,7 +70,7 @@ export default function DetailPeriodPage() {
 	)
 
 	return (
-		<div className='flex h-[calc(100vh-10rem)] min-h-0 overflow-auto'>
+		<div className='flex h-[calc(100vh-10rem)] min-h-0 w-full overflow-auto'>
 			{/* Sidebar */}
 			<aside className={cn('h-fit transition-all duration-300', isSidebarHidden ? 'w-12' : 'w-24')}>
 				<PhaseStepBar

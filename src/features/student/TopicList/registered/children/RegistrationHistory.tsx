@@ -21,11 +21,11 @@ const RegistrationHistory = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		limit: 10,
 		page: 1,
-		search_by: 'topicInfo.titleVN,topicInfo.titleEng, lecturers.fullName, periodName',
+		search_by: ['topicInfo.titleVN','topicInfo.titleEng', 'lecturers.fullName', 'periodName'],
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
-		filter: 'all',
+		filter: [],
 		filter_by: 'fieldIds'
 	})
 	const { data: registrationHistoryData } = useGetRegistrationsHistoryQuery({ queries })

@@ -109,7 +109,7 @@ export function DataTable<T extends Record<string, any>>({
 		const params = {
 			page,
 			limit: pageSize,
-			search_by: searchField,
+			search_by: [searchField],
 			query: searchValue.value,
 			sort_by: sortField,
 			sort_order: sortOrder,
@@ -215,7 +215,7 @@ export function DataTable<T extends Record<string, any>>({
 										setSearchField(value)
 										setSearchValue({ value: '' })
 										updateQuery({
-											search_by: value,
+											search_by: [value],
 											query: '',
 											page: 1
 										})

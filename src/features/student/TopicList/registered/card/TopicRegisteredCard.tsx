@@ -1,151 +1,168 @@
-import { Badge, Card, CardHeader, CardTitle } from '@/components/ui'
-import { Eye } from 'lucide-react'
-import { useState } from 'react'
+import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
+import { Eye, Users, Clock, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-
 import { topicStatusLabels, type Topic } from '@/models'
 
 export const TopicRegisteredCard: React.FC<{
 	topic: Topic
 }> = ({ topic }) => {
 	const isFullSlot = topic.maxStudents === topic.studentsNum
-	//const [confirmOpen, setConfirmOpen] = useState(false)
 	const navigate = useNavigate()
-	const [openDetail, setOpenDetail] = useState(false)
-	const getStatusBadge = (topic: Topic) => {
+
+	const getStatusBadges = () => (
+		<div className='flex flex-col gap-2'>
+			<Badge
+				className={`text-xs ${topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].css}`}
+				variant='outline'
+			>
+				{topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].name}
+			</Badge>
+			<Badge variant={isFullSlot ? 'destructive' : 'secondary'} className='justify-center text-xs'>
+				{isFullSlot ? 'Đã đủ' : `${topic.maxStudents - topic.studentsNum} chỗ trống`}
+			</Badge>
+		</div>
+	)
+
+	const renderLecturers = () => {
+		if (!topic.lecturers || topic.lecturers.length === 0) {
+			return (
+				<div className='flex items-center gap-2 text-sm text-gray-500'>
+					<Users className='h-4 w-4 flex-shrink-0' />
+					<span>Không có giảng viên</span>
+				</div>
+			)
+		}
+
+		const mainLecturer = topic.lecturers[0]
+		const otherLecturers = topic.lecturers.slice(1)
+
 		return (
-			<div className='flex flex-col items-end justify-center gap-2'>
-				{/* Trạng thái của đề tài */}
-				<Badge className={`${topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].css}`}>
-					{'Trạng thái:  '}
-					{topicStatusLabels[topic.currentStatus as keyof typeof topicStatusLabels].name}
-				</Badge>
-				{isFullSlot ? (
-					<Badge variant='destructive'>Đã đủ</Badge>
-				) : (
-					<Badge variant='default' className='max-w-[100px]'>
-						{topic.maxStudents - topic.studentsNum} chỗ trống
-					</Badge>
+			<div className='flex items-center gap-3'>
+				<div className='flex items-center gap-2'>
+					<div
+						className='relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-gray-200'
+						title={`${mainLecturer.title || ''} ${mainLecturer.fullName || 'Không xác định'}`}
+					>
+						{mainLecturer.avatarUrl ? (
+							<img
+								src={mainLecturer.avatarUrl}
+								alt={`${mainLecturer.title || ''} ${mainLecturer.fullName || 'Không xác định'}`}
+								className='h-full w-full object-cover'
+							/>
+						) : (
+							<span className='flex h-full w-full items-center justify-center text-xs font-medium text-gray-600'>
+								{(mainLecturer.fullName || '')
+									.split(' ')
+									.map((n) => n[0])
+									.join('') || 'N/A'}
+							</span>
+						)}
+					</div>
+					<span className='line-clamp-1 text-sm font-medium text-gray-900'>
+						{mainLecturer.title || ''}. {mainLecturer.fullName || 'Không xác định'}
+					</span>
+				</div>
+				{otherLecturers.length > 0 && (
+					<div className='flex items-center gap-1'>
+						<span className='text-xs text-gray-500'>+{otherLecturers.length}</span>
+						{otherLecturers.slice(0, 2).map((lec) => (
+							<div
+								key={lec._id}
+								className='relative -mr-1 h-5 w-5 flex-shrink-0 overflow-hidden rounded-full bg-gray-200 ring-1 ring-white'
+								title={`${lec.title || ''} ${lec.fullName || 'Không xác định'}`}
+							>
+								{lec.avatarUrl ? (
+									<img
+										src={lec.avatarUrl}
+										alt={`${lec.title || ''} ${lec.fullName || 'Không xác định'}`}
+										className='h-full w-full object-cover'
+									/>
+								) : (
+									<span className='flex h-full w-full items-center justify-center text-[8px] text-gray-600'>
+										{(lec.fullName || '')
+											.split(' ')
+											.map((n) => n[0])
+											.join('') || 'N/A'}
+									</span>
+								)}
+							</div>
+						))}
+					</div>
 				)}
 			</div>
 		)
 	}
 
-	const renderDepartmentAndLecturers = (topic: Topic) => {
-		return (
-			<>
-				<div className='mt-1'>
-					<div className='text-md flex items-end gap-1 text-gray-600'>
-						{topic.lecturers.slice(0, 1).map((lec) => {
-							return (
-								<div className='flex flex-row gap-1' key={lec._id}>
-									<span>{`${lec.title} ${lec.fullName}`}</span>
-									{/* Render hình ảnh của giảng viên */}
-									<div
-										title={`${lec.title} ${lec.fullName}`}
-										className='relative flex items-center justify-center overflow-hidden rounded-full bg-gray-200 text-lg font-semibold text-gray-600'
-									>
-										{lec.avatarUrl ? (
-											<img
-												src={lec.avatarUrl}
-												alt={`${lec.title} ${lec.fullName}`}
-												className='h-full w-full object-contain'
-											/>
-										) : (
-											<span className='flex h-6 w-6 items-center justify-center text-[10px]'>
-												{lec.fullName
-													.split(' ')
-													.map((n) => n[0])
-													.join('')}
-											</span>
-										)}
-									</div>
-								</div>
-							)
-						})}
-						{topic.lecturers.length > 1 && (
-							<div className='flex items-center gap-1'>
-								<span className='gap-1 text-sm text-muted-foreground'>
-									và {topic.lecturers.length - 1} giảng viên khác
-								</span>
-								{topic.lecturers.slice(1, topic.lecturers.length).map((lec) => (
-									// Render các hình ảnh của giảng viên khác
-									<div
-										title={`${lec.title} ${lec.fullName}`}
-										className='relative flex w-fit items-center justify-center overflow-hidden rounded-full bg-gray-200 text-lg font-semibold text-gray-600'
-									>
-										{lec.avatarUrl ? (
-											<img
-												src={lec.avatarUrl}
-												alt={`${lec.title} ${lec.fullName}`}
-												className='h-full w-full object-contain'
-											/>
-										) : (
-											<span className='flex h-6 w-6 items-center justify-center text-[10px]'>
-												{lec.fullName
-													.split(' ')
-													.map((n) => n[0])
-													.join('')}
-											</span>
-										)}
-									</div>
-								))}
-							</div>
-						)}
-					</div>
-				</div>
-			</>
-		)
-	}
+	const renderFields = () => (
+		<div className='flex items-center gap-1'>
+			<Tag className='h-3 w-3 flex-shrink-0 text-gray-500' />
+			{topic.fields?.slice(0, 2).map((f) => (
+				<Badge key={f._id} variant='outline' className='text-xs'>
+					{f.name}
+				</Badge>
+			)) || null}
+			{topic.fields && topic.fields.length > 2 && (
+				<Badge className='text-xs text-gray-500'>+{topic.fields.length - 2}</Badge>
+			)}
+		</div>
+	)
+
+	const renderRequirements = () => (
+		<div className='flex flex-wrap gap-1'>
+			{(topic.requirements || []).slice(0, 3).map((req) => (
+				<Badge key={req._id} variant='secondary' className='text-xs'>
+					{req.name}
+				</Badge>
+			))}
+			{topic.requirements && topic.requirements.length > 3 && (
+				<Badge variant='outline' className='text-xs'>
+					+{topic.requirements.length - 3}
+				</Badge>
+			)}
+		</div>
+	)
+
 	return (
-		<Card key={topic._id} className={`relative p-2 transition-shadow hover:cursor-pointer hover:shadow-lg`}>
-			<CardHeader onClick={() => setOpenDetail(!openDetail)}>
-				<div className='flex items-start justify-between space-x-4'>
-					<div className='flex flex-col gap-2'>
-						<CardTitle className='text-lg leading-tight'>{topic.titleVN}</CardTitle>
-						<CardTitle className='text-md font-normal'>{topic.titleEng}</CardTitle>
+		<Card className='group relative flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 p-2 shadow-sm transition-all hover:border-primary/50 hover:shadow-md'>
+			<CardHeader className='flex-1 space-y-3 p-4 pb-3'>
+				<div className='flex h-full items-start justify-between gap-3'>
+					<div className='flex-1 space-y-2'>
+						<CardTitle className='line-clamp-1 text-base font-bold leading-tight text-gray-900'>
+							{topic.titleVN || 'Không có tiêu đề'}
+						</CardTitle>
+						<CardDescription className='line-clamp-1 text-sm text-gray-600'>
+							{topic.titleEng || ''}
+						</CardDescription>
 
-						{renderDepartmentAndLecturers(topic)}
-						<div className='flex gap-2'>
-							{/* Lĩnh vực */}
-							{topic.fields.map((f) => {
-								return (
-									<Badge key={f._id} variant='blue'>
-										{f.name}
-									</Badge>
-								)
-							})}
-						</div>
-						<div className='flex flex-wrap gap-1'>
-							{topic.requirements.slice(0, 4).map((req) => (
-								<Badge key={req._id} variant='secondary' className='text-xs'>
-									{req.name}
-								</Badge>
-							))}
-							{topic.requirements.length > 4 && (
-								<Badge variant='outline' className='text-xs'>
-									+{topic.requirements.length - 4}
-								</Badge>
-							)}
-						</div>
+						{renderLecturers()}
+						{renderFields()}
+						{renderRequirements()}
 					</div>
-
-					{getStatusBadge(topic)}
-				</div>
-				<p className='text-sm font-normal text-gray-500'>
-					{'Thời gian tạo: '}
-					{new Date(topic.createdAt).toLocaleString('vi-VN')}
-				</p>
-				<div className='flex items-center justify-center'>
-					<div
-						className='flex items-center justify-center gap-2 rounded-sm p-0.5 px-2 hover:bg-gray-100'
-						onClick={() => navigate(`/detail-topic/${topic._id}`)}
-					>
-						<Eye className='h-4 w-4' />
-						<span className='text-[13px] font-semibold text-gray-600'>Xem chi tiết</span>
-					</div>
+					{getStatusBadges()}
 				</div>
 			</CardHeader>
+
+			<CardContent className='mt-auto border-t border-gray-100 p-4 pt-0'>
+				<div className='flex items-center justify-between'>
+					<div className='flex items-center gap-2 text-xs text-gray-500'>
+						<Clock className='h-3 w-3' />
+						<span>
+							{new Date(topic.createdAt || Date.now()).toLocaleDateString('vi-VN', {
+								day: '2-digit',
+								month: '2-digit',
+								year: 'numeric'
+							})}
+						</span>
+					</div>
+					<button
+						onClick={() => navigate(`/detail-topic/${topic._id}`)}
+						className='inline-flex items-center gap-1 rounded-md bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+					>
+						<Eye className='h-3.5 w-3.5' />
+						Xem chi tiết
+					</button>
+				</div>
+			</CardContent>
 		</Card>
 	)
 }

@@ -2,6 +2,7 @@ import type { ElementType } from 'react'
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
 import type { TopicStatus } from './topic.model'
+import type { PaginationQueryParamsDto } from './query-params'
 
 export type PeriodStatus = 'timeout' | 'active' | 'pending'
 
@@ -79,7 +80,10 @@ export interface GetCustomMiniPeriodInfoRequestDto {
 	currentPhase: string
 	currentPhaseDetail: PeriodPhase
 }
-
+export interface PaginationPeriodQueryParams extends PaginationQueryParamsDto {
+	type?: PeriodType | 'all'
+	status?: PeriodStatus | 'all'
+}
 export const PeriodPhaseName = {
 	EMPTY: 'empty',
 	SUBMIT_TOPIC: 'submit_topic',
@@ -120,3 +124,11 @@ export const PeriodTypeEnum = {
 	THESIS: 'thesis',
 	SCIENCE_RESEARCH: 'scientific_research'
 } as const
+
+export interface UpdatePeriodDto {
+	year: string
+	semester: number
+	type: string
+	startTime: string
+	endTime: string
+}
