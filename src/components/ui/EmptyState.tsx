@@ -6,7 +6,7 @@ interface EmptyStateProps {
 	description?: string
 }
 
-export function EmptyState({ title, description }: EmptyStateProps) {
+export function 	EmptyState({ title, description }: EmptyStateProps) {
 	return (
 		<Card className='flex h-full items-center justify-center border-none bg-transparent shadow-none'>
 			<CardContent className='flex flex-col items-center space-y-3 text-center'>

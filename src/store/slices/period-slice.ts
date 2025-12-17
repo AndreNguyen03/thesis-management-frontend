@@ -1,28 +1,27 @@
-import type { GetCustomMiniPeriodInfoRequestDto } from '@/models/period.model'
+import type { GetCurrentPeriod, Period } from '@/models/period.model'
 import { createSlice } from '@reduxjs/toolkit'
-import { set } from 'zod'
 
 interface PeriodState {
 	isLoading: boolean
-	currentPeriod: GetCustomMiniPeriodInfoRequestDto | null
+	currentPeriods: GetCurrentPeriod[] | []
 }
 const initialState: PeriodState = {
 	isLoading: false,
-	currentPeriod: null
+	currentPeriods: []
 }
 const periodSlice = createSlice({
 	name: 'period',
 	initialState,
 	reducers: {
-		setCurrentPeriod: (state, action: { payload: GetCustomMiniPeriodInfoRequestDto }) => {
-			state.currentPeriod = action.payload
+		setCurrentPeriods: (state, action: { payload: GetCurrentPeriod[] }) => {
+			state.currentPeriods = action.payload
 		},
-        setCurrPeriodLoading: (state, action: { payload: boolean }) => {
-            state.isLoading = action.payload
-        }
+		setCurrPeriodLoading: (state, action: { payload: boolean }) => {
+			state.isLoading = action.payload
+		}
 	}
 })
 
-export const { setCurrentPeriod, setCurrPeriodLoading } = periodSlice.actions
+export const { setCurrentPeriods, setCurrPeriodLoading } = periodSlice.actions
 
 export default periodSlice

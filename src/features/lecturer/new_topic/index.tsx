@@ -224,7 +224,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	return (
 		<div className='h-full pt-2'>
 			<div className='mx-auto h-full'>
-				<div className='flex h-full flex-col rounded-2xl border border-border bg-card p-8 pt-6 shadow-lg'>
+				<div className='flex h-full flex-col rounded-2xl border border-border bg-card p-6 pt-6 shadow-lg'>
 					<div className='mb-4'>
 						<h1 className='mb-2 text-xl font-bold text-foreground'>Tạo đề tài mới</h1>
 						<p className='text-sm text-muted-foreground'>
@@ -312,12 +312,16 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 							selectedRequirements={selectedRequirements}
 							onSelectionChange={setSelectedRequirements}
 						/>
-	
+
 						{/* Description */}
 						<div className='col-span-2 space-y-2'>
-							<Label htmlFor='description' className='text-base font-semibold'>
-								Mô tả đề tài <span className='text-destructive'>*</span>
-							</Label>
+							<div className='flex gap-2 items-center'>
+								<Label htmlFor='description' className='text-base font-semibold'>
+									Mô tả đề tài <span className='text-destructive'>*</span>
+								</Label>
+								<DescriptionOptimizer currentDescription={description} onOptimize={setDescription} />
+							</div>
+
 							<div className='flex gap-2'>
 								<div className='w-full'>
 									<RichTextEditor
@@ -326,7 +330,6 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 										placeholder='Nhập mô tả chi tiết về đề tài...'
 									/>
 								</div>
-								<DescriptionOptimizer currentDescription={description} onOptimize={setDescription} />
 							</div>
 						</div>
 

@@ -137,7 +137,8 @@ export function EditPeriodModal({ data, open, onSubmit, isLoading, onOpenChange 
 								Hủy
 							</Button>
 							<Button
-								onClick={() =>
+								onClick={() => {
+									resetForm()
 									onSubmit({
 										year: academicYear,
 										semester: Number(semester),
@@ -145,9 +146,13 @@ export function EditPeriodModal({ data, open, onSubmit, isLoading, onOpenChange 
 										startTime: startTime,
 										endTime: endTime
 									} as UpdatePeriodDto)
-								}
+								}}
 								disabled={
-									(!academicYear || !semester || !periodType || !startTime || !endTime) ||
+									!academicYear ||
+									!semester ||
+									!periodType ||
+									!startTime ||
+									!endTime ||
 									(academicYear === data.year &&
 										semester === String(data.semester) &&
 										periodType === data.type &&

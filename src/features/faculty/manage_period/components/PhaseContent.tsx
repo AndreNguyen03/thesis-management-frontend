@@ -154,13 +154,6 @@ export function PhaseContent({
 						? `Danh sách các đề tài ${getLabelForStatus(statusFilter)}`
 						: 'Danh sách đề tài đã nộp'}
 				</h3>
-				{/* <TopicsTable
-					phase={phaseDetail}
-					statFilter={statusFilter}
-					periodId={periodId}
-					queryParams={queryParams}
-					setQueryParams={setQueryParams}
-				/> */}
 				<Card className='space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
 					<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
 					<p className='mb-6 text-sm text-gray-500'>Tổng quan về tất cả các đợt bạn đã tham gia.</p>

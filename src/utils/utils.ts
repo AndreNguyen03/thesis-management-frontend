@@ -1,5 +1,5 @@
 import type { AppUser } from '@/models'
-import type { GetCustomMiniPeriodInfoRequestDto, PhaseType } from '@/models/period.model'
+import type { GetCurrentPeriod, PhaseType } from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -52,39 +52,46 @@ export function decodeJwt<T = any>(token: string): T | null {
 		return null
 	}
 }
-export const PhaseInfo: Record<PhaseType, { order: number; continue: string; continuePhaseId: string; label: string }> =
-	{
-		empty: {
-			order: 0,
-			continue: 'Nộp đề tài',
-			continuePhaseId: 'submit_topic',
-			label: 'Khởi đầu'
-		},
-		submit_topic: {
-			order: 1,
-			continue: 'Mở đăng ký',
-			continuePhaseId: 'open_registration',
-			label: 'Nộp đề tài'
-		},
-		open_registration: {
-			order: 2,
-			continue: 'Thực hiện',
-			continuePhaseId: 'execution',
-			label: 'Mở đăng ký'
-		},
-		execution: {
-			order: 3,
-			continue: 'Hoàn thành',
-			continuePhaseId: 'completion',
-			label: 'Thực hiện'
-		},
-		completion: {
-			order: 4,
-			continue: 'end',
-			continuePhaseId: 'end',
-			label: 'Hoàn thành -   '
-		}
+export const PhaseInfo: Record<
+	PhaseType,
+	{ order: number; continue: string; continueMessage: string; continuePhaseId: string; label: string }
+> = {
+	empty: {
+		order: 0,
+		continue: 'Nộp đề tài',
+		continueMessage: ' để thu thập để tài của giảng viên',
+		continuePhaseId: 'submit_topic',
+		label: 'Khởi đầu'
+	},
+	submit_topic: {
+		order: 1,
+		continue: 'Mở đăng ký',
+		continueMessage: ' để tạo đợt đăng ký cho sinh viên',
+		continuePhaseId: 'open_registration',
+		label: 'Nộp đề tài'
+	},
+	open_registration: {
+		order: 2,
+		continue: 'Thực hiện',
+		continueMessage: ' để xây dựng không gian làm việc nhóm cho mỗi đề tài',
+		continuePhaseId: 'execution',
+		label: 'Mở đăng ký'
+	},
+	execution: {
+		order: 3,
+		continue: 'Hoàn thành',
+		continuePhaseId: 'completion',
+		continueMessage: ' để ghi nhận kết quả bảo vệ của sinh viên',
+		label: 'Thực hiện'
+	},
+	completion: {
+		order: 4,
+		continue: 'end',
+		continuePhaseId: 'end',
+		continueMessage: ' để kết thúc kỳ học này',
+		label: 'Hoàn thành -   '
 	}
+}
 
 export const PhaseStatusMap: Record<
 	'not_started' | 'ongoing' | 'completed',
@@ -100,8 +107,8 @@ const typeLabels = {
 	scientific_research: 'Nghiên cứu khoa học'
 } as const
 
-export const getPeriodTitle = (period: GetCustomMiniPeriodInfoRequestDto) =>
-	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type]}`
+export const getPeriodTitle = (period: GetCurrentPeriod) =>
+	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type as keyof typeof typeLabels]}`
 
 export const getUserIdFromAppUser = (user: AppUser | null): string => {
 	if (!user) return ''
@@ -119,19 +126,18 @@ export const getUserIdFromAppUser = (user: AppUser | null): string => {
 	return ''
 }
 
-
 export const formatDateLabel = (dateStr: string) => {
-  const date = new Date(dateStr);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
+	const date = new Date(dateStr)
+	const today = new Date()
+	const yesterday = new Date()
+	yesterday.setDate(today.getDate() - 1)
 
-  if (date.toDateString() === today.toDateString()) return 'Hôm nay';
-  if (date.toDateString() === yesterday.toDateString()) return 'Hôm qua';
-  return date.toLocaleDateString('vi-VN');
-};
+	if (date.toDateString() === today.toDateString()) return 'Hôm nay'
+	if (date.toDateString() === yesterday.toDateString()) return 'Hôm qua'
+	return date.toLocaleDateString('vi-VN')
+}
 
 export const isSameDay = (d1: string, d2: string) => {
-  if (!d1 || !d2) return false;
-  return new Date(d1).toDateString() === new Date(d2).toDateString();
-};
+	if (!d1 || !d2) return false
+	return new Date(d1).toDateString() === new Date(d2).toDateString()
+}

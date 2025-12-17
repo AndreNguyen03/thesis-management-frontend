@@ -25,8 +25,8 @@ const RegistrationHistory = () => {
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
-		filter: [],
-		filter_by: 'fieldIds'
+		filter: "",
+		filter_by: ['fieldIds']
 	})
 	const { data: registrationHistoryData } = useGetRegistrationsHistoryQuery({ queries })
 	// search input handler

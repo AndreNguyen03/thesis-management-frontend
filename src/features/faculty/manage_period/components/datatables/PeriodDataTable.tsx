@@ -1,11 +1,14 @@
-import { type ApiError, type PaginationTopicsQueryParams } from '@/models'
-import type {
-	Period,
-	PaginationPeriodQueryParams,
-	UpdatePeriodDto,
-	PeriodTypeEnum,
-	PeriodType,
-	PeriodStatus
+import { ROLES, type ApiError, type PaginationTopicsQueryParams } from '@/models'
+import {
+	type Period,
+	type PaginationPeriodQueryParams,
+	type UpdatePeriodDto,
+	type PeriodTypeEnum,
+	type PeriodType,
+	type PeriodStatus,
+	periodTypeMap,
+	statusMap,
+	phaseMap
 } from '@/models/period.model'
 import { useAdjustPeriodMutation, useDeletePeriodMutation, useGetPeriodsQuery } from '@/services/periodApi'
 
@@ -21,26 +24,6 @@ import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger } from 
 import { CustomPagination } from '@/components/PaginationBar'
 import { SelectGroup, SelectValue } from '@radix-ui/react-select'
 
-// Badge màu cho trạng thái
-const statusMap: Record<string, { label: string; color: string }> = {
-	timeout: { label: 'Hết hạn', color: 'text-center bg-gray-100 text-gray-700' },
-	active: { label: 'Đang hoạt động', color: 'text-center bg-green-100 text-green-700' },
-	pending: { label: 'Chờ bắt đầu', color: 'text-center bg-yellow-100 text-yellow-700' }
-}
-
-const periodTypeMap: Record<string, string> = {
-	thesis: 'Khóa luận',
-	scientific_research: 'Nghiên cứu khoa học'
-}
-
-// Map cho các pha của period
-const phaseMap: Record<string, { label: string; color: string }> = {
-	empty: { label: 'Chưa bắt đầu', color: 'text-center bg-gray-100 text-gray-700' },
-	submit_topic: { label: 'Nộp đề tài', color: 'text-center bg-blue-100 text-blue-700' },
-	open_registration: { label: 'Mở đăng ký', color: 'text-center bg-purple-100 text-purple-700' },
-	execution: { label: 'Thực hiện', color: 'text-center bg-indigo-100 text-indigo-700' },
-	completion: { label: 'Hoàn thành', color: 'text-center bg-green-100 text-green-700' }
-}
 const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 	// search input handler
 	const navigate = useNavigate()
@@ -59,7 +42,8 @@ const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 		sort_by: 'startTime',
 		sort_order: 'desc',
 		type: 'all',
-		status: 'all'
+		status: 'all',
+		role: ROLES.LECTURER
 	})
 	const [searchTerm, setSearchTerm] = useState('')
 	const setQuery = (query: string) => {

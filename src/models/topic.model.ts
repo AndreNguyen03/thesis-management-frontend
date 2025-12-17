@@ -331,11 +331,14 @@ export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 	phase?: string
 	status?: string
 	rulesPagination?: number
-	lecturerIds?: string[]	
+	lecturerIds?: string[]
 	fieldIds?: string[]
 	queryStatus?: string[]
 }
-
+//dùng cho khi giảng viên lấy đề tài trong kì theo phase
+export interface PaginationLecturerGetTopicsInPhaseParams extends PaginationQueryParamsDto {
+	status: string
+}
 //#Đề tài trong thư viện số
 //Đánh giá bên trong đề tài được lưu trữ trong thư viện số
 interface TopicStatsDto {

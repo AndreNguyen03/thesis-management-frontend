@@ -11,7 +11,9 @@ import type {
 	CreateTopicRequest,
 	CreateTopicResponse,
 	RequestGradeTopicDto,
-	PaginationTopicsQueryParams
+	PaginationTopicsQueryParams,
+	PaginatedResponse,
+	PaginationLecturerGetTopicsInPhaseParams
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox, GetMajorMiniDto } from '@/models/major.model'
@@ -335,6 +337,20 @@ export const topicApi = baseApi.injectEndpoints({
 				method: 'PATCH',
 				body: { topicIds }
 			})
+		}),
+		lecturerGetTopicsInPhase: builder.query<
+			PaginatedGeneralTopics,
+			{ periodId: string; params: PaginationLecturerGetTopicsInPhaseParams}
+		>({
+			query: ({ periodId, params }) => {
+				const queryString = buildQueryString(params)
+				return {
+					url: `/periods/${periodId}/lecturer/get-topics-in-phase?${queryString}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data,
+			providesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
 		})
 	}),
 	overrideExisting: false
@@ -379,5 +395,6 @@ export const {
 	useGetDocumentsOfTopicQuery,
 	useDownloadTopicFilesZipMutation,
 	useFacuBoardApproveTopicsMutation,
-	useFacuBoardRejectTopicsMutation
+	useFacuBoardRejectTopicsMutation,
+	useLecturerGetTopicsInPhaseQuery
 } = topicApi

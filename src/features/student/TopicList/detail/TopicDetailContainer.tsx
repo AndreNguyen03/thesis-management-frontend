@@ -64,9 +64,8 @@ import { RejectionBanner } from './components/RejectionBanner'
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
-	//lấy thông tin kì hiện tại
-	const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
-	console.log('Current Period in Topic Detail:', currentPeriod)
+	// //lấy thông tin kì hiện tại
+	// const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
 	const [isEditing, setIsEditing] = useState(false)
 	// Quản lý dialog quản lý file tìa liệu
 	const [openFileModal, setOpenFileModal] = useState(false)
@@ -421,13 +420,13 @@ export const TopicDetailContainer = () => {
 		setOpenAddStudentModal(false)
 		setModalRegisterModalOpen(true)
 	}
-	const isAbleInDraftOrSubmitPhase =
-		(currentPeriod?.currentPhase === PeriodPhaseName.EMPTY ||
-			currentPeriod?.currentPhase === PeriodPhaseName.SUBMIT_TOPIC) &&
-		currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
-	const isAbleInOpenRegistrationPhase =
-		currentPeriod?.currentPhase === PeriodPhaseName.OPEN_REGISTRATION &&
-		currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
+	const isAbleInDraftOrSubmitPhase = true
+		// (currentPeriod?.currentPhase === PeriodPhaseName.EMPTY ||
+		// 	currentPeriod?.currentPhase === PeriodPhaseName.SUBMIT_TOPIC) &&
+		// currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
+	const isAbleInOpenRegistrationPhase = false
+		// currentPeriod?.currentPhase === PeriodPhaseName.OPEN_REGISTRATION &&
+		// currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
 	return (
 		<Dialog open={true}>
 			<DialogContent hideClose={true} className='h-screen rounded-xl bg-[#F2F4FF] p-8 sm:min-w-full'>

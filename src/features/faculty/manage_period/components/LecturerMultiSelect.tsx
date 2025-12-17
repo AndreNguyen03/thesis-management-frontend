@@ -50,6 +50,7 @@ export function LecturerMultiSelect({ allLecturers = [], selected, onChange }: L
 					const lec = allLecturers.find((l) => l._id === id)
 					return (
 						<Badge key={id} variant='secondary' className='flex items-center gap-1'>
+							{lec?.title + ' '}
 							{lec?.fullName}
 							<X
 								size={14}
@@ -96,7 +97,7 @@ export function LecturerMultiSelect({ allLecturers = [], selected, onChange }: L
 											className='flex cursor-pointer items-center gap-2 py-2'
 										>
 											<Checkbox checked={localSelected.includes(lec._id)} />
-											{lec.fullName}
+											{lec.title + ' '}{lec.fullName}
 										</CommandItem>
 									))}
 								</CommandGroup>
