@@ -1,5 +1,5 @@
 function AdminDashboard() {
-    return <div>Admin Dashboard</div>
+	return <div></div>
 }
 
 export { AdminDashboard }

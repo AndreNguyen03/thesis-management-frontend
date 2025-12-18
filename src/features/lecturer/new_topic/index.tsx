@@ -223,7 +223,7 @@ function CreateTopic({
 		}
 	}
 	return (
-		<div className='h-full pt-2'>
+		<div className='h-full pt-2 w-full mx-10'>
 			<div className='mx-auto h-full'>
 				<div className='flex h-full flex-col rounded-2xl border border-border bg-card p-6 pt-6 shadow-lg'>
 					<div className='mb-4'>

@@ -1,5 +1,6 @@
 import type { AcademicTitle } from '@/features/admin/manage_lecturer/types'
 import type { GetPaginatedObject } from './paginated-object.model'
+import type { PaginationQueryParamsDto } from './query-params'
 
 // Role
 export type Role = 'student' | 'lecturer' | 'admin' | 'faculty_board'
@@ -195,4 +196,122 @@ export interface GetMiniUserDto {
 	title?: string
 	// facultyId: string
 	// facultyName: string
+}
+
+export interface StudentTable {
+	id: string
+	studentCode: string
+	fullName: string
+	email: string
+	phone?: string
+	class: string
+	major: string
+	facultyId: string
+	facultyName: string
+	isActive: boolean
+	createdAt?: Date
+}
+
+export interface Faculty {
+	id: string
+	name: string
+	urlDirection: string
+	email: string
+	createdAt?: string
+	updatedAt?: string
+}
+
+export interface PaginationLecturerQueryParams extends PaginationQueryParamsDto {
+	title?: AcademicTitle | 'all'
+	isActive?: boolean | 'all'
+	facultyId?: string | 'all'
+}
+
+export interface CreateLecturerSuccessItem {
+	fullName: string
+	email: string
+	facultyName: string
+}
+
+export interface CreateLecturerFailedItem {
+	fullName: string
+	reason: string
+}
+export interface CreateLecturerBatchResponse {
+	success: CreateLecturerSuccessItem[]
+	failed: CreateLecturerFailedItem[]
+}
+
+export interface CreateBatchLecturerDto {
+	fullName: string
+	facultyName: string
+	title: string
+	phone?: string
+}
+
+export interface PaginationStudentQueryParams extends PaginationQueryParamsDto {
+	major?: string | 'all'
+	isActive?: boolean | 'all'
+	facultyId?: string | 'all'
+}
+
+export interface CreateStudentSuccessItem {
+	studentCode: string
+	fullName: string
+	email: string
+}
+
+export interface CreateStudentFailedItem {
+	studentCode: string
+	reason: string
+}
+export interface CreateStudentBatchResponse {
+	success: CreateStudentSuccessItem[]
+	failed: CreateStudentFailedItem[]
+}
+
+export interface CreateBatchStudentDto {
+	fullName: string
+	studentCode: string
+	class: string
+	major: string
+	facultyName: string
+	phone?: string
+	email?: string
+	isActive?: boolean
+}
+
+export interface CreateStudentRequest {
+	email: string
+	password?: string
+	fullName: string
+	isActive: boolean
+	phone?: string
+	facultyId: string
+	studentCode: string
+	class: string
+	major: string
+}
+
+export interface StudentTable {
+	id: string
+	studentCode: string
+	fullName: string
+	email: string
+	phone?: string
+	class: string
+	major: string
+	facultyId: string
+	facultyName: string
+	isActive: boolean
+	createdAt?: Date
+}
+
+export interface Faculty {
+	id: string
+	name: string
+	urlDirection: string
+	email: string
+	createdAt?: string
+	updatedAt?: string
 }

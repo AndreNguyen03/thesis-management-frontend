@@ -18,22 +18,20 @@ export interface LecturerTable {
 	facultyName: string
 	facultyId: string
 	phone?: string
-	role: string
+	// role: string
 	isActive: boolean
 	createdAt: string
 	// last_login?: string
 	updatedAt: string
 }
 
-
 export type AcademicTitle = 'Thạc sĩ' | 'Tiến sĩ' | 'Phó Giáo sư' | 'Giáo sư'
 
 export interface Faculty {
-	id: string
+	_id: string
 	name: string
 	urlDirection: string
 	email: string
 	createdAt?: string
 	updatedAt?: string
 }
-

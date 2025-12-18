@@ -53,7 +53,7 @@ export const SavedTopics = () => {
 		}
 	}
 	return (
-		<div className='space-y-6 py-4'>
+		<div className='space-y-6 py-4 w-full mx-10'>
 			<div className='grid grid-cols-3 items-center space-y-2 rounded-md bg-white px-4'>
 				{/* Header */}
 
@@ -98,8 +98,8 @@ export const SavedTopics = () => {
 			</div>
 
 			{/* Results */}
-			<div className='space-y-4'>
-				<div className='flex items-center justify-between'>
+			<div className='space-y-4 w-full'>
+				<div className='flex items-center justify-between w-full'>
 					{queries.query === '' && (queries.filter === undefined || queries.filter[0] === 'all') ? (
 						<p className='text-md font-bold text-muted-foreground'>
 							Bạn đã lưu {savedTopicsData?.data.length} đề tài

@@ -36,7 +36,7 @@ const Layout = ({ children }: LayoutProps) => {
 
 function LayoutContent({ user, children }: { user: AppUser; children: ReactNode }) {
 	const { isOpen } = useSidebar()
-	const sidebarWidth = isOpen ? 'w-50' : 'w-16'
+	const sidebarWidth = isOpen ? 'w-56' : 'w-16'
 	const mainMargin = isOpen ? 'ml-56' : 'ml-16'
 
 	const { hidden } = useBreadcrumb()

@@ -66,6 +66,7 @@
 		"tailwindcss-animate": "^1.0.7",
 		"ua-parser-js": "^2.0.5",
 		"use-deep-compare-effect": "^1.8.1",
+		"xlsx": "^0.18.5",
 		"zod": "^4.1.12"
 	},
 	"devDependencies": {

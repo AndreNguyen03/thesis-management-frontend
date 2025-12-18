@@ -3,7 +3,7 @@ export const RegisteredTopicContainer = () => {
 	//const user = useAppSelector((state) => state.auth.user)
 
 	return (
-		<div className='mx-auto pb-5'>
+		<div className='mx-10 w-full pb-5'>
 			{/* Results */}
 			<div className='space-y-4'>
 				{/* Navbar with 2 options: Registered & Cancelled */}

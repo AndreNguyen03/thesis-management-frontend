@@ -73,8 +73,8 @@ const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
 		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	],
 	faculty_board: [
-		{ title: 'Quản lý giảng viên khoa', url: '/manage-lecturers', icon: Users },
-		{ title: 'Quản lý sinh viên khoa', url: '/manage-students', icon: Users },
+		{ title: 'Quản lý giảng viên khoa', url: '/manage-faculty-lecturers', icon: Users },
+		{ title: 'Quản lý sinh viên khoa', url: '/manage-faculty-students', icon: Users },
 		{ title: 'Quản lý đợt đề tài', url: '/manage-period', icon: Users },
 		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
