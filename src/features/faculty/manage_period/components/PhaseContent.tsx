@@ -9,11 +9,12 @@ import type { PhaseType } from '@/models/period.model'
 import { useLecGetStatsPeriodQuery, useResolvePhaseMutation } from '@/services/periodApi'
 import { PhaseHeader } from './PhaseHeader'
 import { PhaseActionsBox } from './PhaseActionsBox'
-import PhaseDataTable from './DataTable'
+import PhaseDataTable from './phase-data-table/Phase2DataTable'
 import { useGetTopicsInPhaseQuery } from '@/services/topicApi'
 import { useDebounce } from '@/hooks/useDebounce'
 import { Card, Input } from '@/components/ui'
 import { CustomPagination } from '@/components/PaginationBar'
+import Phase3DataTable from './phase-data-table/Phase3DataTable'
 // import { TopicsTable } from './TopicsTable'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
@@ -165,7 +166,20 @@ export function PhaseContent({
 							className='sm:w-[350px]'
 						/>
 					</div>
-					<PhaseDataTable data={topicInPhaseData} refetch={refetch} phaseId={phaseDetail._id} />
+					{/* <PhaseDataTable			
+						paginatedTopicsInPeriod={topicInPhaseData}
+						refetch={refetch}
+						phaseId={phaseDetail._id}
+						phaseName={currentPhase.toString()}
+						onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
+					/> */}
+					<Phase3DataTable
+						paginatedTopicsInPeriod={topicInPhaseData}
+						refetch={refetch}
+						phaseId={phaseDetail._id}
+						phaseName={currentPhase.toString()}
+						onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
+					/>
 					{topicInPhaseData?.meta && topicInPhaseData?.meta.totalPages > 1 && (
 						<CustomPagination
 							meta={topicInPhaseData?.meta}

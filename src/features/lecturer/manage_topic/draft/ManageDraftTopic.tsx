@@ -8,18 +8,15 @@ import {
 } from '@/services/topicApi'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { CreateTopic } from '../../new_topic'
-import { Eye, Pointer, Search, X } from 'lucide-react'
-import { useCountdown } from '@/hooks/count-down'
+import { Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { Button, Input } from '@/components/ui'
+import { Input } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { CustomPagination } from '@/components/PaginationBar'
-import { useAppSelector } from '@/store'
 import DeleteTopicModal from '../modal/delete-topic-modal'
-import { getPeriodTitle } from '@/utils/utils'
 
 const ManageTopicDraft = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
@@ -132,7 +129,7 @@ const ManageTopicDraft = () => {
 
 	return (
 		<div className='h-screen max-h-[740px] p-1'>
-			<ResizablePanelGroup direction='vertical' className='h-full rounded-lg border'>
+			<ResizablePanelGroup direction='horizontal' className='h-full rounded-lg border'>
 				<ResizablePanel defaultSize={65}>
 					<div className='flex flex-col gap-2 p-2'>
 						<div className='flex w-fit flex-row items-center gap-2'>
@@ -142,7 +139,7 @@ const ManageTopicDraft = () => {
 							<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
 							<Input
 								placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
-								className='pl-10'
+								className='bg-white pl-10'
 								value={searchTerm}
 								onChange={(e) => onEdit(e.target.value)}
 							/>
@@ -166,7 +163,7 @@ const ManageTopicDraft = () => {
 				</ResizablePanel>
 				<ResizableHandle withHandle />
 
-				<ResizablePanel defaultSize={35} className='pt-2'>
+				<ResizablePanel defaultSize={30} minSize={30} className='pt-2'>
 					<CreateTopic refetchDraftTopics={refetch} />
 				</ResizablePanel>
 			</ResizablePanelGroup>

@@ -12,11 +12,12 @@ import type {
 	CreateTopicResponse,
 	RequestGradeTopicDto,
 	PaginationTopicsQueryParams,
-	PaginatedResponse,
-	PaginationLecturerGetTopicsInPhaseParams
+	PaginationLecturerGetTopicsInPhaseParams,
+	SubmittedTopicParamsDto
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
-import type { GetMajorLibraryCombox, GetMajorMiniDto } from '@/models/major.model'
+import type { GetMajorLibraryCombox } from '@/models/major.model'
+import type { PaginatedTopicsInPeriod } from '@/models/period.model'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
 export const topicApi = baseApi.injectEndpoints({
@@ -27,7 +28,7 @@ export const topicApi = baseApi.injectEndpoints({
 		}),
 
 		getTopicsInPhase: builder.query<
-			PaginatedGeneralTopics,
+			PaginatedTopicsInPeriod,
 			{ periodId: string; queries: PaginationTopicsQueryParams }
 		>({
 			query: ({ periodId, queries }) => {
@@ -37,8 +38,7 @@ export const topicApi = baseApi.injectEndpoints({
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data,
-			providesTags: (result, error, { periodId }) => [{ type: 'PhaseTopics' as const, id: periodId }]
+			transformResponse: (response: ApiResponse<PaginatedTopicsInPeriod>) => response.data
 		}),
 
 		getTopicById: builder.query<ITopicDetail, { id: string }>({
@@ -83,7 +83,7 @@ export const topicApi = baseApi.injectEndpoints({
 			},
 			transformResponse: (response: ApiResponse<PaginatedDraftTopics>) => response.data
 		}),
-		getSubmittedTopics: builder.query<PaginatedSubmittedTopics, PaginationQueryParamsDto>({
+		getSubmittedTopics: builder.query<PaginatedSubmittedTopics, SubmittedTopicParamsDto>({
 			query: (queries) => {
 				const queryString = buildQueryString(queries)
 				return `/topics/lecturer/get-submitted-topics?${queryString}`
@@ -339,8 +339,8 @@ export const topicApi = baseApi.injectEndpoints({
 			})
 		}),
 		lecturerGetTopicsInPhase: builder.query<
-			PaginatedGeneralTopics,
-			{ periodId: string; params: PaginationLecturerGetTopicsInPhaseParams}
+			PaginatedTopicsInPeriod,
+			{ periodId: string; params: PaginationLecturerGetTopicsInPhaseParams }
 		>({
 			query: ({ periodId, params }) => {
 				const queryString = buildQueryString(params)
@@ -349,7 +349,7 @@ export const topicApi = baseApi.injectEndpoints({
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data,
+			transformResponse: (response: ApiResponse<PaginatedTopicsInPeriod>) => response.data,
 			providesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
 		})
 	}),

@@ -1,5 +1,5 @@
 import { Badge, Button, Input } from '@/components/ui'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import {
 	Calendar,
@@ -9,7 +9,6 @@ import {
 	Download,
 	Edit2,
 	Eye,
-	EyeOff,
 	File,
 	FileText,
 	History,
@@ -30,7 +29,7 @@ import {
 	useUnsaveTopicMutation,
 	useUpdateTopicMutation
 } from '../../../../services/topicApi'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
 import { UploadFileTypes, type GetUploadedFileDto } from '@/models/file.model'
 import { formatFileSize } from '@/utils/format-file-size'
@@ -44,9 +43,14 @@ import { useCreateRegistrationMutation, useLeaveTopicMutation } from '@/services
 import { getErrorMessage } from '@/utils/catch-error'
 import { useAppSelector } from '@/store'
 import ManageUploadFileModal from './components/ManageUploadFileModal'
-import { downloadFileWithURL } from '@/lib/utils'
+import { cn, downloadFileWithURL } from '@/lib/utils'
 import FieldsContainer from './components/FieldsContainer'
-import type { GetFieldNameReponseDto, GetRequirementNameReponseDto, UpdateTopicPayload } from '@/models'
+import {
+	StudentRegistrationStatus,
+	type GetFieldNameReponseDto,
+	type GetRequirementNameReponseDto,
+	type UpdateTopicPayload
+} from '@/models'
 import RequirementContainer from './components/RequirementContainer'
 import { useGetMajorsBySameFacultyIdQuery } from '@/services/major'
 import RichTextEditor from '@/components/common/RichTextEditor'
@@ -56,19 +60,24 @@ import RegistrationDetail from './modal/TopicRegistrationDetail'
 import CancelRegistrationConfirmModal from './modal/CancelRegistrationConfirmModal'
 import AddLecturerModal from './modal/AddLecturerModal'
 import AddStudentModal from './modal/AddStudentModal'
-import { PeriodPhaseName } from '@/models/period.model'
-import { PeriodPhaseStatus } from '@/models/period-phase.models'
 import DeleteTopicModal from '@/features/lecturer/manage_topic/modal/delete-topic-modal'
 import { RejectionBanner } from './components/RejectionBanner'
+import { PeriodPhaseName } from '@/models/period.model'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
+	//use location
+	const location = useLocation()
+	const state = location.state as {
+		focusTab?: string
+	} | null
 	const navigate = useNavigate()
 	// //lấy thông tin kì hiện tại
 	// const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
 	const [isEditing, setIsEditing] = useState(false)
 	// Quản lý dialog quản lý file tìa liệu
 	const [openFileModal, setOpenFileModal] = useState(false)
+
 	// Call the query hook unconditionally but skip fetching when no id is present
 	const { data: topic, isLoading, refetch } = useGetTopicByIdQuery({ id: id! }, { skip: !id })
 	// lấy danh sách các major cùng thuộc một khoa với đề tài
@@ -85,8 +94,7 @@ export const TopicDetailContainer = () => {
 	const [unsaveTopic, { isLoading: isLoadingUnSave, isSuccess: isSuccessUnSave }] = useUnsaveTopicMutation()
 	const [saveTopic, { isLoading: isLoadingSave, isSuccess: isSuccessSave }] = useSaveTopicMutation()
 	const [updateTopic, { isSuccess: isSuccessUpdate, isLoading: isLoadingUpdate }] = useUpdateTopicMutation()
-	const [setAllowManualApproval, { isLoading: isLoadingManualApproval, isSuccess: isSuccessManualApproval }] =
-		useSetAllowManualApprovalMutation()
+	const [setAllowManualApproval, { isLoading: isLoadingManualApproval }] = useSetAllowManualApprovalMutation()
 	//Thực hiện việc xóa đề tài
 	const [deleteTopics, { isLoading: isLoadingDelete, isSuccess: isSuccessDelete }] = useDeleteTopicsMutation()
 	const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
@@ -102,6 +110,7 @@ export const TopicDetailContainer = () => {
 
 	//Modal thêm sinh viên
 	const [openAddStudentModal, setOpenAddStudentModal] = useState(false)
+
 	if (!id) {
 		return <div>Invalid topic id</div>
 	}
@@ -294,10 +303,22 @@ export const TopicDetailContainer = () => {
 															<Button
 																variant='default'
 																onClick={handleEdit}
-																className='group'
+																className={'group'}
+																disabled={
+																	topic.currentStatus === TopicStatus.REJECTED ||
+																	topic.currentStatus === TopicStatus.APPROVED ||
+																	topic.currentPhase ===
+																		PeriodPhaseName.OPEN_REGISTRATION ||
+																	topic.currentPhase === PeriodPhaseName.EXECUTION
+																}
 															>
 																<Edit2 className='h-4 w-4' />
-																<span className='ml-2 hidden transition-transform duration-1000 group-hover:block'>
+																<span
+																	className={cn(
+																		'ml-2',
+																		'hidden transition-transform duration-1000 group-hover:block'
+																	)}
+																>
 																	Chỉnh sửa
 																</span>
 															</Button>
@@ -339,7 +360,7 @@ export const TopicDetailContainer = () => {
 	const currentTopic = isEditing ? editedTopic : topic
 
 	const toggleRegistration = async () => {
-		if (topic.isRegistered) {
+		if (topic.registrationStatus === StudentRegistrationStatus.PENDING) {
 			try {
 				await leaveTopic({ topicId: topic._id }).unwrap()
 				toast({
@@ -357,21 +378,22 @@ export const TopicDetailContainer = () => {
 				})
 			}
 		} else {
-			try {
-				await createRegistration({ topicId: topic._id }).unwrap()
-				toast({
-					title: 'Thành công',
-					description: 'Đăng ký đề tài thành công'
-				})
-				refetch()
-			} catch (error) {
-				console.error('Error during registration toggle:', error)
-				toast({
-					title: 'Lỗi',
-					description: getErrorMessage(error),
-					variant: 'destructive'
-				})
-			}
+			if (topic.registrationStatus)
+				try {
+					await createRegistration({ topicId: topic._id }).unwrap()
+					toast({
+						title: 'Thành công',
+						description: 'Đăng ký đề tài thành công'
+					})
+					refetch()
+				} catch (error) {
+					console.error('Error during registration toggle:', error)
+					toast({
+						title: 'Lỗi',
+						description: getErrorMessage(error),
+						variant: 'destructive'
+					})
+				}
 		}
 		refetch()
 	}
@@ -420,13 +442,10 @@ export const TopicDetailContainer = () => {
 		setOpenAddStudentModal(false)
 		setModalRegisterModalOpen(true)
 	}
-	const isAbleInDraftOrSubmitPhase = true
-		// (currentPeriod?.currentPhase === PeriodPhaseName.EMPTY ||
-		// 	currentPeriod?.currentPhase === PeriodPhaseName.SUBMIT_TOPIC) &&
-		// currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
-	const isAbleInOpenRegistrationPhase = false
-		// currentPeriod?.currentPhase === PeriodPhaseName.OPEN_REGISTRATION &&
-		// currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
+	const isAbleInDraftOrSubmitPhase =
+		currentTopic.currentPhase === PeriodPhaseName.EMPTY ||
+		currentTopic.currentPhase === PeriodPhaseName.SUBMIT_TOPIC
+	const isAbleInOpenRegistrationPhase = currentTopic.currentPhase === PeriodPhaseName.OPEN_REGISTRATION
 	return (
 		<Dialog open={true}>
 			<DialogContent hideClose={true} className='h-screen rounded-xl bg-[#F2F4FF] p-8 sm:min-w-full'>
@@ -457,7 +476,11 @@ export const TopicDetailContainer = () => {
 									</Badge>
 									{user && user.role === 'student' && (
 										<Badge variant='destructive' className='h-fit text-sm'>
-											<p>{currentTopic.isRegistered ? 'Đã đăng ký' : 'Chưa đăng ký'}</p>
+											<p>
+												{currentTopic.registrationStatus === 'pending'
+													? 'Đã đăng ký'
+													: 'Chưa đăng ký'}
+											</p>
 										</Badge>
 									)}
 								</div>
@@ -608,9 +631,8 @@ export const TopicDetailContainer = () => {
 																		Math.abs(
 																			new Date(history.createdAt).getTime() -
 																				new Date(
-																					topic.phaseHistories[
-																						idx - 1
-																					].createdAt
+																					topic.phaseHistories[idx - 1]
+																						.createdAt
 																				).getTime()
 																		) < 6000 && (
 																			<span className='ml-2 text-xs text-primary'>
@@ -635,7 +657,8 @@ export const TopicDetailContainer = () => {
 																		<span className='flex gap-1'>
 																			{`${history.actor.title ? history.actor.title : ''} ${history.actor.fullName}`}{' '}
 																			{user?.role === 'lecturer' &&
-																				topic.isRegistered &&
+																				topic.registrationStatus ===
+																					'approved' &&
 																				history.actor._id === user.userId && (
 																					<Badge variant='outlineBlue'>
 																						{' '}
@@ -680,9 +703,8 @@ export const TopicDetailContainer = () => {
 																		Math.abs(
 																			new Date(history.createdAt).getTime() -
 																				new Date(
-																					topic.phaseHistories[
-																						idx - 1
-																					].createdAt
+																					topic.phaseHistories[idx - 1]
+																						.createdAt
 																				).getTime()
 																		) < 6000 && (
 																			<span className='ml-2 text-xs text-primary'>
@@ -707,7 +729,8 @@ export const TopicDetailContainer = () => {
 																		<span className='flex gap-1'>
 																			{`${history.actor.title ? history.actor.title : ''} ${history.actor.fullName}`}{' '}
 																			{user?.role === 'lecturer' &&
-																				topic.isRegistered &&
+																				topic.registrationStatus ===
+																					'approved' &&
 																				history.actor._id === user.userId && (
 																					<Badge variant='outlineBlue'>
 																						{' '}
@@ -848,7 +871,7 @@ export const TopicDetailContainer = () => {
 							</div>
 							{/* Thông tin đối tượng là sinh viên tham gia */}
 
-							<div className='relative h-fit gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8'>
+							<div className='relative h-fit gap-4 space-y-4 rounded-md border border-gray-300 bg-white p-8 transition-all duration-300'>
 								<div className='mb-2 flex items-center gap-4'>
 									<h4 className='text-lg font-semibold text-gray-800'>Sinh viên đăng ký</h4>
 									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.students.approvedStudents.length}/${topic.maxStudents})`}</h4>
@@ -981,7 +1004,7 @@ export const TopicDetailContainer = () => {
 										})()}
 									{isAbleInOpenRegistrationPhase &&
 										user?.role === 'student' &&
-										!currentTopic.isRegistered && (
+										!currentTopic.registrationStatus && (
 											<>
 												<div className='flex flex-col justify-between gap-3 border border-b border-green-400 bg-green-50/60 px-3 py-1 sm:flex-row sm:items-center'>
 													<span className='flex items-center gap-2 text-[14px] font-normal text-green-800'>
@@ -1034,11 +1057,6 @@ export const TopicDetailContainer = () => {
 													<span className='font-normal text-gray-500'>
 														{lecturer.roleInTopic}
 													</span>
-													{user?.role === 'lecturer' &&
-														topic.isRegistered &&
-														lecturer._id === user.userId && (
-															<Badge variant='outlineBlue'> Bạn</Badge>
-														)}
 												</p>
 
 												<p className='truncate text-sm text-muted-foreground'>

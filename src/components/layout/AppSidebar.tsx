@@ -55,7 +55,7 @@ const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
 		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp }
 	],
 	lecturer: [
-		{ title: 'Đăng đề tài', url: '/create-topic', icon: PlusCircle },
+		//{ title: 'Đăng đề tài', url: '/create-topic', icon: PlusCircle },
 		{ title: 'Quản lý đề tài', url: '/manage-topics', icon: FileText },
 		{ title: 'Xét duyệt đăng ký', url: '/approve-registrations', icon: UserCheck },
 		{ title: 'Đợt đăng ký', url: '/registration', icon: Search },

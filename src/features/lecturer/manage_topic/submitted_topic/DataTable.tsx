@@ -33,7 +33,7 @@ export function DataTable<TData, TValue>({
 		onChangeSelectedTopicIds(table.getSelectedRowModel().rows.map((row) => row.original))
 	}, [table.getSelectedRowModel().rows.length])
 	return (
-		<div className='h-full overflow-hidden rounded-md border'>
+		<div className='h-full overflow-hidden rounded-md border bg-white'>
 			<Table>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (

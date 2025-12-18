@@ -1,7 +1,7 @@
 import { CustomPagination } from '@/components/PaginationBar'
 import { Card, Input } from '@/components/ui'
 import { useDebounce } from '@/hooks/useDebounce'
-import { tranferToRejectionReasonType, type IStudentRegistration } from '@/models'
+import { StudentRegistrationStatus, tranferToRejectionReasonType, type IStudentRegistration } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useGetRegistrationsHistoryQuery } from '@/services/registrationApi'
 import { Eye, Trash2 } from 'lucide-react'
@@ -21,12 +21,12 @@ const RegistrationHistory = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		limit: 10,
 		page: 1,
-		search_by: ['topicInfo.titleVN','topicInfo.titleEng', 'lecturers.fullName', 'periodName'],
+		search_by: ['topicInfo.titleVN', 'topicInfo.titleEng', 'lecturers.fullName', 'periodName'],
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
-		filter: "",
-		filter_by: ['fieldIds']
+		filter: undefined,
+		filter_by: 'fieldIds'
 	})
 	const { data: registrationHistoryData } = useGetRegistrationsHistoryQuery({ queries })
 	// search input handler
@@ -114,8 +114,7 @@ const RegistrationHistory = () => {
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
-									{(hic.registrationStatus === 'WITHDRAWN' ||
-										hic.registrationStatus === 'REJECTED') && (
+									{hic.registrationStatus === StudentRegistrationStatus.PENDING && (
 										<button className='rounded-full p-2 transition-colors hover:bg-gray-100'>
 											<Trash2 className='h-5 w-5 text-red-400' />
 										</button>

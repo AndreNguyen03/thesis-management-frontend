@@ -140,8 +140,9 @@ const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Học kỳ</th>
 							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Loại đợt</th>
 							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Thời gian</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái</th>
+							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái kì</th>
 							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Pha hiện tại</th>
+							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái của pha</th>
 							<th className='px-3 py-2 text-center text-[15px] font-semibold'>Hành động</th>
 						</tr>
 					</thead>
@@ -179,6 +180,14 @@ const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${phaseMap[pe.currentPhase].color}`}
 									>
 										{phaseMap[pe.currentPhase].label}
+									</span>
+								</td>
+								{/* Phase status */}
+								<td className='px-3 py-2'>
+									<span
+										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[pe.currentPhaseDetail.status].color}`}
+									>
+										{statusMap[pe.currentPhaseDetail.status].label}
 									</span>
 								</td>
 								<td className='px-3 py-2 text-center'>

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 // Icons
-import { Loader2, FileText, Search, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
+import { Loader2, FileText, Search, PanelLeftOpen, PanelLeftClose, ChevronLeft } from 'lucide-react'
 
 // Shadcn UI Components
 import { Button } from '@/components/ui/Button'
@@ -24,12 +24,25 @@ import {
 	useWithdrawSubmittedTopicsMutation
 } from '@/services/topicApi'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
-import { CreateTopic } from '../new_topic'
+import { CreateTopic } from '../../new_topic'
+import type { SubmittedTopicParamsDto } from '@/models'
+import ManageSubmittedTopics from '../../manage_topic/submitted_topic/ManageSubmittedTopics'
+import DraftTopicsDatatable from './DraftTopicsDatatable'
+import { useDebounce } from '@/hooks/useDebounce'
+import { statusMap } from '@/models/period.model'
 
-const SubmitTopicInPeriod = () => {
+const SubmitTopicsInPeriod = () => {
 	const { periodId } = useParams<{ periodId: string }>()
+	const location = useLocation()
+
+	// 1. Lấy dữ liệu từ state (được gửi từ PeriodCard)
+	const state = location.state as {
+		currentPeriod: string
+		currentStatus: string
+		phaseEndtime: string
+	} | null
 	const navigate = useNavigate()
-	const [activeTab, setActiveTab] = useState<'draft' | 'submitted'>('draft')
+	const [activeTab, setActiveTab] = useState<'draft' | 'submitted'>('submitted')
 
 	// Panel Layout State
 	// Using simple boolean to toggle panel size.
@@ -41,18 +54,19 @@ const SubmitTopicInPeriod = () => {
 	const [draftQueries, setDraftQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: ['titleVN'],
+		search_by: ['titleVN', 'titleEng'],
 		query: '',
 		sort_by: 'updatedAt',
 		sort_order: 'desc'
 	})
-	const [submittedQueries, setSubmittedQueries] = useState<PaginationQueryParamsDto>({
+	const [submittedQueries, setSubmittedQueries] = useState<SubmittedTopicParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: ['titleVN'],
+		search_by: ['titleVN', 'titleEng'],
 		query: '',
 		sort_by: 'submittedAt',
-		sort_order: 'desc'
+		sort_order: 'desc',
+		periodId: periodId
 	})
 	const {
 		data: draftTopics,
@@ -64,32 +78,6 @@ const SubmitTopicInPeriod = () => {
 		isLoading: isSubmittedLoading,
 		refetch: refetchSubmitted
 	} = useGetSubmittedTopicsQuery(submittedQueries)
-	const [submitTopic] = useSubmitTopicMutation()
-	const [withdrawTopic] = useWithdrawSubmittedTopicsMutation()
-
-	// Handlers
-	const handleSubmitTopic = async (topic: any) => {
-		if (!periodId) return
-		try {
-			await submitTopic({ topicId: topic._id, periodId }).unwrap()
-			toast.success('Nộp đề tài thành công!')
-			refetchDraft()
-			refetchSubmitted()
-		} catch (error) {
-			toast.error('Lỗi khi nộp đề tài')
-		}
-	}
-
-	const handleWithdrawTopic = async (topic: any) => {
-		try {
-			await withdrawTopic({ topicIds: [topic._id] }).unwrap()
-			toast.success('Rút đề tài thành công!')
-			refetchDraft()
-			refetchSubmitted()
-		} catch (error) {
-			toast.error('Lỗi khi rút đề tài')
-		}
-	}
 
 	const toggleCreatePanel = () => {
 		const panel = panelRef.current
@@ -102,12 +90,28 @@ const SubmitTopicInPeriod = () => {
 			setIsCreatePanelOpen(!isCreatePanelOpen)
 		}
 	}
-
+	const [searchTerm, setSearchTerm] = useState('')
+	const setQuery = (query: string) => {
+		if (activeTab === 'draft') setDraftQueries((p) => ({ ...p, query: query }))
+		else setSubmittedQueries((p) => ({ ...p, query: query }))
+	}
+	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 400 })
+	const onEdit = (val: string) => {
+		setSearchTerm(val)
+		debounceOnChange(val)
+	}
 	return (
 		<div className='flex h-[calc(100dvh-6rem)] w-full flex-col overflow-hidden bg-slate-50/50 font-sans'>
 			{/* Header Area */}
 			<div className='z-10 flex flex-none items-center justify-between border-b bg-white px-6 py-4 shadow-sm'>
 				<div className='flex items-center gap-4'>
+					<button
+						className='group flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100'
+						onClick={() => navigate(-1)}
+					>
+						<ChevronLeft />
+						<span className='hidden animate-fade-in transition-transform group-hover:block'>Quay lại</span>
+					</button>
 					<TooltipProvider>
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -136,15 +140,23 @@ const SubmitTopicInPeriod = () => {
 					</TooltipProvider>
 
 					<div>
-						<h1 className='text-xl font-bold tracking-tight text-slate-900'>Quản lý Đề tài</h1>
-						<p className='mt-0.5 text-xs text-slate-500'>Học kỳ 1 - Năm học 2024-2025</p>
+						<h1 className='text-xl font-bold tracking-tight text-slate-900'>Nộp đề tài</h1>
+						<p className='mt-0.5 text-xs text-slate-500'>{state?.currentPeriod || 'Đang tải...'}</p>
 					</div>
-				</div>
-
-				<div className='flex items-center gap-2'>
-					<Button variant='outline' size='sm' onClick={() => navigate('/manage-topics/draft')}>
-						<FileText className='mr-2 h-4 w-4' /> Quản lý chi tiết
-					</Button>
+					<span
+						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[state?.currentStatus ?? 'pending'].color}`}
+					>
+						{statusMap[state?.currentStatus ?? 'pending'].label}
+					</span>
+					<span
+						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[state?.currentStatus ?? 'pending'].color}`}
+					>
+						{state?.phaseEndtime ? (
+							<>{`Kết thúc vào: ${new Date(state.phaseEndtime).toLocaleString('vi-VN')}`} </>
+						) : (
+							'Đang tải...'
+						)}
+					</span>
 				</div>
 			</div>
 
@@ -165,7 +177,13 @@ const SubmitTopicInPeriod = () => {
 					onCollapse={() => setIsCreatePanelOpen(false)}
 					onExpand={() => setIsCreatePanelOpen(true)}
 				>
-					<CreateTopic />
+					<CreateTopic
+						periodId={periodId}
+						refetchSubmittedTopics={() => {
+							setActiveTab('submitted')
+							refetchSubmitted()
+						}}
+					/>
 				</ResizablePanel>
 
 				<ResizableHandle withHandle={isCreatePanelOpen} />
@@ -179,7 +197,7 @@ const SubmitTopicInPeriod = () => {
 							className='w-full space-y-6'
 						>
 							<div className='flex flex-col justify-between gap-4 sm:flex-row sm:items-center'>
-								<TabsList className='h-10 w-fit border bg-white p-1 shadow-sm'>
+								<TabsList className='ml-4 h-10 w-fit border bg-white p-1 shadow-sm'>
 									<TabsTrigger
 										value='draft'
 										className='px-4 data-[state=active]:bg-slate-100 data-[state=active]:text-indigo-700'
@@ -210,16 +228,15 @@ const SubmitTopicInPeriod = () => {
 									</TabsTrigger>
 								</TabsList>
 
-								<div className='relative w-full sm:w-72'>
+								<div className='relative w-full sm:w-96'>
 									<Search className='absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
 									<Input
-										placeholder='Tìm kiếm...'
+										placeholder='Tìm kiếm theo tên đề tài...'
 										className='border-slate-200 bg-white pl-9 focus-visible:ring-indigo-500'
 										onChange={(e) => {
-											const val = e.target.value
-											if (activeTab === 'draft') setDraftQueries((p) => ({ ...p, query: val }))
-											else setSubmittedQueries((p) => ({ ...p, query: val }))
+											onEdit(e.target.value)
 										}}
+										value={searchTerm}
 									/>
 								</div>
 							</div>
@@ -236,11 +253,15 @@ const SubmitTopicInPeriod = () => {
 									/>
 								) : (
 									<>
-										<div className='grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-											{draftTopics.data.map((topic) => (
-												<div>{topic.description}</div>
-											))}
-										</div>
+										<DraftTopicsDatatable
+											queries={draftQueries}
+											setQueries={setDraftQueries}
+											topicsData={draftTopics}
+											onRefetch={() => {
+												refetchDraft()
+												refetchSubmitted()
+											}}
+										/>
 										<CustomPagination
 											meta={draftTopics.meta}
 											onPageChange={(p) => setDraftQueries((prev) => ({ ...prev, page: p }))}
@@ -261,11 +282,7 @@ const SubmitTopicInPeriod = () => {
 									/>
 								) : (
 									<>
-										<div className='grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-											{submittedTopics.data.map((topic) => (
-												<div>{topic.description}</div>
-											))}
-										</div>
+										<ManageSubmittedTopics dataInernal={submittedTopics} />
 										<CustomPagination
 											meta={submittedTopics.meta}
 											onPageChange={(p) => setSubmittedQueries((prev) => ({ ...prev, page: p }))}
@@ -281,4 +298,4 @@ const SubmitTopicInPeriod = () => {
 	)
 }
 
-export default SubmitTopicInPeriod
+export default SubmitTopicsInPeriod

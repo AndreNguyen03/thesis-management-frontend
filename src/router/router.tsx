@@ -25,9 +25,8 @@ import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_to
 import { LibraryPage } from '@/features/page/LibraryPage'
 import { GroupWorkspacePage } from '@/features/shared/workspace'
 import { RegistrationPeriodsPage } from '@/features/student/registration'
-import TopicRegistration from '@/features/student/registration/partitions/TopicRegistration'
-import ManageTopicsInPeriods from '@/features/lecturer/explore-periods/ManageTopicsInPeriods'
-import SubmitTopicInPeriod from '@/features/lecturer/explore-periods/SubmitTopicInPeriod'
+import ManageTopicsInPeriods from '@/features/lecturer/explore-periods/manage-topics-in-period/ManageTopicsInPeriods'
+import SubmitTopicsInPeriod from '@/features/lecturer/explore-periods/submit-topics-in-period/SubmitTopicsInPeriod'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -75,12 +74,12 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: 'registration/:periodId/submit-topics',
-				element: <SubmitTopicInPeriod />
+				element: <SubmitTopicsInPeriod />
 			},
 			{
 				path: 'registration/:id',
 				element: <></>
-				//<TopicRegistration />
+				//	<TopicRegistration />
 			},
 
 			{

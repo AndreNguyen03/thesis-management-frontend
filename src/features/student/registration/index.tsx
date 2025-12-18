@@ -1,12 +1,11 @@
 import { ROLES } from '@/models'
-import PeriodCard from './partitions/PeriodCard'
 import { FileText, Users } from 'lucide-react'
 import { useAppSelector } from '@/store'
+import PeriodCard from './partitions/PeriodCard'
 
 //sinh viên sẽ truy cập vào đây trong khi kỳ mở pha đăng ký
 export const RegistrationPeriodsPage = () => {
 	const periods = useAppSelector((state) => state.period.currentPeriods)
-
 	const activePeriods = periods.filter((p) => p.status === 'active')
 	const otherPeriods = periods.filter((p) => p.status !== 'active')
 	const user = useAppSelector((state) => state.auth.user)
@@ -53,7 +52,7 @@ export const RegistrationPeriodsPage = () => {
 				{activePeriods.length > 0 && (
 					<section>
 						<h2 className='mb-5 border-l-4 border-indigo-500 pl-3 text-2xl font-bold text-indigo-700'>
-							Đợt Đăng ký Đang Mở ({activePeriods.length})
+							Học kì/đợt đăng ký đang mở cho sinh viên ({activePeriods.length})
 						</h2>
 						<div className='grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3'>
 							{activePeriods.map((p) => (

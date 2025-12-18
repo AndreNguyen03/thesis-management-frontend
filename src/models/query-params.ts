@@ -8,8 +8,8 @@ export class PaginationQueryParamsDto {
 	sort_order?: SortOrder
 	startDate?: string
 	endDate?: string
-	filter?: string
-	filter_by?: string[]
+	filter?: string[]
+	filter_by?: string
 }
 
 export const buildQueryString = (params: Record<string, any>): string => {

@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui'
 import { ROLES } from '@/models'
 import { getPhaseStatus, statusMap, type GetCurrentPeriod, PeriodPhaseName } from '@/models/period.model'
-import { useAppSelector } from '@/store'
+import { store, useAppDispatch, useAppSelector } from '@/store'
 import { Calendar, ChevronRight, Clock, Eye, FileText, FlaskConical, Users, Check, Circle } from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -13,11 +13,9 @@ export interface PeriodCardProps {
 }
 const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 	const navigate = useNavigate()
-	const { label, variant, icon: StatusIcon, color } = getPhaseStatus(period.currentPhase)
+	const { label, variant, icon: StatusIcon, color } = getPhaseStatus(period.currentPhaseDetail.phase)
 	const PeriodIcon = period.type === 'thesis' ? FileText : FlaskConical
 	const user = useAppSelector((state) => state.auth.user)
-	const isStudent = user?.role === ROLES.STUDENT
-
 	// Define all phases in order
 	const allPhases = [
 		{ phase: 'submit_topic', label: PhaseInfo.submit_topic.label },
@@ -26,76 +24,50 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 		{ phase: 'completion', label: PhaseInfo.completion.label }
 	]
 
-	const currentPhaseIndex = allPhases.findIndex((p) => p.phase === period.currentPhase)
-	const progressPercentage = period.currentPhase === 'empty' ? 0 : ((currentPhaseIndex + 1) / allPhases.length) * 100
+	const currentPhaseIndex = allPhases.findIndex((p) => p.phase === period.currentPhaseDetail.phase)
+	const progressPercentage =
+		period.currentPhaseDetail.phase === 'empty' ? 0 : ((currentPhaseIndex + 1) / allPhases.length) * 100
 	// --- LOGIC QUAN TRỌNG: Xử lý nút và trạng thái ---
-	const isStudentActive = period.isActiveAction && isStudent
-	const isStudentDisabled = !isStudentActive && !period.isActiveAction
+	const isStudentActive = user?.role === ROLES.STUDENT
 
 	const isLecturerActive = user?.role === ROLES.LECTURER
 	const isActive = isStudentActive || isLecturerActive
+	// Lecturer
 
-	let buttonText = 'Xem chi tiết Đợt'
-	let buttonIcon = <ChevronRight className='ml-2 h-4 w-4 transition-transform group-hover:translate-x-1' />
-	let linkPath = `/registration/${period._id}`
-
-	if (isStudent) {
-		if (isStudentActive) {
-			buttonText = 'Đăng ký Đề tài'
-		} else if (!period.isActiveAction) {
-			buttonText = 'Xem thông tin (Đã đóng đăng ký)'
-			buttonIcon = <Eye className='ml-2 h-4 w-4' />
-		} else {
-			buttonText = 'Chưa đến thời điểm đăng ký'
-		}
-	} else {
-		// Lecturer
-		//buttonText = 'Quản lý Đề tài/Chấm điểm'
-		buttonText = 'Nộp đề tài'
-		linkPath = `/registration/${period._id}/submit-topics`
-		buttonIcon = <Users className='ml-2 h-4 w-4 transition-transform group-hover:translate-x-1' /> // GV dùng icon Users
-	}
-
-	const handleActionClick = () => {
-		// if (isStudentDisabled) {
-		// 	console.log(`Đợt này hiện đã ${statusMap[label].label}. Bạn không thể thao tác đăng ký.`)
-		// } else {
-		console.log(`Navigating to ${linkPath}`)
-		navigate(linkPath)
-		// }
-	}
+	// `/registration/${period._id}/submit-topics`
+	let buttonIcon = <Users className='ml-2 h-4 w-4 transition-transform group-hover:translate-x-1' /> // GV dùng icon Users
+	// const { url, title: buttonText, isDisabled, badge } = period.navItem
 
 	// Dùng thẻ div mô phỏng button
 	const ButtonComponent = (
-		<>
-			<div
-				role='button'
-				onClick={handleActionClick}
-				className={`group mt-6 flex items-center justify-center rounded-lg px-4 py-2.5 text-base font-semibold shadow-md transition-all duration-200 ${
-					isActive
-						? 'bg-indigo-700 text-white hover:bg-indigo-800 hover:shadow-lg focus:ring-4 focus:ring-indigo-300'
-						: 'cursor-not-allowed border-2 border-gray-300 bg-gray-200 text-gray-500 shadow-inner'
-				} `}
-			>
-
-				{buttonText} demo trong pha nộp đề tài
-				{/* Đảm bảo hiển thị icon chỉ khi isActive */}
-				{isActive && buttonIcon}
-			</div>
-			<div
-				role='button'
-				onClick={() => navigate(`/registration/${period._id}/manage-topics`)}
-				className={`group mt-6 flex items-center justify-center rounded-lg px-4 py-2.5 text-base font-semibold shadow-md transition-all duration-200 ${
-					isActive
-						? 'bg-indigo-700 text-white hover:bg-indigo-800 hover:shadow-lg focus:ring-4 focus:ring-indigo-300'
-						: 'cursor-not-allowed border-2 border-gray-300 bg-gray-200 text-gray-500 shadow-inner'
-				} `}
-			>
-				 Theo dõi các đề tài của bạn (demo sau pha nộp đề tài)
-				{/* Đảm bảo hiển thị icon chỉ khi isActive */}
-				{isActive && buttonIcon}
-			</div>
-		</>
+		<div className='flex gap-2'>
+			{period.navItem.map((item,indx) => {
+				const { url, title: buttonText, isDisabled, badge, note } = item
+				return (
+					<div className='mt-4 flex flex-col space-y-3' key={indx}x>
+						{badge && (
+							<Badge className='w-fit text-xs font-medium' variant={badge.variant}>
+								{badge.text}
+							</Badge>
+						)}
+						<button
+							disabled={isDisabled}
+							onClick={() => navigate(url)}
+							className={`group flex items-center justify-center rounded-lg px-4 py-2.5 text-base font-semibold shadow-md transition-all duration-200 ${
+								!isDisabled
+									? 'bg-indigo-700 text-white hover:bg-indigo-800 hover:shadow-lg focus:ring-4 focus:ring-indigo-300'
+									: 'cursor-not-allowed border-2 border-gray-300 bg-gray-200 text-gray-500 shadow-inner'
+							} `}
+						>
+							{buttonText}
+							{/* Đảm bảo hiển thị icon chỉ khi isActive */}
+							{isActive && buttonIcon}
+						</button>
+						{note && <p className='mt-3 text-center text-xs font-medium text-red-600'>* Lưu ý: {note}</p>}
+					</div>
+				)
+			})}
+		</div>
 	)
 
 	return (
@@ -182,6 +154,21 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 										</div>
 									</div>
 								)}
+
+								{index < allPhases.length - 1 && (
+									<div className='absolute left-1/2 top-4 h-0.5 w-full'>
+										<div className='h-full w-full bg-gray-200'>
+											<motion.div
+												className='h-full bg-green-500'
+												initial={{ width: '0%' }}
+												animate={{
+													width: isCompleted ? '100%' : '0%'
+												}}
+												transition={{ duration: 0.5, delay: index * 0.1 }}
+											/>
+										</div>
+									</div>
+								)}
 							</div>
 						)
 					})}
@@ -194,26 +181,20 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 					<Calendar className='h-4 w-4 text-indigo-600' />
 					<span className='w-24 flex-shrink-0 font-medium text-gray-700'>Mở Đăng ký:</span>
 					<span className='rounded bg-gray-100 px-2 py-0.5 font-mono text-xs font-semibold'>
-						{new Date(period.startTime).toLocaleString('vi-VN')}
+						{new Date(period.currentPhaseDetail.startTime).toLocaleString('vi-VN')}
 					</span>
 				</div>
 				<div className='flex items-center gap-2'>
 					<Clock className='h-4 w-4 text-indigo-600' />
 					<span className='w-24 flex-shrink-0 font-medium text-gray-700'>Đóng Đăng ký:</span>
 					<span className='rounded bg-gray-100 px-2 py-0.5 font-mono text-xs font-semibold'>
-						{new Date(period.endTime).toLocaleString('vi-VN')}
+						{new Date(period.currentPhaseDetail.endTime).toLocaleString('vi-VN')}
 					</span>
 				</div>
 			</div>
 
 			{/* Action Button */}
 			{ButtonComponent}
-
-			{isStudentDisabled && (
-				<p className='mt-3 text-center text-xs font-medium text-red-600'>
-					* Lưu ý: Đợt đăng ký này hiện đang khóa cho vai trò Sinh viên.
-				</p>
-			)}
 		</div>
 	)
 }

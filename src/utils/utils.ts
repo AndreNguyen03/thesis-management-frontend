@@ -1,5 +1,5 @@
 import type { AppUser } from '@/models'
-import type { GetCurrentPeriod, PhaseType } from '@/models/period.model'
+import type { GetCurrentPeriod, Period, PhaseType } from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -141,3 +141,11 @@ export const isSameDay = (d1: string, d2: string) => {
 	if (!d1 || !d2) return false
 	return new Date(d1).toDateString() === new Date(d2).toDateString()
 }
+export function formatPeriodInfo(period: GetCurrentPeriod) {
+	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.facultyName}`
+}
+
+export function formatPeriodInfo2(period: Period) {
+	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.faculty.name}`
+}
+
