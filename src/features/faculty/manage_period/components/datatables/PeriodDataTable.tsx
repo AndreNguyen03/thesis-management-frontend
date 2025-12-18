@@ -3,13 +3,12 @@ import type {
 	Period,
 	PaginationPeriodQueryParams,
 	UpdatePeriodDto,
-	PeriodTypeEnum,
 	PeriodType,
 	PeriodStatus
 } from '@/models/period.model'
 import { useAdjustPeriodMutation, useDeletePeriodMutation, useGetPeriodsQuery } from '@/services/periodApi'
 
-import { Edit, Eye, Loader2, Plus, Search, Trash, XCircle } from 'lucide-react'
+import { Edit, Eye, Loader2, Plus, Trash, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -19,7 +18,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui'
 import { CustomPagination } from '@/components/PaginationBar'
-import { SelectGroup, SelectValue } from '@radix-ui/react-select'
+import { SelectValue } from '@radix-ui/react-select'
 
 // Badge màu cho trạng thái
 const statusMap: Record<string, { label: string; color: string }> = {

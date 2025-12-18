@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/Button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DEFAULT_PASSWORD, type CreateUserRequest, type LecturerTable } from '../types'
 import { useGetFacultiesQuery } from '@/services/facultyApi'
-import { useState } from 'react'
+import {  useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
+import { useAppSelector } from '@/store'
 
 const academicTitles = ['Thạc sĩ', 'Tiến sĩ', 'Phó Giáo sư', 'Giáo sư'] as const
 
@@ -40,6 +41,8 @@ interface LecturerFormProps {
 }
 
 export const LecturerForm = ({ lecturer, onSubmit, isLoading }: LecturerFormProps) => {
+	const userRole = useAppSelector((state) => state.auth.user?.role)
+	const isFacultyBoard = userRole === 'faculty_board'
 	const isEdit = !!lecturer
 
 	// ✅ chọn schema phù hợp
@@ -51,7 +54,7 @@ export const LecturerForm = ({ lecturer, onSubmit, isLoading }: LecturerFormProp
 			fullName: lecturer?.fullName || '',
 			email: lecturer?.email || '',
 			title: lecturer?.title || 'Thạc sĩ',
-			facultyId: lecturer?.facultyId || '',
+			facultyId: lecturer?.facultyId,
 			password: DEFAULT_PASSWORD,
 			phone: lecturer?.phone || '',
 			isActive: lecturer?.isActive ?? true
@@ -59,7 +62,15 @@ export const LecturerForm = ({ lecturer, onSubmit, isLoading }: LecturerFormProp
 	})
 
 	const { errors } = form.formState
-	const { data: faculties } = useGetFacultiesQuery()
+	const { data } = useGetFacultiesQuery({
+		limit: 100,
+		page: 1,
+		sort_by: 'createdAt',
+		sort_order: 'asc'
+	})
+
+	const faculties = data?.data ?? []
+
 	const [showPassword, setShowPassword] = useState(false)
 
 	return (
@@ -170,30 +181,38 @@ export const LecturerForm = ({ lecturer, onSubmit, isLoading }: LecturerFormProp
 
 				{/* Khoa + Trạng thái */}
 				<div className='grid grid-cols-2 gap-4'>
-					<FormField
-						control={form.control}
-						name='facultyId'
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Khoa</FormLabel>
-								<FormControl>
-									<Select onValueChange={field.onChange} value={field.value ?? ''}>
-										<SelectTrigger>
-											<SelectValue placeholder='Chọn khoa' />
-										</SelectTrigger>
+					{!isFacultyBoard && (
+						<FormField
+							control={form.control}
+							name='facultyId'
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Khoa</FormLabel>
+									<Select value={field.value} onValueChange={field.onChange}>
+										<FormControl>
+											<SelectTrigger>
+												<SelectValue placeholder='Chọn khoa' />
+											</SelectTrigger>
+										</FormControl>
 										<SelectContent>
-											{faculties?.map((f) => (
-												<SelectItem key={f.id} value={f.id}>
+											{faculties.map((f) => (
+												<SelectItem key={f._id} value={f._id}>
 													{f.name}
 												</SelectItem>
 											))}
 										</SelectContent>
 									</Select>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+								</FormItem>
+							)}
+						/>
+					)}
+					{isFacultyBoard && (
+						<div className='space-y-2'>
+							<label className='text-sm font-medium'>Khoa</label>
+							<Input disabled value={lecturer?.facultyName} />
+						</div>
+					)}
+
 					<FormField
 						control={form.control}
 						name='isActive'

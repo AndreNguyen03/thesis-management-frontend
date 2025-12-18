@@ -1,27 +1,30 @@
-import type { CreateStudentRequest, StudentTable } from '@/features/admin/manage_student/types'
-import type { PatchStudentDto } from '@/models'
+import type { PaginatedResponse, PatchStudentDto } from '@/models'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
-import type {  PaginatedStudents } from '@/models/users'
+import type {
+    CreateBatchStudentDto,
+    CreateStudentBatchResponse,
+	CreateStudentRequest,
+	PaginatedStudents,
+	PaginationStudentQueryParams,
+	StudentTable
+} from '@/models/users'
 import { baseApi } from '@/services/baseApi'
 import type { ApiResponse } from '@/services/baseApi'
 
 export const studentApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		// 🧩 Lấy danh sách sinh viên
-		getStudents: builder.query<
-			{ datas: StudentTable[]; total_records: number },
-			PaginationQueryParamsDto
-		>({
-			query: (params) => ({
-				url: '/users/students',
-				method: 'GET',
-				params
-			}),
-			transformResponse: (response: ApiResponse<{ datas: StudentTable[]; total_records: number }>) =>
-				response.data,
+		getStudents: builder.query<PaginatedResponse<StudentTable>, PaginationStudentQueryParams>({
+			query: (params) => {
+				const queryString = buildQueryString(params)
+				return {
+					url: `/users/get-all-students?${queryString}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<PaginatedResponse<StudentTable>>) => response.data,
 			providesTags: ['UserProfile', 'ListStudent']
 		}),
-
 		// 🧩 Tạo sinh viên mới
 		createStudent: builder.mutation<StudentTable, CreateStudentRequest>({
 			query: (body) => ({
@@ -34,13 +37,13 @@ export const studentApi = baseApi.injectEndpoints({
 		}),
 
 		// 🧩 Tạo hàng loạt sinh viên (Batch)
-		createBatchStudents: builder.mutation<{ created: StudentTable[]; failed: string[] }, CreateStudentRequest[]>({
+		createBatchStudents: builder.mutation<CreateStudentBatchResponse, CreateBatchStudentDto[]>({
 			query: (body) => ({
-				url: '/students/batch',
+				url: '/users/students/batch',
 				method: 'POST',
 				body
 			}),
-			transformResponse: (response: ApiResponse<{ created: StudentTable[]; failed: string[] }>) => response.data,
+			transformResponse: (response: ApiResponse<CreateStudentBatchResponse>) => response.data,
 			invalidatesTags: ['UserProfile', 'ListStudent']
 		}),
 

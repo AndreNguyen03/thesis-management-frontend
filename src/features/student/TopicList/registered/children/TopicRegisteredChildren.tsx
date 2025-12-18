@@ -57,7 +57,7 @@ export const TopicRegisteredChildren = () => {
 	const emptyList = registerTopics?.data.length === 0 && queries.query === ''
 
 	return (
-		<div className='flex w-full flex-col justify-center space-y-4'>
+		<div className='flex w-full flex-col justify-center space-y-4 '>
 			{emptyList ? (
 				<EmptyStateContainer type='registered' />
 			) : (

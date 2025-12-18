@@ -11,7 +11,7 @@ const NotFound = () => {
 	}, [location.pathname])
 
 	return (
-		<div className='flex min-h-screen items-center justify-center bg-gradient-background'>
+		<div className='bg-gradient-background flex min-h-screen w-full items-center justify-center'>
 			<div className='space-y-6 p-8 text-center'>
 				<div className='space-y-2'>
 					<h1 className='text-8xl font-bold text-primary'>404</h1>
@@ -22,8 +22,8 @@ const NotFound = () => {
 				</div>
 
 				<div className='flex flex-col justify-center gap-3 sm:flex-row'>
-					<Button className='bg-gradient-primary'>
-						<Link to='/'>
+					<Button className='bg-primary-foreground text-primary' variant='outline'>
+						<Link to='/' className='flex gap-2'>
 							<Home className='mr-2 h-4 w-4' />
 							Về trang chủ
 						</Link>

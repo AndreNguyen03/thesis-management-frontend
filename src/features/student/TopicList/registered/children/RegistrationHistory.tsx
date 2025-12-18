@@ -21,7 +21,7 @@ const RegistrationHistory = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		limit: 10,
 		page: 1,
-		search_by: ['topicInfo.titleVN','topicInfo.titleEng', 'lecturers.fullName', 'periodName'],
+		search_by: ['topicInfo.titleVN', 'topicInfo.titleEng', 'lecturers.fullName', 'periodName'],
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'desc',
@@ -51,7 +51,7 @@ const RegistrationHistory = () => {
 		})
 	}
 	return (
-		<Card className='space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
+		<Card className='w-full space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
 			<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
 			<p className='mb-6 text-sm text-gray-500'>Tổng quan về tất cả các đợt bạn đã tham gia.</p>
 			<div className='mb-4 flex flex-col gap-4 sm:flex-row sm:items-center'>

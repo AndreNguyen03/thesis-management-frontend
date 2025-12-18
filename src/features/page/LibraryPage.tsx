@@ -411,7 +411,7 @@ export const LibraryPage = () => {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Thư viện số' }])
 
 	return (
-		<div className='h-[calc(100vh-6rem)] overflow-auto bg-white'>
+		<div className='h-[calc(100vh-6rem)] w-full overflow-auto bg-white'>
 			{/* 1. HERO SECTION (Search Centric) */}
 			<div className='relative overflow-hidden bg-slate-900 px-4 py-12 text-white'>
 				{/* Abstract Background Pattern */}
