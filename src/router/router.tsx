@@ -20,11 +20,13 @@ import { ManageFacultyLecturerPage } from '@/features/faculty/manage_faculty_lec
 import DetailPeriodPage from '@/features/faculty/manage_period/DetailPeriod'
 import LecturerManageTopics from '@/features/lecturer/manage_topic'
 import RegistrationHistory from '@/features/student/TopicList/registered/children/RegistrationHistory'
-import TopicRegistration from '@/features/student/registration/index'
 import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_topic/ManageSubmittedTopics'
 import { LibraryPage } from '@/features/page/LibraryPage'
 import { GroupWorkspacePage } from '@/features/shared/workspace'
+import { RegistrationPeriodsPage } from '@/features/student/registration'
+import ManageTopicsInPeriods from '@/features/lecturer/explore-periods/manage-topics-in-period/ManageTopicsInPeriods'
+import SubmitTopicsInPeriod from '@/features/lecturer/explore-periods/submit-topics-in-period/SubmitTopicsInPeriod'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -63,7 +65,21 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: 'registration',
-				element: <TopicRegistration />
+				element: <RegistrationPeriodsPage />
+			},
+			//cần bảo vệ bởi role giảng viên
+			{
+				path: 'registration/:periodId/manage-topics',
+				element: <ManageTopicsInPeriods />
+			},
+			{
+				path: 'registration/:periodId/submit-topics',
+				element: <SubmitTopicsInPeriod />
+			},
+			{
+				path: 'registration/:id',
+				element: <></>
+				//	<TopicRegistration />
 			},
 
 			{

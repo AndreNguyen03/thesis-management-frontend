@@ -18,7 +18,6 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { toInputDateTime } from '../../utils'
 import type { ResponseMiniLecturerDto } from '@/models'
-
 interface Props {
 	open: boolean
 	onOpenChange: Dispatch<SetStateAction<boolean>>
@@ -39,7 +38,6 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 	)
 
 	const isPhase1 = currentPhase === 'empty' || currentPhase === 'submit_topic'
-	const isTimeInvalid = startTime && endTime ? new Date(endTime).getTime() <= new Date(startTime).getTime() : false
 	const effectivePhaseKey = currentPhase === 'empty' ? 'submit_topic' : currentPhase
 
 	const [createSubmitTopicPhase, { isLoading: isLoadingSubmit }] = useCreateSubmitTopicPhaseMutation()
@@ -128,25 +126,30 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 
 						<div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
 							<div>
-								<label className='text-sm font-medium'>Bắt đầu</label>
+								<label className='text-sm font-medium'>Bắt đầu </label>
 								<input
 									type='datetime-local'
 									className='w-full rounded border px-3 py-2'
 									value={startTime}
+									min={new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
+									step='60'
 									onChange={(e) => setStartTime(e.target.value)}
+									placeholder='dd/mm/yyyy hh:mm'
 								/>
 							</div>
 							<div>
-								<label className='text-sm font-medium'>Kết thúc</label>
+								<label className='text-sm font-medium'>Kết thúc </label>
 								<input
+									disabled={!startTime}
 									type='datetime-local'
-									className={`w-full rounded border px-3 py-2 ${
-										isTimeInvalid ? 'border-red-500' : ''
-									}`}
+									className={`w-full rounded border px-3 py-2 ${'border-red-500'}`}
+									min={startTime || new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
 									value={endTime}
+									step='60'
 									onChange={(e) => setEndTime(e.target.value)}
+									placeholder='dd/mm/yyyy hh:mm'
 								/>
-								{isTimeInvalid && <p className='text-xs text-red-500'>* Kết thúc phải sau bắt đầu</p>}
+								{<p className='text-xs text-red-500'>* Kết thúc phải sau bắt đầu</p>}
 							</div>
 						</div>
 					</section>
@@ -181,7 +184,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 				</div>
 
 				<DialogFooter>
-					<Button onClick={handleSave} disabled={isTimeInvalid || phaseLoadingMap[effectivePhaseKey]}>
+					<Button onClick={handleSave} disabled={false}>
 						{phaseLoadingMap[effectivePhaseKey] ? 'Đang lưu...' : 'Lưu thay đổi'}
 					</Button>
 				</DialogFooter>

@@ -25,21 +25,22 @@ import type { GetMajorMiniDto } from '@/models/major.model'
 import RequirementContainer from '@/features/student/TopicList/detail/components/RequirementContainer'
 import CoSupervisorContainer from '@/features/student/TopicList/detail/components/CoSupervisorContainer'
 import StudentContainer from '@/features/student/TopicList/detail/components/StudentContainer'
-import { useCountdown } from '@/hooks/count-down'
 import { useGetMajorsQuery } from '@/services/major'
 import { formatFileSize } from '@/utils/format-file-size'
 import RichTextEditor from '@/components/common/RichTextEditor'
 
-function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }) {
+function CreateTopic({
+	periodId,
+	refetchDraftTopics,
+	refetchSubmittedTopics
+}: {
+	periodId?: string
+	refetchDraftTopics?: () => void
+	refetchSubmittedTopics?: () => void
+}) {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng đề tài' }])
 	const [createTopic, { isLoading: loadingCreateTopic, isSuccess: successCreateTopic, error: createTopicError }] =
 		useCreateTopicMutation()
-	// current period info
-	const currentPeriodId = localStorage.getItem('currentPeriodId')
-	const currentPeriodName = localStorage.getItem('currentPeriodName')
-	const currentPeriodEndTime = localStorage.getItem('currentPeriodEndTime')
-	// countdown
-	const countdown = useCountdown(currentPeriodEndTime!)
 	// Form state
 	const [titleVN, setTitleVN] = useState('')
 	const [titleEng, setTitleEng] = useState('')
@@ -224,7 +225,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 	return (
 		<div className='h-full pt-2'>
 			<div className='mx-auto h-full'>
-				<div className='flex h-full flex-col rounded-2xl border border-border bg-card p-8 pt-6 shadow-lg'>
+				<div className='flex h-full flex-col rounded-2xl border border-border bg-card p-6 pt-6 shadow-lg'>
 					<div className='mb-4'>
 						<h1 className='mb-2 text-xl font-bold text-foreground'>Tạo đề tài mới</h1>
 						<p className='text-sm text-muted-foreground'>
@@ -241,7 +242,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 							</Label>
 							{majorsOptions && majorsOptions.data && (
 								<select
-									value={selectedMajor?._id}
+									value={selectedMajor?._id ?? ''}
 									onChange={(e) =>
 										setSelectedMajor(
 											majorsOptions.data.find((major) => major._id === e.target.value) ?? null
@@ -249,6 +250,9 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 									}
 									className='mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-[5px]'
 								>
+									<option value='' disabled>
+										Chọn ngành...
+									</option>
 									{majorsOptions?.data.map((major) => (
 										<option key={major._id} value={major._id}>
 											{major.name}
@@ -269,7 +273,7 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 								onValueChange={(value) => setTopicType(value as TopicType)}
 							>
 								<SelectTrigger id='topic-type' className='bg-background'>
-									<SelectValue placeholder='Chọn loại đề tài...' />
+									<SelectValue placeholder='Chọn loại đề tài...' defaultValue={'thesis'} />
 								</SelectTrigger>
 								<SelectContent className='bg-popover'>
 									<SelectItem value='thesis'>Khóa luận tốt nghiệp</SelectItem>
@@ -312,12 +316,16 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 							selectedRequirements={selectedRequirements}
 							onSelectionChange={setSelectedRequirements}
 						/>
-	
+
 						{/* Description */}
 						<div className='col-span-2 space-y-2'>
-							<Label htmlFor='description' className='text-base font-semibold'>
-								Mô tả đề tài <span className='text-destructive'>*</span>
-							</Label>
+							<div className='flex items-center gap-2'>
+								<Label htmlFor='description' className='text-base font-semibold'>
+									Mô tả đề tài <span className='text-destructive'>*</span>
+								</Label>
+								<DescriptionOptimizer currentDescription={description} onOptimize={setDescription} />
+							</div>
+
 							<div className='flex gap-2'>
 								<div className='w-full'>
 									<RichTextEditor
@@ -326,7 +334,6 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 										placeholder='Nhập mô tả chi tiết về đề tài...'
 									/>
 								</div>
-								<DescriptionOptimizer currentDescription={description} onOptimize={setDescription} />
 							</div>
 						</div>
 
@@ -411,47 +418,47 @@ function CreateTopic({ refetchDraftTopics }: { refetchDraftTopics?: () => void }
 						<div className='col-span-2 flex items-center gap-2'>
 							<input
 								type='checkbox'
-								checked={allowManualApproval}
+								disabled={topicType === 'scientific_research'}
+								checked={allowManualApproval || topicType === 'scientific_research'}
 								onChange={(e) => setAllowManualApproval(e.target.checked)}
 								id='allow-manual-approval'
 								className='h-4 w-4'
 							/>
 							<Label htmlFor='allow-manual-approval' className='text-base font-semibold'>
-								Cho phép phê duyệt thủ công đăng ký đề tài
+								Sinh viên đăng ký phải được xét duyệt{' '}
+								<span className='text-sm text-red-600'>
+									{topicType === 'scientific_research' ? '(bắt buộc)' : ''}
+								</span>
 							</Label>
 						</div>
 
 						{/* Action Buttons */}
 						<div className='col-span-2 flex gap-3 border-t border-border pt-6'>
-							{currentPeriodId && (
+							{periodId ? (
 								<div className='flex flex-col items-center justify-center gap-1'>
 									<Button
-										disabled={loadingCreateTopic || countdown === 'End'}
-										onClick={() => handleSave(currentPeriodId)}
+										disabled={loadingCreateTopic}
+										onClick={() => {
+											handleSave(periodId)
+											refetchSubmittedTopics?.()
+										}}
 										variant={'outline_gray'}
 									>
 										<Save className='mr-2 h-4 w-4' />
 										Lưu và đăng đề tài
 									</Button>
-									<div className='flex flex-col items-center gap-2 rounded-md bg-blue-100 p-2'>
-										<span className='text-sm'>
-											{`Kì hiện tại `}{' '}
-											<span className='font-medium text-blue-800'>{`${currentPeriodName}`}</span>
-										</span>
-										<span className='text-sm font-bold text-blue-700'>
-											{countdown === 'End' ? 'Đã kết thúc' : countdown}
-										</span>
-									</div>
 								</div>
+							) : (
+								<Button
+									disabled={loadingCreateTopic}
+									onClick={() => handleSave()}
+									className='hover:bg-primary-dark flex-1 bg-primary transition-colors'
+								>
+									<Save className='mr-2 h-4 w-4' />
+									Lưu đề tài
+								</Button>
 							)}
-							<Button
-								disabled={loadingCreateTopic}
-								onClick={() => handleSave()}
-								className='hover:bg-primary-dark flex-1 bg-primary transition-colors'
-							>
-								<Save className='mr-2 h-4 w-4' />
-								Lưu đề tài
-							</Button>
+
 							<Button
 								onClick={handleCancel}
 								variant='outline'

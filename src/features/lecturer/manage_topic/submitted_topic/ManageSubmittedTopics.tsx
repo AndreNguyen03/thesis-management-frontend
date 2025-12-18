@@ -10,37 +10,37 @@ import { useNavigate } from 'react-router-dom'
 import { Button, Input } from '@/components/ui'
 import { Loader2, RotateCw, Search } from 'lucide-react'
 import { useState } from 'react'
-import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
-
 import { CustomPagination } from '@/components/PaginationBar'
 import { toast } from 'sonner'
 import { WithdrawConfirmation } from './modal/WIthdrawConfirmation'
-import type { SubmittedTopic } from '@/models'
-import { useAppSelector } from '@/store'
-import { PeriodPhaseName } from '@/models/period.model'
-import { PeriodPhaseStatus } from '@/models/period-phase.models'
-import { FlashBanner } from '@/components/banner/flash-banner'
+import type { PaginatedSubmittedTopics, SubmittedTopic, SubmittedTopicParamsDto } from '@/models'
 
-const ManageSubmittedTopics = () => {
+const ManageSubmittedTopics = ({ dataInernal }: { dataInernal?: PaginatedSubmittedTopics }) => {
 	const navigate = useNavigate()
-	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
+	const [queries, setQueries] = useState<SubmittedTopicParamsDto>({
 		page: 1,
 		limit: 5,
-		search_by: 'titleVN,titleEng,lecturerName',
+		search_by: ['titleVN', 'titleEng', 'lecturerName'],
 		query: '',
 		sort_by: 'submittedAt',
 		sort_order: 'desc',
-		filter: 'all',
+		filter: undefined,
 		filter_by: 'fieldIds'
 	})
-	const { data: submittedTopics, refetch, isLoading } = useGetSubmittedTopicsQuery(queries)
+	const {
+		data: submittedTopicsData,
+		refetch,
+		isLoading
+	} = useGetSubmittedTopicsQuery(queries, { skip: !!dataInernal })
+	const submittedTopics = dataInernal || submittedTopicsData
 	const [searchTerm, setSearchTerm] = useState('')
 	const setQuery = (query: string) => {
 		setQueries((prev) => ({ ...prev, query }))
 	}
 	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 400 })
 	const onEdit = (val: string) => {
+		console.log(val)
 		setSearchTerm(val)
 		debounceOnChange(val)
 	}
@@ -64,14 +64,13 @@ const ManageSubmittedTopics = () => {
 	const [selectedWithdrawTopics, setSelectedWithdrawTopics] = useState<SubmittedTopic[]>([])
 	const [showSelection, setShowSelection] = useState(false)
 	const [copyToDraftMutation] = useCopyToDraftMutation()
-	//lấy thông tin kì hiện tại
-	const { currentPeriod } = useAppSelector((state) => state.period)
+
 	const handleWithdraw = async (topic?: SubmittedTopic) => {
+		console.log('withdrawing topic:', topic)
 		try {
 			if (topic) {
 				setSelectedWithdrawTopics([topic])
 				setOpenWithdrawModal(true)
-				return
 			} else {
 				await withdrawSubmittedTopics({ topicIds: selectedWithdrawTopics.map((topic) => topic._id) })
 				setPendingWithdrawId(null)
@@ -79,6 +78,7 @@ const ManageSubmittedTopics = () => {
 				refetch()
 			}
 		} catch (err: any) {
+			console.log('Withdraw error:', err)
 			setOpenWithdrawModal(false)
 			toast('Rút đề tài thất bại. Vui lòng thử lại sau.')
 		}
@@ -96,9 +96,9 @@ const ManageSubmittedTopics = () => {
 			toast('Sao chép đề tài thất bại. Vui lòng thử lại sau.')
 		}
 	}
-	const isAbleInSubmitPhase =
-		currentPeriod?.currentPhaseDetail.phase === PeriodPhaseName.SUBMIT_TOPIC &&
-		currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
+	// const isAbleInSubmitPhase =
+	// 	currentPeriod?.currentPhaseDetail.phase === PeriodPhaseName.SUBMIT_TOPIC &&
+	// 	currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
 	const columns = getColumns({
 		onCopyToDraft: handleCopyTodraft,
 		pendingCopyId,
@@ -107,8 +107,7 @@ const ManageSubmittedTopics = () => {
 		onManualApprovalChange: handleManualApprovalChange,
 		pendingId,
 		pendingWithdrawId,
-		onWithdraw: handleWithdraw,
-		isAbleInSubmitPhase: isAbleInSubmitPhase
+		onWithdraw: handleWithdraw
 	})
 	const data =
 		submittedTopics?.data.map((topic, index) => ({
@@ -119,18 +118,26 @@ const ManageSubmittedTopics = () => {
 	return (
 		<div className='flex flex-col gap-4 px-4 py-2'>
 			<div className='relative flex flex-1 items-center gap-5'>
-				<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
-				<Input
-					placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
-					className='pl-10'
-					value={searchTerm}
-					onChange={(e) => onEdit(e.target.value)}
-				/>
-				<Button onClick={() => refetch()}>
-					{' '}
-					{isLoading ? <Loader2 className='h-4 w-4 animate-spin' /> : <RotateCw className='h-4 w-4' />} Tải
-					lại trang
-				</Button>
+				{!dataInernal && (
+					<>
+						<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
+						<Input
+							placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
+							className='bg-white pl-10'
+							value={searchTerm}
+							onChange={(e) => onEdit(e.target.value)}
+						/>
+						<Button onClick={() => refetch()}>
+							{' '}
+							{isLoading ? (
+								<Loader2 className='h-4 w-4 animate-spin' />
+							) : (
+								<RotateCw className='h-4 w-4' />
+							)}{' '}
+							Tải lại trang
+						</Button>
+					</>
+				)}
 				{showSelection && (
 					<>
 						<Button
@@ -150,7 +157,7 @@ const ManageSubmittedTopics = () => {
 							setShowSelection((prev) => !prev)
 						}}
 					>
-						{showSelection ? 'Ẩn lựa chọn' : 'Hiển thị chọn nhi'}
+						{showSelection ? 'Ẩn lựa chọn' : 'Chọn nhiều'}
 					</Button>
 				)}
 			</div>

@@ -1,26 +1,26 @@
 import type { PaginatedResponse } from '@/models'
 import type { Phase1Response, Phase2Response, Phase3Response } from '@/models/period-phase.models'
 import {
-	PeriodTypeEnum,
 	type CreateCompletionPhaseDto,
 	type CreateExecutionPhaseDto,
 	type CreateOpenRegPhaseDto,
 	type CreatePeriodPayload,
 	type CreatePhaseResponse,
 	type CreatePhaseSubmitTopicDto,
-	type GetCustomMiniPeriodInfoRequestDto,
+	type GetCurrentPeriod,
+	type PaginationPeriodQueryParams,
 	type Period,
 	type UpdatePeriodDto,
 	type UpdatePeriodPhaseDto
 } from '@/models/period.model'
-import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
+import { buildQueryString } from '@/models/query-params'
 import type { GetStatiticInPeriod } from '@/models/statistic.model'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
 
 export const periodApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		// lấy tất cả period
-		getPeriods: builder.query<PaginatedResponse<Period>, PaginationQueryParamsDto>({
+		getPeriods: builder.query<PaginatedResponse<Period>, PaginationPeriodQueryParams>({
 			query: (params) => {
 				const queryString = buildQueryString(params)
 				return {
@@ -137,13 +137,12 @@ export const periodApi = baseApi.injectEndpoints({
 
 		//getSubmissionStatus
 
-		//Lấy thông tin của kì hiện tại ở khoa của người dùng
-		getCurrentThesisPeriodInfo: builder.query<GetCustomMiniPeriodInfoRequestDto | null, void>({
+		getCurrentPeriods: builder.query<GetCurrentPeriod[] | null, void>({
 			query: () => ({
-				url: `/periods/current-period/info?periodType=${PeriodTypeEnum.THESIS}`,
+				url: `/periods/current-periods`,
 				method: 'GET'
 			}),
-			transformResponse: (response: ApiResponse<GetCustomMiniPeriodInfoRequestDto | null>) => response.data
+			transformResponse: (response: ApiResponse<GetCurrentPeriod[] | null>) => response.data
 		}),
 
 		//Lấy thông tin thống kê theo pha trong kì
@@ -187,7 +186,8 @@ export const {
 	useDeletePeriodMutation,
 	useGetPeriodsQuery,
 	useCreatePeriodMutation,
-	useGetCurrentThesisPeriodInfoQuery,
 	useLecGetStatsPeriodQuery,
-	useAdjustPeriodMutation
+	useAdjustPeriodMutation,
+	useGetCurrentPeriodsQuery,
+	
 } = periodApi

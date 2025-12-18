@@ -9,11 +9,12 @@ import type { PhaseType } from '@/models/period.model'
 import { useLecGetStatsPeriodQuery, useResolvePhaseMutation } from '@/services/periodApi'
 import { PhaseHeader } from './PhaseHeader'
 import { PhaseActionsBox } from './PhaseActionsBox'
-import PhaseDataTable from './DataTable'
+import PhaseDataTable from './phase-data-table/Phase2DataTable'
 import { useGetTopicsInPhaseQuery } from '@/services/topicApi'
 import { useDebounce } from '@/hooks/useDebounce'
 import { Card, Input } from '@/components/ui'
 import { CustomPagination } from '@/components/PaginationBar'
+import Phase3DataTable from './phase-data-table/Phase3DataTable'
 // import { TopicsTable } from './TopicsTable'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
@@ -154,13 +155,6 @@ export function PhaseContent({
 						? `Danh sách các đề tài ${getLabelForStatus(statusFilter)}`
 						: 'Danh sách đề tài đã nộp'}
 				</h3>
-				{/* <TopicsTable
-					phase={phaseDetail}
-					statFilter={statusFilter}
-					periodId={periodId}
-					queryParams={queryParams}
-					setQueryParams={setQueryParams}
-				/> */}
 				<Card className='space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
 					<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
 					<p className='mb-6 text-sm text-gray-500'>Tổng quan về tất cả các đợt bạn đã tham gia.</p>
@@ -172,7 +166,20 @@ export function PhaseContent({
 							className='sm:w-[350px]'
 						/>
 					</div>
-					<PhaseDataTable data={topicInPhaseData} refetch={refetch} phaseId={phaseDetail._id} />
+					{/* <PhaseDataTable			
+						paginatedTopicsInPeriod={topicInPhaseData}
+						refetch={refetch}
+						phaseId={phaseDetail._id}
+						phaseName={currentPhase.toString()}
+						onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
+					/> */}
+					<Phase3DataTable
+						paginatedTopicsInPeriod={topicInPhaseData}
+						refetch={refetch}
+						phaseId={phaseDetail._id}
+						phaseName={currentPhase.toString()}
+						onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
+					/>
 					{topicInPhaseData?.meta && topicInPhaseData?.meta.totalPages > 1 && (
 						<CustomPagination
 							meta={topicInPhaseData?.meta}

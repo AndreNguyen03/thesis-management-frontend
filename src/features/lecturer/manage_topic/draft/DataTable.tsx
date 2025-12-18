@@ -42,7 +42,7 @@ export function DataTable<TData, TValue>({
 	}
 
 	return (
-		<div className='h-full overflow-hidden rounded-md border'>
+		<div className='h-full overflow-hidden rounded-md border bg-white'>
 			{showSelection && onSubmitSelected && (
 				<div className='flex items-center gap-2'>
 					<Button

@@ -4,10 +4,11 @@ import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod } from './period.model'
-import type { RegistrationDto, RelatedStudentInTopic } from './registration.model'
+import type { RegistrationDto, RelatedStudentInTopic, StudentRegistrationStatus } from './registration.model'
 import { PaginationQueryParamsDto, type SortOrder } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+import type { RegistrationPhase } from '@/features/student/registration/types'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -148,7 +149,7 @@ export interface Topic {
 
 	updatedAt: Date
 
-	isRegistered: boolean
+	registrationStatus?: StudentRegistrationStatus
 
 	isSaved: boolean
 
@@ -331,11 +332,14 @@ export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 	phase?: string
 	status?: string
 	rulesPagination?: number
-	lecturerIds?: string[]	
+	lecturerIds?: string[]
 	fieldIds?: string[]
 	queryStatus?: string[]
 }
-
+//dùng cho khi giảng viên lấy đề tài trong kì theo phase
+export interface PaginationLecturerGetTopicsInPhaseParams extends PaginationQueryParamsDto {
+	status: string
+}
 //#Đề tài trong thư viện số
 //Đánh giá bên trong đề tài được lưu trữ trong thư viện số
 interface TopicStatsDto {
@@ -370,4 +374,7 @@ interface DefenseResult {
 	gradeText: string // Xếp loại: "Xuất sắc"
 	councilMembers: CouncilMemberSnapshot[]
 	councilName: string // VD: "Hội đồng CNPM 01"
+}
+export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
+    periodId?: string
 }

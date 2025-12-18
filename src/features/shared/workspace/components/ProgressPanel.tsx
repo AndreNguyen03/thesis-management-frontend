@@ -187,7 +187,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 	)
 
 	return (
-		<div className='h-[calc(100vh-10rem)] space-y-6 bg-work p-6'>
+		<div className='h-[calc(100vh-7rem)] space-y-6 bg-work p-6 pb-12'>
 			{/* Stats Grid */}
 			<div className='grid grid-cols-2 gap-4'>
 				<StatCard

@@ -55,7 +55,7 @@ export const WorkPanel = ({ milestones, totalProgress, updateMilestone }: WorkPa
 			</div>
 
 			{/* Tab Content */}
-			<div className='h-[calc(100vh-2rem)] flex-1 overflow-y-auto'>
+			<div className='h-[calc(100dvh-2rem)] flex-1 overflow-y-auto'>
 				{activeTab === 'milestone' && (
 					<MilestonePanel
 						milestones={milestones}
