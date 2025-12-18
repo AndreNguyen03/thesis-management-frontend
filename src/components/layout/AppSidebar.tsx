@@ -37,9 +37,8 @@ type MenuItem = {
 	children?: MenuItem[]
 }
 
-const menuItems: Record<Role | 'common' | 'footer' | 'period_info', MenuItem[]> = {
+const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
 	common: [{ title: 'Dashboard', url: '/', icon: LayoutDashboard }],
-	period_info: [{ title: '', url: '/', icon: LayoutDashboard }],
 	student: [
 		{
 			title: 'Danh sách đề tài',
@@ -56,9 +55,10 @@ const menuItems: Record<Role | 'common' | 'footer' | 'period_info', MenuItem[]> 
 		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp }
 	],
 	lecturer: [
-		{ title: 'Đăng đề tài', url: '/create-topic', icon: PlusCircle },
+		//{ title: 'Đăng đề tài', url: '/create-topic', icon: PlusCircle },
 		{ title: 'Quản lý đề tài', url: '/manage-topics', icon: FileText },
 		{ title: 'Xét duyệt đăng ký', url: '/approve-registrations', icon: UserCheck },
+		{ title: 'Đợt đăng ký', url: '/registration', icon: Search },
 		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users },
 		{ title: 'Thư viện số', url: '/library', icon: Library },
 		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp },
@@ -88,9 +88,6 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const location = useLocation()
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
-	const { currentPeriod, isLoading } = useAppSelector((state) => state.period)
-	const countdown = useCountdown(currentPeriod?.currentPhaseDetail!.endTime)
-
 	function isActive(path: string) {
 		if (path === '/' && currentPath === '/') return true
 		if (path !== '/' && currentPath === path) return true
@@ -101,14 +98,14 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 		setOpenMenus((prev) => (prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]))
 	}
 
-	const handlePeriodInfo = (periodInfo: MenuItem[]) => {
-		if (!currentPeriod) return periodInfo
+	// const handlePeriodInfo = (periodInfo: MenuItem[]) => {
+	// 	if (!currentPeriod) return periodInfo
 
-		const typeLabels = { thesis: 'Khóa luận', scientific_research: 'Nghiên cứu khoa học' } as const
-		const title = `Kì hiện tại: ${currentPeriod.year} • HK ${currentPeriod.semester} • ${typeLabels[currentPeriod.type]}`
+	// 	const typeLabels = { thesis: 'Khóa luận', scientific_research: 'Nghiên cứu khoa học' } as const
+	// 	const title = `Kì hiện tại: ${currentPeriod.year} • HK ${currentPeriod.semester} • ${typeLabels[currentPeriod.type]}`
 
-		return [{ ...periodInfo[0], title, url: `/period/${currentPeriod?._id ?? ''}`, icon: BookOpen }]
-	}
+	// 	return [{ ...periodInfo[0], title, url: `/period/${currentPeriod?._id ?? ''}`, icon: BookOpen }]
+	// }
 
 	const renderMenuItems = (items: typeof menuItems.common) => (
 		<div className='max-w-48 space-y-0.5'>
@@ -194,27 +191,6 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 				{isOpen && <div className='mb-1 px-2 text-xs font-semibold text-gray-500'>Tổng quan</div>}
 				{renderMenuItems(menuItems.common)}
 			</div>
-
-			{/* Period Info */}
-			{isLoading ||
-				(currentPeriod && (
-					<div className='mb-4 flex flex-col gap-0.5'>
-						{isOpen && (
-							<div>
-								<div className='mb-1 px-2 text-xs text-gray-500'>
-									<span className='font-semibold'>{`${currentPeriod?.faculty.name}`}</span>
-								</div>
-								<div className='mb-1 px-2 text-xs font-semibold text-gray-500'>
-									<Badge>{`Đợt ${PhaseInfo[currentPeriod.currentPhaseDetail.phase].label}`}</Badge>
-								</div>
-								<div className='mb-1 flex gap-1 px-2 text-xs font-semibold text-gray-500'>
-									<span>{`Kết thúc ${countdown}`}</span>
-								</div>
-							</div>
-						)}
-						{renderMenuItems(handlePeriodInfo(menuItems.period_info))}
-					</div>
-				))}
 
 			{/* Role Menu */}
 			<div className='mb-4'>

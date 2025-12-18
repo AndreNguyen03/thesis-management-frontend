@@ -1,8 +1,12 @@
 import type { ElementType } from 'react'
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
-import type { TopicStatus } from './topic.model'
+import type { GeneralTopic, PaginatedGeneralTopics, TopicStatus } from './topic.model'
 import type { PaginationQueryParamsDto } from './query-params'
+import { CalendarCheck, Clock, Lightbulb } from 'lucide-react'
+import type { Role } from './users'
+import type { BadgeVariant } from '@/components/ui'
+import type { MetaDto } from './paginated-object.model'
 
 export type PeriodStatus = 'timeout' | 'active' | 'pending'
 
@@ -17,13 +21,18 @@ export interface Period {
 	phases: PeriodPhase[]
 	status: string
 	currentPhase: PhaseType
+	currentPhaseDetail: PeriodPhase
 	startTime: Date
 	endTime: Date
 }
 
+export interface RegistrationPeriodsPageProps {
+	userRole: 'student' | 'lecturer'
+}
 export interface MiniPeriod {
 	_id: string
-	name: string
+	year: string
+	semester: string
 	faculty: GetFaculty
 }
 export interface CreatePeriodPayload {
@@ -67,22 +76,33 @@ export interface GetCustomPeriodDetailRequestDto {
 	}
 }
 
-export interface GetCustomMiniPeriodInfoRequestDto {
+export interface Badge {
+	text: string
+	variant: BadgeVariant
+}
+export interface NavItem {
+	url: string
+	title: string
+	isDisabled: boolean
+	badge?: Badge
+	note?: string
+}
+export interface GetCurrentPeriod {
 	_id: string
 	year: string
 	semester: number
 	type: PeriodType
-	faculty: GetFaculty
-	phases: PeriodPhase[]
+	facultyName: string
 	status: string
 	startTime: Date
 	endTime: Date
-	currentPhase: string
 	currentPhaseDetail: PeriodPhase
+	navItem: NavItem[]
 }
 export interface PaginationPeriodQueryParams extends PaginationQueryParamsDto {
 	type?: PeriodType | 'all'
 	status?: PeriodStatus | 'all'
+	role?: Role
 }
 export const PeriodPhaseName = {
 	EMPTY: 'empty',
@@ -131,4 +151,79 @@ export interface UpdatePeriodDto {
 	type: string
 	startTime: string
 	endTime: string
+}
+export const getPhaseStatus = (phase: GetCurrentPeriod['currentPhaseDetail']['phase']) => {
+	switch (phase) {
+		case PeriodPhaseName.OPEN_REGISTRATION:
+			return {
+				label: 'Đang Mở Đăng ký',
+				variant: 'success',
+				icon: Lightbulb,
+				order: 1,
+				color: 'bg-purple-100 text-purple-700'
+			}
+		case PeriodPhaseName.EXECUTION:
+			return {
+				label: 'Đang Thực hiện',
+				variant: 'default',
+				icon: Clock,
+				order: 2,
+				color: 'bg-indigo-100 text-indigo-700'
+			}
+		case PeriodPhaseName.COMPLETION:
+			return {
+				label: 'Đã Hoàn thành',
+				variant: 'default',
+				icon: CalendarCheck,
+				order: 3,
+				color: 'bg-green-100 text-green-700'
+			}
+		case PeriodPhaseName.SUBMIT_TOPIC:
+			return {
+				label: 'Mở nộp đề tài',
+				variant: 'secondary',
+				icon: Lock,
+				order: 0,
+				color: 'bg-blue-100 text-blue-700'
+			}
+		case PeriodPhaseName.EMPTY:
+		default:
+			return {
+				label: 'Chưa khởi tạo',
+				variant: 'secondary',
+				icon: Lock,
+				order: 0,
+				color: 'bg-gray-100 text-gray-700'
+			}
+	}
+}
+
+// Badge màu cho trạng thái
+export const statusMap: Record<string, { label: string; color: string }> = {
+	timeout: { label: 'Hết hạn', color: 'text-center bg-gray-100 text-gray-700' },
+	active: { label: 'Đang hoạt động', color: 'text-center bg-green-100 text-green-700' },
+	pending: { label: 'Chờ bắt đầu', color: 'text-center bg-yellow-100 text-yellow-700' }
+}
+
+export const periodTypeMap: Record<string, string> = {
+	thesis: 'Khóa luận',
+	scientific_research: 'Nghiên cứu khoa học'
+}
+
+// Map cho các pha của period
+export const phaseMap: Record<string, { label: string; color: string }> = {
+	empty: { label: 'Chưa bắt đầu', color: 'text-center bg-gray-100 text-gray-700' },
+	submit_topic: { label: 'Nộp đề tài', color: 'text-center bg-blue-100 text-blue-700' },
+	open_registration: { label: 'Mở đăng ký', color: 'text-center bg-purple-100 text-purple-700' },
+	execution: { label: 'Thực hiện', color: 'text-center bg-indigo-100 text-indigo-700' },
+	completion: { label: 'Hoàn thành', color: 'text-center bg-green-100 text-green-700' }
+}
+
+
+export interface TopicsInPeriodMeta extends MetaDto {
+    periodInfo: Period
+}
+export interface PaginatedTopicsInPeriod {
+    data: GeneralTopic[]
+    meta: TopicsInPeriodMeta
 }

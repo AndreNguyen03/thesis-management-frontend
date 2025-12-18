@@ -7,10 +7,11 @@ import { setUser } from '@/features/shared/auth'
 import { LoadingOverlay } from '@/components/ui'
 import { Toaster as ToasterSonner } from 'sonner'
 import { Toaster } from './components/ui/toaster'
-import { useGetCurrentThesisPeriodInfoQuery } from './services/periodApi'
-import { setCurrentPeriod, setCurrPeriodLoading } from './store/slices/period-slice'
+
+import { setCurrentPeriods, setCurrPeriodLoading } from './store/slices/period-slice'
 // import { connectSocket, disconnectSocket } from './utils/socket-client'
 import { ChatProvider } from './contexts/ChatSocketContext'
+import { useGetCurrentPeriodsQuery } from './services/periodApi'
 
 const App = () => {
 	const user = useAppSelector((state) => state.auth.user)
@@ -18,7 +19,7 @@ const App = () => {
 	const { data: userData, isLoading } = useGetProfileQuery(undefined, {
 		skip: !token // chỉ skip khi chưa login
 	})
-	const { data: periodInfoData } = useGetCurrentThesisPeriodInfoQuery()
+	const { data: periodDatas } = useGetCurrentPeriodsQuery()
 
 	const dispatch = useAppDispatch()
 
@@ -33,11 +34,11 @@ const App = () => {
 		dispatch(setCurrPeriodLoading(true))
 	}, [])
 	useEffect(() => {
-		if (periodInfoData) {
-			dispatch(setCurrentPeriod(periodInfoData))
+		if (periodDatas) {
+			dispatch(setCurrentPeriods(periodDatas))
 			dispatch(setCurrPeriodLoading(false))
 		}
-	}, [periodInfoData])
+	}, [periodDatas])
 
 	// useEffect(() => {
 	// 	if (token) {

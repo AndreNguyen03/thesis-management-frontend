@@ -1,8 +1,10 @@
+import { CustomPagination } from '@/components/PaginationBar'
 import { Button } from '@/components/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { TableAction } from '@/components/ui/DataTable/types'
-import { type GeneralTopic, type PaginatedGeneralTopics } from '@/models'
-import type { PhaseType } from '@/models/period.model'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { type ApiError, type GeneralTopic, type PaginatedGeneralTopics } from '@/models'
+import { PeriodPhaseName, type PaginatedTopicsInPeriod, type PhaseType } from '@/models/period.model'
 import {
 	useFacuBoardApproveTopicMutation,
 	useFacuBoardApproveTopicsMutation,
@@ -36,11 +38,23 @@ const statusMap: Record<string, { label: string; color: string }> = {
 	rejected_final: { label: 'Chưa đạt', color: 'text-center bg-red-100 text-red-700' }
 }
 interface DataTableProps {
-	data?: PaginatedGeneralTopics
+	paginatedTopicsInPeriod?: PaginatedTopicsInPeriod
 	refetch: () => void
 	phaseId: string
+	phaseName: string
+	isLoading?: boolean
+	error?: ApiError | null
+	onPageChange: (page: number) => void
 }
-const PhaseDataTable = ({ data, refetch, phaseId }: DataTableProps) => {
+const Phase3DataTable = ({
+	paginatedTopicsInPeriod,
+	refetch,
+	phaseId,
+	phaseName,
+	isLoading,
+	error,
+	onPageChange
+}: DataTableProps) => {
 	// search input handler
 	const [selectedTopics, setSelectedTopics] = useState<string[]>([])
 	const navigate = useNavigate()
@@ -89,64 +103,29 @@ const PhaseDataTable = ({ data, refetch, phaseId }: DataTableProps) => {
 			toast.error(`Từ chối thất bại ${err}`, { richColors: true })
 		}
 	}
+
 	return (
-		<div>
-			{isChoosingMany ? (
-				<div className='flex gap-2 p-2'>
-					<Button
-						onClick={handleApproveMany}
-						className='h-fit bg-green-500 px-2 py-1 text-white hover:bg-green-600'
-						disabled={isLoadingApproveMany}
-					>
-						{isLoadingApproveMany && <Loader2 className='mr-2 inline-block h-4 w-4 animate-spin' />}
-						Duyệt ({selectedTopics.length})
-					</Button>
-					<Button
-						onClick={handleRejectMany}
-						className='hover:bg-red-550 h-fit bg-red-500 px-2 py-1 text-white'
-						disabled={isLoadingRejectMany}
-					>
-						{isLoadingRejectMany && <Loader2 className='mr-2 inline-block h-4 w-4 animate-spin' />}
-						Từ chối ({selectedTopics.length})
-					</Button>
-					<Button
-						className='hover:bg-gray-550 h-fit bg-gray-500 px-2 py-1'
-						onClick={() => {
-							setSelectedTopics([])
-							setIsChoosingMany(false)
-						}}
-					>
-						Hủy{' '}
-					</Button>
-				</div>
-			) : (
-				<Button
-					onClick={() => {
-						setIsChoosingMany(true)
-					}}
-					className='mb-2 h-fit px-2 py-1'
-				>
-					Chọn nhiều
-				</Button>
-			)}
-			<div className='overflow-x-auto rounded-lg border'>
-				<table className='min-w-full bg-white'>
-					<thead>
-						<tr className='bg-gray-50 text-gray-700'>
-							{isChoosingMany && <th className='px-3 py-2 text-left text-[15px] font-semibold'>Chọn</th>}
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Đề tài (Việt - Anh)</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Giảng viên</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngành</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngày đăng ký</th>
-							{/* <th className='whitespace-nowrap px-3 py-2 text-left text-[15px] font-semibold'>
+		<div className='overflow-x-auto rounded-lg border'>
+			<table className='min-w-full bg-white'>
+				<thead>
+					<tr className='bg-gray-50 text-gray-700'>
+						{isChoosingMany && <th className='px-3 py-2 text-left text-[15px] font-semibold'>Chọn</th>}
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Đề tài (Việt - Anh)</th>
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Giảng viên</th>
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngành</th>
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngày đăng ký</th>
+						{/* <th className='whitespace-nowrap px-3 py-2 text-left text-[15px] font-semibold'>
 								Trạng thái đề tài
 							</th> */}
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái</th>
-							<th className='px-3 py-2 text-center text-[15px] font-semibold'>Hành động</th>
-						</tr>
-					</thead>
-					<tbody>
-						{data?.data.map((hic) => (
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái</th>
+						<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>Số lượng đăng ký</th>
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Tiến độ</th>
+						<th className='px-3 py-2 text-center text-[15px] font-semibold'>Hành động</th>
+					</tr>
+				</thead>
+				<tbody>
+					{paginatedTopicsInPeriod?.data.map((hic) => {
+						return (
 							<tr key={hic._id} className='border-b last:border-b-0 hover:bg-gray-50'>
 								{isChoosingMany && (
 									<td className='px-3 py-2'>
@@ -163,15 +142,15 @@ const PhaseDataTable = ({ data, refetch, phaseId }: DataTableProps) => {
 									</td>
 								)}
 
-								<td className='flex flex-col px-3 py-2'>
+								<td className='max-w-450 flex min-w-[150px] flex-col px-3 py-2'>
 									<span className='font-semibold text-gray-900'>{hic.titleVN}</span>
 									<span className='font-sm text-[13px] text-gray-500'>{`(${hic.titleEng})`}</span>
 								</td>
 								<td className='px-3 py-2'>
 									<div className='flex flex-col text-sm'>
-										{hic.lecturers
-											.map((lecturer) => `${lecturer.title}. ${lecturer.fullName}`)
-											.join(', ')}
+										{hic.lecturers.map((lecturer) => (
+											<span>{`${lecturer.title}. ${lecturer.fullName}`}</span>
+										))}
 									</div>
 								</td>
 								<td className='px-3 py-2'>{hic.major.name}</td>
@@ -186,6 +165,16 @@ const PhaseDataTable = ({ data, refetch, phaseId }: DataTableProps) => {
 										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[hic.lastStatusInPhaseHistory.status].color}`}
 									>
 										{statusMap[hic.lastStatusInPhaseHistory.status].label}
+									</span>
+								</td>
+								<td className='px-3 py-2'>
+									<span className='font-medium'>
+										{hic.studentsNum}/{hic.maxStudents}
+									</span>
+								</td>
+								<td className='px-3 py-2'>
+									<span className='cursor-pointer font-medium text-yellow-500 hover:underline'>
+										coming
 									</span>
 								</td>
 								<td className='px-3 py-2 text-center'>
@@ -215,19 +204,45 @@ const PhaseDataTable = ({ data, refetch, phaseId }: DataTableProps) => {
 									)}
 								</td>
 							</tr>
-						))}
-						{data?.data.length === 0 && (
-							<tr>
-								<td colSpan={5} className='py-6 text-center text-gray-400'>
-									Không có dữ liệu phù hợp.
-								</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
-			</div>
+						)
+					})}
+
+					{isLoading && (
+						<tr>
+							<td colSpan={7} className='py-12 text-center'>
+								<div className='flex flex-col items-center justify-center gap-2'>
+									<Loader2 className='h-8 w-8 animate-spin text-blue-500' />
+									<span className='text-gray-500'>Đang tải dữ liệu...</span>
+								</div>
+							</td>
+						</tr>
+					)}
+					{error && (
+						<tr>
+							<td colSpan={7} className='py-12 text-center'>
+								<div className='flex flex-col items-center justify-center gap-2'>
+									<XCircle className='h-8 w-8 text-red-500' />
+									<span className='text-gray-500'>
+										{(error as ApiError).data?.message || 'Đã có lỗi xảy ra khi tải dữ liệu'}
+									</span>
+								</div>
+							</td>
+						</tr>
+					)}
+					{!isLoading && !error && paginatedTopicsInPeriod?.data?.length === 0 && (
+						<tr>
+							<td colSpan={7} className='py-12 text-center'>
+								<EmptyState title='Không có dữ liệu' />
+							</td>
+						</tr>
+					)}
+					{paginatedTopicsInPeriod?.meta && paginatedTopicsInPeriod?.meta.totalPages > 1 && (
+						<CustomPagination meta={paginatedTopicsInPeriod?.meta} onPageChange={onPageChange} />
+					)}
+				</tbody>
+			</table>
 		</div>
 	)
 }
 
-export default PhaseDataTable
+export default Phase3DataTable

@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useDebounce } from '@/hooks/useDebounce'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { cn } from '@/lib/utils'
-import { Check, ChevronsUpDown, Loader2, Plus} from 'lucide-react'
+import { Check, ChevronsUpDown, Loader2, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Chip } from '@/features/lecturer/new_topic/components/Chip'
 import type { ResponseMiniStudentDto } from '@/models'
@@ -42,7 +42,7 @@ const StudentContainer = ({
 	const [queriesStudent, setQueriesStudent] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 6,
-		search_by: 'fullName',
+		search_by: ['fullName'],
 		query: '',
 		sort_by: 'fullName',
 		sort_order: 'asc'
@@ -128,8 +128,6 @@ const StudentContainer = ({
 			</div>
 		)
 	}
-
-	// CHẾ ĐỘ CHỈNH SỬA (EDIT MODE)
 	return (
 		<div>
 			<div className='flex items-center gap-4'>
@@ -143,7 +141,7 @@ const StudentContainer = ({
 					<Chip key={req._id} label={req.fullName} onRemove={() => handleRemove(req._id)} />
 				))}
 			</div>
-			<div className='flex items-end gap-3'>
+			<div className='flex flex-col items-start gap-3 sm:flex-row'>
 				<div className='flex-1'>
 					<Select
 						value={maxStudents.toString()}

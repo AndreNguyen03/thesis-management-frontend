@@ -14,7 +14,6 @@ import type { ColumnDef, Row } from '@tanstack/react-table'
 import { Copy, Eye, Loader2, UndoDot } from 'lucide-react'
 
 type ColumnsProps = {
-	isAbleInSubmitPhase: boolean
 	onSeeDetail: (topicId: string) => void
 	showSelection: boolean
 	onManualApprovalChange?: (checked: boolean, topicId: string) => void
@@ -38,7 +37,6 @@ export const getColumns = ({
 	pendingWithdrawId,
 	onWithdraw,
 	onCopyToDraft,
-	isAbleInSubmitPhase,
 	isCopySuccess
 }: ColumnsProps): ColumnDef<NewSubmittedTopic>[] => [
 	{
@@ -112,7 +110,11 @@ export const getColumns = ({
 		header: () => <div className='text-center'> HK</div>,
 		cell: ({ row }) => {
 			return (
-				<div className='flex justify-center text-[14px] capitalize'>{row.original.periodInfo?.name || ''}</div>
+				<div className='flex justify-center text-[14px] capitalize'>
+					<span className='font-semibold'>
+						{row.original.periodInfo?.year || ''} - Học kỳ {row.original.periodInfo?.semester || ''}
+					</span>
+				</div>
 			)
 		}
 	},
@@ -189,7 +191,7 @@ export const getColumns = ({
 								<Eye className='h-4 w-4' />
 							</Button>
 							{/* Đã nộp nhưng muốn rút */}
-							{row.original.currentStatus === TopicStatus.SUBMITTED && isAbleInSubmitPhase && (
+							{row.original.currentStatus === TopicStatus.SUBMITTED  && (
 								<Button
 									title='Rút'
 									variant='outline'

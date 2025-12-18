@@ -4,7 +4,12 @@ import type { PaginationQueryParamsDto } from './query-params'
 
 // Role
 export type Role = 'student' | 'lecturer' | 'admin' | 'faculty_board'
-
+export const ROLES = {
+	STUDENT: 'student',
+	LECTURER: 'lecturer',
+	ADMIN: 'admin',
+	FACULTY_BOARD: 'faculty_board'
+} as const
 // Student Project
 export interface StudentProject {
 	title: string

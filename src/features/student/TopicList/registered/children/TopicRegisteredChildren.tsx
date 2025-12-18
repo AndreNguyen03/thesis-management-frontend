@@ -25,11 +25,11 @@ export const TopicRegisteredChildren = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 6,
-		search_by: 'titleVN,titleEng',
+		search_by: ['titleVN', 'titleEng'],
 		query: '',
 		sort_by: 'createdAt',
 		sort_order: 'asc',
-		filter: '',
+		filter: undefined,
 		filter_by: 'fieldIds'
 	})
 	//Lấy đề tài đã đăng ký
@@ -82,9 +82,9 @@ export const TopicRegisteredChildren = () => {
 								</div>
 
 								<FieldsCombobox
-									selectedFields={queries.filter ? queries.filter.split(',') : []}
+									selectedFields={queries.filter ? queries.filter : []}
 									onSelectionChange={(value: string[]) => {
-										setQueries((prev) => ({ ...prev, filter: value.join(',') }))
+										setQueries((prev) => ({ ...prev, filter: value }))
 									}}
 								/>
 								<Select value={queries.sort_by}>

@@ -45,7 +45,7 @@ const CoSupervisorContainer = ({
 	const [queriesLecturer, setQueriesLecturer] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 6,
-		search_by: 'fullName',
+		search_by: ['fullName'],
 		query: '',
 		sort_by: 'fullName',
 		sort_order: 'asc'
@@ -146,7 +146,7 @@ const CoSupervisorContainer = ({
 			{/* 1. Hiển thị các tags đã chọn (có nút xóa) */}
 			<div className='mb-2 flex flex-wrap gap-2'>
 				{selectedCoSupervisors.map((req) => (
-					<Chip key={req._id} label={req.fullName} onRemove={() => handleRemove(req._id)} />
+					<Chip key={req._id} label={`${req.title} ${req.fullName}`} onRemove={() => handleRemove(req._id)} />
 				))}
 			</div>
 
@@ -196,7 +196,7 @@ const CoSupervisorContainer = ({
 															isSelected ? 'opacity-100' : 'opacity-0'
 														)}
 													/>
-													{req.fullName}
+													{req.title} {req.fullName}
 												</CommandItem>
 											)
 										})}
