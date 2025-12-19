@@ -24,7 +24,7 @@ const rawBaseQuery = fetchBaseQuery({
 })
 
 export const baseApi = createApi({
-	reducerPath: 'api',	
+	reducerPath: 'api',
 	baseQuery: async <T>(
 		args: Parameters<typeof rawBaseQuery>[0],
 		api: Parameters<typeof rawBaseQuery>[1],
@@ -95,6 +95,15 @@ export const baseApi = createApi({
 
 		return result as QueryReturnValue<ApiResponse<T>, FetchBaseQueryError, FetchBaseQueryMeta>
 	},
-	tagTypes: ['UserProfile', 'Theses', 'ListLecturer', 'ListStudent', 'PeriodDetail', 'Periods', 'PhaseTopics'],
+	tagTypes: [
+		'UserProfile',
+		'Theses',
+		'ListLecturer',
+		'ListStudent',
+		'PeriodDetail',
+		'Periods',
+		'PhaseTopics',
+		'MyRegisteredTopics'
+	],
 	endpoints: () => ({})
 })

@@ -18,7 +18,8 @@ const periodSlice = createSlice({
 		},
 		setCurrPeriodLoading: (state, action: { payload: boolean }) => {
 			state.isLoading = action.payload
-		}
+		},
+        
 	}
 })
 

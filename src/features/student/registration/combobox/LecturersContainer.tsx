@@ -23,9 +23,15 @@ interface LecturerContainerProps {
 	isEditing?: boolean
 	// Hàm callback để update ngược lại parent
 	onSelectionChange?: (newLecturers: ResponseMiniLecturerDto[]) => void
+	className?: string
 }
 
-const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionChange }: LecturerContainerProps) => {
+const LecturersContainer = ({
+	selectedLecturers,
+	isEditing = true,
+	onSelectionChange,
+	className
+}: LecturerContainerProps) => {
 	const [open, setOpen] = useState(false)
 
 	const handleOpenModal = (boolean: boolean) => {
@@ -38,9 +44,9 @@ const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionCh
 	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'name',
+		search_by: ['user.fullName'],
 		query: '',
-		sort_by: 'name',
+		sort_by: 'fullName',
 		sort_order: 'asc'
 	})
 
@@ -122,25 +128,27 @@ const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionCh
 
 	// CHẾ ĐỘ CHỈNH SỬA (EDIT MODE)
 	return (
-		<div>
+		<div className={cn('space-y-2', className)}>
 			{/* 1. Hiển thị các tags đã chọn (có nút xóa) */}
-			<div className='mb-2 flex flex-wrap gap-2'>
-				{selectedLecturers.map((lecturer) => (
-					<Badge
-						key={lecturer._id}
-						variant='secondary'
-						className='flex items-center gap-1 px-3 py-1 pr-1 text-sm'
-					>
-						{lecturer.fullName}
-						<button
-							onClick={() => handleRemove(lecturer._id)}
-							className='ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300'
+			{selectedLecturers.length > 0 && (
+				<div className='flex max-w-[200px] flex-wrap gap-1.5'>
+					{selectedLecturers.map((lecturer) => (
+						<Badge
+							key={lecturer._id}
+							variant='secondary'
+							className='flex items-center gap-1 px-2 py-0.5 text-xs'
 						>
-							<X className='h-3 w-3' />
-						</button>
-					</Badge>
-				))}
-			</div>
+							{lecturer.fullName}
+							<button
+								onClick={() => handleRemove(lecturer._id)}
+								className='ml-1 rounded-full p-0.5 transition-colors hover:bg-muted-foreground/50'
+							>
+								<X className='h-2.5 w-2.5' />
+							</button>
+						</Badge>
+					))}
+				</div>
+			)}
 
 			{/* 2. Combobox tìm kiếm & chọn */}
 			<Popover open={open} onOpenChange={handleOpenModal}>
@@ -149,15 +157,26 @@ const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionCh
 						variant='outline'
 						role='combobox'
 						aria-expanded={open}
-						className='w-full justify-between text-left font-normal'
+						className={cn(
+							'h-8 w-[140px] justify-between text-left text-xs font-normal',
+							selectedLecturers.length > 0 && 'text-muted-foreground'
+						)}
 					>
-						<span>Thêm giảng viên...</span>
-						<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+						<span className='truncate'>
+							{selectedLecturers.length > 0
+								? `${selectedLecturers.length} giảng viên đã chọn`
+								: 'Thêm giảng viên...'}
+						</span>
+						<ChevronsUpDown className='ml-1 h-3 w-3 shrink-0 opacity-50' />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className='w-[400px] p-0'>
+				<PopoverContent className='w-[350px] p-0'>
 					<Command shouldFilter={false}>
-						<CommandInput placeholder='Tìm kiếm giảng viên...' onValueChange={debounceFieldOnChange} />
+						<CommandInput
+							placeholder='Tìm kiếm giảng viên...'
+							onValueChange={debounceFieldOnChange}
+							className='h-9'
+						/>
 						<CommandList
 							className='h-fit max-h-60 overflow-y-auto'
 							style={{ overscrollBehavior: 'contain' }}
@@ -181,6 +200,7 @@ const LecturersContainer = ({ selectedLecturers, isEditing = true, onSelectionCh
 													value={lecturer._id} // Lưu ý: value phải unique
 													onSelect={() => handleSelect(lecturer)}
 													className='cursor-pointer'
+													onPointerDown={(e) => e.preventDefault()}
 												>
 													<Check
 														className={cn(

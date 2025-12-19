@@ -8,52 +8,36 @@ import { LoadingOverlay } from '@/components/ui'
 import { Toaster as ToasterSonner } from 'sonner'
 import { Toaster } from './components/ui/toaster'
 
-import { setCurrentPeriods, setCurrPeriodLoading } from './store/slices/period-slice'
-// import { connectSocket, disconnectSocket } from './utils/socket-client'
+// import slice period ❌ BỎ
 import { ChatProvider } from './contexts/ChatSocketContext'
 import { useGetCurrentPeriodsQuery } from './services/periodApi'
 
 const App = () => {
+	const dispatch = useAppDispatch()
 	const user = useAppSelector((state) => state.auth.user)
 	const token = sessionStorage.getItem('accessToken')
-	const { data: userData, isLoading } = useGetProfileQuery(undefined, {
-		skip: !token // chỉ skip khi chưa login
+
+	// 🔹 AUTH
+	const { data: userData, isLoading: isUserLoading } = useGetProfileQuery(undefined, {
+		skip: !token
 	})
-	const { data: periodDatas } = useGetCurrentPeriodsQuery()
 
-	const dispatch = useAppDispatch()
+	// 🔹 PERIODS (RTK QUERY = source of truth)
+	const { isLoading: isPeriodLoading } = useGetCurrentPeriodsQuery()
 
+	// 🔹 Sync user (OK – auth là global state)
 	useEffect(() => {
-		console.log(`app :: `, userData)
 		if (userData && userData !== user) {
 			dispatch(setUser(userData))
 		}
-	}, [userData, user])
+	}, [userData, user, dispatch])
 
-	useEffect(() => {
-		dispatch(setCurrPeriodLoading(true))
-	}, [])
-	useEffect(() => {
-		if (periodDatas) {
-			dispatch(setCurrentPeriods(periodDatas))
-			dispatch(setCurrPeriodLoading(false))
-		}
-	}, [periodDatas])
-
-	// useEffect(() => {
-	// 	if (token) {
-	// 		connectSocket(token)
-	// 	}
-	// 	return () => {
-	// 		disconnectSocket()
-	// 	}
-	// }, [token])
-
-	if (isLoading) return <LoadingOverlay />
-
-	if (!userData) {
-		return null
+	// 🔹 Loading global
+	if (isUserLoading || isPeriodLoading) {
+		return <LoadingOverlay />
 	}
+
+	if (!userData) return null
 
 	const userId = 'userId' in userData ? userData.userId : userData._id
 

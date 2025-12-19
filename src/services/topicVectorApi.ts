@@ -10,8 +10,11 @@ export const topicVectorApi = baseApi.injectEndpoints({
 			PaginatedGeneralTopics,
 			{ periodId: string; queries: RequestGetTopicsInAdvanceSearch }
 		>({
-			query: ({ periodId, queries }) =>
-				`/topic-search/advance/registering-topics/${periodId}?${buildQueryString(queries)}`,
+			query: ({ periodId, queries }) => {
+				const qs = buildQueryString(queries)
+				console.log('🔥 query string:', qs)
+				return `/topic-search/advance/registering-topics/${periodId}?${qs}`
+			},
 			transformResponse: (response: ApiResponse<PaginatedGeneralTopics>) => response.data
 		}),
 		advanceSearchTopicsInLibrary: builder.query<

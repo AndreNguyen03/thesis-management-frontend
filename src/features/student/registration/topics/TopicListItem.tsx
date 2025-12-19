@@ -22,6 +22,16 @@ export function TopicListItem({
 	disabled,
 	isRegistered
 }: TopicListItemProps) {
+	// ===== MAIN LECTURER: Always use createByInfo as main lecturer =====
+	const mainLecturer = topic.createByInfo
+	const lecturerName = mainLecturer?.fullName ?? 'Chưa phân công'
+	const lecturerAvatar = mainLecturer?.avatarUrl
+	const lecturerInitial = lecturerName
+		.split(' ')
+		.slice(-2)
+		.map((w) => w[0])
+		.join('')
+
 	const slotColor = topic.currentStatus === TopicStatus.FULL ? 'text-destructive' : 'text-success'
 
 	const isButtonDisabled = topic.currentStatus === TopicStatus.FULL || isRegistering || disabled
@@ -38,7 +48,7 @@ export function TopicListItem({
 				</>
 			)
 		}
-		if (topic.currentStatus === TopicStatus.FULL) {
+		if (topic.studentsNum === topic.maxStudents) {
 			return 'Hết slot'
 		}
 		return 'Đăng ký'
@@ -62,16 +72,18 @@ export function TopicListItem({
 						</Badge>
 					)}
 				</div>
+
 				<div className='flex items-center gap-2 text-xs text-muted-foreground'>
+					{/* Main Lecturer (Always createByInfo) */}
 					<div className='flex items-center gap-1'>
 						<Avatar className='h-4 w-4'>
-							<AvatarImage src={topic.lecturers[0].avatarUrl} alt={topic.lecturers[0].fullName} />
-							<AvatarFallback className='text-[8px]'>
-								{topic.lecturers[0].fullName.slice(0, 2)}
-							</AvatarFallback>
+							{lecturerAvatar && <AvatarImage src={lecturerAvatar} alt={lecturerName} />}
+							<AvatarFallback className='text-[8px]'>{lecturerInitial}</AvatarFallback>
 						</Avatar>
-						<span className='max-w-[100px] truncate'>{topic.lecturers[0].fullName}</span>
+						<span className='max-w-[100px] truncate'>{lecturerName}</span>
 					</div>
+
+					{/* Fields */}
 					{topic.fields.map((field) => (
 						<span key={field._id} className='max-w-[80px] truncate'>
 							{field.name}
@@ -96,7 +108,7 @@ export function TopicListItem({
 
 			{/* Slots */}
 			<div className={cn('flex items-center gap-1.5 text-xs', slotColor)}>
-				{topic.currentStatus === TopicStatus.FULL ? (
+				{topic.studentsNum === topic.maxStudents ? (
 					<AlertTriangle className='h-3 w-3' />
 				) : (
 					<Users className='h-3 w-3' />
@@ -117,7 +129,7 @@ export function TopicListItem({
 				}}
 				className={cn(
 					'min-w-[80px]',
-					(topic.currentStatus === TopicStatus.FULL || disabled) && 'opacity-50',
+					(topic.studentsNum === topic.maxStudents || disabled) && 'opacity-50',
 					isRegistered && 'border-success/30 bg-success/10 text-success hover:bg-success/20'
 				)}
 			>

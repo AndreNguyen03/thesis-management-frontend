@@ -2,20 +2,22 @@ import { useState, useEffect } from 'react'
 import { Search, X, Filter } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/Button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch' // Import Switch của bạn
 import { type GetFieldNameReponseDto, type PaginationTopicsQueryParams, type ResponseMiniLecturerDto } from '@/models'
 import LecturersContainer from '../combobox/LecturersContainer'
 import FieldsContainer from '../combobox/FieldsContainer'
+import { TopicStatus } from '@/models/topic.model'
 
 interface FilterBarProps {
 	selectedFields: GetFieldNameReponseDto[]
 	selectedLecturers: ResponseMiniLecturerDto[]
-	onQuery(val: string): void
-	onSelectionChangeFields(val: GetFieldNameReponseDto[]): void
-	onSelectionChangeLecturers(val: ResponseMiniLecturerDto[]): void
+	onSelectionChangeFields: (val: GetFieldNameReponseDto[]) => void
+	onSelectionChangeLecturers: (val: ResponseMiniLecturerDto[]) => void
 	queryParams: PaginationTopicsQueryParams
-	onSetQueryParams(val: PaginationTopicsQueryParams): void
+	onSetQueryParams: (val: PaginationTopicsQueryParams) => void
 }
 
 export function FilterBar({
@@ -23,117 +25,130 @@ export function FilterBar({
 	selectedLecturers,
 	queryParams,
 	onSetQueryParams,
-	onSelectionChangeLecturers,
-	onSelectionChangeFields
+	onSelectionChangeFields,
+	onSelectionChangeLecturers
 }: FilterBarProps) {
-	const [searchValue, setSearchValue] = useState(queryParams.query)
+	const [searchValue, setSearchValue] = useState(queryParams.query || '')
 	const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+	const [isSemanticMode, setIsSemanticMode] = useState(queryParams.rulesPagination === 100) // Default based on current params
 
-	// Debounce search
+	// Sync local state with props if changed externally
+	useEffect(() => {
+		setIsSemanticMode(queryParams.rulesPagination === 100)
+	}, [queryParams.rulesPagination])
+
+	// Debounce search - Set rulesPagination based on switch
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			onSetQueryParams({ ...queryParams, query: searchValue })
+			const rulesPagination = isSemanticMode ? 100 : 99
+			onSetQueryParams({ ...queryParams, query: searchValue, page: 1, rulesPagination })
 		}, 400)
 		return () => clearTimeout(timer)
-	}, [searchValue])
+	}, [searchValue, onSetQueryParams, isSemanticMode]) // Removed queryParams from deps
 
-	// Chỉ tính filter active dựa trên advisor, field, status
+	// Tính số lượng filter active (chỉ lecturerIds, fieldIds, và status !== 'all')
 	const activeFilterCount = [
-		queryParams.lecturerIds,
-		queryParams.fieldIds,
-		queryParams.status !== 'all' ? queryParams.status : ''
+		queryParams.lecturerIds?.length ?? 0,
+		queryParams.fieldIds?.length ?? 0,
+		queryParams.status !== 'all'
 	].filter(Boolean).length
 
 	const clearFilters = () => {
 		setSearchValue('')
+		setIsSemanticMode(false) // Default to exact match
+		onSelectionChangeFields([])
+		onSelectionChangeLecturers([])
 		onSetQueryParams({
+			...queryParams,
 			query: '',
 			lecturerIds: [],
 			fieldIds: [],
-			status: 'all'
+			status: 'all',
+			queryStatus: [],
+			page: 1,
+			rulesPagination: 99
 		})
+		setMobileFiltersOpen(false)
+	}
+
+	const handleStatusChange = (value: string) => {
+		const newStatus = value === 'all' ? 'all' : value
+		const newQueryStatus = value === 'all' ? [] : [value]
+		onSetQueryParams({ ...queryParams, status: newStatus, queryStatus: newQueryStatus, page: 1 })
+	}
+
+	const handleModeToggle = (checked: boolean) => {
+		setIsSemanticMode(checked)
+		onSetQueryParams({ ...queryParams, rulesPagination: checked ? 100 : 99, page: 1 })
 	}
 
 	const FilterControls = () => (
-		<div className='flex flex-wrap gap-2'>
+		<div className='flex flex-wrap items-center gap-3'>
+			{/* Switch for Search Mode */}
+			<div className='flex min-w-[160px] items-center gap-1.5'>
+				<span className='whitespace-nowrap text-xs font-medium text-muted-foreground'>Tìm ngữ cảnh:</span>
+				<Switch
+					checked={isSemanticMode}
+					onCheckedChange={handleModeToggle}
+					aria-label='Toggle semantic search mode'
+					className='ml-1' // Small margin for spacing
+				/>
+			</div>
 			{/* Filter theo giảng viên */}
-			{/* Hamf thay doi */}
-			<LecturersContainer selectedLecturers={selectedLecturers} onSelectionChange={onSelectionChangeLecturers} />
-			{/* <Select
-				value={queryParams.lecturerIds}
-				onValueChange={(value) =>
-					onSetQueryParams({ ...queryParams, lecturerIds: value === 'all' ? [] : [value] })
-				}
-			>
-				<SelectTrigger className='w-full min-w-[120px] border-border bg-card md:w-[160px]'>
-					<SelectValue placeholder='Giảng viên' />
-				</SelectTrigger>
-				<SelectContent className='border-border bg-popover'>
-					<SelectItem value='all'>Tất cả giảng viên</SelectItem>
-					{mockAdvisors.map((advisor) => (
-						<SelectItem key={advisor.id} value={advisor.id}>
-							{advisor.name}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select> */}
+			<div className='flex min-w-[180px] items-center gap-1.5'>
+				<span className='whitespace-nowrap text-xs font-medium text-muted-foreground'>Giảng viên:</span>
+				<LecturersContainer
+					selectedLecturers={selectedLecturers}
+					onSelectionChange={onSelectionChangeLecturers}
+					className='flex-1'
+				/>
+			</div>
 
 			{/* Filter theo lĩnh vực */}
-
-			<FieldsContainer selectedFields={selectedFields} onSelectionChange={onSelectionChangeFields} />
-			{/* <Select
-				value={filters.field}
-				onValueChange={(value) => onFiltersChange({ ...filters, field: value === 'all' ? '' : value })}
-			>
-				<SelectTrigger className='w-full min-w-[120px] border-border bg-card md:w-[140px]'>
-					<SelectValue placeholder='Lĩnh vực' />
-				</SelectTrigger>
-				<SelectContent className='border-border bg-popover'>
-					<SelectItem value='all'>Tất cả lĩnh vực</SelectItem>
-					{mockFields.map((field) => (
-						<SelectItem key={field} value={field}>
-							{field}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select> */}
+			<div className='flex min-w-[160px] items-center gap-1.5'>
+				<span className='whitespace-nowrap text-xs font-medium text-muted-foreground'>Lĩnh vực:</span>
+				<FieldsContainer
+					selectedFields={selectedFields}
+					onSelectionChange={onSelectionChangeFields}
+					className='flex-1'
+				/>
+			</div>
 
 			{/* Filter theo trạng thái */}
-			{/* Hamf thay doi */}
-
-			{/* <Select
-				value={queryParams.queryStatus[0]}
-				onValueChange={(value) => onFiltersChange({ ...filters, status: value as FilterState['status'] })}
-			>
-				<SelectTrigger className='w-full min-w-[100px] border-border bg-card md:w-[120px]'>
-					<SelectValue placeholder='Trạng thái' />
-				</SelectTrigger>
-				<SelectContent className='border-border bg-popover'>
-					<SelectItem value='all'>Tất cả</SelectItem>
-					<SelectItem value={TopicStatus.PENDING_REGISTRATION}>Còn slot</SelectItem>
-					<SelectItem value={TopicStatus.FULL}>Hết slot</SelectItem>
-				</SelectContent>
-			</Select> */}
+			<div className='flex min-w-[120px] items-center gap-1.5'>
+				<span className='whitespace-nowrap text-xs font-medium text-muted-foreground'>Trạng thái:</span>
+				<Select value={queryParams.status} onValueChange={handleStatusChange}>
+					<SelectTrigger className='h-8 w-[100px] border-border bg-card text-xs'>
+						<SelectValue placeholder='Tất cả' />
+					</SelectTrigger>
+					<SelectContent className='border-border bg-popover'>
+						<SelectItem value='all'>Tất cả</SelectItem>
+						<SelectItem value={TopicStatus.AVAILABLE}>Còn slot</SelectItem>
+						<SelectItem value={TopicStatus.FULL}>Hết slot</SelectItem>
+					</SelectContent>
+				</Select>
+			</div>
 		</div>
 	)
 
 	return (
-		<div className='glass-effect sticky top-0 z-40 border-b border-border bg-card px-8'>
-			<div className='flex flex-col gap-2 md:flex-row md:items-center md:justify-between'>
+		<div className='glass-effect sticky top-0 z-40 border-b border-border bg-card px-4 py-3 sm:px-6 lg:px-8'>
+			<div className='flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0'>
 				{/* Search & Mobile filter */}
-				<div className='flex flex-1 flex-wrap gap-2'>
+				<div className='flex flex-1 items-center gap-2'>
 					<div className='relative max-w-md flex-1'>
-						<Search className='absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+						<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
 						<Input
 							value={searchValue}
 							onChange={(e) => setSearchValue(e.target.value)}
-							placeholder='Tìm kiếm...'
-							className='border-border bg-card pl-8 pr-8'
+							placeholder='Tìm kiếm đề tài...'
+							className='h-9 border-border bg-card pl-10 pr-10 text-sm'
 						/>
 						{searchValue && (
 							<button
+								type='button'
 								onClick={() => setSearchValue('')}
-								className='absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground'
+								className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground'
 							>
 								<X className='h-4 w-4' />
 							</button>
@@ -142,31 +157,31 @@ export function FilterBar({
 
 					<Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
 						<SheetTrigger asChild className='md:hidden'>
-							<Button variant='outline' className='gap-1 bg-card'>
+							<Button variant='outline' size='sm' className='h-9 gap-1 border-border bg-card px-3'>
 								<Filter className='h-4 w-4' />
 								{activeFilterCount > 0 && (
-									<Badge variant='secondary' className='h-4 px-1 text-xs'>
+									<Badge variant='secondary' className='h-4 w-5 px-1 text-xs'>
 										{activeFilterCount}
 									</Badge>
 								)}
+								<span className='sr-only'>Bộ lọc</span>
 							</Button>
 						</SheetTrigger>
-						<SheetContent side='bottom' className='h-auto bg-card'>
-							<SheetHeader>
-								<SheetTitle>Bộ lọc</SheetTitle>
+						<SheetContent side='bottom' className='max-h-[70vh] border-t-border bg-card'>
+							<SheetHeader className='border-b-border pb-4'>
+								<SheetTitle className='text-base'>Bộ lọc nâng cao</SheetTitle>
 							</SheetHeader>
-							<div className='mt-2 flex flex-col gap-2 pb-3'>
+							<div className='mt-4 flex flex-col gap-4 overflow-y-auto pb-4'>
 								<FilterControls />
 								{activeFilterCount > 0 && (
 									<Button
-										variant='ghost'
-										onClick={() => {
-											clearFilters()
-											setMobileFiltersOpen(false)
-										}}
-										className='text-destructive'
+										variant='outline'
+										size='sm'
+										onClick={clearFilters}
+										className='border-destructive text-destructive hover:bg-destructive/5'
 									>
-										Xóa bộ lọc
+										<X className='mr-1 h-3 w-3' />
+										Xóa tất cả bộ lọc
 									</Button>
 								)}
 							</div>
@@ -175,17 +190,17 @@ export function FilterBar({
 				</div>
 
 				{/* Desktop filters */}
-				<div className='hidden flex-wrap items-center gap-2 md:flex'>
+				<div className='hidden items-center gap-2 md:flex lg:gap-3'>
 					<FilterControls />
 					{activeFilterCount > 0 && (
 						<Button
 							variant='ghost'
 							size='sm'
 							onClick={clearFilters}
-							className='text-muted-foreground hover:text-destructive'
+							className='h-8 gap-1 px-2 text-muted-foreground hover:text-destructive'
 						>
-							<X className='mr-1 h-4 w-4' />
-							Xóa
+							<X className='h-3.5 w-3.5' />
+							<span className='text-xs'>Xóa</span>
 						</Button>
 					)}
 				</div>

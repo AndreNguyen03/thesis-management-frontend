@@ -8,11 +8,11 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle
 } from '@/components/ui/alert-dialog'
-import type { RegisteredTopic } from '../types'
 import { Loader2, AlertTriangle } from 'lucide-react'
+import type { GeneralTopic } from '@/models'
 
 interface CancelConfirmModalProps {
-	registeredTopic: RegisteredTopic | null
+	registeredTopic: GeneralTopic | null
 	isOpen: boolean
 	onClose: () => void
 	onConfirm: () => void
@@ -38,7 +38,7 @@ export function CancelConfirmModal({
 					</div>
 					<AlertDialogDescription className='space-y-2'>
 						<span>Bạn có chắc muốn hủy đăng ký đề tài:</span>
-						<span className='block font-medium text-foreground'>"{registeredTopic.topic.title}"</span>
+						<span className='block font-medium text-foreground'>"{registeredTopic.titleVN}"</span>
 						<span className='text-warning block'>Sau khi hủy, bạn có thể đăng ký đề tài khác.</span>
 					</AlertDialogDescription>
 				</AlertDialogHeader>

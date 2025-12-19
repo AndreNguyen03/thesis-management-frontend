@@ -35,7 +35,7 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 	// Lecturer
 
 	// `/registration/${period._id}/submit-topics`
-	let buttonIcon = <Users className='ml-2 h-4 w-4 transition-transform group-hover:translate-x-1' /> // GV dùng icon Users
+	const buttonIcon = <Users className='ml-2 h-4 w-4 transition-transform group-hover:translate-x-1' /> // GV dùng icon Users
 	// const { url, title: buttonText, isDisabled, badge } = period.navItem
 
 	// Dùng thẻ div mô phỏng button
@@ -44,7 +44,7 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 			{period.navItem.map((item,indx) => {
 				const { url, title: buttonText, isDisabled, badge, note } = item
 				return (
-					<div className='mt-4 flex flex-col space-y-3' key={indx}x>
+					<div className='mt-4 flex flex-col space-y-3' key={indx}>
 						{badge && (
 							<Badge className='w-fit text-xs font-medium' variant={badge.variant}>
 								{badge.text}
@@ -52,7 +52,7 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 						)}
 						<button
 							disabled={isDisabled}
-							onClick={() => navigate(url)}
+							onClick={() => navigate(url, { state: { period } })}
 							className={`group flex items-center justify-center rounded-lg px-4 py-2.5 text-base font-semibold shadow-md transition-all duration-200 ${
 								!isDisabled
 									? 'bg-indigo-700 text-white hover:bg-indigo-800 hover:shadow-lg focus:ring-4 focus:ring-indigo-300'
