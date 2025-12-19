@@ -137,12 +137,12 @@ export const periodApi = baseApi.injectEndpoints({
 
 		//getSubmissionStatus
 
-		getCurrentPeriods: builder.query<GetCurrentPeriod, void>({
+		getCurrentPeriods: builder.query<GetCurrentPeriod[], void>({
 			query: () => ({
 				url: `/periods/current-periods`,
 				method: 'GET'
 			}),
-			transformResponse: (response: ApiResponse<GetCurrentPeriod | null>) => response.data || ({} as GetCurrentPeriod),
+			transformResponse: (response: ApiResponse<GetCurrentPeriod[] | null>) => response.data || ([] as GetCurrentPeriod[]),
 		}),
 
 		//Lấy thông tin thống kê theo pha trong kì
