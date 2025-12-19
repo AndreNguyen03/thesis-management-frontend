@@ -23,9 +23,10 @@ interface FieldsContainerProps {
 	isEditing?: boolean
 	// Hàm callback để update ngược lại parent
 	onSelectionChange?: (newFields: GetFieldNameReponseDto[]) => void
+	className?: string
 }
 
-const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }: FieldsContainerProps) => {
+const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange, className }: FieldsContainerProps) => {
 	const [open, setOpen] = useState(false)
 
 	const handleOpenModal = (boolean: boolean) => {
@@ -38,7 +39,7 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'name',
+		search_by: ['name'],
 		query: '',
 		sort_by: 'name',
 		sort_order: 'asc'
@@ -119,18 +120,51 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 
 	// CHẾ ĐỘ CHỈNH SỬA (EDIT MODE)
 	return (
-		<div>
+		<div className={cn('space-y-2', className)}>
+			{/* 1. Hiển thị các tags đã chọn (có nút xóa) */}
+			{selectedFields.length > 0 && (
+				<div className='flex flex-wrap gap-1.5 max-w-[200px]'>
+					{selectedFields.map((field) => (
+						<Badge
+							key={field._id}
+							variant='secondary'
+							className='flex items-center gap-1 px-2 py-0.5 text-xs'
+						>
+							{field.name}
+							<button
+								onClick={() => handleRemove(field._id)}
+								className='ml-1 rounded-full p-0.5 transition-colors hover:bg-muted-foreground/50'
+							>
+								<X className='h-2.5 w-2.5' />
+							</button>
+						</Badge>
+					))}
+				</div>
+			)}
+
 			{/* 2. Combobox tìm kiếm & chọn */}
 			<Popover open={open} onOpenChange={handleOpenModal}>
 				<PopoverTrigger asChild>
-					<Button variant='outline' role='combobox' className='w-full justify-between text-left font-normal'>
-						<span>Thêm lĩnh vực...</span>
-						<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+					<Button
+						variant='outline'
+						role='combobox'
+						aria-expanded={open}
+						className={cn(
+							'w-[140px] justify-between text-left font-normal text-xs h-8',
+							selectedFields.length > 0 && 'text-muted-foreground'
+						)}
+					>
+						<span className='truncate'>
+							{selectedFields.length > 0
+								? `${selectedFields.length} lĩnh vực đã chọn`
+								: 'Thêm lĩnh vực...'}
+						</span>
+						<ChevronsUpDown className='ml-1 h-3 w-3 shrink-0 opacity-50' />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className='w-[400px] p-0'>
+				<PopoverContent className='w-[350px] p-0'>
 					<Command>
-						<CommandInput placeholder='Tìm kiếm lĩnh vực...' onValueChange={debounceFieldOnChange} />
+						<CommandInput placeholder='Tìm kiếm lĩnh vực...' onValueChange={debounceFieldOnChange} className='h-9' />
 						<CommandList
 							className='h-fit max-h-60 overflow-y-auto'
 							style={{ overscrollBehavior: 'contain' }}

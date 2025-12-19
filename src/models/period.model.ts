@@ -87,7 +87,7 @@ export interface NavItem {
 	badge?: Badge
 	note?: string
 }
-export interface GetCurrentPeriod {
+export interface    GetCurrentPeriod {
 	_id: string
 	year: string
 	semester: number

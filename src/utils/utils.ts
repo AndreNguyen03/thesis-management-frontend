@@ -107,7 +107,7 @@ const typeLabels = {
 	scientific_research: 'Nghiên cứu khoa học'
 } as const
 
-export const getPeriodTitle = (period: GetCurrentPeriod) =>
+export const getPeriodTitle = (period: Period | GetCurrentPeriod) =>
 	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type as keyof typeof typeLabels]}`
 
 export const getUserIdFromAppUser = (user: AppUser | null): string => {

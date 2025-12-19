@@ -162,7 +162,7 @@ export interface Topic {
 	students: RelatedStudentInTopic
 }
 export interface GetPaginatedTopics extends GetPaginatedObject {
-	data: Topic[]
+	data: GeneralTopic[]
 }
 
 export interface CanceledRegisteredTopic extends Topic {
@@ -338,6 +338,17 @@ export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 	fieldIds?: string[]
 	queryStatus?: string[]
 }
+
+export interface PaginationTopicsRegistrationQueryParams extends PaginationQueryParamsDto {
+    year?: string
+	status?: string
+	rulesPagination?: number
+	lecturerIds?: string[]
+	fieldIds?: string[]
+	queryStatus?: string[]
+    majorIds?: string[]
+}
+
 //dùng cho khi giảng viên lấy đề tài trong kì theo phase
 export interface PaginationLecturerGetTopicsInPhaseParams extends PaginationQueryParamsDto {
 	status: string

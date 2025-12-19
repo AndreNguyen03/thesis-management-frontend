@@ -70,11 +70,13 @@ export const topicApi = baseApi.injectEndpoints({
 				const queryString = buildQueryString(queries)
 				return `/topics/registered-topics?${queryString}`
 			},
-			transformResponse: (response: ApiResponse<GetPaginatedTopics>) => response.data
+			transformResponse: (response: ApiResponse<GetPaginatedTopics>) => response.data,
+			providesTags: ['MyRegisteredTopics']
 		}),
 		getCanceledRegisterTopics: builder.query<CanceledRegisteredTopic[], void>({
 			query: () => `/topics/canceled-registered-topics`,
-			transformResponse: (response: ApiResponse<CanceledRegisteredTopic[]>) => response.data
+			transformResponse: (response: ApiResponse<CanceledRegisteredTopic[]>) => response.data,
+			providesTags: ['MyRegisteredTopics']
 		}),
 		getDraftTopics: builder.query<PaginatedDraftTopics, { queries: PaginationQueryParamsDto }>({
 			query: ({ queries }) => {

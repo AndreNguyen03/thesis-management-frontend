@@ -27,6 +27,7 @@ import { GroupWorkspacePage } from '@/features/shared/workspace'
 import { RegistrationPeriodsPage } from '@/features/student/registration'
 import ManageTopicsInPeriods from '@/features/lecturer/explore-periods/manage-topics-in-period/ManageTopicsInPeriods'
 import SubmitTopicsInPeriod from '@/features/lecturer/explore-periods/submit-topics-in-period/SubmitTopicsInPeriod'
+import TopicRegistration from '@/features/student/registration/partitions/TopicRegistration'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -78,8 +79,7 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: 'registration/:id',
-				element: <></>
-				//	<TopicRegistration />
+				element: <TopicRegistration />
 			},
 
 			{

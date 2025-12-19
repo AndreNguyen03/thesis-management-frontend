@@ -8,11 +8,11 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle
 } from '@/components/ui/alert-dialog'
-import type { Topic } from '../types'
 import { Loader2 } from 'lucide-react'
+import type { GeneralTopic } from '@/models'
 
 interface ConfirmModalProps {
-	topic: Topic | null
+	topic: GeneralTopic | null
 	isOpen: boolean
 	onClose: () => void
 	onConfirm: () => void
@@ -29,8 +29,8 @@ export function ConfirmModal({ topic, isOpen, onClose, onConfirm, isLoading }: C
 					<AlertDialogTitle>Xác nhận đăng ký đề tài</AlertDialogTitle>
 					<AlertDialogDescription className='space-y-2'>
 						<span>Bạn có chắc muốn đăng ký đề tài:</span>
-						<span className='block font-medium text-foreground'>"{topic.title}"</span>
-						<span className='block'>Giảng viên hướng dẫn: {topic.advisor.name}</span>
+						<span className='block font-medium text-foreground'>"{topic.titleVN}"</span>
+						<span className='block'>Giảng viên hướng dẫn: {topic.createByInfo.fullName}</span>
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

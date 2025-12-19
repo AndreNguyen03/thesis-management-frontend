@@ -36,13 +36,15 @@ export const registrationApi = baseApi.injectEndpoints({
 			query: (body) => ({
 				url: `/registrations/student-register-topic/${body.topicId}`,
 				method: 'POST'
-			})
+			}),
+			invalidatesTags: ['MyRegisteredTopics']
 		}),
 		leaveTopic: builder.mutation<ApiResponse<any>, { topicId: string }>({
 			query: (body) => ({
-				url: `/registrations/leave-registration/${body.topicId}`,
+				url: `/registrations/leave-topic/${body.topicId}`,
 				method: 'DELETE'
-			})
+			}),
+			invalidatesTags: ['MyRegisteredTopics']
 		}),
 		getRegistrationsHistory: builder.query<PaginatedStudentRegistration, { queries: PaginationQueryParamsDto }>({
 			query: ({ queries }) => {

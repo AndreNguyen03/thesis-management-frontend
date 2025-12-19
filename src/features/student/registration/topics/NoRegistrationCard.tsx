@@ -2,13 +2,14 @@ import type { RegistrationPhase } from '../types'
 import { Card, CardContent } from '@/components/ui/card'
 import { FileQuestion, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { PhaseType } from '@/models/period.model'
 
 interface NoRegistrationCardProps {
-	phase: RegistrationPhase
+	phase: PhaseType
 }
 
 export function NoRegistrationCard({ phase }: NoRegistrationCardProps) {
-	const isOpen = phase === 'open'
+	const isOpen = phase === 'submit_topic'
 	const Icon = isOpen ? FileQuestion : AlertCircle
 
 	return (
