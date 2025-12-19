@@ -3,7 +3,7 @@ import type { GetUploadedFileDto } from './file.model'
 import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
-import type { MiniPeriod } from './period.model'
+import type { MiniPeriod, TopicsInPeriodMeta } from './period.model'
 import type { RegistrationDto, RelatedStudentInTopic, StudentRegistrationStatus } from './registration.model'
 import { PaginationQueryParamsDto, type SortOrder } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
@@ -104,9 +104,11 @@ export interface PaginatedTopicsInLibrary extends GetPaginatedObject {
 	data: TopicInLibrary[]
 }
 
-export interface PaginatedSubmittedTopics extends GetPaginatedObject {
+export interface PaginatedSubmittedTopics {
 	data: SubmittedTopic[]
+	meta: TopicsInPeriodMeta
 }
+
 //Lấy từ kho tri thức
 export interface PaginatedGeneralTopics extends GetPaginatedObject {
 	data: GeneralTopic[]
@@ -376,5 +378,5 @@ interface DefenseResult {
 	councilName: string // VD: "Hội đồng CNPM 01"
 }
 export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
-    periodId?: string
+	periodId?: string
 }

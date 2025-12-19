@@ -46,7 +46,7 @@ interface DataTableProps {
 	error?: ApiError | null
 	onPageChange: (page: number) => void
 }
-const Phase3DataTable = ({
+const Phase234DataTable = ({
 	paginatedTopicsInPeriod,
 	refetch,
 	phaseId,
@@ -61,65 +61,82 @@ const Phase3DataTable = ({
 	const handleGoDetail = (_id: string) => {
 		navigate(`/detail-topic/${_id}`)
 	}
-	const [isChoosingMany, setIsChoosingMany] = useState(false)
-	const [approveTopic, { isLoading: isLoadingApprove }] = useFacuBoardApproveTopicMutation()
-	const [approveTopics, { isLoading: isLoadingApproveMany }] = useFacuBoardApproveTopicsMutation()
-	const [rejectTopics, { isLoading: isLoadingRejectMany }] = useFacuBoardRejectTopicsMutation()
-	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()
-	const handleApprove = async (topicId: string) => {
-		try {
-			await approveTopic({ topicId, phaseId: phaseId }).unwrap()
-			toast.success('Duyệt đề tài thành công', { richColors: true })
-			refetch()
-		} catch (err) {
-			toast.error(`Duyệt thất bại ${err}`, { richColors: true })
-		}
-	}
 
-	const handleReject = async (topicId: string) => {
-		try {
-			await rejectTopic({ topicId, phaseId: phaseId }).unwrap()
-			toast.success('Từ chối đề tài thành công', { richColors: true })
-			refetch()
-		} catch (err) {
-			toast.error(`Từ chối thất bại ${err}`, { richColors: true })
+	const renderHeader = () => {
+		switch (phaseName) {
+			case PeriodPhaseName.OPEN_REGISTRATION:
+				return (
+					<>
+						<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>Số lượng đăng ký</th>
+					</>
+				)
+			case PeriodPhaseName.EXECUTION:
+				return (
+					<>
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Tiến độ</th>
+						<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>
+							Số lượng tham gia
+						</th>
+					</>
+				)
+			case PeriodPhaseName.COMPLETION:
+				return (
+					<>
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Điểm số</th>
+						<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>Ngày báo cáo</th>
+					</>
+				)
 		}
 	}
-	const handleApproveMany = async () => {
-		try {
-			await approveTopics({ topicIds: selectedTopics, phaseId: phaseId }).unwrap()
-			toast.success('Duyệt đề tài thành công', { richColors: true })
-			refetch()
-		} catch (err) {
-			toast.error(`Duyệt thất bại ${err}`, { richColors: true })
+	const renderBody = (hic: GeneralTopic) => {
+		switch (phaseName) {
+			case PeriodPhaseName.OPEN_REGISTRATION:
+				return (
+					<>
+						<td className='t px-3 py-2'>
+							<span className='text-center font-medium'>
+								{hic.studentsNum}/{hic.maxStudents}
+							</span>
+						</td>{' '}
+					</>
+				)
+			case PeriodPhaseName.EXECUTION:
+				return (
+					<>
+						<td className='px-3 py-2'>
+							<span className='cursor-pointer font-medium text-yellow-500 hover:underline'>coming</span>
+						</td>
+						<td className='px-3 py-2'>
+							<span className='cursor-pointer font-medium text-yellow-500 hover:underline'>
+								{hic.studentsNum}
+							</span>
+						</td>
+					</>
+				)
+			case PeriodPhaseName.COMPLETION:
+				return (
+					<>
+						<>
+							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Điểm số - coming</th>
+							<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>
+								Ngày báo cáo -coming
+							</th>
+						</>
+					</>
+				)
 		}
 	}
-	const handleRejectMany = async () => {
-		try {
-			await rejectTopics({ topicIds: selectedTopics }).unwrap()
-			toast.success('Từ chối đề tài thành công', { richColors: true })
-			refetch()
-		} catch (err) {
-			toast.error(`Từ chối thất bại ${err}`, { richColors: true })
-		}
-	}
-
 	return (
 		<div className='overflow-x-auto rounded-lg border'>
 			<table className='min-w-full bg-white'>
 				<thead>
 					<tr className='bg-gray-50 text-gray-700'>
-						{isChoosingMany && <th className='px-3 py-2 text-left text-[15px] font-semibold'>Chọn</th>}
 						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Đề tài (Việt - Anh)</th>
 						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Giảng viên</th>
 						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngành</th>
-						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngày đăng ký</th>
-						{/* <th className='whitespace-nowrap px-3 py-2 text-left text-[15px] font-semibold'>
-								Trạng thái đề tài
-							</th> */}
+						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Cập nhật mới nhất</th>
+						{renderHeader()}
 						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái</th>
-						<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>Số lượng đăng ký</th>
-						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Tiến độ</th>
 						<th className='px-3 py-2 text-center text-[15px] font-semibold'>Hành động</th>
 					</tr>
 				</thead>
@@ -127,21 +144,6 @@ const Phase3DataTable = ({
 					{paginatedTopicsInPeriod?.data.map((hic) => {
 						return (
 							<tr key={hic._id} className='border-b last:border-b-0 hover:bg-gray-50'>
-								{isChoosingMany && (
-									<td className='px-3 py-2'>
-										<Checkbox
-											checked={selectedTopics.includes(hic._id)}
-											onCheckedChange={(checked) => {
-												if (checked) {
-													setSelectedTopics((prev) => [...prev, hic._id])
-												} else {
-													setSelectedTopics((prev) => prev.filter((id) => id !== hic._id))
-												}
-											}}
-										/>
-									</td>
-								)}
-
 								<td className='max-w-450 flex min-w-[150px] flex-col px-3 py-2'>
 									<span className='font-semibold text-gray-900'>{hic.titleVN}</span>
 									<span className='font-sm text-[13px] text-gray-500'>{`(${hic.titleEng})`}</span>
@@ -149,32 +151,19 @@ const Phase3DataTable = ({
 								<td className='px-3 py-2'>
 									<div className='flex flex-col text-sm'>
 										{hic.lecturers.map((lecturer) => (
-											<span>{`${lecturer.title}. ${lecturer.fullName}`}</span>
+											<span key={lecturer._id}>{`${lecturer.title}. ${lecturer.fullName}`}</span>
 										))}
 									</div>
 								</td>
 								<td className='px-3 py-2'>{hic.major.name}</td>
 								<td className='px-3 py-2'>{new Date(hic.updatedAt).toLocaleString('vi-VN')}</td>
-								{/* <td className='px-3 py-2'>
-									<span>
-										{topicStatusLabels[hic.topicStatus as keyof typeof topicStatusLabels].name}
-									</span>
-								</td> */}
+
+								{renderBody(hic)}
 								<td className='px-3 py-2'>
 									<span
 										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[hic.lastStatusInPhaseHistory.status].color}`}
 									>
 										{statusMap[hic.lastStatusInPhaseHistory.status].label}
-									</span>
-								</td>
-								<td className='px-3 py-2'>
-									<span className='font-medium'>
-										{hic.studentsNum}/{hic.maxStudents}
-									</span>
-								</td>
-								<td className='px-3 py-2'>
-									<span className='cursor-pointer font-medium text-yellow-500 hover:underline'>
-										coming
 									</span>
 								</td>
 								<td className='px-3 py-2 text-center'>
@@ -184,24 +173,6 @@ const Phase3DataTable = ({
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
-									{hic.lastStatusInPhaseHistory.status === 'submitted' && (
-										<>
-											<button
-												disabled={isLoadingApprove}
-												className='rounded-full p-2 transition-colors hover:bg-gray-100 disabled:opacity-50'
-												onClick={() => handleApprove(hic._id)}
-											>
-												<CheckCircle className='h-5 w-5 text-green-500' />
-											</button>
-											<button
-												disabled={isLoadingReject}
-												className='rounded-full p-2 transition-colors hover:bg-gray-100 disabled:opacity-50'
-												onClick={() => handleReject(hic._id)}
-											>
-												<XCircle className='h-5 w-5 text-red-500' />
-											</button>
-										</>
-									)}
 								</td>
 							</tr>
 						)
@@ -245,4 +216,4 @@ const Phase3DataTable = ({
 	)
 }
 
-export default Phase3DataTable
+export default Phase234DataTable

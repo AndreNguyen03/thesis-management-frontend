@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Users } from 'lucide-react'
-import { useState, useEffect, type SetStateAction, type Dispatch } from 'react'
+import { useState, useEffect, type SetStateAction, type Dispatch, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { PhaseInfo, PhaseStatusMap } from '@/utils/utils'
 import { LecturerMultiSelect } from '../LecturerMultiSelect'
@@ -31,7 +31,7 @@ interface Props {
 export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, periodId, onSuccess, lecturers }: Props) {
 	const [startTime, setStartTime] = useState(toInputDateTime(phase?.startTime) ?? '')
 	const [endTime, setEndTime] = useState(toInputDateTime(phase?.endTime) ?? '')
-
+	const [isChangeAvailable, setIsChangeAvailable] = useState(false)
 	const [minTopics, setMinTopics] = useState(phase?.minTopicsPerLecturer ?? 1)
 	const [selectedLecturerIds, setSelectedLecturerIds] = useState<string[]>(
 		phase?.requiredLecturers?.map((lec) => lec._id) ?? []
@@ -98,21 +98,22 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 			})
 		}
 	}
-
+	useMemo(() => {
+		setIsChangeAvailable(isValidTimeRange(startTime, endTime))
+	}, [startTime, endTime])
+	function isValidTimeRange(start: string, end: string) {
+		if (!start || !end) return false
+		return new Date(end) > new Date(start)
+	}
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className='flex max-w-xl flex-col'>
 				<DialogHeader>
 					<DialogTitle className='flex items-center gap-2 text-lg font-semibold'>
-						Thiết lập pha '{PhaseInfo[phase?.phase ?? 'empty']?.label ?? 'Không xác định'}' :
-						<Badge
-							variant={
-								PhaseStatusMap[phase?.status as keyof typeof PhaseStatusMap]?.variant ??
-								'bg-muted text-muted-foreground'
-							}
-						>
-							{PhaseStatusMap[phase?.status as keyof typeof PhaseStatusMap]?.text ?? 'Chưa xác định'}
-						</Badge>
+						Thiết lập pha{' '}
+						<span className='text-lg font-semibold text-blue-600'>
+							{PhaseInfo[currentPhase ?? 'empty']?.label ?? 'Không xác định'}
+						</span>
 					</DialogTitle>
 				</DialogHeader>
 
@@ -142,14 +143,16 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 								<input
 									disabled={!startTime}
 									type='datetime-local'
-									className={`w-full rounded border px-3 py-2 ${'border-red-500'}`}
+									className={`w-full rounded border px-3 py-2 ${!isChangeAvailable && 'border-red-500'}`}
 									min={startTime || new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
 									value={endTime}
 									step='60'
 									onChange={(e) => setEndTime(e.target.value)}
 									placeholder='dd/mm/yyyy hh:mm'
 								/>
-								{<p className='text-xs text-red-500'>* Kết thúc phải sau bắt đầu</p>}
+								{!isChangeAvailable && (
+									<p className='text-xs text-red-500'>* Kết thúc phải sau bắt đầu</p>
+								)}
 							</div>
 						</div>
 					</section>
@@ -184,7 +187,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 				</div>
 
 				<DialogFooter>
-					<Button onClick={handleSave} disabled={false}>
+					<Button onClick={handleSave} disabled={!isChangeAvailable}>
 						{phaseLoadingMap[effectivePhaseKey] ? 'Đang lưu...' : 'Lưu thay đổi'}
 					</Button>
 				</DialogFooter>

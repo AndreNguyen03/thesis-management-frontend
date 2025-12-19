@@ -201,7 +201,7 @@ export const getPhaseStatus = (phase: GetCurrentPeriod['currentPhaseDetail']['ph
 // Badge màu cho trạng thái
 export const statusMap: Record<string, { label: string; color: string }> = {
 	timeout: { label: 'Hết hạn', color: 'text-center bg-gray-100 text-gray-700' },
-	active: { label: 'Đang hoạt động', color: 'text-center bg-green-100 text-green-700' },
+	active: { label: 'Đang diễn ra', color: 'text-center bg-green-100 text-green-700' },
 	pending: { label: 'Chờ bắt đầu', color: 'text-center bg-yellow-100 text-yellow-700' }
 }
 

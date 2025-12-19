@@ -106,7 +106,8 @@ export default function DetailPeriodPage() {
 						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-2'>
 							<h2 className='text-2xl font-bold'>Pha {PhaseInfo[currentChosenPhase].label}</h2>
 							<span className='text-gray-500'>
-								Thiết lập pha <span className='font-semibold'>{PhaseInfo[period.currentPhase].continue}</span>
+								Thiết lập pha{' '}
+								<span className='font-semibold'>{PhaseInfo[period.currentPhase].continue}</span>
 								{PhaseInfo[period.currentPhase].continueMessage}
 							</span>
 							<Button
@@ -125,7 +126,9 @@ export default function DetailPeriodPage() {
 			<PhaseSettingsModal
 				open={phaseSettingOpen}
 				onOpenChange={setPhaseSettingsOpen}
-				phase={currentPhaseDetail}
+				phase={currentPhaseDetail
+					
+				}
 				currentPhase={currentChosenPhase}
 				periodId={period._id}
 				lecturers={lecturersByFaculty?.data ?? []}

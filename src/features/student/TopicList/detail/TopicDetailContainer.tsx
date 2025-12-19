@@ -378,7 +378,7 @@ export const TopicDetailContainer = () => {
 				})
 			}
 		} else {
-			if (topic.registrationStatus)
+			if (!topic.registrationStatus)
 				try {
 					await createRegistration({ topicId: topic._id }).unwrap()
 					toast({
