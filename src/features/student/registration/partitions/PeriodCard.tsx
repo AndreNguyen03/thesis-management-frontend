@@ -44,7 +44,7 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 			{period.navItem.map((item, indx) => {
 				const { url, title: buttonText, isDisabled, badge, note } = item
 				return (
-					<div className='mt-4 flex flex-col space-y-3' key={indx}>
+					<div className='mt-4 flex flex-col justify-center space-y-3' key={indx}>
 						{badge && (
 							<Badge className='w-fit text-xs font-medium' variant={badge.variant}>
 								{badge.text}
