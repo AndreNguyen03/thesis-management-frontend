@@ -46,7 +46,7 @@ interface DataTableProps {
 	error?: ApiError | null
 	onPageChange: (page: number) => void
 }
-const Phase2DataTable = ({
+const Phase1DataTable = ({
 	paginatedTopicsInPeriod,
 	refetch,
 	phaseId,
@@ -194,7 +194,9 @@ const Phase2DataTable = ({
 									<td className='px-3 py-2'>
 										<div className='flex flex-col text-sm'>
 											{hic.lecturers.map((lecturer) => (
-												<span>{`${lecturer.title}. ${lecturer.fullName}`}</span>
+												<span
+													key={lecturer._id}
+												>{`${lecturer.title}. ${lecturer.fullName}`}</span>
 											))}
 										</div>
 									</td>
@@ -296,4 +298,4 @@ const Phase2DataTable = ({
 	)
 }
 
-export default Phase2DataTable
+export default Phase1DataTable

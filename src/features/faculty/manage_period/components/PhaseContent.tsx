@@ -4,17 +4,17 @@ import { motion } from 'framer-motion'
 import { type PeriodPhase, type ResolvePhaseResponse } from '@/models/period-phase.models'
 import { useState, type SetStateAction, type Dispatch, useEffect, useRef } from 'react'
 import { type PaginationTopicsQueryParams, type TopicStatus } from '@/models'
-import type { PhaseType } from '@/models/period.model'
+import { PeriodPhaseName, type PhaseType } from '@/models/period.model'
 // import { toast } from '@/hooks/use-toast'
 import { useLecGetStatsPeriodQuery, useResolvePhaseMutation } from '@/services/periodApi'
 import { PhaseHeader } from './PhaseHeader'
 import { PhaseActionsBox } from './PhaseActionsBox'
-import PhaseDataTable from './phase-data-table/Phase2DataTable'
 import { useGetTopicsInPhaseQuery } from '@/services/topicApi'
 import { useDebounce } from '@/hooks/useDebounce'
 import { Card, Input } from '@/components/ui'
 import { CustomPagination } from '@/components/PaginationBar'
-import Phase3DataTable from './phase-data-table/Phase3DataTable'
+import Phase234DataTable from './phase-data-table/Phase234DataTable'
+import Phase1DataTable from './phase-data-table/Phase1DataTable'
 // import { TopicsTable } from './TopicsTable'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
@@ -37,8 +37,6 @@ export function PhaseContent({
 
 	const stats = getPhaseStats(statsData, phaseDetail.phase)
 
-	const [statusFilter, setStatusFilter] = useState<TopicStatus | 'all'>('all')
-
 	const [resolvePhase, { isLoading: isResolving }] = useResolvePhaseMutation()
 
 	const [resolvePhaseData, setResolvePhaseData] = useState<ResolvePhaseResponse | null>(null)
@@ -60,7 +58,7 @@ export function PhaseContent({
 		sort_by: 'createdAt',
 		sort_order: 'desc',
 		phase: phaseDetail.phase,
-		status: statusFilter
+		status: undefined
 	})
 	const {
 		data: topicInPhaseData,
@@ -117,10 +115,14 @@ export function PhaseContent({
 	}
 
 	const handleGoProcess = () => {
-		setStatusFilter('submitted')
 		scrollToTopics()
 	}
-
+	const renderHeader = () => {
+		switch (currentPhase) {
+			case PeriodPhaseName.OPEN_REGISTRATION: {
+			}
+		}
+	}
 	return (
 		<motion.div
 			key={phaseDetail ? phaseDetail.phase : 'no-phase'}
@@ -151,13 +153,11 @@ export function PhaseContent({
 			)}
 			<div className='pb-10' ref={topicsRef}>
 				<h3 className='mb-4 text-lg font-semibold'>
-					{statusFilter && statusFilter !== 'all'
-						? `Danh sách các đề tài ${getLabelForStatus(statusFilter)}`
+					{queryParams && queryParams.status !== 'all'
+						? `Danh sách các đề tài ${getLabelForStatus((queryParams.status as TopicStatus) || 'all')}`
 						: 'Danh sách đề tài đã nộp'}
 				</h3>
 				<Card className='space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
-					<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
-					<p className='mb-6 text-sm text-gray-500'>Tổng quan về tất cả các đợt bạn đã tham gia.</p>
 					<div className='mb-4 flex flex-col gap-4 sm:flex-row sm:items-center'>
 						<Input
 							placeholder='Tìm kiếm theo Đợt, Đề tài, hoặc Giảng viên...'
@@ -166,20 +166,24 @@ export function PhaseContent({
 							className='sm:w-[350px]'
 						/>
 					</div>
-					{/* <PhaseDataTable			
-						paginatedTopicsInPeriod={topicInPhaseData}
-						refetch={refetch}
-						phaseId={phaseDetail._id}
-						phaseName={currentPhase.toString()}
-						onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
-					/> */}
-					<Phase3DataTable
-						paginatedTopicsInPeriod={topicInPhaseData}
-						refetch={refetch}
-						phaseId={phaseDetail._id}
-						phaseName={currentPhase.toString()}
-						onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
-					/>
+					{currentPhase === PeriodPhaseName.SUBMIT_TOPIC ? (
+						<Phase1DataTable
+							paginatedTopicsInPeriod={topicInPhaseData}
+							refetch={refetch}
+							phaseId={phaseDetail._id}
+							phaseName={currentPhase.toString()}
+							onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
+						/>
+					) : (
+						<Phase234DataTable
+							paginatedTopicsInPeriod={topicInPhaseData}
+							refetch={refetch}
+							phaseId={phaseDetail._id}
+							phaseName={currentPhase.toString()}
+							onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
+						/>
+					)}
+
 					{topicInPhaseData?.meta && topicInPhaseData?.meta.totalPages > 1 && (
 						<CustomPagination
 							meta={topicInPhaseData?.meta}

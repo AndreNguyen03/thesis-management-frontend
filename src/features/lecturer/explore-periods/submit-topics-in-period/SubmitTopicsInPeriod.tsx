@@ -30,17 +30,11 @@ import ManageSubmittedTopics from '../../manage_topic/submitted_topic/ManageSubm
 import DraftTopicsDatatable from './DraftTopicsDatatable'
 import { useDebounce } from '@/hooks/useDebounce'
 import { statusMap } from '@/models/period.model'
+import { formatPeriodInfo2 } from '@/utils/utils'
 
 const SubmitTopicsInPeriod = () => {
 	const { periodId } = useParams<{ periodId: string }>()
 	const location = useLocation()
-
-	// 1. Lấy dữ liệu từ state (được gửi từ PeriodCard)
-	const state = location.state as {
-		currentPeriod: string
-		currentStatus: string
-		phaseEndtime: string
-	} | null
 	const navigate = useNavigate()
 	const [activeTab, setActiveTab] = useState<'draft' | 'submitted'>('submitted')
 
@@ -141,18 +135,24 @@ const SubmitTopicsInPeriod = () => {
 
 					<div>
 						<h1 className='text-xl font-bold tracking-tight text-slate-900'>Nộp đề tài</h1>
-						<p className='mt-0.5 text-xs text-slate-500'>{state?.currentPeriod || 'Đang tải...'}</p>
+						<p className='mt-0.5 text-xs text-slate-500'>
+							{(submittedTopics?.meta.periodInfo &&
+								formatPeriodInfo2(submittedTopics?.meta.periodInfo)) ||
+								'Đang tải...'}
+						</p>
 					</div>
 					<span
-						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[state?.currentStatus ?? 'pending'].color}`}
+						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail.status ?? 'pending'].color}`}
 					>
-						{statusMap[state?.currentStatus ?? 'pending'].label}
+						{statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail.status ?? 'pending'].label}
 					</span>
 					<span
-						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[state?.currentStatus ?? 'pending'].color}`}
+						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail.status ?? 'pending'].color}`}
 					>
-						{state?.phaseEndtime ? (
-							<>{`Kết thúc vào: ${new Date(state.phaseEndtime).toLocaleString('vi-VN')}`} </>
+						{submittedTopics?.meta.periodInfo.currentPhaseDetail.endTime ? (
+							<>
+								{`Kết thúc vào: ${new Date(submittedTopics?.meta.periodInfo?.currentPhaseDetail.endTime).toLocaleString('vi-VN')}`}{' '}
+							</>
 						) : (
 							'Đang tải...'
 						)}
