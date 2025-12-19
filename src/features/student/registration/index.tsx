@@ -28,7 +28,7 @@ export const RegistrationPeriodsPage = () => {
 				<>
 					{activePeriods.length > 0 && (
 						<section>
-							<h2 className='mb-5 border-l-4 border-indigo-500 pl-3 text-2xl font-bold text-indigo-700'>
+							<h2 className='mb-5 border-l-4 border-indigo-500 text-2xl font-bold text-indigo-700'>
 								Hoạt động ({activePeriods.length})
 								<p className='mb-8 text-sm font-medium text-gray-600'>Các đợt đăng ký còn hiệu lực</p>
 							</h2>
@@ -46,7 +46,7 @@ export const RegistrationPeriodsPage = () => {
 							<h2 className='mb-5 border-l-4 border-gray-400 pl-3 text-2xl font-bold text-gray-700'>
 								Khác ({otherPeriods.length})
 								<p className='mb-8 text-sm font-medium text-gray-600'>
-									Các đợt đăng ký đã kết thúc / không còn hiệu lực
+									Các đợt đăng ký đã kết thúc/không còn hiệu lực{' '}
 								</p>
 							</h2>
 

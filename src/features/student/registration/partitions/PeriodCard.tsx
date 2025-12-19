@@ -41,7 +41,7 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period }) => {
 	// Dùng thẻ div mô phỏng button
 	const ButtonComponent = (
 		<div className='flex gap-2'>
-			{period.navItem.map((item,indx) => {
+			{period.navItem.map((item, indx) => {
 				const { url, title: buttonText, isDisabled, badge, note } = item
 				return (
 					<div className='mt-4 flex flex-col space-y-3' key={indx}>

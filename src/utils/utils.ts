@@ -148,4 +148,3 @@ export function formatPeriodInfo(period: GetCurrentPeriod) {
 export function formatPeriodInfo2(period: Period) {
 	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.faculty.name}`
 }
-
