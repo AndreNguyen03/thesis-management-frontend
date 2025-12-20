@@ -34,7 +34,8 @@ export const notificationApi = baseApi.injectEndpoints({
 					}
 					const markNoti = (notificationId: string) => {
 						updateCachedData((draft) => {
-							const index = draft.data.findIndex((n) => String(n._id) === String(notificationId))
+							const index = draft.data.findIndex((n) => String(n._id) === 
+							String(notificationId))
 							if (index !== -1) {
 								draft.data[index].isRead = true
 							}

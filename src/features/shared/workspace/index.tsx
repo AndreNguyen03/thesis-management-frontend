@@ -12,7 +12,6 @@ import { useAppDispatch, useAppSelector } from '@/store'
 import { setActiveGroup } from '@/store/slices/group-workspace'
 export const GroupWorkspacePage = () => {
 	const group = useAppSelector((state) => state.group)
-	const [milestones, setMilestones] = useState<any[]>([]) // Empty array ban đầu, thay bằng real data sau
 
 	const { setHidden } = useBreadcrumb()
 	const dispatch = useAppDispatch()
@@ -38,46 +37,6 @@ export const GroupWorkspacePage = () => {
 		{ groupId: group.activeGroup?._id ?? '' },
 		{ skip: !group.activeGroup?._id }
 	)
-
-	// Update milestone function (giữ nguyên, nhưng sẽ không dùng nếu empty)
-	const updateMilestone = (
-		id: number,
-		newProgress: number,
-		newStatus: string,
-		newScore?: number,
-		newFeedback?: string
-	) => {
-		setMilestones((prevMilestones) =>
-			prevMilestones.map((m) => {
-				if (m.id === id) {
-					const updatedMilestone = {
-						...m,
-						progress: newProgress,
-						status: newStatus
-					}
-
-					if (newScore !== undefined || newFeedback !== undefined) {
-						updatedMilestone.submission = updatedMilestone.submission
-							? { ...updatedMilestone.submission }
-							: { date: new Date().toISOString().slice(0, 10), files: [], score: null, feedback: '' }
-
-						if (newScore !== undefined) updatedMilestone.submission.score = newScore
-						if (newFeedback !== undefined) updatedMilestone.submission.feedback = newFeedback
-					}
-
-					return updatedMilestone
-				}
-				return m
-			})
-		)
-	}
-
-	// Calculate total progress (fallback 0 nếu empty)
-	const totalProgress = useMemo(() => {
-		if (milestones.length === 0) return 0
-		const completedProgress = milestones.reduce((sum, m) => sum + m.progress, 0)
-		return Math.round(completedProgress / milestones.length)
-	}, [milestones])
 
 	const handleSelectGroup = (id: string) => {
 		dispatch(setActiveGroup(groups.find((g) => g._id === id) || null))
@@ -138,18 +97,12 @@ export const GroupWorkspacePage = () => {
 										{group.activeGroup ? 'Chưa có dữ liệu công việc' : 'Hãy chọn nhóm để xem'}
 									</h2>
 									<p className='text-sm text-gray-500'>
-										{group.activeGroup
-											? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm'
-											: ''}
+										{group.activeGroup ? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm' : ''}
 									</p>
 								</div>
 							</div>
 						) : (
-							<WorkPanel
-								milestones={milestones}
-								totalProgress={totalProgress}
-								updateMilestone={updateMilestone}
-							/>
+							<WorkPanel />
 						)}
 					</ResizablePanel>
 				</ResizablePanelGroup>

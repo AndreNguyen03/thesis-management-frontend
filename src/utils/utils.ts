@@ -38,7 +38,7 @@ export function getInitials(name: string) {
 
 export function formatDate(dateStr: string) {
 	const d = new Date(dateStr)
-	return d.toLocaleDateString('vi-VN')
+	return d.toLocaleString('vi-VN')
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -301,7 +301,12 @@ export const DocumentsPanel = () => {
 						{filter.label} ({filter.count})
 					</button>
 				))}
-				<Button className='h-fit px-2 py-1' onClick={handleDownloadAllFiles} title='Tải file zip'>
+				<Button
+					className='h-fit px-2 py-1'
+					onClick={handleDownloadAllFiles}
+					title='Tải file zip'
+					disabled={isDownloading || documents.length === 0}
+				>
 					{isDownloading ? <Loader2 className='animate-spin' /> : <Download className='h-4 w-4' />}
 				</Button>
 			</div>

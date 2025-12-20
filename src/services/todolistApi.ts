@@ -3,9 +3,9 @@ import { baseApi, type ApiResponse } from './baseApi'
 import { waitForSocket } from '@/utils/socket-client'
 export const taskApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
-		getStask: builder.query<Task[], { groupId: string }>({
-			query: ({ groupId }) => ({
-				url: `/tasks?groupId=${groupId}`,
+		getStask: builder.query<Task[], { groupId: string; milestoneId?: string }>({
+			query: ({ groupId, milestoneId }) => ({
+				url: `/tasks?groupId=${groupId}&milestoneId=${milestoneId}`,
 				method: 'GET'
 			}),
 			async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
@@ -29,7 +29,8 @@ export const taskApi = baseApi.injectEndpoints({
 					console.error('Socket error in RTK Query:', err)
 				}
 			},
-			transformResponse: (response: ApiResponse<Task[]>) => response.data
+			transformResponse: (response: ApiResponse<Task[]>) => response.data,
+			providesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
 		}),
 		createTask: builder.mutation<Task, CreateTaskPayload>({
 			query: (payload) => ({
@@ -39,20 +40,30 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data
 		}),
-		updateTaskInfo: builder.mutation<Task, { taskId: string; updates: RequestUpdate }>({
+		updateTaskInfo: builder.mutation<Task, { taskId: string; groupId?: string; updates: RequestUpdate }>({
 			query: ({ taskId, updates }) => ({
 				url: `/tasks/updateInfo/${taskId}`,
 				method: 'PATCH',
 				body: updates
 			}),
-			transformResponse: (response: ApiResponse<Task>) => response.data
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
 		}),
-		deleteTask: builder.mutation<string, string>({
-			query: (taskId) => ({
+		updateTaskStatus: builder.mutation<Task, { taskId: string; groupId?: string; status: string }>({
+			query: ({ taskId, status }) => ({
+				url: `/tasks/updateStatus/${taskId}?status=${encodeURIComponent(status)}`,
+				method: 'PATCH'
+			}),
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
+		}),
+		deleteTask: builder.mutation<string, { taskId: string; groupId?: string }>({
+			query: ({ taskId }) => ({
 				url: `/tasks/${taskId}`,
 				method: 'DELETE'
 			}),
-			transformResponse: (response: ApiResponse<string>) => response.data
+			transformResponse: (response: ApiResponse<string>) => response.data,
+			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
 		}),
 		createSubtask: builder.mutation<Subtask, { taskId: string; columnId: string; title: string }>({
 			query: ({ taskId, columnId, title }) => ({
@@ -94,6 +105,15 @@ export const taskApi = baseApi.injectEndpoints({
 				body: { newColumnId, oldColumnId, newPos, subTaskId }
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data
+		}),
+		updateTaskMilestone: builder.mutation<Task, { taskId: string; groupId?: string; milestoneId?: string }>({
+			query: ({ taskId, milestoneId }) => ({
+				url: `/tasks/${taskId}/milestone`,
+				method: 'PATCH',
+				body: { milestoneId: milestoneId || null }
+			}),
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
 		})
 	})
 })
@@ -107,5 +127,7 @@ export const {
 	useDeleteSubtaskMutation,
 	useUpdateTaskColumnsMutation,
 	useMoveInColumnMutation,
-	useMoveToNewColumnMutation
+	useMoveToNewColumnMutation,
+	useUpdateTaskStatusMutation,
+	useUpdateTaskMilestoneMutation
 } = taskApi

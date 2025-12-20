@@ -6,23 +6,19 @@ import {
 	useCreateTaskMutation,
 	useDeleteTaskMutation,
 	useGetStaskQuery,
-	useUpdateTaskInfoMutation
+	useUpdateTaskInfoMutation,
+	useUpdateTaskMilestoneMutation
 } from '@/services/todolistApi'
 import { toast } from 'sonner'
-import TaskCard from './Task'
+import TaskCard from './TaskCard'
 import { DeleteModal } from './modal/DeleteModal'
 import { useAppSelector } from '@/store'
-
-interface Milestone {
-	id: number
-	title: string
-	dueDate: string
-	progress: number
-	status: string
-}
+import { MilestoneStatusOptions, type ResponseMilestone } from '@/models/milestone.model'
+import { formatDate } from '@/utils/utils'
+import { MilestoneSelector } from './MilestoneSelector'
 
 interface ProgressPanelProps {
-	milestones: Milestone[]
+	milestones: ResponseMilestone[]
 	totalProgress: number
 }
 
@@ -51,7 +47,8 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 	const [newTask, setNewTask] = useState<CreateTaskPayload>({
 		groupId: group.activeGroup?._id || '',
 		title: '',
-		description: ''
+		description: '',
+		milestoneId: undefined
 	})
 	const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false)
 
@@ -64,21 +61,23 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 	const [updateTaskInfo] = useUpdateTaskInfoMutation()
 	//gọi endpoint xóa nhiệm vụ
 	const [deleteTask, { isLoading: isDeleteLoading }] = useDeleteTaskMutation()
+	//gọi endpoint cập nhật milestone của task
+	const [updateTaskMilestone] = useUpdateTaskMilestoneMutation()
 	// Calculate milestone stats
 	const milestoneStats = useMemo(() => {
 		const stats = { completed: 0, pendingReview: 0, inProgress: 0, overdue: 0, total: milestones.length }
 		milestones.forEach((m) => {
 			switch (m.status) {
-				case 'Đã Hoàn thành':
+				case MilestoneStatusOptions.COMPLETED:
 					stats.completed++
 					break
-				case 'Đang Chờ Duyệt':
+				case MilestoneStatusOptions.PENDING_REVIEW:
 					stats.pendingReview++
 					break
-				case 'Đang Tiến hành':
+				case MilestoneStatusOptions.IN_PROGRESS:
 					stats.inProgress++
 					break
-				case 'Quá Hạn':
+				case MilestoneStatusOptions.OVERDUE:
 					stats.overdue++
 					break
 			}
@@ -110,7 +109,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 
 	const nextDueDate = useMemo(() => {
 		const upcoming = milestones
-			.filter((m) => m.status !== 'Đã Hoàn thành' && m.status !== 'Quá Hạn')
+			.filter((m) => m.status !== MilestoneStatusOptions.COMPLETED && m.status !== MilestoneStatusOptions.OVERDUE)
 			.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
 		return upcoming.length > 0 ? upcoming[0].dueDate : 'Chưa xác định'
 	}, [milestones])
@@ -129,7 +128,8 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 		setNewTask({
 			groupId: newTask.groupId,
 			title: '',
-			description: ''
+			description: '',
+			milestoneId: undefined
 		})
 		setIsDescriptionVisible(false)
 	}
@@ -151,9 +151,28 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 		}
 	}
 
+	const handleUpdateMilestone = async (taskId: string, milestoneId: string | undefined) => {
+		try {
+			const res = await updateTaskMilestone({
+				taskId,
+				groupId: group.activeGroup?._id,
+				milestoneId
+			}).unwrap()
+
+			setTasks((prev) => prev.map((task) => (task._id === taskId ? res : task)))
+			toast.success('Cập nhật milestone thành công', { richColors: true })
+		} catch (error) {
+			console.error('Failed to update milestone:', error)
+			toast.error('Cập nhật milestone thất bại. Vui lòng thử lại.', { richColors: true })
+		}
+	}
+
 	const handleDeleteTask = async (taskId: string) => {
 		try {
-			const res = await deleteTask(taskId).unwrap()
+			const res = await deleteTask({
+				taskId,
+				groupId: group.activeGroup?._id
+			}).unwrap()
 			setTasks((prev) => prev.filter((task) => task._id !== res))
 			setIsOpenDeleteModal(false)
 			setDeletedTask(null)
@@ -166,12 +185,14 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 		title,
 		value,
 		icon: Icon,
-		colorClass
+		colorClass,
+		subValue
 	}: {
 		title: string
 		value: string | number
 		icon: React.ElementType
 		colorClass: string
+		subValue?: string
 	}) => (
 		<div className='rounded-xl border border-border bg-card p-4 shadow-sm'>
 			<div className='flex items-center gap-3'>
@@ -181,6 +202,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 				<div>
 					<p className='text-xs text-muted-foreground'>{title}</p>
 					<p className='text-lg font-bold text-foreground'>{value}</p>
+					{subValue && <p className='text-sm text-muted-foreground'>{subValue}</p>}
 				</div>
 			</div>
 		</div>
@@ -208,7 +230,12 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 					icon={Zap}
 					colorClass='bg-warning/10 text-warning'
 				/>
-				<StatCard title='Hạn chót Sắp tới' value={nextDueDate} icon={Clock} colorClass='bg-info/10 text-info' />
+				<StatCard
+					title='Hạn chót Sắp tới'
+					value={formatDate(nextDueDate)}
+					icon={Clock}
+					colorClass='bg-info/10 text-info'
+				/>
 			</div>
 
 			{/* Progress Overview */}
@@ -240,6 +267,21 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 					<Plus className='h-5 w-5 text-primary' />
 					Tạo Công Việc Mới
 				</h4>
+
+				{/* Milestone Selector */}
+				<div className='mb-3'>
+					<label className='mb-2 block text-xs font-medium text-muted-foreground'>
+						Liên kết với Milestone (Tùy chọn)
+					</label>
+					<MilestoneSelector
+						milestones={milestones}
+						selectedMilestoneId={newTask.milestoneId}
+						onSelect={(milestoneId) => setNewTask({ ...newTask, milestoneId })}
+						placeholder='Không liên kết'
+					/>
+				</div>
+
+				{/* Title Input */}
 				<div className='flex gap-2'>
 					<input
 						type='text'
@@ -256,6 +298,8 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 						Tạo
 					</button>
 				</div>
+
+				{/* Description Input (Optional) */}
 				<div className='mt-2 flex'>
 					{isDescriptionVisible ? (
 						<input
@@ -288,11 +332,13 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 							key={task._id + task.title}
 							task={task}
 							onUpdateTask={handleUpdateTask}
+							onUpdateMilestone={handleUpdateMilestone}
 							onDeleteTask={() => {
 								setIsOpenDeleteModal(true)
 								setDeletedTask(task)
 							}}
 							setTasks={setTasks}
+							milestones={milestones}
 						/>
 					</div>
 				))}

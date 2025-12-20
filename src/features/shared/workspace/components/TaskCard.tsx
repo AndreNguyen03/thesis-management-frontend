@@ -1,30 +1,44 @@
-import { useState } from 'react'
-import type { RequestUpdate, Task } from '@/models/todolist.model'
+import { useEffect, useState } from 'react'
+import { StatusOptions, type RequestUpdate, type Task } from '@/models/todolist.model'
 import { StatusTag } from './StatusTag'
 import { ProgressBar } from './ProgressBar'
 import { Button } from '@/components/ui'
 import Column from './Column'
-import { closestCorners, DndContext, DragOverlay, type DragEndEvent } from '@dnd-kit/core'
+import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
-import { useMoveInColumnMutation, useMoveToNewColumnMutation } from '@/services/todolistApi'
+import {
+	useMoveInColumnMutation,
+	useMoveToNewColumnMutation,
+	useUpdateTaskStatusMutation
+} from '@/services/todolistApi'
 import { toast } from 'sonner'
+import { useAppSelector } from '@/store'
+import { Calendar } from 'lucide-react'
+import { formatDate } from '@/utils/utils'
+import type { ResponseMilestone } from '@/models/milestone.model'
+import { EditMilestoneModal } from './modal/EditMilestoneModal'
 
 interface TaskCardProps {
 	task: Task
 	setTasks?: React.Dispatch<React.SetStateAction<Task[]>>
 	onUpdateTask?: (taskId: string, update: RequestUpdate) => void
 	onDeleteTask?: (taskId: string) => void
+	onUpdateMilestone?: (taskId: string, milestoneId: string | undefined) => void
+	milestones?: ResponseMilestone[]
 }
 
-const TaskCard = ({ task, onUpdateTask, setTasks, onDeleteTask }: TaskCardProps) => {
+const TaskCard = ({ task, onUpdateTask, setTasks, onDeleteTask, onUpdateMilestone, milestones }: TaskCardProps) => {
 	const [editingValue, setEditingValue] = useState<RequestUpdate>({
 		title: task.title,
 		description: task.description
 	})
 	const [isEditingInfo, setIsEditingInfo] = useState(false)
+	const [isEditMilestoneModalOpen, setIsEditMilestoneModalOpen] = useState(false)
 	const [moveInColumn] = useMoveInColumnMutation()
 	const [moveToNewColumn] = useMoveToNewColumnMutation()
-
+	//gọi endpoint cập nhật trạng thái task
+	const [updateTaskStatus] = useUpdateTaskStatusMutation()
+	const group = useAppSelector((state) => state.group)
 	// CORE: Handle drag end - works for BOTH within column AND between columns
 	const handleDragEnd = async (event: DragEndEvent) => {
 		const { active, over } = event
@@ -160,9 +174,15 @@ const TaskCard = ({ task, onUpdateTask, setTasks, onDeleteTask }: TaskCardProps)
 	}
 	const progress = calculateTaskProgress(task)
 	let taskStatus: 'Done' | 'In Progress' | 'Todo' = 'Todo'
-	if (progress === 100) taskStatus = 'Done'
-	else if (progress > 0) taskStatus = 'In Progress'
-
+	if (progress === 100) taskStatus = StatusOptions.DONE
+	else if (progress > 0) taskStatus = StatusOptions.IN_PROGRESS
+	useEffect(() => {
+		if (progress === 100) taskStatus = StatusOptions.DONE
+		else if (progress > 0) taskStatus = StatusOptions.IN_PROGRESS
+		else taskStatus = StatusOptions.TODO
+		if (task.status !== taskStatus)
+			updateTaskStatus({ taskId: task._id, groupId: group.activeGroup?._id || '', status: taskStatus })
+	}, [progress])
 	const totalItems = task.columns.reduce((sum, col) => sum + col.items.length, 0)
 	const doneItems = task.columns.find((col) => col.title === 'Done')?.items.length || 0
 
@@ -226,6 +246,31 @@ const TaskCard = ({ task, onUpdateTask, setTasks, onDeleteTask }: TaskCardProps)
 									Thêm mô tả...
 								</p>
 							)}
+							{/* Milestone Info */}
+							{task.milestone ? (
+								<div
+									className='mt-2 flex cursor-pointer items-center gap-2 rounded-md bg-primary/5 px-2 py-1 text-xs transition-colors hover:bg-primary/10'
+									onClick={() => milestones && setIsEditMilestoneModalOpen(true)}
+									title='Click để thay đổi milestone'
+								>
+									<Calendar className='h-3 w-3 text-primary' />
+									<span className='font-medium text-primary'>{task.milestone.title}</span>
+									<span className='text-muted-foreground'>•</span>
+									<span className='text-muted-foreground'>
+										{new Date(task.milestone.dueDate).toLocaleString('vi-VN')}
+									</span>
+								</div>
+							) : (
+								milestones && (
+									<button
+										onClick={() => setIsEditMilestoneModalOpen(true)}
+										className='mt-2 flex items-center gap-2 rounded-md border border-dashed border-primary/30 px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary'
+									>
+										<Calendar className='h-3 w-3' />
+										<span>Liên kết milestone</span>
+									</button>
+								)
+							)}
 						</>
 					)}
 				</div>
@@ -280,6 +325,20 @@ const TaskCard = ({ task, onUpdateTask, setTasks, onDeleteTask }: TaskCardProps)
 					</SortableContext>
 				</DndContext>
 			</div>
+
+			{/* Edit Milestone Modal */}
+			{milestones && (
+				<EditMilestoneModal
+					isOpen={isEditMilestoneModalOpen}
+					onClose={() => setIsEditMilestoneModalOpen(false)}
+					currentMilestoneId={task.milestone?._id}
+					milestones={milestones}
+					onSave={(milestoneId) => {
+						onUpdateMilestone?.(task._id, milestoneId)
+					}}
+					taskTitle={task.title}
+				/>
+			)}
 		</div>
 	)
 }

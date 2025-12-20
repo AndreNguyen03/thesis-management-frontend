@@ -103,7 +103,8 @@ export const baseApi = createApi({
 		'PeriodDetail',
 		'Periods',
 		'PhaseTopics',
-		'MyRegisteredTopics'
+		'MyRegisteredTopics',
+		'Milestones'
 	],
 	endpoints: () => ({})
 })

@@ -29,7 +29,7 @@ import {
 	useUnsaveTopicMutation,
 	useUpdateTopicMutation
 } from '../../../../services/topicApi'
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
 import { UploadFileTypes, type GetUploadedFileDto } from '@/models/file.model'
 import { formatFileSize } from '@/utils/format-file-size'
@@ -68,9 +68,7 @@ export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
 	//use location
 	const location = useLocation()
-	const state = location.state as {
-		focusTab?: string
-	} | null
+
 	const navigate = useNavigate()
 	// //lấy thông tin kì hiện tại
 	// const currentPeriod = useAppSelector((state) => state.period.currentPeriod)
