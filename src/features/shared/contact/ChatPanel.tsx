@@ -59,8 +59,8 @@ export const ChatPanel = ({ groupId, otherPaticipant }: ChatPanelProps) => {
 	const messages = messagesByGroup[groupId] ?? []
 	const onlineUserIds = onlineUsersByGroup[groupId] ?? []
 	const typingUserIds = typingUsersByGroup[groupId] ?? []
-	const isOtherOnline = onlineUserIds.includes(otherPaticipant._id)
-	const isOtherTyping = typingUserIds.includes(otherPaticipant._id)
+	const isOtherOnline = onlineUserIds.includes(otherPaticipant?._id)
+	const isOtherTyping = typingUserIds.includes(otherPaticipant?._id)
 
 	/* ================= UTILS ================= */
 

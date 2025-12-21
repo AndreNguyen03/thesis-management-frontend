@@ -3,6 +3,7 @@ import { GraduationCap, Mail, MessageCircle, Phone, User2 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { useNavigate } from 'react-router-dom'
 import { useCreateOrGetDirectGroupMutation } from '@/services/groupApi'
+import { useChat } from '@/hooks'
 
 interface Props {
 	student: StudentUser
@@ -13,14 +14,17 @@ export function StudentProfileLeft({ student, isOwner }: Props) {
 	const navigate = useNavigate()
 	const [createOrGetDirectGroup, { isLoading }] = useCreateOrGetDirectGroupMutation()
 
+    const {setDirectSidebars} = useChat()
+
+
 	const handleMessage = async () => {
 		if (isLoading) return
 		try {
 			const newGroup = await createOrGetDirectGroup({
 				targetUserId: student.userId
 			}).unwrap()
-
-			navigate(`/chat?groupId=${newGroup.id}`)
+            setDirectSidebars(prev => [...prev,newGroup])
+			navigate(`/chat?groupId=${newGroup._id}`)
 		} catch (error) {
 			console.error('Tạo chat thất bại:', error)
 			alert('Không thể tạo cuộc trò chuyện. Thử lại sau.')

@@ -91,8 +91,8 @@ export const ContactSidebar = ({
 								<div className='relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full'>
 									{g.otherUser?.avatarUrl ? (
 										<img
-											src={g.otherUser.avatarUrl}
-											alt={g.otherUser.fullName || 'User Avatar'}
+											src={g.otherUser?.avatarUrl}
+											alt={g.otherUser?.fullName || 'User Avatar'}
 											className='h-full w-full rounded-full object-cover'
 										/>
 									) : (
@@ -103,7 +103,7 @@ export const ContactSidebar = ({
 								</div>
 								<div className='flex min-w-0 flex-1 flex-col'>
 									<p className='truncate text-sm font-semibold text-gray-800'>
-										{g.otherUser.fullName}
+										{g.otherUser?.fullName}
 									</p>
 									<div className='mt-0.5 flex items-center justify-between'>
 										<p className='truncate text-xs text-gray-600'>{content}</p>

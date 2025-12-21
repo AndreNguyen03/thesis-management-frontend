@@ -2,6 +2,7 @@ import { baseApi, type ApiResponse } from './baseApi'
 import type {
 	CreateDirectGroupDto,
 	CreateDirectGroupResponse,
+	DirectSidebarGroup,
 	GroupDetail,
 	MessageDto,
 	PaginatedDirectGroups,
@@ -38,13 +39,13 @@ export const groupApi = baseApi.injectEndpoints({
 			providesTags: ['DirectGroups']
 		}),
 		// THÊM: Mutation cho createOrGetDirectGroup
-		createOrGetDirectGroup: builder.mutation<CreateDirectGroupResponse, CreateDirectGroupDto>({
+		createOrGetDirectGroup: builder.mutation<DirectSidebarGroup, CreateDirectGroupDto>({
 			query: (dto) => ({
 				url: '/groups/direct',
 				method: 'POST',
 				body: dto // { targetUserId, topicId? }
 			}),
-			transformResponse: (response: ApiResponse<CreateDirectGroupResponse>) => response.data,
+			transformResponse: (response: ApiResponse<DirectSidebarGroup>) => response.data,
 			invalidatesTags: ['DirectGroups'] // Refresh paginated list sau tạo
 		}),
 		// ===== GET MESSAGES =====
