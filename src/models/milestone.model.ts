@@ -16,6 +16,11 @@ export interface FileInfo {
 export interface Submission {
 	date: string
 	files: FileInfo[]
+	createdBy: {
+		_id: string
+		fullName: string
+		email: string
+	}
 }
 export interface TaskDto {
 	_id: string
@@ -34,8 +39,8 @@ export interface ResponseMilestone {
 	dueDate: string
 	type: MilestoneType
 	status: MilestoneStatus
-	submission: Submission
-	submissionHistory: Submission[]
+	submission?: Submission
+	submissionHistory?: Submission[]
 	tasks?: TaskDto[]
 	progress: number
 	isCompleted: boolean

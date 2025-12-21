@@ -1,8 +1,7 @@
-import { Calendar, Clock, FileText, Plus, Save, ThumbsDown, ThumbsUp, Trash2, X } from 'lucide-react'
+import { Clock, FileText, Plus, Save, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { SubmissionHistoryList } from './submisstion-history'
 import type { PayloadUpdateMilestone, ResponseMilestone, TaskDto } from '@/models/milestone.model'
-import { useAppSelector } from '@/store'
 import { cn, fromDatetimeLocal, toDatetimeLocal } from '@/lib/utils'
 import RichTextEditor from '@/components/common/RichTextEditor'
 import { TaskInMilestones } from './tab/TaskInMiletones'
@@ -44,7 +43,7 @@ export const LecturerMilestoneDrawer = ({
 		<div className='fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-slate-200 bg-white shadow-2xl'>
 			<div className='flex h-16 shrink-0 items-center justify-between border-b bg-orange-50 px-6'>
 				<div>
-					<span className='text-xs font-bold uppercase text-orange-600'>Giao diện Giảng viên</span>
+					<span className='text-xs font-bold uppercase text-orange-600'> Giảng viên</span>
 					<h2 className='text-lg font-bold text-slate-800'>Quản lý Milestone</h2>
 				</div>
 				<button onClick={onClose}>

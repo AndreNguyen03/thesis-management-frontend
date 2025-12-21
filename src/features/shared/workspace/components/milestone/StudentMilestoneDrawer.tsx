@@ -1,4 +1,4 @@
-import type { MilestoneStatus, PayloadUpdateMilestone, ResponseMilestone } from '@/models/milestone.model'
+import type { FileInfo, MilestoneStatus, PayloadUpdateMilestone, ResponseMilestone } from '@/models/milestone.model'
 import { useMemo, useState, useRef } from 'react'
 import { calculateProgress, ProgressBar, StatusBadge } from './ProcessBar'
 import { AlertCircle, CheckCircle2, CheckSquare, FileText, Send, UploadCloud, X, Upload } from 'lucide-react'
@@ -25,7 +25,7 @@ export const StudentMilestoneDrawer = ({
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [isDragging, setIsDragging] = useState(false)
 	const [isEditingSubmission, setIsEditingSubmission] = useState(false)
-	const [filesToKeep, setFilesToKeep] = useState<typeof milestone.submission.files>([])
+	const [filesToKeep, setFilesToKeep] = useState<FileInfo[]>([])
 
 	// Gọi API nộp báo cáo
 	const [submitReport, { isLoading: isSubmitLoading }] = useSubmitReportMutation()
@@ -34,7 +34,7 @@ export const StudentMilestoneDrawer = ({
 	const isResubmit = milestone.status === 'Needs Revision'
 
 	// Kiểm tra xem đã nộp bài chưa
-	const hasSubmission = milestone.submission && milestone.submission.files.length > 0
+	const hasSubmission = milestone.submission
 
 	// Kiểm tra còn hạn hay không
 	const isBeforeDeadline = new Date(milestone.dueDate) > new Date()
@@ -160,7 +160,7 @@ export const StudentMilestoneDrawer = ({
 	// Cập nhật submission (giữ file cũ + thêm file mới)
 	const handleUpdateSubmission = async () => {
 		// Nếu không có file mới và không xóa file nào thì không làm gì
-		if (selectedFiles.length === 0 && filesToKeep.length === milestone.submission.files.length) {
+		if (selectedFiles.length === 0 && filesToKeep.length === (milestone.submission?.files?.length || 0)) {
 			sonnerToast.info('Không có thay đổi nào', { richColors: true })
 			return
 		}
@@ -297,7 +297,7 @@ export const StudentMilestoneDrawer = ({
 		<div className='fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-slate-200 bg-white shadow-2xl'>
 			<div className='flex h-16 shrink-0 items-center justify-between border-b bg-slate-50 px-6'>
 				<div>
-					<span className='text-xs font-bold uppercase text-slate-400'>Giao diện Sinh viên</span>
+					<span className='text-xs font-bold uppercase text-slate-400'>Sinh viên</span>
 					<h2 className='text-lg font-bold text-slate-800'>{milestone.title}</h2>
 				</div>
 				<button onClick={onClose}>
@@ -337,7 +337,8 @@ export const StudentMilestoneDrawer = ({
 									</span>
 									<div className='flex items-center gap-2'>
 										<span className='text-xs text-slate-500'>
-											{new Date(milestone.submission.date).toLocaleDateString('vi-VN')}
+											{milestone.submission?.date &&
+												new Date(milestone.submission.date).toLocaleString('vi-VN')}
 										</span>
 										{!isEditingSubmission && canResubmit && (
 											<button
@@ -418,25 +419,26 @@ export const StudentMilestoneDrawer = ({
 									</>
 								) : (
 									<div className='space-y-2'>
-										{milestone.submission.files.map((file, idx) => (
-											<div key={idx} className='flex items-center gap-3'>
-												<FileText className='h-10 w-10 rounded-lg bg-blue-100 p-2 text-blue-600' />
-												<div className='flex-1'>
-													<p className='text-sm font-medium'>{file.name}</p>
-													<p className='text-xs text-slate-500'>
-														{(file.size / 1024 / 1024).toFixed(2)} MB
-													</p>
+										{milestone?.submission &&
+											milestone?.submission.files?.map((file, idx) => (
+												<div key={idx} className='flex items-center gap-3'>
+													<FileText className='h-10 w-10 rounded-lg bg-blue-100 p-2 text-blue-600' />
+													<div className='flex-1'>
+														<p className='text-sm font-medium'>{file.name}</p>
+														<p className='text-xs text-slate-500'>
+															{(file.size / 1024 / 1024).toFixed(2)} MB
+														</p>
+													</div>
+													<a
+														href={file.url}
+														target='_blank'
+														rel='noopener noreferrer'
+														className='text-xs font-medium text-blue-600 hover:underline'
+													>
+														Xem file
+													</a>
 												</div>
-												<a
-													href={file.url}
-													target='_blank'
-													rel='noopener noreferrer'
-													className='text-xs font-medium text-blue-600 hover:underline'
-												>
-													Xem file
-												</a>
-											</div>
-										))}
+											))}
 									</div>
 								)}
 							</div>
