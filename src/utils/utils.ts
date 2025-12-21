@@ -1,5 +1,5 @@
 import type { AppUser } from '@/models'
-import type { GetCurrentPeriod, Period, PhaseType } from '@/models/period.model'
+import type { GetCurrentPeriod, MiniPeriod, Period, PhaseType } from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -159,4 +159,8 @@ export const getAvatarInitials = (fullName?: string) => {
 	const firstInitial = names[0][0].toUpperCase()
 	const lastInitial = names[names.length - 1][0].toUpperCase()
 	return firstInitial + lastInitial
+}
+
+export function formatPeriodInfoMiniPeriod(period: MiniPeriod) {
+	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.faculty.name}`
 }

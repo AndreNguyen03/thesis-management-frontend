@@ -1,26 +1,24 @@
 import { CustomPagination } from '@/components/PaginationBar'
-import { Card, Input } from '@/components/ui'
+import { Card, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
 import { useDebounce } from '@/hooks/useDebounce'
-import { StudentRegistrationStatus, tranferToRejectionReasonType, type IStudentRegistration } from '@/models'
-import type { PaginationQueryParamsDto } from '@/models/query-params'
+import {
+	registrationStatusMap,
+	StudentRegistrationStatus,
+	tranferToRejectionReasonType,
+	type IStudentRegistration,
+	type RegistrationHistoryQueryParams
+} from '@/models'
 import { useGetRegistrationsHistoryQuery } from '@/services/registrationApi'
+import { formatPeriodInfoMiniPeriod } from '@/utils/utils'
 import { Eye, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-// Badge màu cho trạng thái
-const statusMap: Record<string, { label: string; color: string }> = {
-	approved: { label: 'Đã Duyệt', color: 'text-center bg-green-100 text-green-700' },
-	rejected: { label: 'Bị Từ Chối', color: 'text-center bg-red-100 text-red-700' },
-	pending: { label: 'Chờ Duyệt', color: 'text-center bg-yellow-100 text-yellow-700' },
-	withdrawn: { label: 'Đã Rút', color: 'text-center bg-gray-100 text-gray-700' },
-	canceled: { label: 'Đã bị hủy', color: 'text-center bg-gray-100 text-gray-700' }
-}
-
-const RegistrationHistory = () => {
-	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
+const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
+	const [queries, setQueries] = useState<RegistrationHistoryQueryParams>({
 		limit: 10,
 		page: 1,
+		periodId: periodId ? periodId : undefined,
 		search_by: ['topicInfo.titleVN', 'topicInfo.titleEng', 'lecturers.fullName', 'periodName'],
 		query: '',
 		sort_by: 'createdAt',
@@ -50,17 +48,50 @@ const RegistrationHistory = () => {
 			}
 		})
 	}
+	const handleSelectPeriod = (value: string) => {
+		setQueries((prev) => ({
+			...prev,
+			periodId: value === 'Tất cả' ? undefined : value,
+			page: 1
+		}))
+	}
 	return (
 		<Card className='w-full space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
-			<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
-			<p className='mb-6 text-sm text-gray-500'>Tổng quan về tất cả các đợt bạn đã tham gia.</p>
-			<div className='mb-4 flex flex-col gap-4 sm:flex-row sm:items-center'>
-				<Input
-					placeholder='Tìm kiếm theo Đợt, Đề tài, hoặc Giảng viên...'
-					value={searchTerm}
-					onChange={(e) => onEdit(e.target.value)}
-					className='sm:w-[350px]'
-				/>
+			{!periodId && (
+				<div className='w-fit bg-slate-200'>
+					<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
+					<p className='mb-6 text-sm text-gray-500'>Xem lịch sử và trạng thái của các lần đăng ký trước đó</p>
+				</div>
+			)}
+			<div className='flex items-end gap-2'>
+				<div className='flex flex-col items-start space-y-1'>
+					<label className='text-sm font-semibold text-slate-700'>Tìm kiếm từ khóa</label>
+					<Input
+						placeholder='Tìm kiếm theo Đợt, Đề tài, hoặc Giảng viên...'
+						value={searchTerm}
+						onChange={(e) => onEdit(e.target.value)}
+						className='sm:w-[350px]'
+					/>
+				</div>
+				<div className='flex flex-col items-start space-y-1'>
+					<label className='text-sm font-semibold text-slate-700'>Chọn kỳ/đợt đăng ký</label>
+					<Select
+						value={queries.periodId === undefined ? 'Tất cả' : queries.periodId}
+						onValueChange={(value) => handleSelectPeriod(value)}
+					>
+						<SelectTrigger className='w-full bg-slate-50'>
+							<SelectValue placeholder='Chọn năm' />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value='Tất cả'>Tất cả</SelectItem>
+							{registrationHistoryData?.meta.periodOptions.map((y) => (
+								<SelectItem key={y._id} value={y._id}>
+									{formatPeriodInfoMiniPeriod(y)}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
 			</div>
 			<div className='overflow-x-auto rounded-lg border'>
 				<table className='min-w-full bg-white'>
@@ -81,7 +112,9 @@ const RegistrationHistory = () => {
 					<tbody>
 						{registrationHistoryData?.data.map((hic) => (
 							<tr key={hic._id} className='border-b last:border-b-0 hover:bg-gray-50'>
-								<td className='px-3 py-2'>{hic.periodName}</td>
+								<td className='px-3 py-2 font-semibold'>
+									{formatPeriodInfoMiniPeriod(hic.periodInfo)}
+								</td>
 								<td className='flex flex-col px-3 py-2'>
 									<span className='font-semibold text-gray-900'>{hic.titleVN}</span>
 									<span className='font-sm text-[13px] text-gray-500'>{`(${hic.titleEng})`}</span>
@@ -95,16 +128,11 @@ const RegistrationHistory = () => {
 								</td>
 								<td className='px-3 py-2'>{hic.major}</td>
 								<td className='px-3 py-2'>{new Date(hic.registeredAt).toLocaleString('vi-VN')}</td>
-								{/* <td className='px-3 py-2'>
-									<span>
-										{topicStatusLabels[hic.topicStatus as keyof typeof topicStatusLabels].name}
-									</span>
-								</td> */}
 								<td className='px-3 py-2'>
 									<span
-										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[hic.registrationStatus].color}`}
+										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${registrationStatusMap[hic.registrationStatus].color}`}
 									>
-										{statusMap[hic.registrationStatus].label}
+										{registrationStatusMap[hic.registrationStatus].label}
 									</span>
 								</td>
 								<td className='px-3 py-2 text-center'>

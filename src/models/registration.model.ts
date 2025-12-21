@@ -15,7 +15,9 @@ export function renderRegistrationStatus(status: StudentRegistrationStatus): { l
 			return { label: 'Không xác định', color: 'text-gray-400 bg-gray-50 border border-gray-200' }
 	}
 }
-import type { GetPaginatedObject } from './paginated-object.model'
+import type { GetPaginatedObject, MetaDto } from './paginated-object.model'
+import type { GetCurrentPeriod, MiniPeriod } from './period.model'
+import type { PaginationQueryParamsDto } from './query-params'
 import type { ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 export const StudentRegistrationStatus = {
 	PENDING: 'pending',
@@ -37,15 +39,17 @@ export interface IStudentRegistration {
 	registrationStatus: StudentRegistrationStatus
 	registeredAt: Date
 	lecturers: ResponseMiniLecturerDto[]
-	periodName: string
-	periodId: string
+	periodInfo: MiniPeriod
 	lecturerResponse: string
 	rejectionReasonType: string
 	processedBy: ResponseMiniLecturerDto
 }
-
-export interface PaginatedStudentRegistration extends GetPaginatedObject {
+export interface MetaCustom extends MetaDto {
+	periodOptions: MiniPeriod[]
+}
+export interface PaginatedStudentRegistration {
 	data: IStudentRegistration[]
+	meta: MetaCustom
 }
 
 export interface RelatedStudentInTopic {
@@ -85,4 +89,16 @@ export const tranferToRejectionReasonType = {
 	gpa_low: 'Điểm trung bình chưa đạt yêu cầu',
 	skill_mismatch: 'Kỹ năng chưa phù hợp',
 	other: 'Lý do khác'
+}
+
+export interface RegistrationHistoryQueryParams extends PaginationQueryParamsDto {
+	periodId?: string
+}
+// Badge màu cho trạng thái
+export const registrationStatusMap: Record<string, { label: string; color: string }> = {
+	approved: { label: 'Đã Duyệt', color: 'text-center bg-green-100 text-green-700' },
+	rejected: { label: 'Bị Từ Chối', color: 'text-center bg-red-100 text-red-700' },
+	pending: { label: 'Chờ Duyệt', color: 'text-center bg-yellow-100 text-yellow-700' },
+	withdrawn: { label: 'Đã Rút', color: 'text-center bg-gray-100 text-gray-700' },
+	canceled: { label: 'Đã bị hủy', color: 'text-center bg-gray-100 text-gray-700' }
 }

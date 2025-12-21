@@ -112,7 +112,6 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 					>
 						<LayoutDashboard className='h-5 w-5' />
 					</div>
-					<span className='hidden font-bold text-slate-800 sm:inline'>Graduation Project LMS</span>
 				</div>
 
 				{/* Role Switcher */}
