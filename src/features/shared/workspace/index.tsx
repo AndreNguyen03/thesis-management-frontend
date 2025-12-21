@@ -39,6 +39,7 @@ export const GroupWorkspacePage = () => {
 		{ skip: !group.activeGroup?._id }
 	)
 
+	// Update milestone function (giữ nguyên, nhưng sẽ không dùng nếu empty)
 	const updateMilestone = (
 		id: number,
 		newProgress: number,
@@ -46,30 +47,36 @@ export const GroupWorkspacePage = () => {
 		newScore?: number,
 		newFeedback?: string
 	) => {
-		setMilestones((prev) =>
-			prev.map((m) => {
+		setMilestones((prevMilestones) =>
+			prevMilestones.map((m) => {
 				if (m.id === id) {
-					const updated = { ...m, progress: newProgress, status: newStatus }
-					if (newScore !== undefined || newFeedback !== undefined) {
-						updated.submission = updated.submission || {
-							date: new Date().toISOString().slice(0, 10),
-							files: [],
-							score: null,
-							feedback: ''
-						}
-						if (newScore !== undefined) updated.submission.score = newScore
-						if (newFeedback !== undefined) updated.submission.feedback = newFeedback
+					const updatedMilestone = {
+						...m,
+						progress: newProgress,
+						status: newStatus
 					}
-					return updated
+
+					if (newScore !== undefined || newFeedback !== undefined) {
+						updatedMilestone.submission = updatedMilestone.submission
+							? { ...updatedMilestone.submission }
+							: { date: new Date().toISOString().slice(0, 10), files: [], score: null, feedback: '' }
+
+						if (newScore !== undefined) updatedMilestone.submission.score = newScore
+						if (newFeedback !== undefined) updatedMilestone.submission.feedback = newFeedback
+					}
+
+					return updatedMilestone
 				}
 				return m
 			})
 		)
 	}
 
+	// Calculate total progress (fallback 0 nếu empty)
 	const totalProgress = useMemo(() => {
-		if (!milestones.length) return 0
-		return Math.round(milestones.reduce((sum, m) => sum + m.progress, 0) / milestones.length)
+		if (milestones.length === 0) return 0
+		const completedProgress = milestones.reduce((sum, m) => sum + m.progress, 0)
+		return Math.round(completedProgress / milestones.length)
 	}, [milestones])
 
 	const handleSelectGroup = (id: string) => {
@@ -145,10 +152,12 @@ export const GroupWorkspacePage = () => {
 										Hãy chọn nhóm để xem công việc
 									</h2>
 									<p className='text-sm text-gray-500'>
-										Dữ liệu milestone và task sẽ được tải khi chọn nhóm
+										{group.activeGroup ? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm' : ''}
 									</p>
 								</div>
 							</div>
+						) : (
+							<WorkPanel />
 						)}
 					</ResizablePanel>
 				</ResizablePanelGroup>

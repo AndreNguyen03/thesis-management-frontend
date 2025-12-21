@@ -41,10 +41,37 @@ export function FilterBar({
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			const rulesPagination = isSemanticMode ? 100 : 99
-			onSetQueryParams({ ...queryParams, query: searchValue, page: 1, rulesPagination })
+			if (rulesPagination === 100) {
+				onSetQueryParams({
+					page: 1,
+					limit: 10,
+					search_by: [],
+					query: searchValue,
+					sort_by: 'createdAt',
+					sort_order: 'desc',
+					status: 'all',
+					rulesPagination: rulesPagination,
+					lecturerIds: [],
+					fieldIds: [],
+					queryStatus: []
+				})
+			} else
+				onSetQueryParams({
+					page: 1,
+					limit: 10,
+					search_by: ['titleVN', 'titleEng'],
+					query: searchValue,
+					sort_by: 'createdAt',
+					sort_order: 'desc',
+					status: 'all',
+					rulesPagination: rulesPagination,
+					lecturerIds: [],
+					fieldIds: [],
+					queryStatus: []
+				})
 		}, 400)
 		return () => clearTimeout(timer)
-	}, [searchValue, onSetQueryParams, isSemanticMode]) // Removed queryParams from deps
+	}, [searchValue, isSemanticMode]) // Removed queryParams from deps
 
 	// Tính số lượng filter active (chỉ lecturerIds, fieldIds, và status !== 'all')
 	const activeFilterCount = [

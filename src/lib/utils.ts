@@ -26,3 +26,16 @@ export function splitFileName(fileName: string) {
 		ext: fileName.slice(lastDot) // bao gồm dấu chấm
 	}
 }
+
+export function toDatetimeLocal(dt: string) {
+	if (!dt) return ''
+	const date = new Date(dt)
+	date.setMinutes(date.getMinutes() - date.getTimezoneOffset())
+	return date.toISOString().slice(0, 16)
+}
+export function fromDatetimeLocal(local: string) {
+	if (!local) return ''
+	const date = new Date(local)
+	date.setMinutes(date.getMinutes() + date.getTimezoneOffset())
+	return date.toISOString()
+}

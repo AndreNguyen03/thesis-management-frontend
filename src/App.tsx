@@ -10,6 +10,7 @@ import { Toaster } from './components/ui/toaster'
 
 // import slice period ❌ BỎ
 import { ChatProvider } from './contexts/ChatSocketContext'
+// import { NotificationSocketProvider } from './contexts/NotificationSocketContext'
 import { useGetCurrentPeriodsQuery } from './services/periodApi'
 
 const App = () => {
@@ -45,11 +46,13 @@ const App = () => {
 
 	return (
 		<ChatProvider userId={userId}>
-			<Layout>
-				<Outlet />
-				<Toaster />
-				<ToasterSonner />
-			</Layout>
+			{/* <NotificationSocketProvider userId={userId}> */}
+				<Layout>
+					<Outlet />
+					<Toaster />
+					<ToasterSonner />
+				</Layout>
+			{/* </NotificationSocketProvider> */}
 		</ChatProvider>
 	)
 }
