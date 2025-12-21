@@ -9,6 +9,7 @@ import Bubble from './Bubble'
 import LoadingBubble from './LoadingBubble'
 import { useGetChatbotVersionQuery } from '@/services/chatbotApi'
 import { toast } from 'react-toastify'
+import { X } from 'lucide-react'
 
 const suggestedQuestions = [
 	'Cách đăng ký đề tài luận văn?',
@@ -18,7 +19,12 @@ const suggestedQuestions = [
 	'Xu hướng đề tài hot năm 2024'
 ]
 
-export const AIAssistant = () => {
+interface Props {
+	open: boolean
+	onClose: () => void
+}
+
+export const AIAssistant = ({ open, onClose }: Props) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [input, setInput] = useState('')
 	const bottomRef = useRef<HTMLDivElement>(null)
@@ -51,17 +57,34 @@ export const AIAssistant = () => {
 		<>
 			{/* Floating Button */}
 			<Dialog open={isOpen} onOpenChange={setIsOpen}>
-				<DialogTrigger asChild>
-					<Button
-						className='fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary shadow-xl transition-all duration-300 hover:shadow-2xl'
-						size='icon'
-					>
-						<MessageCircle className='h-6 w-6 text-primary-foreground' />
-						<div className='absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent'>
-							<Sparkles className='h-2 w-2 text-accent-foreground' />
+				{open && (
+					<DialogTrigger asChild>
+						<div className='fixed bottom-6 right-6 z-50'>
+							{/* Close (X) */}
+							<button
+								type='button'
+								onClick={(e) => {
+									e.stopPropagation() // không mở dialog
+									onClose()
+								}}
+								className='absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-destructive hover:text-white'
+							>
+								×
+							</button>
+
+							{/* Floating button */}
+							<Button
+								size='icon'
+								className='h-14 w-14 rounded-full bg-primary shadow-xl transition-all hover:shadow-2xl'
+							>
+								<MessageCircle className='h-6 w-6 text-primary-foreground' />
+								<div className='absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent'>
+									<Sparkles className='h-2 w-2 text-accent-foreground' />
+								</div>
+							</Button>
 						</div>
-					</Button>
-				</DialogTrigger>
+					</DialogTrigger>
+				)}
 
 				<DialogContent className='flex max-h-[80vh] flex-col sm:max-w-2xl'>
 					<DialogHeader>

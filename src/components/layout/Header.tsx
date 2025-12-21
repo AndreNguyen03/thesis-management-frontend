@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LogOut, MessageCircle, Search, Settings, User2 } from 'lucide-react'
 import { Button, Dropdown, DropdownItem, DropdownLabel, DropdownSeparator, Input, LoadingOverlay, Badge } from '../ui'
 import uitLogo from '../../assets/uit.png'
@@ -5,20 +6,53 @@ import type { ApiError, AppUser } from '../../models'
 import { useLogoutMutation } from '../../services/authApi'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppDispatch } from '../../store'
 import { userApi } from '../../services/userApi'
 import NotificationPopover from '../NotificationPopover'
+import type { SearchUserItemDto } from '@/models/users'
+import { useLazySearchUsersQuery } from '../../services/userApi'
+import { useDebounce } from '@/hooks/useDebounce' // import hook debounce
+import { getAvatarInitials } from '@/utils/utils'
 
 interface HeaderProps {
 	user: AppUser | null
+	onOpenAI: () => void
 }
 
-const Header = ({ user }: HeaderProps) => {
+const PAGE_SIZE = 6
+
+const Header = ({ user, onOpenAI }: HeaderProps) => {
 	const [logout, { isLoading }] = useLogoutMutation()
 	const navigate = useNavigate()
-	const [open, setOpen] = useState(false)
+	const [openUserMenu, setOpenUserMenu] = useState(false)
+	const [searchQuery, setSearchQuery] = useState('')
+	const [openSearch, setOpenSearch] = useState(false)
+	const [page, setPage] = useState(1)
+	const [results, setResults] = useState<SearchUserItemDto[]>([])
+	const [hasMore, setHasMore] = useState(false)
 	const dispatch = useAppDispatch()
+	const [triggerSearch, { data, isFetching }] = useLazySearchUsersQuery()
+
+	// Debounce search
+	const debouncedSearch = useDebounce({
+		onChange: (val: string) => {
+			setPage(1)
+			triggerSearch({ query: val, page: 1, limit: PAGE_SIZE })
+		},
+		duration: 300
+	})
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const val = e.target.value
+		setSearchQuery(val)
+		setResults([]) // reset kết quả cũ ngay
+		setPage(1) // reset page
+		setHasMore(false) // reset hasMore
+		setOpenSearch(true) // giữ dropdown mở khi gõ
+		debouncedSearch(val)
+	}
+
 	const handleLogout = async () => {
 		try {
 			await logout().unwrap()
@@ -27,9 +61,40 @@ const Header = ({ user }: HeaderProps) => {
 			navigate('/login')
 		} catch (err) {
 			const error = err as ApiError
-
 			toast.error(`Đã xảy ra lỗi : ${error?.data?.message}`)
 		}
+	}
+
+	useEffect(() => {
+		if (!data) return
+
+		if (page === 1) {
+			setResults(data.data)
+		} else {
+			setResults((prev) => [...prev, ...data.data])
+		}
+
+		const totalLoaded = page === 1 ? data.data.length : results.length + data.data.length
+		setHasMore(data.meta.totalItems > totalLoaded)
+
+		setOpenSearch(true) // luôn giữ dropdown mở
+	}, [data, page])
+
+	const loadMore = (e: React.MouseEvent<HTMLDivElement>) => {
+		e.stopPropagation()
+		const nextPage = page + 1
+		setPage(nextPage)
+
+		triggerSearch({ query: searchQuery, page: nextPage, limit: PAGE_SIZE }).then((res: any) => {
+			if ('data' in res) {
+				setResults((prev) => {
+					const newResults = [...prev, ...res.data.data]
+					setHasMore(res.data.meta.totalItems > newResults.length)
+					return newResults
+				})
+				setOpenSearch(true) // giữ dropdown mở
+			}
+		})
 	}
 
 	if (isLoading) return <LoadingOverlay />
@@ -50,30 +115,110 @@ const Header = ({ user }: HeaderProps) => {
 
 				{/* Search */}
 				<div className='mx-6 flex-1'>
-					<div className='relative mx-auto max-w-md'>
+					<div className='relative mx-auto w-full max-w-md'>
 						<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-500' />
 						<Input
-							placeholder='Tìm kiếm đề tài, giảng viên, sinh viên...'
-							className='border-none bg-gray-50 pl-10 focus:bg-white focus:ring-1 focus:ring-blue-500'
+							placeholder='Tìm kiếm giảng viên, sinh viên...'
+							className='w-full border-none bg-gray-50 pl-10 focus:bg-white focus:ring-1 focus:ring-blue-500'
+							value={searchQuery}
+							onChange={handleInputChange}
+							onFocus={() => setOpenSearch(true)}
+							onBlur={() => setTimeout(() => setOpenSearch(false), 200)}
 						/>
+
+						{openSearch && searchQuery && (
+							<div className='absolute left-0 top-full z-50 mt-1 max-h-96 w-full max-w-md overflow-y-auto rounded-md border bg-white shadow-lg'>
+								{results.length === 0 && isFetching ? (
+									// Skeleton lần search đầu
+									Array.from({ length: 3 }).map((_, idx) => (
+										<div key={idx} className='flex animate-pulse items-center gap-3 px-3 py-2'>
+											<div className='h-10 w-10 rounded-full bg-gray-300' />
+											<div className='flex-1 space-y-1'>
+												<div className='h-4 w-3/4 rounded bg-gray-300' />
+												<div className='h-3 w-1/2 rounded bg-gray-200' />
+											</div>
+										</div>
+									))
+								) : results.length > 0 ? (
+									<>
+										{results.map((u) => (
+											<DropdownItem
+												key={u.id}
+												className='flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-gray-100'
+												onClick={() => {
+													navigate(`/profile/${u.role}/${u.id}`)
+													setOpenSearch(false)
+													setSearchQuery('')
+												}}
+											>
+												<div className='flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 font-bold text-white'>
+													{u.avatarUrl ? (
+														<img
+															src={u.avatarUrl}
+															alt={u.fullName}
+															className='h-full w-full rounded-full object-cover'
+														/>
+													) : (
+														getAvatarInitials(u.fullName)
+													)}
+												</div>
+												<div className='flex-1'>
+													<p className='text-sm font-medium'>{u.fullName}</p>
+													<p className='text-xs text-gray-500'>
+														{u.role === 'student'
+															? `${u.email} • ${u.studentCode || ''}`
+															: `${u.email} • ${u.title || ''}`}
+													</p>
+												</div>
+											</DropdownItem>
+										))}
+
+										{isFetching &&
+											page > 1 &&
+											// Skeleton loadMore
+											Array.from({ length: 2 }).map((_, idx) => (
+												<div
+													key={`load-${idx}`}
+													className='flex animate-pulse items-center gap-3 px-3 py-2'
+												>
+													<div className='h-10 w-10 rounded-full bg-gray-300' />
+													<div className='flex-1 space-y-1'>
+														<div className='h-4 w-3/4 rounded bg-gray-300' />
+														<div className='h-3 w-1/2 rounded bg-gray-200' />
+													</div>
+												</div>
+											))}
+
+										{hasMore && !isFetching && (
+											<div
+												className='cursor-pointer px-3 py-1 text-center text-sm text-blue-600 hover:underline'
+												onClick={(e) => loadMore(e)}
+											>
+												Xem thêm
+											</div>
+										)}
+									</>
+								) : (
+									<div className='px-3 py-2 text-center text-gray-500'>Không tìm thấy kết quả</div>
+								)}
+							</div>
+						)}
 					</div>
 				</div>
 
 				{/* Actions */}
 				<div className='flex items-center space-x-4'>
-					{/* AI Assistant */}
-					<Button variant='ghost' size='sm' className='flex items-center'>
+					<Button variant='default' size='sm' className='flex items-center' onClick={onOpenAI}>
 						<MessageCircle className='h-6 w-6' />
 						<span className='ml-2 hidden sm:inline'>AI Assistant</span>
 					</Button>
 
-					{/* Notifications */}
 					<NotificationPopover />
 
 					{/* User Menu */}
 					<Dropdown
-						open={open}
-						onOpenChange={setOpen}
+						open={openUserMenu}
+						onOpenChange={setOpenUserMenu}
 						trigger={
 							<Button
 								variant='ghost'
@@ -86,8 +231,8 @@ const Header = ({ user }: HeaderProps) => {
 										className='h-full w-full rounded-full object-cover'
 									/>
 								) : (
-									<div className='flex h-full w-full items-center justify-center rounded-full bg-blue-500'>
-										<User2 className='h-4 w-4 text-white' />
+									<div className='flex h-full w-full items-center justify-center rounded-full bg-blue-500 font-bold text-white'>
+										{getAvatarInitials(user?.fullName)}
 									</div>
 								)}
 							</Button>
@@ -108,7 +253,7 @@ const Header = ({ user }: HeaderProps) => {
 						<DropdownItem
 							onClick={() => {
 								navigate('/profile')
-								setOpen(false)
+								setOpenUserMenu(false)
 							}}
 							className='flex items-center'
 						>
@@ -118,7 +263,7 @@ const Header = ({ user }: HeaderProps) => {
 						<DropdownItem
 							onClick={() => {
 								navigate('/setting')
-								setOpen(false)
+								setOpenUserMenu(false)
 							}}
 							className='flex items-center'
 						>

@@ -2,7 +2,7 @@ import { type ApiError, type PaginationLecturerQueryParams } from '@/models'
 
 import { Edit, Eye, Loader2, Plus, Trash, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-// import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useDebounce } from '@/hooks/useDebounce'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -33,8 +33,7 @@ import { BulkCreateLecturers } from '@/features/admin/manage_lecturer/components
 import { useGetFacultiesQuery } from '@/services/facultyApi'
 
 const FacultyLecturerDataTable = () => {
-	// search input handler
-	// const navigate = useNavigate()
+	const navigate = useNavigate()
 
 	//các state của modal
 	// STATE CHO EDIT MODAL
@@ -99,7 +98,7 @@ const FacultyLecturerDataTable = () => {
 		})
 	}
 
-    console.log('lecturerData', lecturerData)
+	console.log('lecturerData', lecturerData)
 
 	const hasFilter =
 		Boolean(searchTerm.trim()) ||
@@ -259,7 +258,7 @@ const FacultyLecturerDataTable = () => {
 								<td className='px-3 py-2 text-center'>
 									<button
 										className='rounded-full p-2 transition-colors hover:bg-gray-100'
-										onClick={() => alert('Chức năng đang phát triển')}
+										onClick={() => navigate(`/profile/lecturer/${lec.id}`)}
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>

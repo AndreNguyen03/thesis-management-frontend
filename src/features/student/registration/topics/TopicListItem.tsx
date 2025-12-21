@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { Users, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { TopicStatus, type GeneralTopic } from '@/models'
 
@@ -22,6 +23,8 @@ export function TopicListItem({
 	disabled,
 	isRegistered
 }: TopicListItemProps) {
+	const navigate = useNavigate()
+
 	// ===== MAIN LECTURER: Always use createByInfo as main lecturer =====
 	const mainLecturer = topic.createByInfo
 	const lecturerName = mainLecturer?.fullName ?? 'Chưa phân công'
@@ -54,6 +57,13 @@ export function TopicListItem({
 		return 'Đăng ký'
 	}
 
+	const handleLecturerClick = (e: React.MouseEvent) => {
+		e.stopPropagation()
+		if (mainLecturer?._id) {
+			navigate(`/profile/lecturer/${mainLecturer._id}`)
+		}
+	}
+
 	return (
 		<div
 			className={cn(
@@ -74,8 +84,11 @@ export function TopicListItem({
 				</div>
 
 				<div className='flex items-center gap-2 text-xs text-muted-foreground'>
-					{/* Main Lecturer (Always createByInfo) */}
-					<div className='flex items-center gap-1'>
+					{/* Main Lecturer (Always createByInfo) - Clickable */}
+					<div
+						className='flex cursor-pointer items-center gap-1 hover:underline'
+						onClick={handleLecturerClick}
+					>
 						<Avatar className='h-4 w-4'>
 							{lecturerAvatar && <AvatarImage src={lecturerAvatar} alt={lecturerName} />}
 							<AvatarFallback className='text-[8px]'>{lecturerInitial}</AvatarFallback>

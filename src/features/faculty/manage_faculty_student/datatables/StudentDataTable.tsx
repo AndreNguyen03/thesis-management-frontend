@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type ApiError, type PaginationStudentQueryParams } from '@/models'
 
-import { Edit, Eye, Loader2, Plus, Trash, XCircle } from 'lucide-react'
+import { Edit, Eye, Loader2, Trash, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-// import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useDebounce } from '@/hooks/useDebounce'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -38,8 +38,7 @@ import { useAppSelector } from '@/store'
 import { StudentForm } from '@/features/admin/manage_student/components/StudentForm'
 
 const StudentDataTable = () => {
-	// search input handler
-	// const navigate = useNavigate()
+	const navigate = useNavigate()
 	const facultyUser = useAppSelector((state) => state.auth.user) as FacultyBoardProfile
 	const facultyId = facultyUser.facultyId
 	//các state của modal
@@ -106,10 +105,7 @@ const StudentDataTable = () => {
 		})
 	}
 
-	const hasFilter =
-		Boolean(searchTerm.trim()) ||
-		queryParams.isActive !== 'all' ||
-		queryParams.major !== 'all'
+	const hasFilter = Boolean(searchTerm.trim()) || queryParams.isActive !== 'all' || queryParams.major !== 'all'
 
 	return (
 		<div className='px-2'>
@@ -143,34 +139,32 @@ const StudentDataTable = () => {
 						</SelectContent>
 					</Select>
 
-					{queryParams.facultyId !== 'all' && (
-						<Select
-							value={queryParams.major ?? 'all'}
-							onValueChange={(value) => {
-								return setQueryParams((prev) => ({
-									...prev,
-									page: 1,
-									major: value
-								}))
-							}}
-						>
-							<SelectTrigger className='w-[100px] border-gray-300 bg-white'>
-								<SelectValue>
-									{queryParams.major === 'all'
-										? 'Tất cả ngành'
-										: majors.find((m) => m.name === queryParams.major)?.name}
-								</SelectValue>
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value='all'>Tất cả ngành</SelectItem>
-								{majors.map((m) => (
-									<SelectItem key={m._id} value={m.name}>
-										{m.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					)}
+					<Select
+						value={queryParams.major ?? 'all'}
+						onValueChange={(value) => {
+							return setQueryParams((prev) => ({
+								...prev,
+								page: 1,
+								major: value
+							}))
+						}}
+					>
+						<SelectTrigger className='w-[100px] border-gray-300 bg-white'>
+							<SelectValue>
+								{queryParams.major === 'all'
+									? 'Tất cả ngành'
+									: majors.find((m) => m.name === queryParams.major)?.name}
+							</SelectValue>
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value='all'>Tất cả ngành</SelectItem>
+							{majors.map((m) => (
+								<SelectItem key={m._id} value={m.name}>
+									{m.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
 
 					{hasFilter && (
 						<Button variant='outline' onClick={handleResetFilter} className='gap-2 text-gray-700'>
@@ -254,7 +248,7 @@ const StudentDataTable = () => {
 								<td className='px-3 py-2 text-center'>
 									<button
 										className='rounded-full p-2 transition-colors hover:bg-gray-100'
-										onClick={() => alert('Chức năng đang phát triển')}
+										onClick={() => navigate(`/profile/student/${student.id}`)}
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
@@ -281,7 +275,7 @@ const StudentDataTable = () => {
 						))}
 						{isLoading && (
 							<tr>
-								<td colSpan={8} className='py-12 text-center'>
+								<td colSpan={10} className='py-12 text-center'>
 									<div className='flex flex-col items-center justify-center gap-2'>
 										<Loader2 className='h-8 w-8 animate-spin text-blue-500' />
 										<span className='text-gray-500'>Đang tải dữ liệu...</span>
@@ -291,7 +285,7 @@ const StudentDataTable = () => {
 						)}
 						{error && (
 							<tr>
-								<td colSpan={8} className='py-12 text-center'>
+								<td colSpan={10} className='py-12 text-center'>
 									<div className='flex flex-col items-center justify-center gap-2'>
 										<XCircle className='h-8 w-8 text-red-500' />
 										<span className='text-gray-500'>
@@ -303,7 +297,7 @@ const StudentDataTable = () => {
 						)}
 						{!isLoading && !error && studentDataState?.length === 0 && (
 							<tr>
-								<td colSpan={8} className='py-12 text-center'>
+								<td colSpan={10} className='py-12 text-center'>
 									<EmptyState title='Không có dữ liệu' />
 								</td>
 							</tr>
@@ -365,7 +359,7 @@ const StudentDataTable = () => {
 											})
 										})
 										.catch((error: any) => {
-											console.error('Error when creating student:', error)
+											console.error('Error when updating student:', error)
 											const message =
 												error?.data?.message ||
 												error?.message ||
@@ -387,7 +381,7 @@ const StudentDataTable = () => {
 						<AlertDialogHeader>
 							<AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
 							<AlertDialogDescription>
-								Hành động này không thể hoàn tác. Tài khoản giảng viên sẽ bị xóa vĩnh viễn.
+								Hành động này không thể hoàn tác. Tài khoản sinh viên sẽ bị xóa vĩnh viễn.
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 
@@ -405,7 +399,7 @@ const StudentDataTable = () => {
 											})
 										})
 										.catch((error: any) => {
-											console.error('Error when creating student:', error)
+											console.error('Error when deleting student:', error)
 											const message =
 												error?.data?.message ||
 												error?.message ||

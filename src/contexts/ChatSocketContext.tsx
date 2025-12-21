@@ -2,8 +2,9 @@
 // context/ChatContext.tsx
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { socketService } from '@/services/socket.service'
-import type { MessageDto } from '@/models/groups.model'
+import type { DirectSidebarGroup, MessageDto } from '@/models/groups.model'
 import { groupApi } from '@/services/groupApi'
+import { store } from '@/store'
 
 const CHAT_NS = '/chat'
 
@@ -63,6 +64,8 @@ interface ChatContextValue {
 	searchGroupMessages: (groupId: string, keyword: string, limit?: number) => Promise<ChatMessage[]>
 
 	markAllMessagesAsSeenLocal: (groupId: string) => void
+	hasUnreadDirect: boolean
+	setHasUnreadDirect: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 /* ================= CONTEXT ================= */
@@ -78,6 +81,8 @@ const ChatProvider: React.FC<{
 	const [messagesByGroup, setMessagesByGroup] = useState<Record<string, ChatMessage[]>>({})
 	const [onlineUsersByGroup, setOnlineUsersByGroup] = useState<Record<string, string[]>>({})
 	const [typingUsersByGroup, setTypingUsersByGroup] = useState<Record<string, string[]>>({})
+
+	const [hasUnreadDirect, setHasUnreadDirect] = useState(false)
 
 	/* ====== RTK Query lazy hook ====== */
 	const [triggerFetchGroupMessages] = groupApi.useLazyGetGroupMessagesQuery()
@@ -122,6 +127,9 @@ const ChatProvider: React.FC<{
 					// Push mới nếu chưa tồn tại
 					return { ...prev, [groupId]: [...list, message] }
 				})
+				if (message.senderId !== userId) {
+					setHasUnreadDirect(true)
+				}
 			}
 		)
 
@@ -353,6 +361,21 @@ const ChatProvider: React.FC<{
 		})
 	}
 
+	useEffect(() => {
+		const checkInitialUnread = async () => {
+			try {
+				const result = await store.dispatch(groupApi.endpoints.getPaginateDirectGroups.initiate()).unwrap()
+                console.log('fetch direct group data ::: ', result?.data)
+				if (result?.data?.some((g: any) => g.unreadCount > 0)) {
+					setHasUnreadDirect(true)
+				}
+			} catch (e) {
+				console.warn('Skip initial unread check')
+			}
+		}
+		checkInitialUnread()
+	}, [])
+
 	const value = useMemo(
 		() => ({
 			messagesByGroup,
@@ -363,7 +386,9 @@ const ChatProvider: React.FC<{
 			markGroupSeen,
 			fetchGroupMessages,
 			searchGroupMessages,
-			markAllMessagesAsSeenLocal
+			markAllMessagesAsSeenLocal,
+			hasUnreadDirect,
+			setHasUnreadDirect
 		}),
 		[messagesByGroup, onlineUsersByGroup, typingUsersByGroup]
 	)

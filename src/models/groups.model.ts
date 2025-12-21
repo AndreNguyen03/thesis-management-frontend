@@ -21,18 +21,23 @@ export interface Group {
 	updatedAt: string
 }
 
+
 export interface PaginatedGroup extends GetPaginatedObject {
 	data: Group[]
 }
 
+export interface PaginatedDirectGroup extends GetPaginatedObject {
+	data: DirectSidebarGroup[]
+}
+
 export interface GroupResponseDto {
 	id: string
-	topicId: string
+	topicId?: string
 	type: 'direct' | 'group'
 	participants: {
 		id: string
 		fullName: string
-		avatarUrl: string
+		avatarUrl?: string
 	}[]
 	lastMessage?: {
 		content: string
@@ -41,6 +46,38 @@ export interface GroupResponseDto {
 	}
 	unreadCounts: Record<string, number>
 	lastSeenAtByUser: Record<string, string>
+}
+
+// models/groups.model.ts (hoặc dto/group-response.dto.ts)
+export interface DirectSidebarGroup {
+	_id: string
+	type: 'direct'
+
+	otherUser: {
+		_id: string
+		fullName: string
+		avatarUrl?: string
+	}
+
+	lastMessage?: {
+		content: string
+		createdAt: string
+		senderId: string
+	}
+
+	unreadCount: number
+	updatedAt: string
+}
+
+export interface CreateDirectGroupDto {
+	targetUserId: string // ID user cần liên hệ (bắt buộc)
+	topicId?: string // Optional topicId (nếu chat về topic cụ thể)
+}
+
+export interface CreateDirectGroupResponse {
+	id: string
+	type: 'direct'
+	topicId: string | null
 }
 
 export interface MessageDto {

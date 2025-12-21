@@ -14,9 +14,9 @@ export function Profile() {
 
 	switch (role) {
 		case 'student':
-			return <StudentProfile student={user} />
+			return <StudentProfile student={user} viewerId={user.userId}/>
 		case 'lecturer':
-			return <LecturerProfilePage lecturer={user} />
+			return <LecturerProfilePage lecturer={user} viewerId={user.userId} />
 		case 'admin':
 			return <div>Admin profile</div>
 		case 'faculty_board':

@@ -1,5 +1,12 @@
 import { baseApi, type ApiResponse } from './baseApi'
-import type { GroupResponseDto, MessageDto, PaginatedGroup } from '@/models/groups.model'
+import type {
+	CreateDirectGroupDto,
+	CreateDirectGroupResponse,
+	GroupResponseDto,
+	MessageDto,
+	PaginatedDirectGroup,
+	PaginatedGroup
+} from '@/models/groups.model'
 
 export const groupApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -10,6 +17,25 @@ export const groupApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<PaginatedGroup>) => response.data
+		}),
+
+		getPaginateDirectGroups: builder.query<PaginatedDirectGroup, void>({
+			query: () => ({
+				url: '/groups/user-directs',
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<PaginatedDirectGroup>) => response.data,
+			providesTags: ['DirectGroups']
+		}),
+		// THÊM: Mutation cho createOrGetDirectGroup
+		createOrGetDirectGroup: builder.mutation<CreateDirectGroupResponse, CreateDirectGroupDto>({
+			query: (dto) => ({
+				url: '/groups/direct',
+				method: 'POST',
+				body: dto // { targetUserId, topicId? }
+			}),
+			transformResponse: (response: ApiResponse<CreateDirectGroupResponse>) => response.data,
+			invalidatesTags: ['DirectGroups'] // Refresh paginated list sau tạo
 		}),
 		getGroupDetail: builder.query<GroupResponseDto, { groupId: string }>({
 			query: ({ groupId }) => ({
@@ -42,6 +68,8 @@ export const groupApi = baseApi.injectEndpoints({
 
 export const {
 	useGetPaginateGroupsQuery,
+	useGetPaginateDirectGroupsQuery,
+	useCreateOrGetDirectGroupMutation,
 	useGetGroupDetailQuery,
 	useGetGroupMessagesQuery,
 	useSearchGroupMessagesQuery

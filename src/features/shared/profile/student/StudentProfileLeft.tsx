@@ -1,14 +1,30 @@
 import type { StudentUser } from '@/models'
 import { GraduationCap, Mail, MessageCircle, Phone, User2 } from 'lucide-react'
 import { Button } from '@/components/ui'
+import { useNavigate } from 'react-router-dom'
+import { useCreateOrGetDirectGroupMutation } from '@/services/groupApi'
 
 interface Props {
 	student: StudentUser
+	isOwner: boolean
 }
 
-export function StudentProfileLeft({ student }: Props) {
-	const handleMessage = () => {
-		alert(`Nhắn tin cho ${student.fullName}`)
+export function StudentProfileLeft({ student, isOwner }: Props) {
+	const navigate = useNavigate()
+	const [createOrGetDirectGroup, { isLoading }] = useCreateOrGetDirectGroupMutation()
+
+	const handleMessage = async () => {
+		if (isLoading) return
+		try {
+			const newGroup = await createOrGetDirectGroup({
+				targetUserId: student.userId
+			}).unwrap()
+
+			navigate(`/chat?groupId=${newGroup.id}`)
+		} catch (error) {
+			console.error('Tạo chat thất bại:', error)
+			alert('Không thể tạo cuộc trò chuyện. Thử lại sau.')
+		}
 	}
 
 	return (
@@ -57,17 +73,19 @@ export function StudentProfileLeft({ student }: Props) {
 						{student.phone || 'Chưa có'}
 					</div>
 
-					<div className='flex items-center justify-center md:justify-end'>
-						<Button
-							onClick={handleMessage}
-							size='lg'
-							variant='default'
-							className='flex w-full gap-2 shadow-sm transition-shadow duration-150 hover:shadow-md md:w-auto'
-						>
-							<MessageCircle className='h-5 w-5' />
-							Liên hệ ngay
-						</Button>
-					</div>
+					{!isOwner && (
+						<div className='flex items-center justify-center md:justify-end'>
+							<Button
+								onClick={handleMessage}
+								size='lg'
+								variant='default'
+								className='flex w-full gap-2 shadow-sm transition-shadow duration-150 hover:shadow-md md:w-auto'
+							>
+								<MessageCircle className='h-5 w-5' />
+								Liên hệ ngay
+							</Button>
+						</div>
+					)}
 				</div>
 			</div>
 

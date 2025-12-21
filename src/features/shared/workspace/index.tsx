@@ -84,7 +84,12 @@ export const GroupWorkspacePage = () => {
 		// TODO: Fetch milestones/tasks cho group này (e.g., useQuery dựa trên id)
 	}
 
-	if (isLoading) return <LoadingState message='Đang tải dữ liệu' />
+	if (isLoading)
+		return (
+			<div className='h-full w-full'>
+				<LoadingState message='Đang tải dữ liệu' />
+			</div>
+		)
 	if (error) return <div>Lỗi: {(error as ApiError).data?.message}</div>
 
 	// Empty state cho groups (nếu chưa có group nào)
@@ -121,8 +126,8 @@ export const GroupWorkspacePage = () => {
 								participants={groupDetail?.participants ?? []}
 							/>
 						) : (
-							<div className='h-100dvh flex items-center justify-center bg-gray-50'>
-								<p className='text-center text-sm text-gray-500'>Hãy chọn nhóm để xem</p>
+							<div className='flex h-full items-center justify-center bg-gray-50'>
+								<p className='mb-2 text-lg font-medium text-gray-900'>Hãy chọn nhóm để xem</p>
 							</div>
 						)}
 					</ResizablePanel>
@@ -138,9 +143,7 @@ export const GroupWorkspacePage = () => {
 										{group.activeGroup ? 'Chưa có dữ liệu công việc' : 'Hãy chọn nhóm để xem'}
 									</h2>
 									<p className='text-sm text-gray-500'>
-										{group.activeGroup
-											? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm'
-											: ''}
+										{group.activeGroup ? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm' : ''}
 									</p>
 								</div>
 							</div>

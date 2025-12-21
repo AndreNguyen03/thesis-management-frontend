@@ -315,3 +315,34 @@ export interface Faculty {
 	createdAt?: string
 	updatedAt?: string
 }
+
+// models/search-users.ts
+
+// Query params khi gọi API
+export interface SearchUserQueryDto {
+	query?: string
+	page?: number
+	limit?: number
+}
+
+// 1 item user trả về
+export interface SearchUserItemDto {
+	id: string
+	fullName: string
+	email: string
+	role: 'student' | 'lecturer' | 'admin' | 'faculty_board'
+	studentCode?: string
+	title?: string
+	avatarUrl?: string
+}
+
+// Kết quả phân trang
+export interface PaginatedSearchUserDto {
+	data: SearchUserItemDto[]
+	meta: {
+		itemsPerPage: number
+		totalItems: number
+		currentPage: number
+		totalPages: number
+	}
+}
