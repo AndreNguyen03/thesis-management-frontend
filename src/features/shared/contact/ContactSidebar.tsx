@@ -61,7 +61,7 @@ export const ContactSidebar = ({
 					const msgs = messagesByGroup?.[g._id] ?? []
 
 					// Lấy last message
-					const lastMessage = msgs.length > 0 ? msgs[msgs.length - 1] : g.lastMessage
+					const lastMessage = g.lastMessage
 
 					const content = lastMessage?.content ?? 'Chưa có tin nhắn'
 					const time = formatTime(lastMessage?.createdAt)

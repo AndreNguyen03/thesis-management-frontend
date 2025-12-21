@@ -5,7 +5,6 @@ import { useGetPaginateDirectGroupsQuery } from '@/services/groupApi'
 import { useBreadcrumb, useChat } from '@/hooks'
 // import { useAppSelector } from '@/store'
 // import { getUserIdFromAppUser } from '@/utils/utils'
-import type { DirectSidebarGroup } from '@/models/groups.model'
 import { ChatPanel } from './ChatPanel'
 import { ContactSidebar } from './ContactSidebar'
 import { LoadingState } from '@/components/ui/LoadingState'
@@ -15,7 +14,7 @@ export const ContactPage = () => {
 	const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
 	const [searchQuery, setSearchQuery] = useState('')
 
-	const { fetchGroupMessages, setHasUnreadDirect } = useChat()
+	const { directSidebars, setDirectSidebars, fetchGroupMessages, setHasUnreadDirect } = useChat()
 	// const user = useAppSelector((state) => state.auth.user)
 	// const userId = getUserIdFromAppUser(user)
 
@@ -38,18 +37,22 @@ export const ContactPage = () => {
 			searchParams.delete('groupId')
 			setSearchParams(searchParams)
 		}
-	}, [])
+	}, [searchParams, setSearchParams])
 
 	const { data, isLoading, error } = useGetPaginateDirectGroupsQuery()
 
-	const groups: DirectSidebarGroup[] = data?.data ?? []
+	useEffect(() => {
+		if (data?.data?.length && directSidebars.length === 0) {
+			setDirectSidebars(data.data)
+		}
+	}, [data, directSidebars.length, setDirectSidebars])
 
 	const filteredGroups = useMemo(() => {
-		if (!searchQuery.trim()) return groups
-		return groups.filter((g) => g.otherUser.fullName.toLowerCase().includes(searchQuery.toLowerCase()))
-	}, [groups, searchQuery])
+		if (!searchQuery.trim()) return directSidebars
+		return directSidebars.filter((g) => g.otherUser.fullName.toLowerCase().includes(searchQuery.toLowerCase()))
+	}, [directSidebars, searchQuery])
 
-	const selectedGroup = groups.find((g) => g._id === selectedGroupId)
+	const selectedGroup = directSidebars.find((g) => g._id === selectedGroupId)
 
 	useEffect(() => {
 		if (selectedGroupId) {
@@ -57,7 +60,7 @@ export const ContactPage = () => {
 		}
 	}, [selectedGroupId])
 
-	if (error) return <div className='h-full w-full m-auto p-4 text-red-500'>Lỗi tải liên hệ</div>
+	if (error) return <div className='m-auto h-full w-full p-4 text-red-500'>Lỗi tải liên hệ</div>
 
 	if (isLoading)
 		return (
