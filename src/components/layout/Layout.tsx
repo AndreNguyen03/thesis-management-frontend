@@ -2,7 +2,7 @@ import { SidebarProvider } from '../../contexts/SidebarContext'
 import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import { useSidebar } from '@/hooks/useSidebar'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Breadcrumbs } from '../ui/Breadcrumbs'
 import { BreadcrumbProvider } from '../../contexts/BreadcrumbContext'
 import { useAppSelector } from '../../store'
@@ -38,12 +38,12 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 	const { isOpen } = useSidebar()
 	const sidebarWidth = isOpen ? 'w-56' : 'w-16'
 	const mainMargin = isOpen ? 'ml-56' : 'ml-16'
-
+    const [openAI, setOpenAI] = useState(true)
 	const { hidden } = useBreadcrumb()
 	return (
 		<>
 			{/* Header fixed at top */}
-			<Header user={user} />
+			<Header user={user} onOpenAI={() => setOpenAI(true)}/>
 			{/* Main layout: sidebar fixed left, content scrollable right */}
 			<div
 				className={cn(
@@ -75,7 +75,7 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 					</main>
 				</div>
 				{/* AI Assistant floating or fixed as needed */}
-				<AIAssistant />
+				<AIAssistant open={openAI} onClose={() => setOpenAI(false)} />
 			</div>
 		</>
 	)

@@ -16,6 +16,7 @@ export type BadgeVariant =
 	| 'mini'
 	| 'outlineBlue'
 	| 'info'
+	| 'warning'
 
 interface BadgeProps {
 	children: ReactNode
@@ -39,7 +40,8 @@ export const Badge = ({ children, variant = 'default', className }: BadgeProps) 
 		status: 'bg-green-100 text-green-800',
 		mini: 'px-1.5 py-0.5 text-xs bg-gray-200 text-gray-800 transition-transform scale-100 hover:scale-105',
 		outlineBlue: 'border border-blue-500 text-blue-700 px-1 py-0',
-		info: 'bg-indigo-600 text-white'
+		info: 'bg-indigo-600 text-white',
+		warning: 'bg-yellow-500 text-yellow-900 transition-transform scale-100 hover:scale-105'
 	}
 
 	return (
