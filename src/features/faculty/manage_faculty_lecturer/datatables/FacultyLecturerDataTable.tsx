@@ -2,7 +2,7 @@ import { type ApiError, type FacultyBoardProfile, type PaginationLecturerQueryPa
 
 import { Edit, Eye, Loader2, Plus, Trash, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-// import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useDebounce } from '@/hooks/useDebounce'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -33,8 +33,7 @@ import {
 import { BulkCreateLecturers } from '@/features/admin/manage_lecturer/components/BulkCreateLecturers'
 
 const FacultyLecturerDataTable = () => {
-	// search input handler
-	// const navigate = useNavigate()
+	const navigate = useNavigate()
 
 	// get facultyId from faculty board profile
 	const facultyUser = useAppSelector((state) => state.auth.user) as FacultyBoardProfile
@@ -193,7 +192,7 @@ const FacultyLecturerDataTable = () => {
 								<td className='px-3 py-2 text-center'>
 									<button
 										className='rounded-full p-2 transition-colors hover:bg-gray-100'
-										onClick={() => alert('Chức năng đang phát triển')}
+										onClick={() => navigate(`/profile/lecturer/${lec.id}`)}
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
@@ -220,7 +219,7 @@ const FacultyLecturerDataTable = () => {
 						))}
 						{isLoading && (
 							<tr>
-								<td colSpan={7} className='py-12 text-center'>
+								<td colSpan={8} className='py-12 text-center'>
 									<div className='flex flex-col items-center justify-center gap-2'>
 										<Loader2 className='h-8 w-8 animate-spin text-blue-500' />
 										<span className='text-gray-500'>Đang tải dữ liệu...</span>
@@ -230,7 +229,7 @@ const FacultyLecturerDataTable = () => {
 						)}
 						{error && (
 							<tr>
-								<td colSpan={7} className='py-12 text-center'>
+								<td colSpan={8} className='py-12 text-center'>
 									<div className='flex flex-col items-center justify-center gap-2'>
 										<XCircle className='h-8 w-8 text-red-500' />
 										<span className='text-gray-500'>
@@ -242,7 +241,7 @@ const FacultyLecturerDataTable = () => {
 						)}
 						{!isLoading && !error && lecturerDataState?.length === 0 && (
 							<tr>
-								<td colSpan={7} className='py-12 text-center'>
+								<td colSpan={8} className='py-12 text-center'>
 									<EmptyState title='Không có dữ liệu' />
 								</td>
 							</tr>
@@ -304,7 +303,7 @@ const FacultyLecturerDataTable = () => {
 											})
 										})
 										.catch((error) => {
-											console.error('Error when creating lecturer:', error)
+											console.error('Error when updating lecturer:', error)
 											const message =
 												error?.data?.message ||
 												error?.message ||
@@ -344,7 +343,7 @@ const FacultyLecturerDataTable = () => {
 											})
 										})
 										.catch((error) => {
-											console.error('Error when creating lecturer:', error)
+											console.error('Error when deleting lecturer:', error)
 											const message =
 												error?.data?.message ||
 												error?.message ||

@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Users, AlertTriangle, BookOpen, Code, GraduationCap, Loader2, CheckCircle2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { type ITopicDetail } from '@/models'
 import DOMPurify from 'dompurify'
@@ -28,6 +29,8 @@ export function TopicDetailPanel({
 	disabled = false,
 	isRegistered = false
 }: TopicDetailPanelProps) {
+	const navigate = useNavigate()
+
 	if (!topic) return null
 
 	const approvedCount = topic.students?.approvedStudents?.length ?? 0
@@ -41,6 +44,20 @@ export function TopicDetailPanel({
 	const mainLecturer = topic.createByInfo
 	const coLecturers = topic.lecturers || []
 
+	const handleLecturerClick = (id: string | undefined, e: React.MouseEvent) => {
+		e.stopPropagation()
+		if (id) {
+			navigate(`/profile/lecturer/${id}`)
+		}
+	}
+
+	const handleStudentClick = (id: string | undefined, e: React.MouseEvent) => {
+		e.stopPropagation()
+		if (id) {
+			navigate(`/profile/student/${id}`)
+		}
+	}
+
 	return (
 		<Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent side='right' className='w-full p-0 sm:max-w-lg'>
@@ -53,13 +70,16 @@ export function TopicDetailPanel({
 						{/* Main Lecturer (Creator) */}
 						{mainLecturer && (
 							<div>
-								<div className='flex items-center gap-3 rounded-lg bg-muted/50 p-4'>
+								<div 
+									className='flex items-center gap-3 rounded-lg bg-muted/50 p-4 cursor-pointer hover:bg-muted'
+									onClick={(e) => handleLecturerClick(mainLecturer._id, e)}
+								>
 									<Avatar className='h-12 w-12'>
 										<AvatarImage src={mainLecturer.avatarUrl} />
 										<AvatarFallback>{mainLecturer.fullName.slice(0, 2)}</AvatarFallback>
 									</Avatar>
-									<div>
-										<p className='font-medium'>{mainLecturer.fullName}</p>
+									<div className='min-w-0 flex-1'>
+										<p className='font-medium hover:underline'>{mainLecturer.fullName}</p>
 										<p className='text-sm text-muted-foreground'>{mainLecturer.email}</p>
 									</div>
 								</div>
@@ -77,14 +97,15 @@ export function TopicDetailPanel({
 									{coLecturers.map((lecturer) => (
 										<div
 											key={lecturer._id}
-											className='flex items-center gap-2 rounded-md bg-muted/30 p-2'
+											className='flex items-center gap-2 rounded-md bg-muted/30 p-2 cursor-pointer hover:bg-muted'
+											onClick={(e) => handleLecturerClick(lecturer._id, e)}
 										>
 											<Avatar className='h-8 w-8'>
 												<AvatarImage src={lecturer.avatarUrl} />
 												<AvatarFallback>{lecturer.fullName.slice(0, 2)}</AvatarFallback>
 											</Avatar>
 											<div className='min-w-0 flex-1'>
-												<p className='truncate text-sm font-medium'>{lecturer.fullName}</p>
+												<p className='truncate text-sm font-medium hover:underline'>{lecturer.fullName}</p>
 												{lecturer.facultyName && (
 													<p className='truncate text-xs text-muted-foreground'>
 														{lecturer.facultyName}
@@ -190,7 +211,10 @@ export function TopicDetailPanel({
 											key={s._id}
 											className='flex items-center justify-between rounded-md border p-3'
 										>
-											<div>
+											<div 
+												className='cursor-pointer hover:underline'
+												onClick={(e) => handleStudentClick(s.student._id, e)}
+											>
 												<p className='font-medium'>{s.student.fullName}</p>
 												<p className='text-sm text-muted-foreground'>{s.student.email}</p>
 											</div>
@@ -205,7 +229,10 @@ export function TopicDetailPanel({
 											key={s._id}
 											className='flex items-center justify-between rounded-md border border-yellow-200 bg-yellow-50 p-3'
 										>
-											<div>
+											<div 
+												className='cursor-pointer hover:underline'
+												onClick={(e) => handleStudentClick(s.student._id, e)}
+											>
 												<p className='font-medium'>{s.student.fullName}</p>
 												<p className='text-sm text-muted-foreground'>{s.student.email}</p>
 											</div>

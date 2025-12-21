@@ -3,7 +3,7 @@ import { type ApiError, type PaginationStudentQueryParams } from '@/models'
 
 import { Edit, Eye, Loader2, Plus, Trash, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-// import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useDebounce } from '@/hooks/useDebounce'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -39,8 +39,7 @@ import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { BulkCreateStudents } from '../components/BulkCreateStudents'
 
 const StudentDataTable = () => {
-	// search input handler
-	// const navigate = useNavigate()
+	const navigate = useNavigate()
 
 	//các state của modal
 	// STATE CHO EDIT MODAL
@@ -290,7 +289,7 @@ const StudentDataTable = () => {
 								<td className='px-3 py-2 text-center'>
 									<button
 										className='rounded-full p-2 transition-colors hover:bg-gray-100'
-										onClick={() => alert('Chức năng đang phát triển')}
+										onClick={() => navigate(`/profile/student/${student.id}`)}
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
@@ -317,7 +316,7 @@ const StudentDataTable = () => {
 						))}
 						{isLoading && (
 							<tr>
-								<td colSpan={8} className='py-12 text-center'>
+								<td colSpan={10} className='py-12 text-center'>
 									<div className='flex flex-col items-center justify-center gap-2'>
 										<Loader2 className='h-8 w-8 animate-spin text-blue-500' />
 										<span className='text-gray-500'>Đang tải dữ liệu...</span>
@@ -327,7 +326,7 @@ const StudentDataTable = () => {
 						)}
 						{error && (
 							<tr>
-								<td colSpan={8} className='py-12 text-center'>
+								<td colSpan={10} className='py-12 text-center'>
 									<div className='flex flex-col items-center justify-center gap-2'>
 										<XCircle className='h-8 w-8 text-red-500' />
 										<span className='text-gray-500'>
@@ -339,7 +338,7 @@ const StudentDataTable = () => {
 						)}
 						{!isLoading && !error && studentDataState?.length === 0 && (
 							<tr>
-								<td colSpan={8} className='py-12 text-center'>
+								<td colSpan={10} className='py-12 text-center'>
 									<EmptyState title='Không có dữ liệu' />
 								</td>
 							</tr>
@@ -401,7 +400,7 @@ const StudentDataTable = () => {
 											})
 										})
 										.catch((error: any) => {
-											console.error('Error when creating student:', error)
+											console.error('Error when updating student:', error)
 											const message =
 												error?.data?.message ||
 												error?.message ||
@@ -423,7 +422,7 @@ const StudentDataTable = () => {
 						<AlertDialogHeader>
 							<AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
 							<AlertDialogDescription>
-								Hành động này không thể hoàn tác. Tài khoản giảng viên sẽ bị xóa vĩnh viễn.
+								Hành động này không thể hoàn tác. Tài khoản sinh viên sẽ bị xóa vĩnh viễn.
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 
@@ -441,7 +440,7 @@ const StudentDataTable = () => {
 											})
 										})
 										.catch((error: any) => {
-											console.error('Error when creating student:', error)
+											console.error('Error when deleting student:', error)
 											const message =
 												error?.data?.message ||
 												error?.message ||

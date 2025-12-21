@@ -28,6 +28,8 @@ import { RegistrationPeriodsPage } from '@/features/student/registration'
 import ManageTopicsInPeriods from '@/features/lecturer/explore-periods/manage-topics-in-period/ManageTopicsInPeriods'
 import SubmitTopicsInPeriod from '@/features/lecturer/explore-periods/submit-topics-in-period/SubmitTopicsInPeriod'
 import TopicRegistration from '@/features/student/registration/partitions/TopicRegistration'
+import { ViewProfile } from '@/features/shared/profile/ViewProfile'
+import { ContactPage } from '@/features/shared/contact/ContactPage'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -53,6 +55,10 @@ export const router = createBrowserRouter([
 			{
 				path: 'profile/edit',
 				element: <ProfileEdit /> // tạm thời dùng mockUser
+			},
+			{
+				path: '/profile/:role/:id',
+				element: <ViewProfile />
 			},
 
 			{ path: 'topics/saved', element: <SavedTopics /> }, // /thesis/saved
@@ -125,6 +131,10 @@ export const router = createBrowserRouter([
 			//   { path: 'my-groups', element: <MyGroups /> },
 			//   { path: 'group-workspace/:id', element: <GroupWorkspace /> },
 			{ path: 'library', element: <LibraryPage /> },
+			{
+				path: 'chat', // THÊM: Route mới cho ContactPage
+				element: <ContactPage />
+			},
 			//   { path: 'ai-chat', element: <AIChatPage /> },
 			{
 				path: 'settings',

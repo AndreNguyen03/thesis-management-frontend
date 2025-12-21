@@ -148,3 +148,15 @@ export function formatPeriodInfo(period: GetCurrentPeriod) {
 export function formatPeriodInfo2(period: Period) {
 	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.faculty.name}`
 }
+
+// utils/avatar.ts
+export const getAvatarInitials = (fullName?: string) => {
+	if (!fullName) return 'U' // fallback nếu không có tên
+
+	const names = fullName.trim().split(' ').filter(Boolean)
+	if (names.length === 0) return 'U' // tên toàn khoảng trắng
+	if (names.length === 1) return names[0][0].toUpperCase() // chỉ 1 từ, lấy chữ cái đầu
+	const firstInitial = names[0][0].toUpperCase()
+	const lastInitial = names[names.length - 1][0].toUpperCase()
+	return firstInitial + lastInitial
+}
