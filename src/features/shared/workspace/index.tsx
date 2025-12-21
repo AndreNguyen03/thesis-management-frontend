@@ -13,11 +13,8 @@ import { setActiveGroup } from '@/store/slices/group-workspace'
 
 export const GroupWorkspacePage = () => {
 	const group = useAppSelector((state) => state.group)
-	const dispatch = useAppDispatch()
-
-	const [milestones, setMilestones] = useState<any[]>([])
 	const { groupSidebars, setGroupSidebars } = useChat()
-
+	const dispatch = useAppDispatch()
 	const { setHidden } = useBreadcrumb()
 	useEffect(() => {
 		setHidden(true)
@@ -38,46 +35,6 @@ export const GroupWorkspacePage = () => {
 		{ groupId: group.activeGroup?._id ?? '' },
 		{ skip: !group.activeGroup?._id }
 	)
-
-	// Update milestone function (giữ nguyên, nhưng sẽ không dùng nếu empty)
-	const updateMilestone = (
-		id: number,
-		newProgress: number,
-		newStatus: string,
-		newScore?: number,
-		newFeedback?: string
-	) => {
-		setMilestones((prevMilestones) =>
-			prevMilestones.map((m) => {
-				if (m.id === id) {
-					const updatedMilestone = {
-						...m,
-						progress: newProgress,
-						status: newStatus
-					}
-
-					if (newScore !== undefined || newFeedback !== undefined) {
-						updatedMilestone.submission = updatedMilestone.submission
-							? { ...updatedMilestone.submission }
-							: { date: new Date().toISOString().slice(0, 10), files: [], score: null, feedback: '' }
-
-						if (newScore !== undefined) updatedMilestone.submission.score = newScore
-						if (newFeedback !== undefined) updatedMilestone.submission.feedback = newFeedback
-					}
-
-					return updatedMilestone
-				}
-				return m
-			})
-		)
-	}
-
-	// Calculate total progress (fallback 0 nếu empty)
-	const totalProgress = useMemo(() => {
-		if (milestones.length === 0) return 0
-		const completedProgress = milestones.reduce((sum, m) => sum + m.progress, 0)
-		return Math.round(completedProgress / milestones.length)
-	}, [milestones])
 
 	const handleSelectGroup = (id: string) => {
 		dispatch(setActiveGroup(groupSidebars.find((g) => g._id === id) || null))
@@ -108,7 +65,11 @@ export const GroupWorkspacePage = () => {
 
 	return (
 		<div className='flex h-full w-full overflow-hidden'>
-			<GroupSidebar groups={groupSidebars} selectedGroupId={group.activeGroup?._id} onSelectGroup={handleSelectGroup} />
+			<GroupSidebar
+				groups={groupSidebars}
+				selectedGroupId={group.activeGroup?._id}
+				onSelectGroup={handleSelectGroup}
+			/>
 
 			<div className='h-100dvh flex-1'>
 				<ResizablePanelGroup direction='horizontal' className='max-h-[100dvh]'>
@@ -139,11 +100,7 @@ export const GroupWorkspacePage = () => {
 							isLoadingGroupDetail ? (
 								<LoadingState message='Đang tải dữ liệu công việc...' />
 							) : (
-								<WorkPanel
-									milestones={milestones}
-									totalProgress={totalProgress}
-									updateMilestone={updateMilestone}
-								/>
+								<WorkPanel />
 							)
 						) : (
 							<div className='flex h-full items-center justify-center bg-gray-50'>
@@ -156,9 +113,7 @@ export const GroupWorkspacePage = () => {
 									</p>
 								</div>
 							</div>
-						) : (
-							<WorkPanel />
-						)}
+						) }
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			</div>
