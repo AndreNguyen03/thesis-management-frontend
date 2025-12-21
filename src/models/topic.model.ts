@@ -87,6 +87,7 @@ export interface GeneralTopic extends AbstractTopic {
 	createByInfo: MiniActorInforDto
 	periodInfo: MiniPeriod
 	year: number
+	original_id?: string
 	// file
 }
 
@@ -340,13 +341,13 @@ export interface PaginationTopicsQueryParams extends PaginationQueryParamsDto {
 }
 
 export interface PaginationTopicsRegistrationQueryParams extends PaginationQueryParamsDto {
-    year?: string
+	year?: string
 	status?: string
 	rulesPagination?: number
 	lecturerIds?: string[]
 	fieldIds?: string[]
 	queryStatus?: string[]
-    majorIds?: string[]
+	majorIds?: string[]
 }
 
 //dùng cho khi giảng viên lấy đề tài trong kì theo phase

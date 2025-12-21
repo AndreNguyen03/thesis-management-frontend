@@ -28,9 +28,8 @@ import { CurrentTime } from '../topics/CurrentTime'
 import { FilterBar } from '../topics/FilterBar'
 import { SkeletonLoader } from '../topics/SkeletonLoader'
 import { TopicListItem } from '../topics/TopicListItem'
-import { TopicDetailPanel } from '../topics/TopicDetailPanel'
 import { EmptyState } from '../topics/EmptyState'
-import { useLocation, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { RegisteredTopicCard } from '../topics/RegisteredTopicCard'
 import { NoRegistrationCard } from '../topics/NoRegistrationCard'
 import { ConfirmModal } from '../topics/ConfirmModal'
@@ -39,6 +38,7 @@ import { PeriodHeaderSkeleton } from './PeriodHeaderSkeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAdvanceSearchRegisteringTopicsQuery } from '@/services/topicVectorApi'
 import { useGetRegisteredTopicQuery, useLazyGetTopicByIdQuery } from '@/services/topicApi'
+import RegistrationHistory from '../../TopicList/registered/children/RegistrationHistory'
 
 export default function TopicRegistration() {
 	// ------------------ PAGINATION STATE ------------------
@@ -48,8 +48,6 @@ export default function TopicRegistration() {
 	const location = useLocation()
 	const periodFromState = location.state?.period
 	const period = periodFromState ? (periodFromState as GetCurrentPeriod) : null
-
-	console.log('period from state :::', periodFromState)
 
 	const [queryParams, setQueryParams] = useState<PaginationTopicsRegistrationQueryParams>({
 		page: 1,
@@ -62,8 +60,7 @@ export default function TopicRegistration() {
 		rulesPagination: 99,
 		lecturerIds: [],
 		fieldIds: [],
-		queryStatus: [],
-		year: period ? period.year : undefined
+		queryStatus: []
 	})
 
 	// ------------------ FILTER STATE ------------------
@@ -73,11 +70,8 @@ export default function TopicRegistration() {
 		periodId: id!,
 		queries: queryParams
 	})
-
-    console.log('topic paginate data, ',paginated?.data)
-
+	const navigate = useNavigate()
 	const [triggerGetTopicDetail] = useLazyGetTopicByIdQuery()
-
 	// ------------------ OTHER STATES ------------------
 	const [selectedTopic, setSelectedTopic] = useState<ITopicDetail | null>(null)
 	const [isPanelOpen, setIsPanelOpen] = useState(false)
@@ -113,7 +107,7 @@ export default function TopicRegistration() {
 	const handleSelectionChangeLecturers = useCallback((newLecturers: ResponseMiniLecturerDto[]) => {
 		setSelectedLecturers(newLecturers)
 		const lecturerIds = newLecturers.map((lecturer) => lecturer._id)
-		setQueryParams((prev) => ({ ...prev, lecturerIds, page: 1}))
+		setQueryParams((prev) => ({ ...prev, lecturerIds, page: 1 }))
 	}, [])
 
 	const handlePageChange = (newPage: number) => {
@@ -174,10 +168,11 @@ export default function TopicRegistration() {
 		}
 	}
 
-	const handleViewTopic = async (topic: GeneralTopic) => {
+	const handleViewTopic = async (_id: string) => {
 		setIsPanelOpen(true)
-		const { data } = await triggerGetTopicDetail({ id: topic._id })
-		if (data) setSelectedTopic(data)
+		navigate(`/detail-topic/${_id}`)
+		//const { data } = await triggerGetTopicDetail({ id: _id })
+		// if (data) setSelectedTopic(data)
 	}
 
 	// ------------------ UI ------------------
@@ -251,7 +246,11 @@ export default function TopicRegistration() {
 									<TopicListItem
 										key={topic._id}
 										topic={topic}
-										onClick={() => handleViewTopic(topic)}
+										onClick={() =>
+											handleViewTopic(
+												queryParams.rulesPagination === 100 ? topic.original_id! : topic._id
+											)
+										}
 										onRegister={() => handleRegisterClick(topic)}
 										isRegistering={isRegistering && topicToRegister?._id === topic._id}
 										disabled={!canRegister}
@@ -371,28 +370,11 @@ export default function TopicRegistration() {
 						</div>
 					) : (
 						<main className='container py-6'>
-							{registeredTopic ? (
-								<RegisteredTopicCard
-									registeredTopic={registeredTopic}
-									phase={period?.currentPhaseDetail?.phase}
-									onCancel={() => setIsCancelModalOpen(true)}
-									isCancelling={isCancelling}
-								/>
-							) : (
-								<NoRegistrationCard phase={period?.currentPhaseDetail?.phase} />
-							)}
+							<RegistrationHistory periodId={period?._id} />
 						</main>
 					)}
 				</>
 			)}
-
-			<TopicDetailPanel
-				topic={selectedTopic}
-				isOpen={isPanelOpen}
-				onClose={() => setIsPanelOpen(false)}
-				onRegister={handleConfirmRegister}
-				isRegistering={isRegistering}
-			/>
 
 			<ConfirmModal
 				isOpen={isConfirmOpen}

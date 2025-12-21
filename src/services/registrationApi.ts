@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { PaginatedStudentRegistration, QueryReplyRegistration } from '@/models'
+import type { PaginatedStudentRegistration, QueryReplyRegistration, RegistrationHistoryQueryParams } from '@/models'
 import { baseApi, type ApiResponse } from './baseApi'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -46,7 +46,7 @@ export const registrationApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ['MyRegisteredTopics']
 		}),
-		getRegistrationsHistory: builder.query<PaginatedStudentRegistration, { queries: PaginationQueryParamsDto }>({
+		getRegistrationsHistory: builder.query<PaginatedStudentRegistration, { queries: RegistrationHistoryQueryParams }>({
 			query: ({ queries }) => {
 				const queryString = buildQueryString(queries)
 				return `/registrations/student/history-registrations?${queryString}`

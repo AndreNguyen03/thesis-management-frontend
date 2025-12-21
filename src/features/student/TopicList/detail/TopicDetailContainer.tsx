@@ -66,8 +66,6 @@ import { PeriodPhaseName } from '@/models/period.model'
 
 export const TopicDetailContainer = () => {
 	const { id } = useParams<{ id: string }>()
-	//use location
-	const location = useLocation()
 
 	const navigate = useNavigate()
 	// //lấy thông tin kì hiện tại
@@ -114,7 +112,18 @@ export const TopicDetailContainer = () => {
 	}
 
 	if (isLoading) {
-		return <div>Loading...</div>
+		return (
+			<Dialog open>
+				<DialogContent className='flex min-h-[200px] flex-col items-center justify-center'>
+					<div className='flex w-full flex-col items-center gap-4'>
+						<div className='h-16 w-16 animate-pulse rounded-full bg-gray-200'>
+							<Loader2 className='h-8 w-8 animate-spin text-gray-400' />
+							Đang tải
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
+		)
 	}
 	if (topic == null) {
 		return <div>Topic not found</div>

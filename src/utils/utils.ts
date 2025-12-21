@@ -1,5 +1,5 @@
 import type { AppUser } from '@/models'
-import type { GetCurrentPeriod, Period, PhaseType } from '@/models/period.model'
+import type { GetCurrentPeriod, MiniPeriod, Period, PhaseType } from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -146,5 +146,9 @@ export function formatPeriodInfo(period: GetCurrentPeriod) {
 }
 
 export function formatPeriodInfo2(period: Period) {
+	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.faculty.name}`
+}
+
+export function formatPeriodInfoMiniPeriod(period: MiniPeriod) {
 	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.faculty.name}`
 }
