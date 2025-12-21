@@ -1,4 +1,4 @@
-import type { AppUser } from '@/models'
+import type { AppUser, PaginatedSearchUserDto, SearchUserQueryDto } from '@/models'
 import { baseApi, type ApiResponse } from './baseApi'
 import type { PatchLecturerDto, PatchStudentDto } from '@/models/update-users'
 
@@ -12,8 +12,11 @@ export const userApi = baseApi.injectEndpoints({
 		}),
 
 		// lấy profile của người khác
-		getUser: builder.query<AppUser, { role: 'student' | 'lecturer' | 'admin'; id: string }>({
-			query: ({ role, id }) => `/users/${role}/${id}`,
+		getUser: builder.query<AppUser, { role: 'student' | 'lecturer' | 'admin' | 'faculty_board'; id: string }>({
+			query: ({ role, id }) => ({
+				url: `/users/${id}`,
+				params: { role } // Sử dụng query param cho role
+			}),
 			transformResponse: (response: ApiResponse<AppUser>) => response.data,
 			providesTags: ['UserProfile']
 		}),
@@ -46,6 +49,13 @@ export const userApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ['UserProfile']
 		}),
+		searchUsers: builder.query<PaginatedSearchUserDto, SearchUserQueryDto>({
+			query: (params) => ({
+				url: '/users/search',
+				params
+			}),
+			transformResponse: (response: ApiResponse<PaginatedSearchUserDto>) => response.data
+		})
 	}),
 	overrideExisting: false
 })
@@ -56,4 +66,6 @@ export const {
 	usePatchStudentMutation,
 	usePatchLecturerMutation,
 	useUpdateLecturerProfileMutation,
+	useSearchUsersQuery,
+	useLazySearchUsersQuery
 } = userApi

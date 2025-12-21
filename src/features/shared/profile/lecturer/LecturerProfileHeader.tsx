@@ -1,11 +1,27 @@
 import { Avatar, AvatarFallback, AvatarImage, Button } from '@/components/ui'
+import { useChat } from '@/hooks'
 import type { LecturerProfile } from '@/models'
-import {  MailIcon, MessageCircle, PhoneIcon } from 'lucide-react'
+import { useCreateOrGetDirectGroupMutation } from '@/services/groupApi'
+import { MailIcon, MessageCircle, PhoneIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
-export function LecturerProfileHeader({ lecturer }: { lecturer: LecturerProfile }) {
-	const handleMessage = () => {
-		alert(`Nhắn tin cho ${lecturer.fullName}`)
-		// Hoặc navigate tới trang chat
+export function LecturerProfileHeader({ lecturer, isOwner }: { lecturer: LecturerProfile; isOwner: boolean }) {
+	const navigate = useNavigate()
+	const [createOrGetDirectGroup, { isLoading }] = useCreateOrGetDirectGroupMutation()
+	const { setDirectSidebars } = useChat()
+
+	const handleMessage = async () => {
+		if (isLoading) return
+		try {
+			const newGroup = await createOrGetDirectGroup({
+				targetUserId: lecturer.userId
+			}).unwrap()
+			setDirectSidebars((prev) => [...prev, newGroup])
+			navigate(`/chat?groupId=${newGroup._id}`)
+		} catch (error) {
+			console.error('Tạo chat thất bại:', error)
+			alert('Không thể tạo cuộc trò chuyện. Thử lại sau.')
+		}
 	}
 	return (
 		<div className='flex flex-col gap-8 rounded-xl bg-gradient-to-br from-white to-gray-50 p-6 shadow-lg sm:p-8 lg:flex-row lg:gap-12'>
@@ -51,17 +67,19 @@ export function LecturerProfileHeader({ lecturer }: { lecturer: LecturerProfile 
 							</div>
 						</div>
 						{/* Action Button */}
-						<div className='flex items-center justify-center lg:justify-start'>
-							<Button
-								onClick={handleMessage}
-								size='lg'
-								variant='default'
-								className='w-full transform hover:shadow-xl md:w-auto'
-							>
-								<MessageCircle className='h-6 w-6' />
-								Liên hệ ngay
-							</Button>
-						</div>
+						{!isOwner && (
+							<div className='flex items-center justify-center lg:justify-start'>
+								<Button
+									onClick={handleMessage}
+									size='lg'
+									variant='default'
+									className='w-full transform hover:shadow-xl md:w-auto'
+								>
+									<MessageCircle className='h-6 w-6' />
+									Liên hệ ngay
+								</Button>
+							</div>
+						)}
 					</div>
 				</div>
 				{/* Right Section: Stats */}

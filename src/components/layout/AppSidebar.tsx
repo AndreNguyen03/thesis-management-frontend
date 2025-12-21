@@ -9,11 +9,9 @@ import {
 	FileText,
 	LayoutDashboard,
 	Library,
-	PlusCircle,
+	MessageCircle,
 	Search,
 	Settings,
-	Shield,
-	TrendingUp,
 	UserCheck,
 	Users
 } from 'lucide-react'
@@ -21,10 +19,7 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import type { Role } from '@/models'
-import { useCountdown } from '@/hooks/count-down'
-import { useAppSelector } from '@/store'
-import { PhaseInfo } from '@/utils/utils'
-import { Badge } from '../ui'
+import { useChat } from '@/hooks'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
@@ -37,8 +32,12 @@ type MenuItem = {
 	children?: MenuItem[]
 }
 
-const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
+const menuItems: Record<Role | 'common' | 'footer' | 'chung', MenuItem[]> = {
 	common: [{ title: 'Dashboard', url: '/', icon: LayoutDashboard }],
+	chung: [
+		{ title: 'Liên hệ', url: '/chat', icon: MessageCircle },
+		{ title: 'Thư viện số', url: '/library', icon: Library }
+	],
 	student: [
 		{
 			title: 'Danh sách đề tài',
@@ -50,35 +49,31 @@ const menuItems: Record<Role | 'common' | 'footer', MenuItem[]> = {
 			]
 		},
 		{ title: 'Đăng kí đề tài', url: '/registration', icon: Search },
-		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users },
-		{ title: 'Thư viện số', url: '/library', icon: Library },
-		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp }
+		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users }
+		// { title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp }
 	],
 	lecturer: [
 		//{ title: 'Đăng đề tài', url: '/create-topic', icon: PlusCircle },
 		{ title: 'Quản lý đề tài', url: '/manage-topics', icon: FileText },
 		{ title: 'Xét duyệt đăng ký', url: '/approve-registrations', icon: UserCheck },
 		{ title: 'Đợt đăng ký', url: '/registration', icon: Search },
-		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users },
-		{ title: 'Thư viện số', url: '/library', icon: Library },
-		{ title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp },
-		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
+		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users }
+		// { title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp },
+		// { title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	],
 	admin: [
 		{ title: 'Quản lý giảng viên', url: '/manage-lecturers', icon: Users },
 		{ title: 'Quản lý sinh viên', url: '/manage-students', icon: Users },
 		{ title: 'Quản lý AI thông minh', url: '/manage-ai', icon: BotMessageSquare },
-		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 },
-		{ title: 'Thư viện số', url: '/library', icon: Library },
-		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
+		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 }
+		// { title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	],
 	faculty_board: [
 		{ title: 'Quản lý giảng viên khoa', url: '/manage-faculty-lecturers', icon: Users },
 		{ title: 'Quản lý sinh viên khoa', url: '/manage-faculty-students', icon: Users },
 		{ title: 'Quản lý đợt đề tài', url: '/manage-period', icon: Users },
-		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 },
-		{ title: 'Thư viện số', url: '/library', icon: Library },
-		{ title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
+		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 }
+		// { title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	],
 	footer: [{ title: 'Cài đặt', url: '/settings', icon: Settings }]
 }
@@ -88,6 +83,9 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const location = useLocation()
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
+
+	const { hasUnreadDirect } = useChat()
+	console.log('has unread direct at sidebar :::', hasUnreadDirect)
 	function isActive(path: string) {
 		if (path === '/' && currentPath === '/') return true
 		if (path !== '/' && currentPath === path) return true
@@ -124,7 +122,7 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 										: 'hover:bg-gray-100'
 								}`}
 							>
-								<div className='flex items-center gap-2'>
+								<div className='relative flex items-center gap-2'>
 									<item.icon className='h-4 w-4' />
 									{isOpen && <span>{item.title}</span>}
 								</div>
@@ -172,7 +170,15 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 							}`
 						}
 					>
-						<item.icon className='h-4 w-4' />
+						<div className='relative'>
+							<item.icon className='h-4 w-4' />
+
+							{/* 🔴 UNREAD DIRECT INDICATOR */}
+							{item.url === '/chat' && hasUnreadDirect && (
+								<span className='absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white' />
+							)}
+						</div>
+
 						{isOpen && <span>{item.title}</span>}
 					</NavLink>
 				)
@@ -203,6 +209,10 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 					</div>
 				)}
 				{renderMenuItems(menuItems[userRole])}
+			</div>
+			<div className='mb-4'>
+				{isOpen && <div className='mb-1 px-2 text-xs font-semibold text-gray-500'>Chung</div>}
+				{renderMenuItems(menuItems.chung)}
 			</div>
 
 			{/* Footer Menu */}

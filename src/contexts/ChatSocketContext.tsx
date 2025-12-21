@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // context/ChatContext.tsx
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { socketService } from '@/services/socket.service'
-import type { MessageDto } from '@/models/groups.model'
+import type { DirectSidebarGroup, GroupSidebar, MessageDto } from '@/models/groups.model'
 import { groupApi } from '@/services/groupApi'
+import { store } from '@/store'
 
 const CHAT_NS = '/chat'
 
@@ -43,6 +44,26 @@ interface SeenPayload {
 	seenAt: string
 }
 
+interface GroupLastMessagePayload {
+	groupId: string
+	lastMessage: {
+		content: string
+		senderId: string
+		createdAt: string
+	}
+}
+
+// interface GroupUnreadUpdatePayload {
+// 	groupId: string
+// 	userId: string
+// }
+
+// interface GroupSeenUpdatePayload {
+// 	groupId: string
+// 	userId: string
+// 	seenAt: string
+// }
+
 interface ChatContextValue {
 	messagesByGroup: Record<string, ChatMessage[]>
 	onlineUsersByGroup: Record<string, string[]>
@@ -63,6 +84,12 @@ interface ChatContextValue {
 	searchGroupMessages: (groupId: string, keyword: string, limit?: number) => Promise<ChatMessage[]>
 
 	markAllMessagesAsSeenLocal: (groupId: string) => void
+	hasUnreadDirect: boolean
+	setHasUnreadDirect: React.Dispatch<React.SetStateAction<boolean>>
+	groupSidebars: GroupSidebar[]
+	setGroupSidebars: React.Dispatch<React.SetStateAction<GroupSidebar[]>>
+	directSidebars: DirectSidebarGroup[]
+	setDirectSidebars: React.Dispatch<React.SetStateAction<DirectSidebarGroup[]>>
 }
 
 /* ================= CONTEXT ================= */
@@ -78,6 +105,9 @@ const ChatProvider: React.FC<{
 	const [messagesByGroup, setMessagesByGroup] = useState<Record<string, ChatMessage[]>>({})
 	const [onlineUsersByGroup, setOnlineUsersByGroup] = useState<Record<string, string[]>>({})
 	const [typingUsersByGroup, setTypingUsersByGroup] = useState<Record<string, string[]>>({})
+	const [groupSidebars, setGroupSidebars] = useState<GroupSidebar[]>([])
+	const [directSidebars, setDirectSidebars] = useState<DirectSidebarGroup[]>([])
+	const [hasUnreadDirect, setHasUnreadDirect] = useState(false)
 
 	/* ====== RTK Query lazy hook ====== */
 	const [triggerFetchGroupMessages] = groupApi.useLazyGetGroupMessagesQuery()
@@ -122,6 +152,9 @@ const ChatProvider: React.FC<{
 					// Push mới nếu chưa tồn tại
 					return { ...prev, [groupId]: [...list, message] }
 				})
+				if (message.senderId !== userId) {
+					setHasUnreadDirect(true)
+				}
 			}
 		)
 
@@ -210,49 +243,100 @@ const ChatProvider: React.FC<{
 			})
 		})
 
+		/* ========== SIDEBAR EVENTS ========== */
+
+		const unsubGroupLastMessage = socketService.on(
+			CHAT_NS,
+			'group:last_message',
+			(payload: GroupLastMessagePayload) => {
+				setGroupSidebars((prev) =>
+					prev.map((g) => {
+						if (g._id !== payload.groupId) return g
+
+						const sender = g.participants.find((p) => p.id === payload.lastMessage.senderId)
+
+						return {
+							...g,
+							lastMessage: {
+								...payload.lastMessage,
+								fullName: sender?.fullName
+							},
+							updatedAt: payload.lastMessage.createdAt
+						}
+					})
+				)
+			}
+		)
+
+		const unsubDirectLastMessage = socketService.on(
+			CHAT_NS,
+			'direct:last_message',
+			(payload: GroupLastMessagePayload) => {
+				setDirectSidebars((prev) =>
+					prev.map((g) => {
+						if (g._id !== payload.groupId) return g
+
+						return {
+							...g,
+							lastMessage: {
+								...payload.lastMessage
+							},
+							updatedAt: payload.lastMessage.createdAt
+						}
+					})
+				)
+			}
+		)
+
 		return () => {
 			unsubNewMessage()
 			unsubUserStatus()
 			unsubTyping()
 			unsubSeen()
+
+			unsubGroupLastMessage()
+			unsubDirectLastMessage()
 		}
-	}, [])
+	}, [userId])
 
 	/* ========== ACTIONS (EMIT) ========== */
 
-	const sendGroupMessage: ChatContextValue['sendGroupMessage'] = (data) => {
-		if (!data.groupId) {
-			console.error('❌ sendGroupMessage without groupId', data)
-			return
-		}
-		const clientTempId = crypto.randomUUID()
+	const sendGroupMessage: ChatContextValue['sendGroupMessage'] = useCallback(
+		(data) => {
+			if (!data.groupId) {
+				console.error('❌ sendGroupMessage without groupId', data)
+				return
+			}
+			const clientTempId = crypto.randomUUID()
 
-		const optimisticMessage: ChatMessage = {
-			_id: clientTempId,
-			clientTempId,
-			groupId: data.groupId,
-			senderId: userId,
-			content: data.content,
-			type: data.type ?? 'text',
-			attachments: data.attachments ?? [],
-			replyTo: data.replyTo,
-			createdAt: new Date().toISOString(),
-			status: 'sending',
-			lastSeenAtByUser: {}
-		}
+			const optimisticMessage: ChatMessage = {
+				_id: clientTempId,
+				clientTempId,
+				groupId: data.groupId,
+				senderId: userId,
+				content: data.content,
+				type: data.type ?? 'text',
+				attachments: data.attachments ?? [],
+				replyTo: data.replyTo,
+				createdAt: new Date().toISOString(),
+				status: 'sending',
+				lastSeenAtByUser: {}
+			}
 
-		// 1️⃣ Optimistic push
-		setMessagesByGroup((prev) => ({
-			...prev,
-			[data.groupId]: [...(prev[data.groupId] ?? []), optimisticMessage]
-		}))
+			// 1️⃣ Optimistic push
+			setMessagesByGroup((prev) => ({
+				...prev,
+				[data.groupId]: [...(prev[data.groupId] ?? []), optimisticMessage]
+			}))
 
-		// 2️⃣ Emit kèm clientTempId
-		socketService.emit(CHAT_NS, 'send_group_message', {
-			...data,
-			clientTempId
-		})
-	}
+			// 2️⃣ Emit kèm clientTempId
+			socketService.emit(CHAT_NS, 'send_group_message', {
+				...data,
+				clientTempId
+			})
+		},
+		[userId]
+	)
 
 	const sendTyping = (groupId: string, isTyping: boolean) => {
 		socketService.emit(CHAT_NS, 'typing', { groupId, isTyping })
@@ -265,93 +349,117 @@ const ChatProvider: React.FC<{
 
 	// ================= ACTIONS =================
 	/* ========== On-demand fetch group messages ====== */
-	const fetchGroupMessages = async (groupId: string, limit?: number, before?: string) => {
-		try {
-			const result = await triggerFetchGroupMessages({ groupId, limit, before }).unwrap()
+	const fetchGroupMessages = useCallback(
+		async (groupId: string, limit?: number, before?: string) => {
+			try {
+				const result = await triggerFetchGroupMessages({ groupId, limit, before }).unwrap()
 
-			const newMessages: ChatMessage[] = result.map((m: MessageDto) => ({
-				_id: m._id,
-				groupId: m.groupId,
-				senderId: m.senderId._id,
-				content: m.content,
-				type: m.type,
-				attachments: m.attachments ?? [],
-				replyTo: m.replyTo ?? undefined,
-				createdAt: m.createdAt,
-				status: m.status ?? 'sent',
-				lastSeenAtByUser: { [userId]: new Date().toISOString() } // lấy info từ server nếu có
-			}))
+				const newMessages: ChatMessage[] = result.map((m: MessageDto) => ({
+					_id: m._id,
+					groupId: m.groupId,
+					senderId: m.senderId._id,
+					content: m.content,
+					type: m.type,
+					attachments: m.attachments ?? [],
+					replyTo: m.replyTo ?? undefined,
+					createdAt: m.createdAt,
+					status: m.status ?? 'sent',
+					lastSeenAtByUser: { [userId]: new Date().toISOString() }
+				}))
 
-			setMessagesByGroup((prev) => {
-				const existing = prev[groupId] ?? []
+				setMessagesByGroup((prev) => {
+					const existing = prev[groupId] ?? []
 
-				// Merge: nếu message đã có, giữ lastSeenAtByUser cũ, nếu mới thì thêm
-				const merged = [
-					...newMessages
-						.filter((m) => !existing.some((e) => e._id === m._id))
-						.map((m) => ({
-							...m,
-							lastSeenAtByUser: {
-								[userId]: new Date().toISOString(), // đánh dấu đã seen cho user hiện tại
-								...m.lastSeenAtByUser
-							}
-						})),
-					...existing
-				]
+					// Merge: nếu message đã có, giữ lastSeenAtByUser cũ, nếu mới thì thêm
+					const merged = [
+						...newMessages
+							.filter((m) => !existing.some((e) => e._id === m._id))
+							.map((m) => ({
+								...m,
+								lastSeenAtByUser: {
+									[userId]: new Date().toISOString(), // đánh dấu đã seen cho user hiện tại
+									...m.lastSeenAtByUser
+								}
+							})),
+						...existing
+					]
 
-				return {
-					...prev,
-					[groupId]: merged
-				}
-			})
+					return {
+						...prev,
+						[groupId]: merged
+					}
+				})
 
-			return newMessages
-		} catch (error) {
-			console.error('Failed to fetch messages', error)
-			return []
-		}
-	}
+				return newMessages
+			} catch (error) {
+				console.error('Failed to fetch messages', error)
+				return []
+			}
+		},
+		[triggerFetchGroupMessages, userId]
+	)
 
 	/* ========== On-demand search messages ====== */
-	const searchGroupMessages: ChatContextValue['searchGroupMessages'] = async (groupId, keyword, limit) => {
-		try {
-			const result = await triggerSearchGroupMessages({ groupId, keyword, limit }).unwrap()
-			const messages: ChatMessage[] = result.map((m: MessageDto) => ({
-				_id: m._id,
-				groupId: m.groupId,
-				senderId: m.senderId._id,
-				content: m.content,
-				type: m.type,
-				attachments: m.attachments ?? [],
-				replyTo: m.replyTo ?? undefined,
-				createdAt: m.createdAt,
-				status: m.status ?? 'sent',
-				lastSeenAtByUser: { [userId]: new Date().toISOString() }
-			}))
-			return messages
-		} catch (error) {
-			console.error('Failed to search messages', error)
-			return []
-		}
-	}
-
-	const markAllMessagesAsSeenLocal = (groupId: string) => {
-		setMessagesByGroup((prev) => {
-			const list = prev[groupId] ?? []
-			const now = new Date().toISOString()
-			return {
-				...prev,
-				[groupId]: list.map((m) => ({
-					...m,
-					status: 'seen',
-					lastSeenAtByUser: {
-						...m.lastSeenAtByUser,
-						[userId]: now
-					}
+	const searchGroupMessages: ChatContextValue['searchGroupMessages'] = useCallback(
+		async (groupId, keyword, limit) => {
+			try {
+				const result = await triggerSearchGroupMessages({ groupId, keyword, limit }).unwrap()
+				const messages: ChatMessage[] = result.map((m: MessageDto) => ({
+					_id: m._id,
+					groupId: m.groupId,
+					senderId: m.senderId._id,
+					content: m.content,
+					type: m.type,
+					attachments: m.attachments ?? [],
+					replyTo: m.replyTo ?? undefined,
+					createdAt: m.createdAt,
+					status: m.status ?? 'sent',
+					lastSeenAtByUser: { [userId]: new Date().toISOString() }
 				}))
+				return messages
+			} catch (error) {
+				console.error('Failed to search messages', error)
+				return []
 			}
-		})
-	}
+		},
+		[triggerSearchGroupMessages, userId]
+	)
+
+	const markAllMessagesAsSeenLocal = useCallback(
+		(groupId: string) => {
+			setMessagesByGroup((prev) => {
+				const list = prev[groupId] ?? []
+				const now = new Date().toISOString()
+				return {
+					...prev,
+					[groupId]: list.map((m) => ({
+						...m,
+						status: 'seen',
+						lastSeenAtByUser: {
+							...m.lastSeenAtByUser,
+							[userId]: now
+						}
+					}))
+				}
+			})
+		},
+		[userId]
+	)
+
+	useEffect(() => {
+		const checkInitialUnread = async () => {
+			try {
+				const result = await store.dispatch(groupApi.endpoints.getPaginateDirectGroups.initiate()).unwrap()
+				console.log('fetch direct group data ::: ', result?.data)
+				if (result?.data?.some((g: any) => g.unreadCount > 0)) {
+					setHasUnreadDirect(true)
+				}
+			} catch (e) {
+				console.warn('Skip initial unread check')
+			}
+		}
+		checkInitialUnread()
+	}, [])
 
 	const value = useMemo(
 		() => ({
@@ -363,9 +471,26 @@ const ChatProvider: React.FC<{
 			markGroupSeen,
 			fetchGroupMessages,
 			searchGroupMessages,
-			markAllMessagesAsSeenLocal
+			markAllMessagesAsSeenLocal,
+			hasUnreadDirect,
+			setHasUnreadDirect,
+			groupSidebars,
+			setGroupSidebars,
+			directSidebars,
+			setDirectSidebars
 		}),
-		[messagesByGroup, onlineUsersByGroup, typingUsersByGroup]
+		[
+			messagesByGroup,
+			onlineUsersByGroup,
+			typingUsersByGroup,
+			hasUnreadDirect,
+			groupSidebars,
+			directSidebars,
+			fetchGroupMessages,
+			markAllMessagesAsSeenLocal,
+			searchGroupMessages,
+			sendGroupMessage
+		]
 	)
 
 	return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>

@@ -2,7 +2,7 @@ import { Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui'
 
 interface LoadingStateProps {
-	message?: string
+	message?: string,
 }
 
 export function LoadingState({ message = 'Đang tải dữ liệu...' }: LoadingStateProps) {
