@@ -38,7 +38,7 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'name',
+		search_by: ['name'],
 		query: '',
 		sort_by: 'name',
 		sort_order: 'asc'

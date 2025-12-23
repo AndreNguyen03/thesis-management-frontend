@@ -8,11 +8,10 @@ import { LoadingOverlay } from '@/components/ui'
 // sinh viên sẽ truy cập vào đây trong khi kỳ mở pha đăng ký
 export const RegistrationPeriodsPage = () => {
 	const user = useAppSelector((state) => state.auth.user)
-
 	// 👉 LẤY DATA TỪ RTK QUERY (CACHE)
 	const { data: periods = [], isLoading, isFetching } = useGetCurrentPeriodsQuery()
 
-    console.log('periods', periods);
+	console.log('periods', periods)
 
 	// ⛔ chưa có data thì không xử lý gì hết
 	if (isLoading) {

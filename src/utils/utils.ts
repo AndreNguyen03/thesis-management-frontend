@@ -164,3 +164,12 @@ export const getAvatarInitials = (fullName?: string) => {
 export function formatPeriodInfoMiniPeriod(period: MiniPeriod) {
 	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.faculty.name}`
 }
+
+export const toSlug = (name: string) =>
+	name
+		.trim()
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.replace(/[^a-z0-9\s-]/g, '')
+		.replace(/\s+/g, '-')

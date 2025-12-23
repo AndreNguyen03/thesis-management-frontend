@@ -98,7 +98,7 @@ export default function LecturerProfileEdit({ lecturer }: LecturerProfileEditPro
 	if (isUpdating || isUploading) return <LoadingOverlay />
 
 	return (
-		<form onSubmit={handleSubmit} className='space-y-6'>
+		<form onSubmit={handleSubmit} className='space-y-6 w-full mx-10 my-5'>
 			{/* Expand All */}
 			<div className='flex flex-row-reverse items-center gap-2'>
 				<label htmlFor='expandAll' className='text-sm font-medium'>
