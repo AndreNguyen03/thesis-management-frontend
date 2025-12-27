@@ -12,13 +12,13 @@ const STORAGE_KEY = 'phase3-actions-sent'
 
 export function Phase3Handler({ data, onCompletePhase }: { data: Phase3Response; onCompletePhase: () => void }) {
 	const [sendRemainNotification] = useSendRemainIssueNotiMutation()
+	console.log('data overdue topics', data.overdueTopics)
 	const noOverdue = data.overdueTopics.length === 0
 	const [loading, setLoading] = useState(false)
 	const [deadlineModalOpen, setDeadlineModalOpen] = useState(false)
 	const [sentActions, setSentActions] = useState<Set<string>>(new Set())
 	const [expanded, setExpanded] = useState(false)
 	const actionId = 'remind-overdue-topics'
-
 	// Load sent actions
 	useEffect(() => {
 		const stored = localStorage.getItem(STORAGE_KEY)

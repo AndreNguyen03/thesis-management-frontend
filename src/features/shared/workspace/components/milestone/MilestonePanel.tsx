@@ -15,11 +15,12 @@ import {
 } from 'lucide-react'
 import { StatusTag } from '../StatusTag'
 import { ProgressBar, StatusBadge } from './ProcessBar'
-import type {
-	MilestoneStatus,
-	PayloadCreateMilestone,
-	PayloadUpdateMilestone,
-	ResponseMilestone
+import {
+	milestoneTypeMap,
+	type MilestoneStatus,
+	type PayloadCreateMilestone,
+	type PayloadUpdateMilestone,
+	type ResponseMilestone
 } from '@/models/milestone.model'
 import { StudentMilestoneDrawer } from './StudentMilestoneDrawer'
 import { LecturerMilestoneDrawer } from './LecturerMilestoneDrawer'
@@ -30,6 +31,9 @@ import { useCreateMilestoneMutation, useUpdateMilestoneMutation } from '@/servic
 import { toast } from 'sonner'
 import { formatDate } from '@/utils/utils'
 import { StatusOptions } from '@/models/todolist.model'
+import { useGetGroupDetailQuery } from '@/services/groupApi'
+import AskToGoToDefense from './modal/AskToGoToDefense'
+import { useSetAwaitingEvaluationMutation } from '@/services/topicApi'
 
 interface MilestonePanelProps {
 	milestones: ResponseMilestone[]
@@ -40,12 +44,18 @@ interface MilestonePanelProps {
 export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: MilestonePanelProps) => {
 	const user = useAppSelector((state) => state.auth)
 	const group = useAppSelector((state) => state.group)
-
+	const [isOpenAskGotoDefense, setIsOpenAskGotoDefense] = useState(false)
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [isShowCreateModal, setIsShowCreateModal] = useState(false)
 	const selectedMilestone = useMemo(() => milestones.find((m) => m._id === selectedId), [milestones, selectedId])
 	//gọi endpoint cập nhật thông tin milestone
 	const [updateMilestone] = useUpdateMilestoneMutation()
+	const { data: groupDetail, isLoading: isLoadingGroupDetail } = useGetGroupDetailQuery(
+		{ groupId: group.activeGroup?._id ?? '' },
+		{ skip: !group.activeGroup?._id }
+	)
+	//gọi endpoint chuyển trạng thía của dề tài sang chuẩn bị đánh giá
+	const [setAwaitingEvaluation, { isLoading: isTransferAwaiting }] = useSetAwaitingEvaluationMutation()
 	const handleUpdateMilestone = async (id: string, updates: PayloadUpdateMilestone) => {
 		try {
 			await updateMilestone({
@@ -86,7 +96,6 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 	}
 	const handleCreateMilestone = async () => {
 		try {
-			console.log('Gọi nút tạo mới milestone')
 			const createdMilestone = await createMilestone({
 				...newMilestone,
 				groupId: group.activeGroup?._id!
@@ -98,6 +107,16 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 		} catch (error) {
 			toast.error('Lỗi tạo milestone', { richColors: true })
 			console.error('Lỗi tạo milestone:', error)
+		}
+	}
+	const handleGoToDefense = async () => {
+		setIsOpenAskGotoDefense(false)
+		try {
+			await setAwaitingEvaluation({ topicId: groupDetail?.topicId! })
+			toast.success('Đề tài đang chờ chấm điểm', { richColors: true })
+		} catch (error) {
+			toast.error('Lỗi chuyển đề tài sang trạng thái chuẩn bị đánh giá', { richColors: true })
+			console.error('Lỗi chuyển đề tài sang trạng thái chuẩn bị đánh giá:', error)
 		}
 	}
 	return (
@@ -112,6 +131,22 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 					>
 						<LayoutDashboard className='h-5 w-5' />
 					</div>
+					{groupDetail?.isAbleGoToDefense && user.user?.role === ROLES.LECTURER && (
+						<div>
+							<span className='rounded-bl rounded-ss bg-green-600 px-2 py-1 font-semibold text-white'>
+								Đủ điều kiện bảo vệ
+							</span>
+							<span
+								className='cursor-pointer rounded-ee bg-yellow-200 px-2 py-1 font-semibold text-gray-500 transition-colors duration-200 hover:bg-yellow-300 hover:text-gray-700'
+								onClick={() => {
+									console.log('Đóng góp ý kiến')
+									setIsOpenAskGotoDefense(true)
+								}}
+							>
+								Xác nhận
+							</span>
+						</div>
+					)}
 				</div>
 
 				{/* Role Switcher */}
@@ -171,10 +206,12 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 
 				{/* Milestones List */}
 				<div className='space-y-4'>
-					<h2 className='mb-4 flex items-center gap-2 text-lg font-bold text-slate-800'>
-						<LayoutDashboard className='h-5 w-5 text-slate-500' />
-						Danh sách Milestones
-					</h2>
+					{milestones.length > 0 && (
+						<h2 className='mb-4 flex items-center gap-2 text-lg font-bold text-slate-800'>
+							<LayoutDashboard className='h-5 w-5 text-slate-500' />
+							Danh sách Milestones
+						</h2>
+					)}
 
 					{milestones.map((milestone) => {
 						const mProgress = milestone.progress
@@ -199,11 +236,10 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 												{milestone.title}
 											</h3>
 											<StatusBadge status={milestone.status as MilestoneStatus} />
-											{milestone.type === 'STRICT' && (
-												<span className='rounded border-2 border-red-500 bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600'>
-													Quan trọng
-												</span>
-											)}
+
+											<span className='rounded border-2 border-blue-500 bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600'>
+												{milestoneTypeMap[milestone.type].label}
+											</span>
 										</div>
 										<div className='mb-3 flex items-center gap-4 text-sm text-slate-500'>
 											<span className='flex items-center gap-1.5'>
@@ -274,6 +310,13 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 					)}
 				</>
 			)}
+
+			<AskToGoToDefense
+				open={isOpenAskGotoDefense}
+				setShowAskToGoModal={setIsOpenAskGotoDefense}
+				onGotoDefense={handleGoToDefense}
+				isLoading={isTransferAwaiting}
+			/>
 		</div>
 	)
 }

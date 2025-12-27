@@ -1,20 +1,11 @@
 import { CustomPagination } from '@/components/PaginationBar'
-import { Button } from '@/components/ui'
-import { Checkbox } from '@/components/ui/checkbox'
-import type { TableAction } from '@/components/ui/DataTable/types'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { type ApiError, type GeneralTopic, type PaginatedGeneralTopics } from '@/models'
+import { TopicStatus, type ApiError, type GeneralTopic, type PaginatedGeneralTopics } from '@/models'
 import { PeriodPhaseName, type PaginatedTopicsInPeriod, type PhaseType } from '@/models/period.model'
-import {
-	useFacuBoardApproveTopicMutation,
-	useFacuBoardApproveTopicsMutation,
-	useFacuBoardRejectTopicMutation,
-	useFacuBoardRejectTopicsMutation
-} from '@/services/topicApi'
-import { Check, CheckCircle, Eye, Loader2, XCircle } from 'lucide-react'
+
+import { Eye, Loader2, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
 
 // Badge màu cho trạng thái
 const statusMap: Record<string, { label: string; color: string }> = {
@@ -46,7 +37,7 @@ interface DataTableProps {
 	error?: ApiError | null
 	onPageChange: (page: number) => void
 }
-const Phase234DataTable = ({
+export const Phase3DataTable = ({
 	paginatedTopicsInPeriod,
 	refetch,
 	phaseId,
@@ -104,7 +95,9 @@ const Phase234DataTable = ({
 				return (
 					<>
 						<td className='px-3 py-2'>
-							<span className='cursor-pointer font-medium text-yellow-500 hover:underline'>coming</span>
+							<span className='cursor-pointer font-medium text-yellow-500 hover:underline'>
+								{hic.progress} %
+							</span>
 						</td>
 						<td className='px-3 py-2'>
 							<span className='cursor-pointer font-medium text-yellow-500 hover:underline'>
@@ -173,6 +166,9 @@ const Phase234DataTable = ({
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
+									{hic.lastStatusInPhaseHistory.status === TopicStatus.AWAITING_EVALUATION && (
+										<button className='bg-gray-100 hover:bg-gray-200'>Phân công bảo vệ</button>
+									)}
 								</td>
 							</tr>
 						)
@@ -215,5 +211,3 @@ const Phase234DataTable = ({
 		</div>
 	)
 }
-
-export default Phase234DataTable

@@ -88,7 +88,7 @@ export interface GeneralTopic extends AbstractTopic {
 	periodInfo: MiniPeriod
 	year: number
 	original_id?: string
-	// file
+	progress?: number
 }
 
 //Định nghĩa đề tài trong thư viện số

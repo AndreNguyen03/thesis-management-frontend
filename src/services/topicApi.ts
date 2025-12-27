@@ -195,7 +195,7 @@ export const topicApi = baseApi.injectEndpoints({
 			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),
 
-		setAwaitingEvaluation: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+		setAwaitingEvaluation: builder.mutation<{ message: string }, { topicId: string; phaseId?: string }>({
 			query: ({ topicId }) => ({
 				url: `/topics/${topicId}/set-awaiting-evaluation`,
 				method: 'PATCH'
@@ -398,5 +398,5 @@ export const {
 	useDownloadTopicFilesZipMutation,
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicsMutation,
-	useLecturerGetTopicsInPhaseQuery
+	useLecturerGetTopicsInPhaseQuery,
 } = topicApi

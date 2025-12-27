@@ -113,7 +113,7 @@ export const GroupWorkspacePage = () => {
 									</p>
 								</div>
 							</div>
-						) }
+						)}
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			</div>

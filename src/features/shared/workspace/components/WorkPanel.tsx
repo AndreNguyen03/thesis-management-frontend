@@ -6,7 +6,7 @@ import { DocumentsPanel } from './DocumentsPanel'
 import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/store'
 import { useGetMilestonesOfGroupQuery } from '@/services/milestoneApi'
-import type { MilestoneStatus, ResponseMilestone } from '@/models/milestone.model'
+import type { ResponseMilestone } from '@/models/milestone.model'
 
 type TabType = 'milestone' | 'progress' | 'documents'
 
@@ -22,7 +22,9 @@ export const WorkPanel = () => {
 	const { data: milestonesData } = useGetMilestonesOfGroupQuery(
 		{ groupId: group.activeGroup?._id! },
 		{ skip: !group.activeGroup?._id }
-	) // Thay 'example-group-id' bằng ID nhóm thực tế
+	)
+	
+	// Thay 'example-group-id' bằng ID nhóm thực tế
 	const [milestones, setMilestones] = useState<ResponseMilestone[]>([]) // Empty array ban đầu, thay bằng real data sau
 	//console.log('milestonesData', milestonesData)
 	useEffect(() => {

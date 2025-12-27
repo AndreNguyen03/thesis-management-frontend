@@ -105,7 +105,11 @@ export const baseApi = createApi({
 		'PhaseTopics',
 		'MyRegisteredTopics',
 		'Milestones',
-		'DirectGroups'
+		'DirectGroups',
+		'MilestonePeriods',
+		'ChatbotConfig',
+		'ChatbotResources',
+		'KnowledgeSources'
 	],
 	endpoints: () => ({})
 })
