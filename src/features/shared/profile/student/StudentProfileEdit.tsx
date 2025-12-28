@@ -8,12 +8,14 @@ import { useNavigate } from 'react-router-dom'
 import { LoadingOverlay } from '@/components/ui'
 import { useUpdateStudentProfileMutation } from '@/services/studentApi'
 import { useUploadAvatarMutation } from '@/services/uploadAvatarApi'
+import SkillContainer from './SkillContainer '
 
 export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Hồ sơ', path: '/profile' }, { label: 'Chỉnh sửa' }])
 	console.log('student :::', student)
 	const [form, setForm] = useState(student)
 	const [expandAll, setExpandAll] = useState(false)
+	const [skills, setSkills] = useState<string[]>(student.skills || [])
 	const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
 		basic: true,
 		bio: false,
@@ -55,7 +57,11 @@ export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 	// ===== Submit form =====
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		const { userId, role, major, studentCode, facultyName, class: _class, ...patchData } = form
+		const { userId, role, major, studentCode, facultyName, class: _class, ...rest } = form
+		const patchData = {
+			...rest,
+			skills 
+		}
 		console.log('Submitting patch data:', patchData)
 		try {
 			await updateStudent({ id: form.userId, data: patchData }).unwrap()
@@ -94,7 +100,7 @@ export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 	if (isLoading || isUploading) return <LoadingOverlay />
 
 	return (
-		<form onSubmit={handleSubmit} className='space-y-6'>
+		<form onSubmit={handleSubmit} className='mx-10 my-5 w-full space-y-6'>
 			{/* Expand All Toggle */}
 			<div className='flex flex-row-reverse items-center gap-2'>
 				<label htmlFor='expandAll' className='text-sm font-medium'>
@@ -196,30 +202,7 @@ export const StudentProfileEdit = ({ student }: { student: StudentUser }) => {
 				isOpen={expandAll || openSections.skills}
 				onToggle={() => toggleSection('skills')}
 			>
-				{form.skills &&
-					form.skills.length > 0 &&
-					form.skills.map((skill, idx) => (
-						<div key={idx} className='mb-2 flex items-center gap-4'>
-							<div className='flex-1'>
-								<ProfileField
-									label={`Kỹ năng ${idx + 1}`}
-									value={skill}
-									onChange={(e) => updateItem('skills', idx, e.target.value)}
-									variant='medium'
-								/>
-							</div>
-							<button
-								type='button'
-								onClick={() => removeItem('skills', idx)}
-								className='flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200'
-							>
-								X
-							</button>
-						</div>
-					))}
-				<button type='button' onClick={() => addItem('skills', '')} className='mt-2 text-blue-500'>
-					+ Thêm
-				</button>
+				<SkillContainer selectedSkills={skills} onSelectionChange={setSkills} />
 			</ProfileSection>
 
 			{/* Interests */}

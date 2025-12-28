@@ -10,42 +10,37 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useDebounce } from '@/hooks/useDebounce'
-import type { GetFieldNameReponseDto } from '@/models'
+import type { GetRequirementNameReponseDto } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
-import { useCreateFieldMutation, useGetFieldsQuery } from '@/services/fieldApi'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useCreateRequirementMutation, useGetRequirementsQuery } from '@/services/requirementApi'
+import { toSlug } from '@/utils/utils'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { toSlug } from '@/utils/utils'
 
-interface FieldsContainerProps {
+interface SkillContainerProps {
 	// Danh sách các field ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
-	selectedFields: GetFieldNameReponseDto[]
+	selectedSkills: string[]
 	isEditing?: boolean
 	// Hàm callback để update ngược lại parent
-	onSelectionChange?: (newFields: GetFieldNameReponseDto[]) => void
+	onSelectionChange?: (skills: string[]) => void
 }
 
-const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }: FieldsContainerProps) => {
+const SkillContainer = ({ selectedSkills, isEditing = true, onSelectionChange }: SkillContainerProps) => {
 	const [open, setOpen] = useState(false)
-
-	const handleOpenModal = (boolean: boolean) => {
-		setOpen(boolean)
-		debounceFieldOnChange('')
-	}
-
-	const [openCreateDialog, setOpenCreateDialog] = useState(false)
-	const [newFieldName, setNewFieldName] = useState('')
-	const [newFieldDescription, setNewFieldDescription] = useState('')
 	const [searchKeyword, setSearchKeyword] = useState('')
+	const [openCreateDialog, setOpenCreateDialog] = useState(false)
+	const [newSkillName, setNewSkillName] = useState('')
+	const [newSkillDescription, setNewSkillDescription] = useState('')
+
 	//sử dụng để cộng dồn các lựa chọn khi bấm loadmore
-	const [selectableOptions, setSelectableOptions] = useState<GetFieldNameReponseDto[]>([])
+	const [selectableOptions, setSelectableOptions] = useState<GetRequirementNameReponseDto[]>([])
 	// State cho query tìm kiếm server-side
-	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
+	const [queriesRequirement, setQueriesRequirement] = useState<PaginationQueryParamsDto>({
 		page: 1,
-		limit: 8,
+		limit: 6,
 		search_by: ['name'],
 		query: '',
 		sort_by: 'name',
@@ -53,37 +48,65 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 	})
 
 	// Debounce search
-	const setQueriesFieldSearch = (query: string) => {
+	const setQueriesRequirementSearch = (query: string) => {
 		setSearchKeyword(query)
-		setQueriesField((prev) => ({ ...prev, query, page: 1 })) // Reset về trang 1 khi search
+		setQueriesRequirement((prev) => ({
+			...prev,
+			query,
+			page: 1
+		}))
 	}
-	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
 
+	const debounceRequirementOnChange = useDebounce({
+		onChange: setQueriesRequirementSearch,
+		duration: 300
+	})
 	// Fetch data
 	const {
-		data: fieldPagingData,
+		data: requirementPagingData,
 		isLoading,
 		isFetching
-	} = useGetFieldsQuery(queriesField, { skip: !isEditing || !open })
+	} = useGetRequirementsQuery(queriesRequirement, { skip: !isEditing || !open })
 
 	// create new skill
-	const [createField, { isLoading: isCreating }] = useCreateFieldMutation()
+	const [createSkill, { isLoading: isCreating }] = useCreateRequirementMutation()
+
+	// Logic chọn/bỏ chọn
+	const handleSelect = (field: GetRequirementNameReponseDto) => {
+		const isSelected = selectedSkills.includes(field.name)
+		let newSelected: string[]
+
+		if (isSelected) {
+			// Nếu đã chọn -> Bỏ chọn
+			newSelected = selectedSkills.filter((s) => s !== field.name)
+		} else {
+			// Nếu chưa chọn -> Thêm vào
+			// Giới hạn chọn tối đa 15 lĩnh vực
+			if (selectedSkills.length >= 15) {
+				return
+			}
+			newSelected = [...selectedSkills, field.name]
+		}
+
+		// Gọi callback để parent update state
+		onSelectionChange?.(newSelected)
+	}
 
 	const handleSubmitCreateSkill = async () => {
-		if (!newFieldName.trim() || !newFieldDescription.trim()) return
+		if (!newSkillName.trim() || !newSkillDescription.trim()) return
 
 		try {
-			const newField = await createField({
-				name: newFieldName.trim(),
-				slug: toSlug(newFieldName),
-				description: newFieldDescription.trim()
+			const newSkill = await createSkill({
+				name: newSkillName.trim(),
+				slug: toSlug(newSkillName),
+				description: newSkillDescription.trim()
 			}).unwrap()
 
-			onSelectionChange?.([...selectedFields, newField])
+			onSelectionChange?.([...selectedSkills, newSkill.name])
 
 			// reset
-			setNewFieldName('')
-			setNewFieldDescription('')
+			setNewSkillName('')
+			setNewSkillDescription('')
 			setOpenCreateDialog(false)
 			setOpen(false)
 		} catch (err) {
@@ -91,64 +114,47 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 		}
 	}
 
-	// Logic chọn/bỏ chọn
-	const handleSelect = (field: GetFieldNameReponseDto) => {
-		const isSelected = selectedFields.some((f) => f._id === field._id)
-		let newSelected: GetFieldNameReponseDto[]
-
-		if (isSelected) {
-			// Nếu đã chọn -> Bỏ chọn
-			newSelected = selectedFields.filter((f) => f._id !== field._id)
-		} else {
-			// Nếu chưa chọn -> Thêm vào
-			// Giới hạn chọn tối đa 3 lĩnh vực
-			if (selectedFields.length >= 3) {
-				return
-			}
-			newSelected = [...selectedFields, field]
-		}
-
-		// Gọi callback để parent update state
-		onSelectionChange?.(newSelected)
+	const handleOpenModal = (boolean: boolean) => {
+		setOpen(boolean)
+		debounceRequirementOnChange('')
 	}
 
-	const handleRemove = (id: string) => {
-		const newSelected = selectedFields.filter((f) => f._id !== id)
-		onSelectionChange?.(newSelected)
+	const handleRemove = (name: string) => {
+		onSelectionChange?.(selectedSkills.filter((s) => s !== name))
 	}
 
 	const handleLoadMore = () => {
-		if (fieldPagingData && fieldPagingData.meta.currentPage < fieldPagingData.meta.totalPages) {
-			setQueriesField((prev) => ({ ...prev, page: (prev.page || 1) + 1 }))
+		if (requirementPagingData && requirementPagingData.meta.currentPage < requirementPagingData.meta.totalPages) {
+			setQueriesRequirement((prev) => ({ ...prev, page: (prev.page || 1) + 1 }))
 		}
 	}
 	useEffect(() => {
-		if (fieldPagingData?.data) {
-			if (queriesField.page === 1) {
+		if (requirementPagingData?.data) {
+			if (queriesRequirement.page === 1) {
 				// Trường hợp 1: Nếu là trang 1 (hoặc user mới search lại) -> Gán mới hoàn toàn
-				setSelectableOptions(fieldPagingData.data)
+				setSelectableOptions(requirementPagingData.data)
 			} else {
 				// Trường hợp 2: Nếu là trang 2 trở đi (Load more) -> Cộng dồn vào mảng cũ
 				setSelectableOptions((prev) => {
 					// Mẹo: Lọc trùng lặp (nếu API trả về trùng) dựa trên _id
-					const newItems = fieldPagingData.data.filter(
+					const newItems = requirementPagingData.data.filter(
 						(newItem) => !prev.some((prevItem) => prevItem._id === newItem._id)
 					)
 					return [...prev, ...newItems]
 				})
 			}
 		}
-	}, [fieldPagingData, queriesField.page])
+	}, [requirementPagingData, queriesRequirement.page])
 	// CHẾ ĐỘ XEM (VIEW MODE)
 	if (!isEditing) {
 		return (
 			<div className='rounded-md'>
-				<h4 className='mb-2 text-lg font-semibold text-gray-800'>Lĩnh vực</h4>
-				{selectedFields.length > 0 ? (
+				<h4 className='mb-2 text-lg font-semibold text-gray-800'> Yêu cầu kỹ năng</h4>
+				{selectedSkills.length > 0 ? (
 					<div className='flex flex-wrap gap-2'>
-						{selectedFields.map((field) => (
-							<Badge key={field._id} variant='blue' className='text-md px-3 py-1'>
-								{field.name}
+						{selectedSkills.map((skill) => (
+							<Badge key={skill} variant='blue'>
+								{skill}
 							</Badge>
 						))}
 					</div>
@@ -161,27 +167,20 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 
 	// CHẾ ĐỘ CHỈNH SỬA (EDIT MODE)
 	return (
-		<div>
+		<>
 			<div className='flex items-center gap-4'>
 				<h4 className='mb-2 text-lg font-semibold text-gray-800'>
-					Lĩnh vực <span className='text-red-500'>*</span>
+					Yêu cầu kỹ năng <span className='text-red-500'>*</span>
 				</h4>
-				<h4 className='mb-2 text-sm font-semibold text-gray-500'>Chọn tối đa 3 lĩnh vực chính</h4>
-				<h4 className='mb-2 text-lg font-semibold text-blue-600'>{`(${selectedFields.length})`}</h4>
+				<h4 className='mb-2 text-sm font-semibold text-gray-500'>Chọn tối đa 15 kỹ năng </h4>
+				<h4 className='mb-2 text-lg font-semibold text-blue-600'>{`(${selectedSkills.length})`}</h4>
 			</div>
 			{/* 1. Hiển thị các tags đã chọn (có nút xóa) */}
 			<div className='mb-2 flex flex-wrap gap-2'>
-				{selectedFields.map((field) => (
-					<Badge
-						key={field._id}
-						variant='secondary'
-						className='flex items-center gap-1 px-3 py-1 pr-1 text-sm'
-					>
-						{field.name}
-						<button
-							onClick={() => handleRemove(field._id)}
-							className='ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300'
-						>
+				{selectedSkills.map((skill) => (
+					<Badge key={skill} variant='secondary' className='flex items-center gap-1'>
+						{skill}
+						<button onClick={() => handleRemove(skill)}>
 							<X className='h-3 w-3' />
 						</button>
 					</Badge>
@@ -197,13 +196,13 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 						aria-expanded={open}
 						className='w-full justify-between text-left font-normal'
 					>
-						<span>Thêm lĩnh vực...</span>
+						<span>Thêm kỹ năng...</span>
 						<ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className='w-[400px] p-0'>
 					<Command shouldFilter={false}>
-						<CommandInput placeholder='Tìm kiếm lĩnh vực...' onValueChange={debounceFieldOnChange} />
+						<CommandInput placeholder='Tìm kiếm kỹ năng...' onValueChange={debounceRequirementOnChange} />
 						<CommandList
 							className='h-fit max-h-60 overflow-y-auto'
 							style={{ overscrollBehavior: 'contain' }}
@@ -214,33 +213,33 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 								</div>
 							) : (
 								<>
-									{fieldPagingData?.data?.length === 0 && searchKeyword && (
+									{requirementPagingData?.data?.length === 0 && searchKeyword && (
 										<>
-											<CommandEmpty>Không tìm thấy lĩnh vực.</CommandEmpty>
+											<CommandEmpty>Không tìm thấy kỹ năng.</CommandEmpty>
 											<CommandSeparator />
 											<CommandGroup>
 												<CommandItem
 													onSelect={() => {
-														setNewFieldName(searchKeyword)
+														setNewSkillName(searchKeyword)
 														setOpenCreateDialog(true)
 													}}
 													className='cursor-pointer font-medium text-green-600'
 												>
 													<Plus className='mr-2 h-4 w-4' />
-													Tạo lĩnh vực mới
+													Tạo kỹ năng mới
 												</CommandItem>
 											</CommandGroup>
 										</>
 									)}
 
-									<CommandGroup heading='Danh sách lĩnh vực'>
-										{selectableOptions.map((field) => {
-											const isSelected = selectedFields.some((f) => f._id === field._id)
+									<CommandGroup heading='Danh sách các kỹ năng'>
+										{selectableOptions.map((req) => {
+											const isSelected = selectedSkills.includes(req.name)
 											return (
 												<CommandItem
-													key={field._id}
-													value={field._id} // Lưu ý: value phải unique
-													onSelect={() => handleSelect(field)}
+													key={req._id}
+													value={req._id} // Lưu ý: value phải unique
+													onSelect={() => handleSelect(req)}
 													className='cursor-pointer'
 												>
 													<Check
@@ -249,14 +248,15 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 															isSelected ? 'opacity-100' : 'opacity-0'
 														)}
 													/>
-													{field.name}
+													{req.name}
 												</CommandItem>
 											)
 										})}
 									</CommandGroup>
 
-									{fieldPagingData &&
-										fieldPagingData.meta.currentPage < fieldPagingData.meta.totalPages && (
+									{requirementPagingData &&
+										requirementPagingData.meta.currentPage <
+											requirementPagingData.meta.totalPages && (
 											<>
 												<CommandSeparator />
 												<CommandGroup>
@@ -283,15 +283,15 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 			<Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Tạo lĩnh vực mới</DialogTitle>
+						<DialogTitle>Tạo kỹ năng mới</DialogTitle>
 					</DialogHeader>
 
 					<div className='space-y-4'>
 						<div>
-							<label className='text-sm font-medium'>Tên Lĩnh vực *</label>
+							<label className='text-sm font-medium'>Tên kỹ năng *</label>
 							<Input
-								value={newFieldName}
-								onChange={(e) => setNewFieldName(e.target.value)}
+								value={newSkillName}
+								onChange={(e) => setNewSkillName(e.target.value)}
 								placeholder='VD: React, Machine Learning...'
 							/>
 						</div>
@@ -299,9 +299,9 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 						<div>
 							<label className='text-sm font-medium'>Mô tả *</label>
 							<Textarea
-								value={newFieldDescription}
-								onChange={(e) => setNewFieldDescription(e.target.value)}
-								placeholder='Mô tả ngắn về lĩnh vực'
+								value={newSkillDescription}
+								onChange={(e) => setNewSkillDescription(e.target.value)}
+								placeholder='Mô tả ngắn về kỹ năng'
 							/>
 						</div>
 
@@ -311,14 +311,14 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 							</Button>
 							<Button onClick={handleSubmitCreateSkill} disabled={isCreating}>
 								{isCreating && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-								Tạo lĩnh vực
+								Tạo kỹ năng
 							</Button>
 						</div>
 					</div>
 				</DialogContent>
 			</Dialog>
-		</div>
+		</>
 	)
 }
 
-export default FieldsContainer
+export default SkillContainer

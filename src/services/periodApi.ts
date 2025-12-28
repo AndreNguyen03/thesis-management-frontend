@@ -8,6 +8,7 @@ import {
 	type CreatePhaseResponse,
 	type CreatePhaseSubmitTopicDto,
 	type GetCurrentPeriod,
+	type GetDashboardCurrentPeriod,
 	type PaginationPeriodQueryParams,
 	type Period,
 	type UpdatePeriodDto,
@@ -144,6 +145,8 @@ export const periodApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<GetCurrentPeriod[] | null>) =>
 				response.data || ([] as GetCurrentPeriod[])
+			transformResponse: (response: ApiResponse<GetCurrentPeriod[] | null>) =>
+				response.data || ([] as GetCurrentPeriod[])
 		}),
 
 		//Lấy thông tin thống kê theo pha trong kì
@@ -181,6 +184,13 @@ export const periodApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
 			invalidatesTags: (result, error, periodId) => [{ type: 'PeriodDetail', id: periodId }, 'Periods']
+		}),
+		getDashboardCurrentPeriod: builder.query<GetDashboardCurrentPeriod, void>({
+			query: () => ({
+				url: `/periods/dashboard-current-periods`
+			}),
+			transformResponse: (response: ApiResponse<GetDashboardCurrentPeriod>) => response.data,
+            providesTags: ['Periods']
 		})
 	})
 })
@@ -198,5 +208,6 @@ export const {
 	useLecGetStatsPeriodQuery,
 	useAdjustPeriodMutation,
 	useGetCurrentPeriodsQuery,
-	useCompletePeriodMutation
+	useGetDashboardCurrentPeriodQuery,
+    useCompletePeriodMutation
 } = periodApi

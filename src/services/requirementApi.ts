@@ -1,6 +1,10 @@
 import { baseApi, type ApiResponse } from './baseApi'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
-import type { PaginatedRequirement } from '@/models/requirement.model'
+import type {
+	CreateRequirementDto,
+	GetRequirementNameReponseDto,
+	PaginatedRequirement
+} from '@/models/requirement.model'
 
 export const requirementApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -12,8 +16,18 @@ export const requirementApi = baseApi.injectEndpoints({
 				}
 			},
 			transformResponse: (response: ApiResponse<PaginatedRequirement>) => response.data
+		}),
+		createRequirement: builder.mutation<GetRequirementNameReponseDto, CreateRequirementDto>({
+			query: (body) => {
+				return {
+					url: `/requirements`,
+					method: 'POST',
+					body: body
+				}
+			},
+			transformResponse: (response: ApiResponse<GetRequirementNameReponseDto>) => response.data
 		})
 	}),
 	overrideExisting: false
 })
-export const { useGetRequirementsQuery } = requirementApi
+export const { useGetRequirementsQuery,useCreateRequirementMutation } = requirementApi

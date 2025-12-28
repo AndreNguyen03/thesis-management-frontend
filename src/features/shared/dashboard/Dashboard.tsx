@@ -1,6 +1,6 @@
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { useAppSelector } from '../../../store'
-import { AdminDashboard, TeacherDashboard, StudentDashboard } from './'
+import { AdminDashboard, LecturerDashboard, StudentDashboard } from './'
 import { FacultyDashboard } from './FacultyDashboard'
 
 const Dashboard = () => {
@@ -14,7 +14,7 @@ const Dashboard = () => {
 		case 'admin':
 			return <AdminDashboard />
 		case 'lecturer':
-			return <TeacherDashboard />
+			return <LecturerDashboard />
 		case 'student':
 			return <StudentDashboard />
 		case 'faculty_board':

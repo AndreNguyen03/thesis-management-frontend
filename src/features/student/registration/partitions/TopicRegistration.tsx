@@ -39,6 +39,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAdvanceSearchRegisteringTopicsQuery } from '@/services/topicVectorApi'
 import { useGetRegisteredTopicQuery, useLazyGetTopicByIdQuery } from '@/services/topicApi'
 import RegistrationHistory from '../../TopicList/registered/children/RegistrationHistory'
+import { RecommendationPanel } from '../recommendation/RecommendationPanel'
+import { RecommendationButton } from '../recommendation/RecommendationButton'
 
 export default function TopicRegistration() {
 	// ------------------ PAGINATION STATE ------------------
@@ -75,6 +77,8 @@ export default function TopicRegistration() {
 	// ------------------ OTHER STATES ------------------
 	const [selectedTopic, setSelectedTopic] = useState<ITopicDetail | null>(null)
 	const [isPanelOpen, setIsPanelOpen] = useState(false)
+	const [isRecommendOpen, setIsRecommendOpen] = useState(false)
+	const [hasProfile, setHasProfile] = useState(true)
 	const [activeTab, setActiveTab] = useState('list')
 	const [topicToRegister, setTopicToRegister] = useState<GeneralTopic | null>(null)
 	const [selectedFields, setSelectedFields] = useState<GetFieldNameReponseDto[]>([])
@@ -391,6 +395,16 @@ export default function TopicRegistration() {
 				onClose={() => setIsCancelModalOpen(false)}
 				isLoading={isCancelling}
 			/>
+
+			{/* Recommendation Panel */}
+			<RecommendationPanel
+				isOpen={isRecommendOpen}
+				onClose={() => setIsRecommendOpen(false)}
+				hasProfile={hasProfile}
+			/>
+
+			{/* Floating Button */}
+			<RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} />
 		</div>
 	)
 }

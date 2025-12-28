@@ -1,5 +1,11 @@
 import type { AppUser } from '@/models'
-import type { GetCurrentPeriod, MiniPeriod, Period, PhaseType } from '@/models/period.model'
+import type {
+	GetCurrentPeriod,
+	GetDashboardCurrentPeriodType,
+	MiniPeriod,
+	Period,
+	PhaseType
+} from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -110,6 +116,9 @@ const typeLabels = {
 export const getPeriodTitle = (period: Period | GetCurrentPeriod) =>
 	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type as keyof typeof typeLabels]}`
 
+export const getDashboardPeriodTitle = (period: GetDashboardCurrentPeriodType) =>
+	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type as keyof typeof typeLabels]}`
+
 export const getUserIdFromAppUser = (user: AppUser | null): string => {
 	if (!user) return ''
 
@@ -164,3 +173,12 @@ export const getAvatarInitials = (fullName?: string) => {
 export function formatPeriodInfoMiniPeriod(period: MiniPeriod) {
 	return `Năm học ${period.year} - Học kỳ ${period.semester} - ${period.faculty.name}`
 }
+
+export const toSlug = (name: string) =>
+	name
+		.trim()
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.replace(/[^a-z0-9\s-]/g, '')
+		.replace(/\s+/g, '-')

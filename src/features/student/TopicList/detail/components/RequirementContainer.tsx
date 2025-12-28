@@ -1,4 +1,4 @@
-import { Badge, Button } from '@/components/ui'
+import { Badge, Button, Input } from '@/components/ui'
 import {
 	Command,
 	CommandEmpty,
@@ -10,13 +10,15 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useDebounce } from '@/hooks/useDebounce'
-import type { GetFieldNameReponseDto, GetRequirementNameReponseDto } from '@/models'
+import type { GetRequirementNameReponseDto } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
-import { useGetFieldsQuery } from '@/services/fieldApi'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useGetRequirementsQuery } from '@/services/requirementApi'
+import { useCreateRequirementMutation, useGetRequirementsQuery } from '@/services/requirementApi'
+import { toSlug } from '@/utils/utils'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 
 interface RequirementContainerProps {
 	// Danh sách các field ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
@@ -33,6 +35,11 @@ const RequirementContainer = ({
 }: RequirementContainerProps) => {
 	const [open, setOpen] = useState(false)
 
+	const [searchKeyword, setSearchKeyword] = useState('')
+	const [openCreateDialog, setOpenCreateDialog] = useState(false)
+	const [newRequirementName, setNewRequirementName] = useState('')
+	const [newRequirementDescription, setNewRequirementDescription] = useState('')
+
 	const handleOpenModal = (boolean: boolean) => {
 		setOpen(boolean)
 		debounceRequirementOnChange('')
@@ -43,7 +50,7 @@ const RequirementContainer = ({
 	const [queriesRequirement, setQueriesRequirement] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 6,
-		search_by: 'name',
+		search_by: ['name'],
 		query: '',
 		sort_by: 'name',
 		sort_order: 'asc'
@@ -51,6 +58,7 @@ const RequirementContainer = ({
 
 	// Debounce search
 	const setQueriesRequirementSearch = (query: string) => {
+		setSearchKeyword(query)
 		setQueriesRequirement((prev) => ({ ...prev, query, page: 1 })) // Reset về trang 1 khi search
 	}
 	const debounceRequirementOnChange = useDebounce({ onChange: setQueriesRequirementSearch, duration: 300 })
@@ -61,6 +69,30 @@ const RequirementContainer = ({
 		isLoading,
 		isFetching
 	} = useGetRequirementsQuery(queriesRequirement, { skip: !isEditing || !open })
+
+	const [createRequirement, { isLoading: isCreating }] = useCreateRequirementMutation()
+
+	const handleSubmitCreateSkill = async () => {
+		if (!newRequirementName.trim() || !newRequirementDescription.trim()) return
+
+		try {
+			const newRequirement = await createRequirement({
+				name: newRequirementName.trim(),
+				slug: toSlug(newRequirementName),
+				description: newRequirementDescription.trim()
+			}).unwrap()
+
+			onSelectionChange?.([...selectedRequirements, newRequirement])
+
+			// reset
+			setNewRequirementName('')
+			setNewRequirementDescription('')
+			setOpenCreateDialog(false)
+			setOpen(false)
+		} catch (err) {
+			console.error(err)
+		}
+	}
 
 	// Logic chọn/bỏ chọn
 	const handleSelect = (field: GetRequirementNameReponseDto) => {
@@ -181,8 +213,23 @@ const RequirementContainer = ({
 								</div>
 							) : (
 								<>
-									{requirementPagingData?.data?.length === 0 && (
-										<CommandEmpty>Không tìm thấy yêu cầu.</CommandEmpty>
+									{requirementPagingData?.data?.length === 0 && searchKeyword && (
+										<>
+											<CommandEmpty>Không tìm thấy kỹ năng yêu cầu.</CommandEmpty>
+											<CommandSeparator />
+											<CommandGroup>
+												<CommandItem
+													onSelect={() => {
+														setNewRequirementName(searchKeyword)
+														setOpenCreateDialog(true)
+													}}
+													className='cursor-pointer font-medium text-green-600'
+												>
+													<Plus className='mr-2 h-4 w-4' />
+													Tạo yêu cầu mới
+												</CommandItem>
+											</CommandGroup>
+										</>
 									)}
 
 									<CommandGroup heading='Danh sách các yêu cầu'>
@@ -233,6 +280,43 @@ const RequirementContainer = ({
 					</Command>
 				</PopoverContent>
 			</Popover>
+			<Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Tạo kỹ năng mới</DialogTitle>
+					</DialogHeader>
+
+					<div className='space-y-4'>
+						<div>
+							<label className='text-sm font-medium'>Tên yêu cầu kỹ năng *</label>
+							<Input
+								value={newRequirementName}
+								onChange={(e) => setNewRequirementName(e.target.value)}
+								placeholder='VD: React, Machine Learning...'
+							/>
+						</div>
+
+						<div>
+							<label className='text-sm font-medium'>Mô tả *</label>
+							<Textarea
+								value={newRequirementDescription}
+								onChange={(e) => setNewRequirementDescription(e.target.value)}
+								placeholder='Mô tả ngắn về kỹ năng'
+							/>
+						</div>
+
+						<div className='flex justify-end gap-2'>
+							<Button variant='outline' onClick={() => setOpenCreateDialog(false)}>
+								Hủy
+							</Button>
+							<Button onClick={handleSubmitCreateSkill} disabled={isCreating}>
+								{isCreating && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+								Tạo yêu cầu
+							</Button>
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }

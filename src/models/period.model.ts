@@ -1,7 +1,7 @@
 import type { ElementType } from 'react'
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
-import type { GeneralTopic, PaginatedGeneralTopics, TopicStatus } from './topic.model'
+import type { GeneralTopic, TopicStatus } from './topic.model'
 import type { PaginationQueryParamsDto } from './query-params'
 import { CalendarCheck, Clock, Lightbulb } from 'lucide-react'
 import type { Role } from './users'
@@ -87,7 +87,7 @@ export interface NavItem {
 	badge?: Badge
 	note?: string
 }
-export interface    GetCurrentPeriod {
+export interface GetCurrentPeriod {
 	_id: string
 	year: string
 	semester: number
@@ -99,6 +99,25 @@ export interface    GetCurrentPeriod {
 	currentPhaseDetail: PeriodPhase
 	navItem: NavItem[]
 }
+
+export interface GetDashboardCurrentPeriodType {
+	_id: string
+	year: string
+	semester: number
+	type: PeriodType
+	facultyName: string
+	phases: PeriodPhase[]
+	status: string
+	startTime: Date
+	endTime: Date
+	currentPhase: string
+	currentPhaseDetail: PeriodPhase
+}
+export interface GetDashboardCurrentPeriod {
+	thesisDashboard: GetDashboardCurrentPeriodType
+	researchDashboard: GetDashboardCurrentPeriodType
+}
+
 export interface PaginationPeriodQueryParams extends PaginationQueryParamsDto {
 	type?: PeriodType | 'all'
 	status?: PeriodStatus | 'all'
@@ -219,11 +238,10 @@ export const phaseMap: Record<string, { label: string; color: string }> = {
 	completion: { label: 'Hoàn thành', color: 'text-center bg-green-100 text-green-700' }
 }
 
-
 export interface TopicsInPeriodMeta extends MetaDto {
-    periodInfo: Period
+	periodInfo: Period
 }
 export interface PaginatedTopicsInPeriod {
-    data: GeneralTopic[]
-    meta: TopicsInPeriodMeta
+	data: GeneralTopic[]
+	meta: TopicsInPeriodMeta
 }
