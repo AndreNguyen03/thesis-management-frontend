@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { PhaseInfo } from '@/utils/utils'
 import type { PeriodPhase } from '@/models/period-phase.models'
-import type { PhaseType } from '@/models/period.model'
+import { PeriodPhaseName, type PhaseType } from '@/models/period.model'
 
 interface PhaseStepBarProps {
 	phases: PeriodPhase[]
@@ -93,7 +93,7 @@ export function PhaseStepBar({
 					{phases.map((p, index) => {
 						const isActive = activePhase === p.phase
 						const isCompleted = p.status === 'completed'
-						const isClickable = p.status === 'completed' || p.status === 'active'
+						const isClickable = p.status === 'completed' || p.status === 'active'|| p.status==="timeout"
 						const isLast = index === phases.length - 1
 						return (
 							<div key={p.phase} className='flex flex-col items-center'>

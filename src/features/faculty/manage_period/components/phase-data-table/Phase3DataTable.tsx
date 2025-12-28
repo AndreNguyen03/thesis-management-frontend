@@ -5,7 +5,7 @@ import { PeriodPhaseName, type PaginatedTopicsInPeriod, type PhaseType } from '@
 
 import { Eye, Loader2, XCircle } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 // Badge màu cho trạng thái
 const statusMap: Record<string, { label: string; color: string }> = {
@@ -23,6 +23,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 	paused: { label: 'Tạm ngưng', color: 'text-center bg-gray-300 text-gray-800' },
 	submitted_for_review: { label: 'Đã nộp báo cáo', color: 'text-center bg-yellow-100 text-yellow-700' },
 	awaiting_evaluation: { label: 'Chờ đánh giá', color: 'text-center bg-purple-100 text-purple-700' },
+	assigned_defense: { label: 'Sẵn sàng bảo vệ', color: 'text-center bg-cyan-100 text-cyan-700' },
 	graded: { label: 'Đã chấm điểm', color: 'text-center bg-green-100 text-green-700' },
 	reviewed: { label: 'Đã kiểm tra', color: 'text-center bg-blue-100 text-blue-700' },
 	archived: { label: 'Đã lưu trữ', color: 'text-center bg-gray-100 text-gray-700' },
@@ -37,7 +38,7 @@ interface DataTableProps {
 	error?: ApiError | null
 	onPageChange: (page: number) => void
 }
-export const Phase3DataTable = ({
+export const Phase4DataTable = ({
 	paginatedTopicsInPeriod,
 	refetch,
 	phaseId,
@@ -52,7 +53,7 @@ export const Phase3DataTable = ({
 	const handleGoDetail = (_id: string) => {
 		navigate(`/detail-topic/${_id}`)
 	}
-
+	const { id: periodId } = useParams()
 	const renderHeader = () => {
 		switch (phaseName) {
 			case PeriodPhaseName.OPEN_REGISTRATION:
@@ -167,7 +168,12 @@ export const Phase3DataTable = ({
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
 									{hic.lastStatusInPhaseHistory.status === TopicStatus.AWAITING_EVALUATION && (
-										<button className='bg-gray-100 hover:bg-gray-200'>Phân công bảo vệ</button>
+										<button
+											onClick={() => navigate(`/period/${periodId}/manage-defense-assignment`)}
+											className='bg-gray-100 hover:bg-gray-200'
+										>
+											Phân công bảo vệ
+										</button>
 									)}
 								</td>
 							</tr>

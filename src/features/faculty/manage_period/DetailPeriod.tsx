@@ -7,7 +7,7 @@ import type { PhaseType } from '@/models/period.model'
 import { Button } from '@/components/ui'
 import { useGetPeriodDetailQuery } from '@/services/periodApi'
 import NotFound from '@/features/shared/NotFound'
-import type { PeriodPhase } from '@/models/period-phase.models'
+import { PeriodPhaseStatus, type PeriodPhase } from '@/models/period-phase.models'
 import { PhaseInfo } from '@/utils/utils'
 import { cn } from '@/lib/utils'
 import { PhaseSettingsModal } from './components/modals/PhaseSettingsModal'
@@ -71,7 +71,7 @@ export default function DetailPeriodPage() {
 	const currentPhaseDetail = period.phases.find(
 		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
 	)
-
+	const isFinal =  period.phases.findIndex(p => p.phase === currentChosenPhase) !== -1
 	return (
 		<div className='flex h-[calc(100vh-10rem)] min-h-0 w-full overflow-auto'>
 			{/* Sidebar */}
@@ -89,7 +89,7 @@ export default function DetailPeriodPage() {
 			{/* Main Content */}
 			<main className='min-h-0 flex-1 overflow-y-auto px-4 pt-12'>
 				<div className='h-full'>
-					{currentPhaseDetail ? (
+					{currentPhaseDetail  ? (
 						<>
 							<PhaseContent
 								phaseDetail={currentPhaseDetail}
@@ -112,8 +112,12 @@ export default function DetailPeriodPage() {
 						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-4'>
 							<h2 className='text-2xl font-bold'>Pha {PhaseInfo[currentChosenPhase].label}</h2>
 							<span className='text-gray-500'>
-								Thiết lập pha{' '}
-								<span className='font-semibold'>{PhaseInfo[period.currentPhase].continue}</span>
+								{PhaseInfo[period.currentPhase].continue && 'Thiết lập pha '}
+
+								<span className='font-semibold'>
+									{PhaseInfo[period.currentPhase].continue ??
+										'Đủ điều kiện để có thể kết thúc kỳ học'}
+								</span>
 								{PhaseInfo[period.currentPhase].continueMessage}
 							</span>
 
@@ -133,15 +137,21 @@ export default function DetailPeriodPage() {
 								</div>
 							)}
 
-							<Button
-								variant={period.currentPhase === 'empty' ? 'outline' : 'default'}
-								size='sm'
-								onClick={() => {
-									setPhaseSettingsOpen(true)
-								}}
-							>
-								Thiết lập pha {PhaseInfo[period.currentPhase].continue}
-							</Button>
+							<div className='flex gap-2'>
+								<Button
+									variant={period.currentPhase === 'empty' ? 'outline' : 'default'}
+									size='sm'
+									onClick={() => {
+										setPhaseSettingsOpen(true)
+									}}
+								>
+									Thiết lập pha {PhaseInfo[period.currentPhase].continue}
+								</Button>
+
+								<Button size='sm' onClick={() => setCurrentChosenPhase(period.currentPhase)}>
+									Quay lại pha {PhaseInfo[period.currentPhase].label}
+								</Button>
+							</div>
 						</div>
 					)}
 				</div>

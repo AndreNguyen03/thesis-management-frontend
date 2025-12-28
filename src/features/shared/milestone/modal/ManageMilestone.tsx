@@ -93,8 +93,8 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 			let minestoneInfo
 			let nameZip
 			if (isMilestoneScreen) {
-				minestoneInfo = milestoneData?.find((m) => m._id.refId === id)
-				blob = await downloadZipByBatchId({ batchId: id }).unwrap()
+				minestoneInfo = milestoneData?.find((m) => m._id === id)
+				blob = await downloadZipByBatchId({ parentId: id }).unwrap()
 				nameZip = `${minestoneInfo?.title}(${minestoneInfo?.count}) report.zip`
 			} else {
 				nameZip = `${nameTopic} report.zip`
@@ -138,14 +138,14 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 		sort_by: 'createdAt',
 		sort_order: 'desc'
 	})
-	const [selectedBatchId, setSelectedBatchId] = useState<string>('')
+	const [selectedParentId, setSelectedParentId] = useState<string>('')
 	const {
 		data: topicsInBatch,
 		isLoading: isLoadingTopics,
 		error: topicsError
 	} = useFacultyGetTopicsInBatchQuery(
 		{
-			batchId: selectedBatchId,
+			parentId: selectedParentId,
 			queries: queriesTopics
 		},
 		{
@@ -160,16 +160,18 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 					<>
 						<DialogHeader>
 							<DialogTitle className='flex items-center gap-2 text-lg font-semibold'>
-								<Button onClick={() => {
-									setIsMilestoneScreen(true)
-									setQueriesTopics({...queriesTopics, page: 1})
-								}}>Quay lại</Button>
+								<Button
+									onClick={() => {
+										setIsMilestoneScreen(true)
+										setQueriesTopics({ ...queriesTopics, page: 1 })
+									}}
+								>
+									Quay lại
+								</Button>
 								Trạng thái các đề tài theo cột mốc
 								<div>
 									{(() => {
-										const minestoneInfo = milestoneData?.find(
-											(m) => m._id.refId === selectedBatchId
-										)
+										const minestoneInfo = milestoneData?.find((m) => m._id === selectedParentId)
 										return minestoneInfo ? (
 											<span className='ml-2 text-sm text-gray-500'>
 												{minestoneInfo.title} ({minestoneInfo.count} nhóm)
@@ -440,7 +442,7 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 													className='cursor-pointer border-b last:border-b-0 hover:bg-gray-50'
 													onClick={() => {
 														setIsMilestoneScreen(false)
-														setSelectedBatchId(m._id.refId)
+														setSelectedParentId(m._id)
 													}}
 												>
 													<td className='max-w-[200px] px-3 py-2'>
@@ -489,13 +491,17 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 														</span>
 													</td>
 													<td className='px-3 py-2'>
-														<span
-															className='cursor-pointer text-gray-700 hover:underline'
-															onClick={() => handleDownloadZip(m._id.refId)}
-														>
-															<Download className='inline-block h-4 w-4' />
-															Tải báo cáo
-														</span>
+														{m.isDownload ? (
+															<span
+																className='cursor-pointer text-gray-700 hover:underline'
+																onClick={() => handleDownloadZip(m._id)}
+															>
+																<Download className='inline-block h-4 w-4' />
+																Tải báo cáo
+															</span>
+														) : (
+															<span> Chưa có báo cáo</span>
+														)}
 													</td>
 												</tr>
 											))}

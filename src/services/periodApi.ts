@@ -142,7 +142,8 @@ export const periodApi = baseApi.injectEndpoints({
 				url: `/periods/current-periods`,
 				method: 'GET'
 			}),
-			transformResponse: (response: ApiResponse<GetCurrentPeriod[] | null>) => response.data || ([] as GetCurrentPeriod[]),
+			transformResponse: (response: ApiResponse<GetCurrentPeriod[] | null>) =>
+				response.data || ([] as GetCurrentPeriod[])
 		}),
 
 		//Lấy thông tin thống kê theo pha trong kì
@@ -172,6 +173,14 @@ export const periodApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Period>) => response.data,
 			invalidatesTags: ['Periods', 'PeriodDetail']
+		}),
+		completePeriod: builder.mutation<{ message: string }, string>({
+			query: (periodId) => ({
+				url: `/periods/${periodId}/period-complete`,
+				method: 'PATCH'
+			}),
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
+			invalidatesTags: (result, error, periodId) => [{ type: 'PeriodDetail', id: periodId }, 'Periods']
 		})
 	})
 })
@@ -189,5 +198,5 @@ export const {
 	useLecGetStatsPeriodQuery,
 	useAdjustPeriodMutation,
 	useGetCurrentPeriodsQuery,
-	
+	useCompletePeriodMutation
 } = periodApi

@@ -14,8 +14,8 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { Card, Input } from '@/components/ui'
 import { CustomPagination } from '@/components/PaginationBar'
 import Phase1DataTable from './phase-data-table/Phase1DataTable'
-import { Phase24DataTable } from './phase-data-table/Phase24DataTable'
-import { Phase3DataTable } from './phase-data-table/Phase3DataTable'
+import { Phase23DataTable } from './phase-data-table/Phase24DataTable'
+import { Phase4DataTable } from './phase-data-table/Phase3DataTable'
 // import { TopicsTable } from './TopicsTable'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
@@ -178,7 +178,7 @@ export function PhaseContent({
 							className='sm:w-[350px]'
 						/>
 					</div>
-					{currentPhase === PeriodPhaseName.SUBMIT_TOPIC ? (
+					{activePhase === PeriodPhaseName.SUBMIT_TOPIC ? (
 						<Phase1DataTable
 							paginatedTopicsInPeriod={topicInPhaseData}
 							isLoading={isLoading}
@@ -188,8 +188,8 @@ export function PhaseContent({
 							phaseName={currentPhase.toString()}
 							onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
 						/>
-					) : currentPhase === PeriodPhaseName.EXECUTION ? (
-						<Phase3DataTable
+					) : activePhase === PeriodPhaseName.COMPLETION ? (
+						<Phase4DataTable
 							paginatedTopicsInPeriod={topicInPhaseData}
 							isLoading={isLoading}
 							error={error as ApiError}
@@ -199,7 +199,7 @@ export function PhaseContent({
 							onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
 						/>
 					) : (
-						<Phase24DataTable
+						<Phase23DataTable
 							paginatedTopicsInPeriod={topicInPhaseData}
 							isLoading={isLoading}
 							error={error as ApiError}

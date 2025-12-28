@@ -6,7 +6,9 @@ import type {
 	PayloadFacultyCreateMilestone,
 	RequestTopicInMilestoneBatchQuery,
 	ResponseFacultyMilestone,
-	ResponseMilestone
+	ResponseMilestone,
+	ResponseMilestoneWithTemplate,
+	TopicSnaps
 } from '@/models/milestone.model'
 import { baseApi, type ApiResponse } from './baseApi'
 import type { CreateTaskPayload, Task } from '@/models/todolist.model'
@@ -37,7 +39,7 @@ export const milestoneApi = baseApi.injectEndpoints({
 				body
 			}),
 			transformResponse: (response: ApiResponse<ResponseMilestone>) => response.data,
-			invalidatesTags: (_result, _error, arg) => [{ type: 'MilestonePeriods', id: arg.periodId }]
+			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestone-Faculty', id: arg.periodId }]
 		}),
 		updateMilestone: builder.mutation<any, { milestoneId: string; groupId: string; body: any; files?: File[] }>({
 			query: ({ milestoneId, body, files }) => {
@@ -86,7 +88,7 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<ResponseFacultyMilestone[]>) => response.data,
-			providesTags: (result, error, periodId) => [{ type: 'MilestonePeriods', id: periodId }]
+			providesTags: (result, error, periodId) => [{ type: 'Milestone-Faculty', id: periodId }]
 		}),
 		setMilestoneActive: builder.mutation<
 			ResponseMilestone,
@@ -99,9 +101,9 @@ export const milestoneApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<ResponseMilestone>) => response.data,
 			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
 		}),
-		facultyDownloadZipByBatchId: builder.mutation<Blob, { batchId: string }>({
-			query: ({ batchId }) => ({
-				url: `/milestones/${batchId}/faculty-download-zip`,
+		facultyDownloadZipByBatchId: builder.mutation<Blob, { parentId: string }>({
+			query: ({ parentId }) => ({
+				url: `/milestones/${parentId}/faculty-download-zip`,
 				method: 'GET',
 				responseHandler: (response) => response.blob()
 			})
@@ -115,12 +117,12 @@ export const milestoneApi = baseApi.injectEndpoints({
 		}),
 		facultyGetTopicsInBatch: builder.query<
 			PaginatedTopicInBatchMilestone,
-			{ batchId: string; queries: RequestTopicInMilestoneBatchQuery }
+			{ parentId: string; queries: RequestTopicInMilestoneBatchQuery }
 		>({
-			query: ({ batchId, queries }) => {
+			query: ({ parentId, queries }) => {
 				const queryString = buildQueryString(queries)
 				return {
-					url: `/milestones/topic-in-batch/${batchId}?${queryString}`,
+					url: `/milestones/topics-in-parent-milestone/${parentId}?${queryString}`,
 					method: 'GET'
 				}
 			},
@@ -142,6 +144,36 @@ export const milestoneApi = baseApi.injectEndpoints({
 				response.data,
 			invalidatesTags: (_result, _error, { milestoneId }) => [{ type: 'Milestones', id: milestoneId }]
 		}),
+		getDefenseAssignmentInPeriod: builder.query<ResponseMilestoneWithTemplate[], string>({
+			query: (periodId) => ({
+				url: `/milestones/in-period/manage-defense-assignment/${periodId}`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<ResponseMilestoneWithTemplate[]>) => response.data,
+			providesTags: (result, error, periodId) => [{ type: 'Milestones', id: periodId }]
+		}),
+		manageTopicsInDefenseMilestone: builder.mutation<
+			{ message: string },
+			{
+				milestoneTemplateId: string
+				action: 'add' | 'delete'
+				topicSnapshots: TopicSnaps[]
+			}
+		>({
+			query: (body) => {
+				return {
+					url: `/milestones/defense-milestone/manage-topics`,
+					method: 'PATCH',
+					body: {
+						milestoneTemplateId: body.milestoneTemplateId,
+						action: body.action,
+						topicSnapshots: body.topicSnapshots,
+					}
+				}
+			},
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
+			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestones', id: 'defense' }]
+		})
 	}),
 	overrideExisting: false
 })
@@ -158,4 +190,6 @@ export const {
 	useFacultyDownloadZipByMilestoneIdMutation,
 	useFacultyGetTopicsInBatchQuery,
 	useReviewMilestoneByLecturerMutation,
+	useGetDefenseAssignmentInPeriodQuery,
+	useManageTopicsInDefenseMilestoneMutation
 } = milestoneApi

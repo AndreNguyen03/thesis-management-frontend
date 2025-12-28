@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import type { TopicStatus } from '@/models/period.model';
+import type { TopicStatus } from '@/models';
 
 interface StatusBadgeProps {
 	status: TopicStatus
@@ -26,11 +26,12 @@ const statusConfig: Record<
 	paused: { label: 'Tạm dừng', variant: 'secondary' },
 	submitted_for_review: { label: 'Đã nộp xét duyệt', variant: 'default' },
 	awaiting_evaluation: { label: 'Chờ đánh giá', variant: 'warning' },
+	assigned_defense: { label: 'Chuẩn bị bảo vệ', variant: 'warning' },
 	// Phase 4
 	graded: { label: 'Đã chấm điểm', variant: 'success' },
 	reviewed: { label: 'Đã nhận xét', variant: 'success' },
 	archived: { label: 'Lưu trữ', variant: 'secondary' },
-	rejected_final: { label: 'Không đạt', variant: 'destructive' }
+	rejected_final: { label: 'Không đạt', variant: 'destructive' },
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {

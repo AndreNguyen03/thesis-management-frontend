@@ -17,6 +17,7 @@ import type {
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
+import type { PaginatedTopicInBatchMilestone } from '@/models/milestone.model'
 import type { PaginatedTopicsInPeriod } from '@/models/period.model'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -353,6 +354,10 @@ export const topicApi = baseApi.injectEndpoints({
 			},
 			transformResponse: (response: ApiResponse<PaginatedTopicsInPeriod>) => response.data,
 			providesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
+		}),
+		getTopicsAwaitingEvaluationInPeriod: builder.query<PaginatedTopicInBatchMilestone, { periodId: string }>({
+			query: ({ periodId }) => `/topics/awaiting-evaluation/in-period/${periodId}`,
+			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data
 		})
 	}),
 	overrideExisting: false
@@ -399,4 +404,5 @@ export const {
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicsMutation,
 	useLecturerGetTopicsInPhaseQuery,
+	useGetTopicsAwaitingEvaluationInPeriodQuery
 } = topicApi

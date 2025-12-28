@@ -19,6 +19,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 	full: { label: 'Đã đủ số lượng', color: 'text-center bg-gray-300 text-gray-800' },
 	cancelled: { label: 'Đã hủy', color: 'text-center bg-red-300 text-red-800' },
 	in_progress: { label: 'Đang thực hiện', color: 'text-center bg-blue-300 text-blue-800' },
+	assigned_defense: { label: 'Đã phân công bảo vệ', color: 'text-center bg-green-300 text-green-800' },
 	delayed: { label: 'Bị trì hoãn', color: 'text-center bg-yellow-300 text-yellow-800' },
 	paused: { label: 'Tạm ngưng', color: 'text-center bg-gray-300 text-gray-800' },
 	submitted_for_review: { label: 'Đã nộp báo cáo', color: 'text-center bg-yellow-100 text-yellow-700' },
@@ -37,7 +38,7 @@ interface DataTableProps {
 	error?: ApiError | null
 	onPageChange: (page: number) => void
 }
-export const Phase24DataTable = ({
+export const Phase23DataTable = ({
 	paginatedTopicsInPeriod,
 	refetch,
 	phaseId,
@@ -70,13 +71,6 @@ export const Phase24DataTable = ({
 						</th>
 					</>
 				)
-			case PeriodPhaseName.COMPLETION:
-				return (
-					<>
-						<th className='px-3 py-2 text-left text-[15px] font-semibold'>Điểm số</th>
-						<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>Ngày báo cáo</th>
-					</>
-				)
 		}
 	}
 	const renderBody = (hic: GeneralTopic) => {
@@ -106,17 +100,6 @@ export const Phase24DataTable = ({
 						</td>
 					</>
 				)
-			case PeriodPhaseName.COMPLETION:
-				return (
-					<>
-						<>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Điểm số - coming</th>
-							<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>
-								Ngày báo cáo -coming
-							</th>
-						</>
-					</>
-				)
 		}
 	}
 	return (
@@ -135,6 +118,7 @@ export const Phase24DataTable = ({
 				</thead>
 				<tbody>
 					{paginatedTopicsInPeriod?.data.map((hic) => {
+						console.log('Rendering row for topic:', hic)
 						return (
 							<tr key={hic._id} className='border-b last:border-b-0 hover:bg-gray-50'>
 								<td className='max-w-450 flex min-w-[150px] flex-col px-3 py-2'>
@@ -199,9 +183,6 @@ export const Phase24DataTable = ({
 								<EmptyState title='Không có dữ liệu' />
 							</td>
 						</tr>
-					)}
-					{paginatedTopicsInPeriod?.meta && paginatedTopicsInPeriod?.meta.totalPages > 1 && (
-						<CustomPagination meta={paginatedTopicsInPeriod?.meta} onPageChange={onPageChange} />
 					)}
 				</tbody>
 			</table>

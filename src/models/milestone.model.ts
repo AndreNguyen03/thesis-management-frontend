@@ -1,7 +1,7 @@
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import { PaginationQueryParamsDto } from './query-params'
-import type { ResponseMiniLecturerDto } from './users'
+import type { ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 
 export type MilestoneStatus = 'Todo' | 'In Progress' | 'Pending Review' | 'Completed' | 'Needs Revision' | 'Overdue'
 export const MilestoneStatusOptions = {
@@ -12,10 +12,10 @@ export const MilestoneStatusOptions = {
 	NEEDS_REVISION: 'Needs Revision',
 	OVERDUE: 'Overdue'
 } as const
-export type MilestoneType = 'SUBMISSION' | 'SUBMISSION'
+export type MilestoneType = 'submission' | 'defense'
 export const MilestoneType = {
-	SUBMISSION: 'SUBMISSION',
-	DEFENSE: 'SUBMISSION'
+	SUBMISSION: 'submission',
+	DEFENSE: 'defense'
 } as const
 
 export interface FileInfo {
@@ -67,12 +67,36 @@ export interface ResponseMilestone {
 	progress: number
 	//isCompleted: boolean
 }
+export interface TopicSnaps {
+	_id: string
+	titleVN: string
+	titleEng: string
+	studentName: string[]
+	lecturers: ResponseMiniLecturerDto[]
+}
+export interface ResponseMilestoneWithTemplate {
+	_id: string
+	title: string
+	description: string
+	dueDate: string
+	type: string
+	count: string
+	isActive: string
+	periodId: string
+	defenseCouncil: {
+		memberId: string
 
+		role: string
+
+		title: string
+
+		fullName: string
+	}[]
+	topicSnaps?: TopicSnaps[]
+	location: string
+}
 export interface ResponseFacultyMilestone {
-	_id: {
-		refId: string
-		periodId: string
-	}
+	_id: string
 	title: string
 	type: string
 	description: string
@@ -80,6 +104,7 @@ export interface ResponseFacultyMilestone {
 	count: number
 	status: string
 	uncompleteNum: number
+	isDownload: boolean
 }
 
 export interface PayloadCreateMilestone {
@@ -121,8 +146,8 @@ export interface UploadReportPayload {
 }
 
 export const milestoneTypeMap: Record<string, { label: string; color: string }> = {
-	SUBMISSION: { label: 'Nộp báo cáo', color: 'bg-blue-100 text-blue-700' },
-	DEFENSE: { label: 'Bảo vệ', color: 'bg-purple-100 text-purple-700' }
+	submission: { label: 'Nộp báo cáo', color: 'bg-blue-100 text-blue-700' },
+	defense: { label: 'Bảo vệ', color: 'bg-purple-100 text-purple-700' }
 }
 
 export const milestoneStatusMap: Record<string, { label: string; color: string }> = {
@@ -144,6 +169,7 @@ export interface GetTopicsInBatchMilestoneDto {
 	majorName: string
 	studentNum: number
 	lecturers: ResponseMiniLecturerDto[]
+	students: ResponseMiniStudentDto[]
 	status: string
 }
 export interface PaginatedTopicInBatchMilestone extends GetPaginatedObject {

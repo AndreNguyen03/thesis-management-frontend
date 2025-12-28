@@ -4,11 +4,10 @@ import type { GetMajorMiniDto } from './major.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod, TopicsInPeriodMeta } from './period.model'
-import type { RegistrationDto, RelatedStudentInTopic, StudentRegistrationStatus } from './registration.model'
-import { PaginationQueryParamsDto, type SortOrder } from './query-params'
+import type { RelatedStudentInTopic, StudentRegistrationStatus } from './registration.model'
+import { PaginationQueryParamsDto } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
-import type { RegistrationPhase } from '@/features/student/registration/types'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -223,7 +222,6 @@ export type TopicStatus =
 	| 'approved'
 	| 'rejected'
 	// Pha 2 - Mở đăng ký
-	| 'available'
 	| 'pending_registration'
 	| 'registered'
 	| 'full'
@@ -234,6 +232,7 @@ export type TopicStatus =
 	| 'paused'
 	| 'submitted_for_review'
 	| 'awaiting_evaluation'
+	| 'assigned_defense'
 	// Pha 4 - Hoàn tất
 	| 'graded'
 	| 'reviewed'
