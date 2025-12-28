@@ -4,19 +4,25 @@ import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { PhaseInfo } from '@/utils/utils'
 import type { PeriodPhase } from '@/models/period-phase.models'
-import type { PhaseType } from '@/models/period.model'
+import { PeriodPhaseName, type PhaseType } from '@/models/period.model'
 
 interface PhaseStepBarProps {
 	phases: PeriodPhase[]
 	currentPhase: string
+	activePhase: string
 	onPhaseChange: (phase: PhaseType) => void
 	collapsed?: boolean
 	onCollapsedChange?: (collapsed: boolean) => void
 }
 
-export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, onCollapsedChange }: PhaseStepBarProps) {
-
-
+export function PhaseStepBar({
+	phases,
+	currentPhase,
+	activePhase,
+	onPhaseChange,
+	collapsed,
+	onCollapsedChange
+}: PhaseStepBarProps) {
 	const toggle = () => {
 		const next = !collapsed
 		onCollapsedChange?.(next)
@@ -47,13 +53,13 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, o
 								disabled
 								className={cn(
 									'relative mt-3 flex h-6 w-6 items-center justify-center rounded-full border-2 shadow transition-all',
-									currentPhase !== 'empty'
+									activePhase !== 'empty'
 										? 'border-success bg-success'
 										: 'border-primary bg-primary shadow-primary/40'
 								)}
 								whileHover={{ scale: 1.05 }}
 							>
-								{currentPhase !== 'empty' ? (
+								{activePhase !== 'empty' ? (
 									<Check className='h-4 w-4 text-white' />
 								) : (
 									<Circle className='h-4 w-4 text-white' />
@@ -85,11 +91,10 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, o
 
 					{/* REAL PHASE NODES */}
 					{phases.map((p, index) => {
-						const isActive = currentPhase === p.phase
+						const isActive = activePhase === p.phase
 						const isCompleted = p.status === 'completed'
-						const isClickable = p.status === 'completed' || p.status === 'ongoing'
+						const isClickable = p.status === 'completed' || p.status === 'active'|| p.status==="timeout"
 						const isLast = index === phases.length - 1
-
 						return (
 							<div key={p.phase} className='flex flex-col items-center'>
 								<Tooltip>
@@ -100,7 +105,8 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, o
 											className={cn(
 												'relative flex h-10 w-10 items-center justify-center rounded-full border-2 shadow transition-all',
 												isCompleted && 'border-success bg-success',
-												isActive && 'border-primary bg-primary shadow-primary/40',
+												(isActive || p.status === 'active') &&
+													'border-primary bg-primary shadow-primary/40',
 												!isActive && !isCompleted && 'border-step-inactive bg-card',
 												isClickable && 'hover:scale-105 active:scale-95',
 												!isClickable && 'cursor-not-allowed opacity-50'
@@ -149,8 +155,6 @@ export function PhaseStepBar({ phases, currentPhase, onPhaseChange, collapsed, o
 					})}
 				</div>
 			</div>
-
-
 		</TooltipProvider>
 	)
 }

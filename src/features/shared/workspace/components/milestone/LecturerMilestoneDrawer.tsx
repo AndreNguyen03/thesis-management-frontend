@@ -1,10 +1,24 @@
-import { Clock, FileText, Plus, Save, X } from 'lucide-react'
+import { Clock, FileText, Loader2, Plus, Save, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { SubmissionHistoryList } from './submisstion-history'
-import type { PayloadUpdateMilestone, ResponseMilestone, TaskDto } from '@/models/milestone.model'
+import {
+	MilestoneStatusOptions,
+	type LecturerReviewDecision,
+	type PayloadUpdateMilestone,
+	type ResponseMilestone,
+	type TaskDto
+} from '@/models/milestone.model'
 import { cn, fromDatetimeLocal, toDatetimeLocal } from '@/lib/utils'
 import RichTextEditor from '@/components/common/RichTextEditor'
 import { TaskInMilestones } from './tab/TaskInMiletones'
+import { formatFileSize } from '@/utils/format-file-size'
+import {
+	useFacultyDownloadZipByMilestoneIdMutation,
+	useReviewMilestoneByLecturerMutation
+} from '@/services/milestoneApi'
+import { toast } from 'sonner'
+import DOMPurify from 'dompurify'
+import AskToGoToDefense from './modal/AskToGoToDefense'
 
 export const LecturerMilestoneDrawer = ({
 	milestone,
@@ -16,6 +30,8 @@ export const LecturerMilestoneDrawer = ({
 	onUpdate: (id: string, updates: PayloadUpdateMilestone) => void
 }) => {
 	const [activeTab, setActiveTab] = useState<'settings' | 'grading' | 'tasks'>('settings')
+	//gọi endpoint review milestone
+	const [reviewMilestoneByLecturer, { isLoading: isLoadingReview }] = useReviewMilestoneByLecturerMutation()
 	const [updateInfo, setUpdateInfo] = useState<PayloadUpdateMilestone>({
 		title: milestone.title,
 		dueDate: toDatetimeLocal(milestone.dueDate),
@@ -36,8 +52,67 @@ export const LecturerMilestoneDrawer = ({
 		}
 		onUpdate(milestone._id, payload)
 	}
+	const [newComment, setNewComment] = useState<{
+		lecturerFeedback: string
+		lecturerDesion: LecturerReviewDecision | undefined
+	}>({
+		lecturerFeedback: '',
+		lecturerDesion: undefined
+	})
+	// modal hỏi xem có muốn xác nhận rằng đề tài này có thể đi bảo vệ hay không
+	const [showAskToGoModal, setShowAskToGoModal] = useState(false)
+	const handleReviewMilestone = async () => {
+		if (!newComment.lecturerDesion) return
 
+		try {
+			const { isAbleToGotoDefense } = await reviewMilestoneByLecturer({
+				milestoneId: milestone._id,
+				comment: newComment.lecturerFeedback,
+				decision: newComment.lecturerDesion
+			}).unwrap()
+			if (isAbleToGotoDefense) {
+				setShowAskToGoModal(true)
+			}
+			// Xử lý thành công (nếu cần)
+			toast.success('Đã gửi nhận xét và quyết định thành công.', { richColors: true })
+			onClose()
+		} catch (error) {
+			// Xử lý lỗi (nếu cần)
+			console.error('Error reviewing milestone:', error)
+			toast.error('Có lỗi xảy ra khi gửi nhận xét và quyết định.', { richColors: true })
+		}
+	}
 	const hasSubmission = !!milestone.submission
+	const hasComment = milestone.submission?.lecturerDecision !== undefined
+	const [isCollapsed, setIsCollapsed] = useState(true)
+	//gọi endpoin tải file theo milesttonesid
+	const [downloadZipByMilestoneId, { isLoading: isDownloadingMilestone }] =
+		useFacultyDownloadZipByMilestoneIdMutation()
+	//gọi endpoint cho ra bảo vệ
+	const handleDownloadZip = async (id: string, nameTopic?: string) => {
+		try {
+			let blob
+			let nameZip
+			nameZip = `${nameTopic} report.zip`
+			blob = await downloadZipByMilestoneId({ milestoneId: id }).unwrap()
+
+			if (blob) {
+				const url = window.URL.createObjectURL(blob)
+				const a = document.createElement('a')
+				a.href = url
+				a.download = nameZip
+				document.body.appendChild(a)
+				a.click()
+				a.remove()
+				window.URL.revokeObjectURL(url)
+			} else {
+				toast.error('Không nhận được file từ server', { richColors: true })
+			}
+		} catch (error) {
+			console.error('Error downloading zip:', error)
+			toast.error('Xảy ra lỗi khi tải xuống', { richColors: true })
+		}
+	}
 
 	return (
 		<div className='fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-slate-200 bg-white shadow-2xl'>
@@ -69,8 +144,10 @@ export const LecturerMilestoneDrawer = ({
 					onClick={() => setActiveTab('grading')}
 					className={`relative flex-1 py-3 text-sm font-medium ${activeTab === 'grading' ? 'border-b-2 border-orange-600 text-orange-600' : 'text-slate-500 hover:bg-slate-50'}`}
 				>
-					Chấm điểm & Duyệt
-					<span className='absolute right-4 top-2 h-2 w-2 rounded-full bg-red-500'></span>
+					Nhận xét và duyệt
+					{milestone.status === MilestoneStatusOptions.PENDING_REVIEW && (
+						<span className='absolute right-4 top-2 h-2 w-2 rounded-full bg-red-500'></span>
+					)}
 				</button>
 			</div>
 
@@ -142,14 +219,99 @@ export const LecturerMilestoneDrawer = ({
 												{milestone.submission?.files[0].name}
 											</p>
 											<p className='text-xs text-slate-500'>
-												{milestone.submission?.date} • {milestone.submission?.files[0].size}
+												{new Date(milestone.submission?.date!).toLocaleString('vi-VN')} •{' '}
+												{formatFileSize(milestone.submission?.files[0].size!)}
 											</p>
 										</div>
-										<button className='text-xs font-bold text-blue-600 hover:underline'>
+										<button
+											className='text-xs font-bold text-blue-600 hover:underline'
+											onClick={() => handleDownloadZip(milestone._id, milestone.title)}
+										>
 											Tải xuống
 										</button>
 									</div>
-
+									{hasComment && milestone.submission && (
+										<>
+											<div className='ml-5 flex flex-col rounded bg-blue-100 p-2 text-sm text-slate-700'>
+												<div className='flex gap-2'>
+													<span className='text font-medium'>
+														{milestone.submission.lecturerInfo.title +
+															' ' +
+															milestone.submission.lecturerInfo.fullName}
+													</span>
+													<span className='rounded bg-slate-400 px-2 font-medium text-white'>
+														{milestone.submission.lecturerDecision === 'approved'
+															? 'Chấp nhận'
+															: 'Yêu cầu làm lại'}
+													</span>
+												</div>
+												<span className='text ml-5'>
+													<div
+														className='prose max-w-none rounded-lg bg-blue-50 px-2 py-1'
+														// Sử dụng DOMPurify để đảm bảo an toàn, tránh XSS
+														dangerouslySetInnerHTML={{
+															__html: DOMPurify.sanitize(
+																milestone.submission.lecturerFeedback ||
+																	'<p>Chưa có mô tả</p>'
+															)
+														}}
+													/>
+												</span>
+											</div>
+										</>
+									)}
+									{!hasComment && (
+										<>
+											<button
+												className='mt-2 px-2 py-1 font-semibold text-blue-500 hover:bg-blue-100'
+												onClick={() => setIsCollapsed(false)}
+											>
+												Nhận xét
+											</button>
+											{!isCollapsed && (
+												<div className='mt-4'>
+													<RichTextEditor
+														value={newComment.lecturerFeedback}
+														onChange={(data) =>
+															setNewComment({ ...newComment, lecturerFeedback: data })
+														}
+														placeholder='Nhập nhận xét...'
+													/>
+													<div className='flex items-center gap-2'>
+														<select
+															value={newComment.lecturerDesion}
+															onChange={(e) =>
+																setNewComment({
+																	...newComment,
+																	lecturerDesion: e.target
+																		.value as LecturerReviewDecision
+																})
+															}
+															className='mt-2 w-fit rounded border px-2 py-1'
+														>
+															<option value='' className='bg-gray-200' disabled={true}>
+																Chọn
+															</option>
+															<option value='approved'>Duyệt</option>
+															<option value='rejected'>Không duyệt</option>
+														</select>
+														<span className='font-semibold'>(Quyết định cuối cùng)</span>
+													</div>
+													<button
+														disabled={isLoadingReview || !newComment.lecturerDesion}
+														className='mt-2 rounded-sm bg-blue-500 px-2 py-1 font-semibold text-white'
+														onClick={() => handleReviewMilestone()}
+													>
+														{isLoadingReview ? (
+															<Loader2 className='h-4 w-4 animate-spin' />
+														) : (
+															'Gửi nhận xét'
+														)}
+													</button>
+												</div>
+											)}
+										</>
+									)}
 									{/* Show History for Lecturer too */}
 									<SubmissionHistoryList history={milestone.submissionHistory} />
 								</div>

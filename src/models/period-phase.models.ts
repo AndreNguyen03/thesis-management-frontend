@@ -58,22 +58,67 @@ export interface Phase2Response {
 	}
 	canTriggerNextPhase: boolean
 }
+export interface PausedOrDelayedTopic {
+	topicId: string
+	titleEng: string
+	titleVN: string
+	status: 'paused' | 'delayed'
+	lecturerId: string
+	lecturerEmail: string
+	studentIds: string[]
+	studentEmails: string[]
+	reason?: string
+}
+
+export interface PendingLecturerReviewTopic {
+	topicId: string
+	titleVN: string
+	titleEng: string
+	lecturerId: string
+	lecturerEmail: string
+	studentIds: string[]
+	submittedAt: Date
+	daysPending: number
+}
+export interface OverdueTopic {
+	topicId: string
+	titleEng: string
+	titleVN: string
+	lecturerId: string
+	lecturerEmail: string
+	studentIds: string[]
+	studentEmails: string[]
+}
 
 export interface Phase3Response {
 	periodId: string
 	phase: 'execution'
-	overdueTopics: {
-		topicId: string
-		title: string
-		lecturerId: string
-		lecturerEmail: string
-		studentIds: string[]
-		studentEmails: string[]
-	}[]
+
+	// 1. Đề tài chưa nộp báo cáo cuối kỳ (đã có)
+	overdueTopics: OverdueTopic[]
+
+	// 2. Đề tài đang tạm dừng/bị delay
+	pausedOrDelayedTopics: PausedOrDelayedTopic[]
+
+	// 3. Đề tài chờ giảng viên đánh giá
+	pendingLecturerReview: PendingLecturerReviewTopic[]
+
 	canTriggerNextPhase: boolean
 }
 
-export type ResolvePhaseResponse = Phase1Response | Phase2Response | Phase3Response
+export interface Phase4Response {
+	periodId: string
+	phase: 'completion'
+	// // 1. Đề tài chưa nộp báo cáo cuối kỳ (đã có)
+	// overdueTopics: OverdueTopicInfo[]
+	// // 2. Đề tài đang tạm dừng/bị delay
+	// pausedOrDelayedTopics: PausedOrDelayedTopicInfo[]
+	// // 3. Đề tài chờ giảng viên đánh giá
+	// pendingLecturerReview: PendingLecturerReview[]
+	canTriggerNextPhase: boolean
+}
+
+export type ResolvePhaseResponse = Phase1Response | Phase2Response | Phase3Response | Phase4Response
 
 export const isPhase1 = (res: ResolvePhaseResponse): res is Phase1Response => res.phase === 'submit_topic'
 

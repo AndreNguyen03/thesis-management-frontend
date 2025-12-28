@@ -3,7 +3,7 @@ import { getLabelForStatus, getPhaseStats } from '../utils'
 import { motion } from 'framer-motion'
 import { type PeriodPhase, type ResolvePhaseResponse } from '@/models/period-phase.models'
 import { useState, type SetStateAction, type Dispatch, useEffect, useRef } from 'react'
-import { type PaginationTopicsQueryParams, type TopicStatus } from '@/models'
+import { type ApiError, type PaginationTopicsQueryParams, type TopicStatus } from '@/models'
 import { PeriodPhaseName, type PhaseType } from '@/models/period.model'
 // import { toast } from '@/hooks/use-toast'
 import { useLecGetStatsPeriodQuery, useResolvePhaseMutation } from '@/services/periodApi'
@@ -13,28 +13,35 @@ import { useGetTopicsInPhaseQuery } from '@/services/topicApi'
 import { useDebounce } from '@/hooks/useDebounce'
 import { Card, Input } from '@/components/ui'
 import { CustomPagination } from '@/components/PaginationBar'
-import Phase234DataTable from './phase-data-table/Phase234DataTable'
 import Phase1DataTable from './phase-data-table/Phase1DataTable'
+import { Phase23DataTable } from './phase-data-table/Phase24DataTable'
+import { Phase4DataTable } from './phase-data-table/Phase3DataTable'
 // import { TopicsTable } from './TopicsTable'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
 	currentPhase: PhaseType
+	activePhase: PhaseType
 	periodId: string
 	lecturers?: string[]
 	onPhaseSettingOpen: Dispatch<SetStateAction<boolean>>
+	onManageMilestones: Dispatch<SetStateAction<boolean>>
 	completePhase: () => void
 }
 
 export function PhaseContent({
 	phaseDetail,
 	currentPhase,
+	activePhase,
 	periodId,
 	onPhaseSettingOpen,
-	completePhase
+	completePhase,
+	onManageMilestones
 }: PhaseContentProps) {
 	// // stats theo phase.phase
-	const { data: statsData } = useLecGetStatsPeriodQuery({ periodId, phase: currentPhase })
-
+	const { data: statsData } = useLecGetStatsPeriodQuery(
+		{ periodId, phase: activePhase },
+		{ refetchOnMountOrArgChange: true }
+	)
 	const stats = getPhaseStats(statsData, phaseDetail.phase)
 
 	const [resolvePhase, { isLoading: isResolving }] = useResolvePhaseMutation()
@@ -60,6 +67,10 @@ export function PhaseContent({
 		phase: phaseDetail.phase,
 		status: undefined
 	})
+	useEffect(() => {
+		setQueryParams((prev) => ({ ...prev, query: '', status: undefined, page: 1 }))
+		setSearchTerm('')
+	}, [activePhase])
 	const {
 		data: topicInPhaseData,
 		isLoading,
@@ -72,8 +83,14 @@ export function PhaseContent({
 		},
 		{ skip: !periodId }
 	)
+
+	// Cập nhật queryParams.phase khi phaseDetail.phase thay đổi
 	useEffect(() => {
-		if (!phaseDetail) return
+		setQueryParams((prev) => ({ ...prev, phase: phaseDetail.phase, page: 1 }))
+	}, [phaseDetail.phase])
+
+	useEffect(() => {
+		if (!phaseDetail || phaseDetail.status === 'completed' || phaseDetail.status === 'active') return
 
 		// Nếu pha chưa cấu hình (không endTime) → vẫn resolve ngay
 		if (!phaseDetail.endTime) {
@@ -117,12 +134,6 @@ export function PhaseContent({
 	const handleGoProcess = () => {
 		scrollToTopics()
 	}
-	const renderHeader = () => {
-		switch (currentPhase) {
-			case PeriodPhaseName.OPEN_REGISTRATION: {
-			}
-		}
-	}
 	return (
 		<motion.div
 			key={phaseDetail ? phaseDetail.phase : 'no-phase'}
@@ -137,6 +148,7 @@ export function PhaseContent({
 				onViewConfig={() => {
 					onPhaseSettingOpen(true)
 				}}
+				onManageMilestone={() => onManageMilestones(true)}
 			/>
 
 			<StatsCards stats={stats} onClick={(status) => setQueryParams((prev) => ({ ...prev, status }))} />
@@ -154,7 +166,7 @@ export function PhaseContent({
 			<div className='pb-10' ref={topicsRef}>
 				<h3 className='mb-4 text-lg font-semibold'>
 					{queryParams && queryParams.status !== 'all'
-						? `Danh sách các đề tài ${getLabelForStatus((queryParams.status as TopicStatus) || 'all')}`
+						? `Danh sách các đề tài - ${getLabelForStatus((queryParams.status as TopicStatus) || 'all')}`
 						: 'Danh sách đề tài đã nộp'}
 				</h3>
 				<Card className='space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
@@ -166,17 +178,31 @@ export function PhaseContent({
 							className='sm:w-[350px]'
 						/>
 					</div>
-					{currentPhase === PeriodPhaseName.SUBMIT_TOPIC ? (
+					{activePhase === PeriodPhaseName.SUBMIT_TOPIC ? (
 						<Phase1DataTable
 							paginatedTopicsInPeriod={topicInPhaseData}
+							isLoading={isLoading}
+							error={error as ApiError}
+							refetch={refetch}
+							phaseId={phaseDetail._id}
+							phaseName={currentPhase.toString()}
+							onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
+						/>
+					) : activePhase === PeriodPhaseName.COMPLETION ? (
+						<Phase4DataTable
+							paginatedTopicsInPeriod={topicInPhaseData}
+							isLoading={isLoading}
+							error={error as ApiError}
 							refetch={refetch}
 							phaseId={phaseDetail._id}
 							phaseName={currentPhase.toString()}
 							onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
 						/>
 					) : (
-						<Phase234DataTable
+						<Phase23DataTable
 							paginatedTopicsInPeriod={topicInPhaseData}
+							isLoading={isLoading}
+							error={error as ApiError}
 							refetch={refetch}
 							phaseId={phaseDetail._id}
 							phaseName={currentPhase.toString()}

@@ -7,13 +7,15 @@ import type { PhaseType } from '@/models/period.model'
 import { Button } from '@/components/ui'
 import { useGetPeriodDetailQuery } from '@/services/periodApi'
 import NotFound from '@/features/shared/NotFound'
-import type { PeriodPhase } from '@/models/period-phase.models'
+import { PeriodPhaseStatus, type PeriodPhase } from '@/models/period-phase.models'
 import { PhaseInfo } from '@/utils/utils'
 import { cn } from '@/lib/utils'
 import { PhaseSettingsModal } from './components/modals/PhaseSettingsModal'
+import { MultiPhaseSetupModal } from './components/modals/MultiPhaseSetupModal'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { getNextPhase } from './utils'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
+import ManageMilestone from '@/features/shared/milestone/modal/ManageMilestone'
 
 export default function DetailPeriodPage() {
 	const { id } = useParams()
@@ -31,7 +33,8 @@ export default function DetailPeriodPage() {
 	const [isSidebarHidden, setSidebarHidden] = useState(false)
 	const [currentChosenPhase, setCurrentChosenPhase] = useState<PhaseType>('empty')
 	const [phaseSettingOpen, setPhaseSettingsOpen] = useState<boolean>(false)
-
+	const [multiPhaseSetupOpen, setMultiPhaseSetupOpen] = useState<boolean>(false)
+	const [isManagingMilestonesOpen, setManagingMilestonesOpen] = useState<boolean>(false)
 	const typeLabels = {
 		thesis: 'Khóa luận',
 		scientific_research: 'Nghiên cứu khoa học'
@@ -68,13 +71,14 @@ export default function DetailPeriodPage() {
 	const currentPhaseDetail = period.phases.find(
 		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
 	)
-
+	const isFinal =  period.phases.findIndex(p => p.phase === currentChosenPhase) !== -1
 	return (
 		<div className='flex h-[calc(100vh-10rem)] min-h-0 w-full overflow-auto'>
 			{/* Sidebar */}
 			<aside className={cn('h-fit transition-all duration-300', isSidebarHidden ? 'w-12' : 'w-24')}>
 				<PhaseStepBar
 					phases={period.phases}
+					activePhase={period.currentPhase}
 					currentPhase={currentChosenPhase}
 					onPhaseChange={setCurrentChosenPhase}
 					collapsed={isSidebarHidden}
@@ -85,11 +89,12 @@ export default function DetailPeriodPage() {
 			{/* Main Content */}
 			<main className='min-h-0 flex-1 overflow-y-auto px-4 pt-12'>
 				<div className='h-full'>
-					{currentPhaseDetail ? (
+					{currentPhaseDetail  ? (
 						<>
 							<PhaseContent
 								phaseDetail={currentPhaseDetail}
 								currentPhase={period.currentPhase}
+								activePhase={currentChosenPhase}
 								periodId={period._id}
 								completePhase={() => {
 									const nextPhase = getNextPhase(currentChosenPhase)
@@ -100,25 +105,53 @@ export default function DetailPeriodPage() {
 									setCurrentChosenPhase(nextPhase)
 								}}
 								onPhaseSettingOpen={setPhaseSettingsOpen}
+								onManageMilestones={setManagingMilestonesOpen}
 							/>
 						</>
 					) : (
-						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-2'>
+						<div className='flex min-h-[60vh] flex-col items-center justify-center gap-4'>
 							<h2 className='text-2xl font-bold'>Pha {PhaseInfo[currentChosenPhase].label}</h2>
 							<span className='text-gray-500'>
-								Thiết lập pha{' '}
-								<span className='font-semibold'>{PhaseInfo[period.currentPhase].continue}</span>
+								{PhaseInfo[period.currentPhase].continue && 'Thiết lập pha '}
+
+								<span className='font-semibold'>
+									{PhaseInfo[period.currentPhase].continue ??
+										'Đủ điều kiện để có thể kết thúc kỳ học'}
+								</span>
 								{PhaseInfo[period.currentPhase].continueMessage}
 							</span>
-							<Button
-								variant='default'
-								size='sm'
-								onClick={() => {
-									setPhaseSettingsOpen(true)
-								}}
-							>
-								Thiết lập pha {PhaseInfo[period.currentPhase].continue}
-							</Button>
+
+							{/* Nút thiết lập nhiều pha nếu đang ở pha execution */}
+							{period.currentPhase === 'execution' && (
+								<div className='flex flex-col items-center gap-2'>
+									<Button
+										variant='default'
+										size='lg'
+										onClick={() => {
+											setMultiPhaseSetupOpen(true)
+										}}
+									>
+										⚡ Thiết lập nhiều pha cùng lúc
+									</Button>
+									<span className='text-xs text-muted-foreground'>Hoặc</span>
+								</div>
+							)}
+
+							<div className='flex gap-2'>
+								<Button
+									variant={period.currentPhase === 'empty' ? 'outline' : 'default'}
+									size='sm'
+									onClick={() => {
+										setPhaseSettingsOpen(true)
+									}}
+								>
+									Thiết lập pha {PhaseInfo[period.currentPhase].continue}
+								</Button>
+
+								<Button size='sm' onClick={() => setCurrentChosenPhase(period.currentPhase)}>
+									Quay lại pha {PhaseInfo[period.currentPhase].label}
+								</Button>
+							</div>
 						</div>
 					)}
 				</div>
@@ -126,14 +159,28 @@ export default function DetailPeriodPage() {
 			<PhaseSettingsModal
 				open={phaseSettingOpen}
 				onOpenChange={setPhaseSettingsOpen}
-				phase={currentPhaseDetail
-					
-				}
+				phase={currentPhaseDetail}
 				currentPhase={currentChosenPhase}
 				periodId={period._id}
 				lecturers={lecturersByFaculty?.data ?? []}
 				onSuccess={() => refetch()}
 			/>
+			<MultiPhaseSetupModal
+				open={multiPhaseSetupOpen}
+				onOpenChange={setMultiPhaseSetupOpen}
+				periodId={period._id}
+				lecturers={lecturersByFaculty?.data ?? []}
+				onSuccess={() => refetch()}
+			/>
+			{currentPhaseDetail && (
+				<ManageMilestone
+					open={isManagingMilestonesOpen}
+					onOpenChange={setManagingMilestonesOpen}
+					periodId={period._id}
+					currentPhaseDetail={currentPhaseDetail}
+					onSuccess={() => refetch()}
+				/>
+			)}
 		</div>
 	)
 }

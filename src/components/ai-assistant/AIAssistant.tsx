@@ -9,7 +9,6 @@ import Bubble from './Bubble'
 import LoadingBubble from './LoadingBubble'
 import { useGetChatbotVersionQuery } from '@/services/chatbotApi'
 import { toast } from 'react-toastify'
-import { X } from 'lucide-react'
 
 const suggestedQuestions = [
 	'Cách đăng ký đề tài luận văn?',

@@ -106,6 +106,11 @@ export const baseApi = createApi({
 		'MyRegisteredTopics',
 		'Milestones',
 		'DirectGroups',
+		'MilestonePeriods',
+		'ChatbotConfig',
+		'ChatbotResources',
+		'KnowledgeSources',
+		"Milestone-Faculty"
 		'ListFields'
 	],
 	endpoints: () => ({})
