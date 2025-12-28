@@ -12,7 +12,7 @@ const STORAGE_KEY = 'phase3-actions-sent'
 
 export function Phase3Handler({ data, onCompletePhase }: { data: Phase3Response; onCompletePhase: () => void }) {
 	const [sendRemainNotification] = useSendRemainIssueNotiMutation()
-	const noOverdue = data.overdueTopics.length === 0
+	const noOverdue = (data.overdueTopics?.length ?? 0) === 0
 	const [loading, setLoading] = useState(false)
 	const [deadlineModalOpen, setDeadlineModalOpen] = useState(false)
 	const [sentActions, setSentActions] = useState<Set<string>>(new Set())

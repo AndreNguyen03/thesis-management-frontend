@@ -100,7 +100,7 @@ const Header = ({ user, onOpenAI }: HeaderProps) => {
 	if (isLoading) return <LoadingOverlay />
 
 	return (
-		<header className='fixed top-0 z-50 w-full min-w-[10rem] border-b bg-white/95 backdrop-blur'>
+		<header className='support-backdrop-blur:bg-white/60 fixed top-0 z-50 w-full min-w-[10rem] border-b border-gray-200 bg-white/80 backdrop-blur-md'>
 			<div className='container mx-auto flex h-16 items-center px-4'>
 				{/* Logo */}
 				<div className='flex items-center space-x-3'>

@@ -15,8 +15,7 @@ import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useGetRequirementsQuery } from '@/services/requirementApi'
-import { useCreateFieldMutation } from '@/services/fieldApi'
+import { useCreateRequirementMutation, useGetRequirementsQuery } from '@/services/requirementApi'
 import { toSlug } from '@/utils/utils'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { Textarea } from '@/components/ui/textarea'
@@ -70,7 +69,7 @@ const SkillContainer = ({ selectedSkills, isEditing = true, onSelectionChange }:
 	} = useGetRequirementsQuery(queriesRequirement, { skip: !isEditing || !open })
 
 	// create new skill
-	const [createField, { isLoading: isCreating }] = useCreateFieldMutation()
+	const [createSkill, { isLoading: isCreating }] = useCreateRequirementMutation()
 
 	// Logic chọn/bỏ chọn
 	const handleSelect = (field: GetRequirementNameReponseDto) => {
@@ -97,7 +96,7 @@ const SkillContainer = ({ selectedSkills, isEditing = true, onSelectionChange }:
 		if (!newSkillName.trim() || !newSkillDescription.trim()) return
 
 		try {
-			const newSkill = await createField({
+			const newSkill = await createSkill({
 				name: newSkillName.trim(),
 				slug: toSlug(newSkillName),
 				description: newSkillDescription.trim()

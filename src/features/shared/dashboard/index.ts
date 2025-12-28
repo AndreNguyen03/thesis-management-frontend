@@ -1,4 +1,4 @@
 export * from './Dashboard'
 export * from './AdminDashboard'
-export * from './TeacherDashboard'
+export * from './LecturerDashboard'
 export * from './StudentDashboard'  

@@ -38,16 +38,16 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 	const { isOpen } = useSidebar()
 	const sidebarWidth = isOpen ? 'w-56' : 'w-16'
 	const mainMargin = isOpen ? 'ml-56' : 'ml-16'
-    const [openAI, setOpenAI] = useState(true)
+	const [openAI, setOpenAI] = useState(true)
 	const { hidden } = useBreadcrumb()
 	return (
 		<>
 			{/* Header fixed at top */}
-			<Header user={user} onOpenAI={() => setOpenAI(true)}/>
+			<Header user={user} onOpenAI={() => setOpenAI(true)} />
 			{/* Main layout: sidebar fixed left, content scrollable right */}
 			<div
 				className={cn(
-					'flex w-full bg-gradient-to-br from-gray-50 to-gray-100',
+					'flex w-full bg-[#fafafa] selection:bg-blue-100 selection:text-blue-900',
 					hidden
 						? 'mt-16 h-[calc(100vh-4rem)] overflow-hidden' // WORKSPACE MODE
 						: 'mt-16 min-h-screen pt-10' // NORMAL MODE

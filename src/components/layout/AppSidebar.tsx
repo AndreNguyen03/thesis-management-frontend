@@ -20,6 +20,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import type { Role } from '@/models'
 import { useChat } from '@/hooks'
+import { cn } from '@/lib/utils'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
@@ -77,15 +78,13 @@ const menuItems: Record<Role | 'common' | 'footer' | 'chung', MenuItem[]> = {
 	],
 	footer: [{ title: 'Cài đặt', url: '/settings', icon: Settings }]
 }
-
 const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	const { isOpen, toggleSidebar } = useSidebar()
 	const location = useLocation()
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
-
 	const { hasUnreadDirect } = useChat()
-	console.log('has unread direct at sidebar :::', hasUnreadDirect)
+
 	function isActive(path: string) {
 		if (path === '/' && currentPath === '/') return true
 		if (path !== '/' && currentPath === path) return true
@@ -96,58 +95,55 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 		setOpenMenus((prev) => (prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]))
 	}
 
-	// const handlePeriodInfo = (periodInfo: MenuItem[]) => {
-	// 	if (!currentPeriod) return periodInfo
-
-	// 	const typeLabels = { thesis: 'Khóa luận', scientific_research: 'Nghiên cứu khoa học' } as const
-	// 	const title = `Kì hiện tại: ${currentPeriod.year} • HK ${currentPeriod.semester} • ${typeLabels[currentPeriod.type]}`
-
-	// 	return [{ ...periodInfo[0], title, url: `/period/${currentPeriod?._id ?? ''}`, icon: BookOpen }]
-	// }
-
 	const renderMenuItems = (items: typeof menuItems.common) => (
-		<div className='max-w-48 space-y-0.5'>
+		<div className='space-y-1 px-3'>
 			{items.map((item) => {
 				const isSubMenuOpen = openMenus.includes(item.title)
 				const isParentActive = item.children ? currentPath.startsWith(item.url) : isActive(item.url)
 
+				// Render Parent Item with Children
 				if (item.children) {
 					return (
-						<div key={item.title}>
+						<div key={item.title} className='group'>
 							<button
 								onClick={() => handleMenuClick(item.title)}
-								className={`flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
+								className={cn(
+									'flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
 									isParentActive
-										? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
-										: 'hover:bg-gray-100'
-								}`}
+										? 'bg-gray-100 text-gray-900' // Active style nhẹ nhàng hơn (xám nhạt thay vì xanh đậm)
+										: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+								)}
 							>
-								<div className='relative flex items-center gap-2'>
-									<item.icon className='h-4 w-4' />
+								<div className='flex items-center gap-3'>
+									<item.icon
+										className={cn('h-4 w-4', isParentActive ? 'text-blue-600' : 'text-gray-500')}
+									/>
 									{isOpen && <span>{item.title}</span>}
 								</div>
 								{isOpen && (
 									<ChevronDown
-										className={`h-4 w-4 transform transition-transform ${isSubMenuOpen ? 'rotate-180' : ''}`}
+										className={`h-3.5 w-3.5 text-gray-400 transition-transform duration-200 ${isSubMenuOpen ? 'rotate-180' : ''}`}
 									/>
 								)}
 							</button>
+
+							{/* Submenu */}
 							{isOpen && isSubMenuOpen && (
-								<div className='ml-5 mt-0.5 space-y-0.5 border-l pl-2'>
+								<div className='ml-5 mt-1 space-y-0.5 border-l border-gray-100 pl-2'>
 									{item.children.map((sub) => (
 										<NavLink
 											key={sub.title}
 											to={sub.url}
 											end={sub.url === '/topics'}
 											className={({ isActive }) =>
-												`flex items-center gap-1.5 rounded px-1.5 py-0.5 text-sm transition-colors ${
+												cn(
+													'flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors',
 													isActive
-														? 'bg-blue-50 font-semibold text-blue-700'
-														: 'text-gray-600 hover:bg-gray-50'
-												}`
+														? 'bg-blue-50 font-medium text-blue-600' // Submenu active: Xanh rất nhạt
+														: 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+												)
 											}
 										>
-											<sub.icon className='h-3 w-3' />
 											<span>{sub.title}</span>
 										</NavLink>
 									))}
@@ -157,29 +153,38 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 					)
 				}
 
+				// Render Single Item
 				return (
 					<NavLink
 						key={item.title}
 						to={item.url}
 						end={item.url === '/'}
 						className={({ isActive }) =>
-							`flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors ${
+							cn(
+								'group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
 								isActive
-									? 'border-r-2 border-blue-500 bg-blue-100 font-medium text-blue-800'
-									: 'hover:bg-gray-100'
-							}`
+									? 'bg-gray-100 text-gray-900' // Active style: Nền xám nhạt, chữ đen
+									: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+							)
 						}
 					>
 						<div className='relative'>
-							<item.icon className='h-4 w-4' />
-
-							{/* 🔴 UNREAD DIRECT INDICATOR */}
+							<item.icon
+								className={cn(
+									'h-4 w-4 transition-colors',
+									isActive(item.url) ? 'text-blue-600' : 'text-gray-500'
+								)}
+							/>
 							{item.url === '/chat' && hasUnreadDirect && (
-								<span className='absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white' />
+								<span className='absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white' />
 							)}
 						</div>
-
 						{isOpen && <span>{item.title}</span>}
+
+						{/* Active Indicator Bar bên trái (Optional) */}
+						{isActive(item.url) && (
+							<div className='absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-blue-600' />
+						)}
 					</NavLink>
 				)
 			})}
@@ -187,36 +192,56 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	)
 
 	return (
-		<div className='flex h-full flex-col px-2 py-1'>
-			<Button variant='ghost' size='sm' onClick={toggleSidebar} className='mb-3 w-fit'>
-				<ChevronLeft className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
-			</Button>
-
-			{/* Main Menu */}
-			<div className='mb-4 flex flex-col gap-0.5'>
-				{isOpen && <div className='mb-1 px-2 text-xs font-semibold text-gray-500'>Tổng quan</div>}
-				{renderMenuItems(menuItems.common)}
+		<div className='flex h-full flex-col py-3'>
+			{/* Header Sidebar (Toggle) */}
+			<div className={cn('mb-6 flex items-center px-4', isOpen ? 'justify-end' : 'justify-center')}>
+				<Button
+					variant='ghost'
+					size='sm'
+					onClick={toggleSidebar}
+					className='h-8 w-8 rounded-full p-0 text-gray-500 hover:bg-gray-100'
+				>
+					<ChevronLeft
+						className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`}
+					/>
+				</Button>
 			</div>
 
-			{/* Role Menu */}
-			<div className='mb-4'>
-				{isOpen && (
-					<div className='mb-1 px-2 text-xs font-semibold text-gray-500'>
-						{userRole === 'student' && 'Sinh viên'}
-						{userRole === 'lecturer' && 'Giảng viên'}
-						{userRole === 'admin' && 'Quản trị'}
-						{userRole === 'faculty_board' && 'Ban chủ nhiệm khoa'}
-					</div>
-				)}
-				{renderMenuItems(menuItems[userRole])}
-			</div>
-			<div className='mb-4'>
-				{isOpen && <div className='mb-1 px-2 text-xs font-semibold text-gray-500'>Chung</div>}
-				{renderMenuItems(menuItems.chung)}
+			{/* Menu Sections */}
+			<div className='custom-scrollbar flex-1 space-y-6 overflow-y-auto'>
+				<div>
+					{isOpen && (
+						<div className='mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-400'>
+							Tổng quan
+						</div>
+					)}
+					{renderMenuItems(menuItems.common)}
+				</div>
+
+				<div>
+					{isOpen && (
+						<div className='mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-400'>
+							{userRole === 'student' && 'Sinh viên'}
+							{userRole === 'lecturer' && 'Giảng viên'}
+							{userRole === 'admin' && 'Quản trị'}
+							{userRole === 'faculty_board' && 'Ban chủ nhiệm'}
+						</div>
+					)}
+					{renderMenuItems(menuItems[userRole])}
+				</div>
+
+				<div>
+					{isOpen && (
+						<div className='mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-400'>
+							Tiện ích
+						</div>
+					)}
+					{renderMenuItems(menuItems.chung)}
+				</div>
 			</div>
 
-			{/* Footer Menu */}
-			<div className='mt-auto'>{renderMenuItems(menuItems.footer)}</div>
+			{/* Footer */}
+			<div className='mt-auto border-t border-gray-100 pt-3'>{renderMenuItems(menuItems.footer)}</div>
 		</div>
 	)
 }

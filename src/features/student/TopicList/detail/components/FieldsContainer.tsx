@@ -1,4 +1,4 @@
-import { Badge, Button } from '@/components/ui'
+import { Badge, Button, Input } from '@/components/ui'
 import {
 	Command,
 	CommandEmpty,
@@ -12,10 +12,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useDebounce } from '@/hooks/useDebounce'
 import type { GetFieldNameReponseDto } from '@/models'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
-import { useGetFieldsQuery } from '@/services/fieldApi'
+import { useCreateFieldMutation, useGetFieldsQuery } from '@/services/fieldApi'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { toSlug } from '@/utils/utils'
 
 interface FieldsContainerProps {
 	// Danh sách các field ĐANG ĐƯỢC CHỌN (từ parent truyền xuống)
@@ -32,6 +35,11 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 		setOpen(boolean)
 		debounceFieldOnChange('')
 	}
+
+	const [openCreateDialog, setOpenCreateDialog] = useState(false)
+	const [newFieldName, setNewFieldName] = useState('')
+	const [newFieldDescription, setNewFieldDescription] = useState('')
+	const [searchKeyword, setSearchKeyword] = useState('')
 	//sử dụng để cộng dồn các lựa chọn khi bấm loadmore
 	const [selectableOptions, setSelectableOptions] = useState<GetFieldNameReponseDto[]>([])
 	// State cho query tìm kiếm server-side
@@ -46,6 +54,7 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 
 	// Debounce search
 	const setQueriesFieldSearch = (query: string) => {
+		setSearchKeyword(query)
 		setQueriesField((prev) => ({ ...prev, query, page: 1 })) // Reset về trang 1 khi search
 	}
 	const debounceFieldOnChange = useDebounce({ onChange: setQueriesFieldSearch, duration: 300 })
@@ -56,6 +65,31 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 		isLoading,
 		isFetching
 	} = useGetFieldsQuery(queriesField, { skip: !isEditing || !open })
+
+	// create new skill
+	const [createField, { isLoading: isCreating }] = useCreateFieldMutation()
+
+	const handleSubmitCreateSkill = async () => {
+		if (!newFieldName.trim() || !newFieldDescription.trim()) return
+
+		try {
+			const newField = await createField({
+				name: newFieldName.trim(),
+				slug: toSlug(newFieldName),
+				description: newFieldDescription.trim()
+			}).unwrap()
+
+			onSelectionChange?.([...selectedFields, newField])
+
+			// reset
+			setNewFieldName('')
+			setNewFieldDescription('')
+			setOpenCreateDialog(false)
+			setOpen(false)
+		} catch (err) {
+			console.error(err)
+		}
+	}
 
 	// Logic chọn/bỏ chọn
 	const handleSelect = (field: GetFieldNameReponseDto) => {
@@ -180,8 +214,23 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 								</div>
 							) : (
 								<>
-									{fieldPagingData?.data?.length === 0 && (
-										<CommandEmpty>Không tìm thấy lĩnh vực.</CommandEmpty>
+									{fieldPagingData?.data?.length === 0 && searchKeyword && (
+										<>
+											<CommandEmpty>Không tìm thấy lĩnh vực.</CommandEmpty>
+											<CommandSeparator />
+											<CommandGroup>
+												<CommandItem
+													onSelect={() => {
+														setNewFieldName(searchKeyword)
+														setOpenCreateDialog(true)
+													}}
+													className='cursor-pointer font-medium text-green-600'
+												>
+													<Plus className='mr-2 h-4 w-4' />
+													Tạo lĩnh vực mới
+												</CommandItem>
+											</CommandGroup>
+										</>
 									)}
 
 									<CommandGroup heading='Danh sách lĩnh vực'>
@@ -231,6 +280,43 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange }
 					</Command>
 				</PopoverContent>
 			</Popover>
+			<Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Tạo lĩnh vực mới</DialogTitle>
+					</DialogHeader>
+
+					<div className='space-y-4'>
+						<div>
+							<label className='text-sm font-medium'>Tên Lĩnh vực *</label>
+							<Input
+								value={newFieldName}
+								onChange={(e) => setNewFieldName(e.target.value)}
+								placeholder='VD: React, Machine Learning...'
+							/>
+						</div>
+
+						<div>
+							<label className='text-sm font-medium'>Mô tả *</label>
+							<Textarea
+								value={newFieldDescription}
+								onChange={(e) => setNewFieldDescription(e.target.value)}
+								placeholder='Mô tả ngắn về lĩnh vực'
+							/>
+						</div>
+
+						<div className='flex justify-end gap-2'>
+							<Button variant='outline' onClick={() => setOpenCreateDialog(false)}>
+								Hủy
+							</Button>
+							<Button onClick={handleSubmitCreateSkill} disabled={isCreating}>
+								{isCreating && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+								Tạo lĩnh vực
+							</Button>
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }

@@ -125,6 +125,7 @@ const ChatProvider: React.FC<{
 
 	/* ========== SUBSCRIBE EVENTS ========== */
 	useEffect(() => {
+        console.log('group sidebar :::', groupSidebars)
 		const unsubNewMessage = socketService.on(
 			CHAT_NS,
 			'new_group_message',
@@ -450,7 +451,6 @@ const ChatProvider: React.FC<{
 		const checkInitialUnread = async () => {
 			try {
 				const result = await store.dispatch(groupApi.endpoints.getPaginateDirectGroups.initiate()).unwrap()
-				console.log('fetch direct group data ::: ', result?.data)
 				if (result?.data?.some((g: any) => g.unreadCount > 0)) {
 					setHasUnreadDirect(true)
 				}

@@ -1,5 +1,11 @@
 import type { AppUser } from '@/models'
-import type { GetCurrentPeriod, MiniPeriod, Period, PhaseType } from '@/models/period.model'
+import type {
+	GetCurrentPeriod,
+	GetDashboardCurrentPeriodType,
+	MiniPeriod,
+	Period,
+	PhaseType
+} from '@/models/period.model'
 import { UAParser } from 'ua-parser-js'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -108,6 +114,9 @@ const typeLabels = {
 } as const
 
 export const getPeriodTitle = (period: Period | GetCurrentPeriod) =>
+	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type as keyof typeof typeLabels]}`
+
+export const getDashboardPeriodTitle = (period: GetDashboardCurrentPeriodType) =>
 	`Kì hiện tại: ${period.year} • HK ${period.semester} • ${typeLabels[period.type as keyof typeof typeLabels]}`
 
 export const getUserIdFromAppUser = (user: AppUser | null): string => {

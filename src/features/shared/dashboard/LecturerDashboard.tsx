@@ -1,10 +1,10 @@
 import { useAppSelector } from '@/store'
 import { LecturerSubmissionCard } from './component/LecturerSubmissionCard'
 
-function TeacherDashboard() {
+export function LecturerDashboard() {
 	const { currentPeriod } = useAppSelector((state) => state.period)
 	return (
-		<div className='min-h-screen bg-gray-50 p-6'>
+		<div className='min-h-screen w-full bg-gray-50 p-4'>
 			{/* Tiêu đề */}
 			<h1 className='mb-6 text-2xl font-bold text-gray-800'>Dashboard</h1>
 
@@ -22,5 +22,3 @@ function TeacherDashboard() {
 		</div>
 	)
 }
-
-export { TeacherDashboard }
