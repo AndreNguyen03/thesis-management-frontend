@@ -35,6 +35,7 @@ export interface GroupDetail {
 	lastMessage?: LastMessage
 	unreadCounts?: Record<string, number>
 	lastSeenAtByUser?: Record<string, string | null>
+	isAbleGoToDefense: boolean
 }
 
 export interface PaginatedGroups extends GetPaginatedObject {

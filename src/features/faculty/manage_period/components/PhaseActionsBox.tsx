@@ -12,8 +12,10 @@ import {
 	type Phase1Response,
 	type Phase2Response,
 	type Phase3Response,
+	type Phase4Response,
 	type ResolvePhaseResponse
 } from '@/models/period-phase.models'
+import { Phase4Handler } from './Phase4Handler'
 
 interface PhaseActionsBoxProps {
 	resolvePhaseData: ResolvePhaseResponse
@@ -31,8 +33,6 @@ export function PhaseActionsBox({
 	onGoProcess
 }: PhaseActionsBoxProps) {
 	const phaseCompleted = resolvePhaseData.canTriggerNextPhase
-
-	console.log(phaseCompleted)
 
 	let phaseContent = null
 	if (resolvePhaseData) {
@@ -54,6 +54,11 @@ export function PhaseActionsBox({
 			case 'execution':
 				phaseContent = (
 					<Phase3Handler data={resolvePhaseData as Phase3Response} onCompletePhase={onCompletePhase} />
+				)
+				break
+			case 'completion':
+				phaseContent = (
+					<Phase4Handler data={resolvePhaseData as Phase4Response}  />
 				)
 				break
 		}

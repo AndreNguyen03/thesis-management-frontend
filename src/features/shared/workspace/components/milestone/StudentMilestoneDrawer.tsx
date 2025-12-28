@@ -1,4 +1,6 @@
 import type { FileInfo, MilestoneStatus, PayloadUpdateMilestone, ResponseMilestone } from '@/models/milestone.model'
+// Lấy base url download file từ biến môi trường
+const baseDownloadUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 import { useMemo, useState, useRef } from 'react'
 import { calculateProgress, ProgressBar, StatusBadge } from './ProcessBar'
 import { AlertCircle, CheckCircle2, CheckSquare, FileText, Send, UploadCloud, X, Upload } from 'lucide-react'
@@ -9,6 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import Editting from '../Editting'
 import { cn } from '@/lib/utils'
 import { toast as sonnerToast } from 'sonner'
+import DOMPurify from 'dompurify'
 
 export const StudentMilestoneDrawer = ({
 	milestone,
@@ -430,7 +433,11 @@ export const StudentMilestoneDrawer = ({
 														</p>
 													</div>
 													<a
-														href={file.url}
+														href={
+															baseDownloadUrl
+																? baseDownloadUrl + '/' + file.url
+																: file.url
+														}
 														target='_blank'
 														rel='noopener noreferrer'
 														className='text-xs font-medium text-blue-600 hover:underline'
@@ -442,7 +449,35 @@ export const StudentMilestoneDrawer = ({
 									</div>
 								)}
 							</div>
-
+							{milestone.submission && milestone.submission.lecturerDecision && (
+								<>
+									<div className='ml-5 flex flex-col rounded bg-blue-100 p-2 text-sm text-slate-700'>
+										<div className='flex gap-2'>
+											<span className='text font-medium'>
+												{milestone.submission.lecturerInfo.title +
+													' ' +
+													milestone.submission.lecturerInfo.fullName}
+											</span>
+											<span className='rounded bg-slate-400 px-2 font-medium text-white'>
+												{milestone.submission.lecturerDecision === 'approved'
+													? 'Chấp nhận'
+													: 'Yêu cầu làm lại'}
+											</span>
+										</div>
+										<span className='text ml-5'>
+											<div
+												className='prose max-w-none rounded-lg bg-blue-50 px-2 py-1'
+												// Sử dụng DOMPurify để đảm bảo an toàn, tránh XSS
+												dangerouslySetInnerHTML={{
+													__html: DOMPurify.sanitize(
+														milestone.submission.lecturerFeedback || '<p>Chưa có mô tả</p>'
+													)
+												}}
+											/>
+										</span>
+									</div>
+								</>
+							)}
 							{/* Lịch sử nộp bài */}
 							{milestone.submissionHistory && milestone.submissionHistory.length > 0 && (
 								<SubmissionHistoryList history={milestone.submissionHistory} />

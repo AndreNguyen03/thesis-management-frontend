@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/Button'
 import { CalendarDays, Clock, Settings, Bell } from 'lucide-react'
 import { SendNotificationModal } from '@/components/NotificationModal'
 import type { ResponseMiniLecturerDto } from '@/models'
+import { set } from 'zod'
+import { cn } from '@/lib/utils'
 
 const MOCK_TOTAL_STUDENTS = 150
 const MOCK_TOTAL_INSTRUCTORS = 25
@@ -46,19 +48,21 @@ const MOCK_AVAILABLE_INSTRUCTORS: ResponseMiniLecturerDto[] = [
 interface PhaseHeader {
 	phase: PeriodPhase
 	onViewConfig?: () => void
-	onEditConfig?: () => void
+	onManageMilestone?: () => void
 }
 
 const statusLabels: Record<PeriodPhaseStatus, string> = {
-	not_started: 'Sắp tới',
-	ongoing: 'Đang diễn ra',
+	active: 'Đang diễn ra',
+	pending: 'Chưa bắt đầu',
+	timeout: 'Hết giờ',
 	completed: 'Đã hoàn thành'
 }
 
 const statusBadgeStyles: Record<PeriodPhaseStatus, string> = {
-	not_started: 'bg-muted text-muted-foreground',
-	ongoing: 'bg-primary/10 text-primary border-primary/20',
-	completed: 'bg-success/10 text-success border-success/20'
+	pending: 'bg-muted text-muted-foreground',
+	active: 'bg-primary/10 text-primary border-primary/20',
+	completed: 'bg-success/10 text-success border-success/20',
+	timeout: 'bg-destructive/10 text-destructive border-destructive/20'
 }
 
 const calculateTimeRemaining = (endDate: string) => {
@@ -78,7 +82,7 @@ const calculateTimeRemaining = (endDate: string) => {
 	return { expired: false, days, hours, minutes, seconds }
 }
 
-export function PhaseHeader({ phase, onViewConfig }: PhaseHeader) {
+export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHeader) {
 	const [currentTime, setCurrentTime] = useState(new Date())
 	const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining(phase.endTime))
 
@@ -102,7 +106,7 @@ export function PhaseHeader({ phase, onViewConfig }: PhaseHeader) {
 
 		return () => clearInterval(interval)
 	}, [phase.endTime])
-
+	const [isCollapsed, setIsCollapsed] = useState(true)
 	return (
 		<div className='animate-fade-in rounded-lg border bg-card p-6 shadow-sm'>
 			{/* Header Row */}
@@ -122,10 +126,50 @@ export function PhaseHeader({ phase, onViewConfig }: PhaseHeader) {
 				<div className='flex items-center gap-2'>
 					{/* Cấu hình */}
 
-					<Button variant='outline' size='sm' onClick={onViewConfig}>
-						Thiết lập
-						<Settings className='h-4 w-4' />
-					</Button>
+					<div className='relative' onBlur={() => setIsCollapsed(true)} tabIndex={0}>
+						<Button
+							variant='outline'
+							size='sm'
+							id='phase-config-dropdown'
+							aria-haspopup='menu'
+							aria-expanded='false'
+							className={cn('flex items-center gap-1', !isCollapsed && 'bg-slate-200 hover:bg-slate-300')}
+							onClick={() => setIsCollapsed((prev) => !prev)}
+						>
+							Thiết lập
+							<Settings className='h-4 w-4' />
+						</Button>
+						{!isCollapsed && (
+							<div className='absolute left-0 z-10 mt-1 min-w-[180px] rounded-md border bg-popover shadow-lg'>
+								<ul className='py-1 text-sm text-foreground'>
+									<li>
+										<button
+											type='button'
+											className='w-full px-4 py-2 text-left font-medium hover:bg-muted'
+											onMouseDown={() => {
+												onViewConfig?.()
+												setIsCollapsed(true)
+											}}
+										>
+											Thiết lập thời gian pha
+										</button>
+									</li>
+									<li>
+										<button
+											onMouseDown={() => {
+												onManageMilestone?.()
+												setIsCollapsed(true)
+											}}
+											type='button'
+											className='w-full px-4 py-2 text-left font-medium hover:bg-muted'
+										>
+											Quản lý các mốc quan trọng
+										</button>
+									</li>
+								</ul>
+							</div>
+						)}
+					</div>
 
 					<Button variant='outline' size='sm' onClick={handleOpenModal}>
 						Thông báo

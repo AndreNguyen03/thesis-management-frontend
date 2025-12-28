@@ -1,4 +1,4 @@
-import type {  TopicStatus } from '@/models'
+import { TopicStatus } from '@/models'
 import { PHASE_ORDER } from '@/models/period-phase.models'
 import type { PhaseStats, PhaseType, StatVariant } from '@/models/period.model'
 import type { GetStatiticInPeriod } from '@/models/statistic.model'
@@ -14,10 +14,8 @@ import {
 	Timer,
 	Archive,
 	BookCheck,
-	PenLine,
+	PenLine
 } from 'lucide-react'
-
-
 
 export const iconVariantStyles: Record<StatVariant | 'default', string> = {
 	default: 'bg-muted text-muted-foreground',
@@ -145,9 +143,9 @@ export const getPhaseStats = (rawStats: GetStatiticInPeriod | undefined, phase: 
 					...statMeta.paused
 				},
 				{
-					status: 'submitted_for_review',
-					label: 'Đã hoàn thành',
-					value: rawStats.submittedToReviewTopicsNumber,
+					status: TopicStatus.AWAITING_EVALUATION,
+					label: 'Chờ ra hội đồng',
+					value: rawStats.readyForEvaluationNumber,
 					variant: 'success',
 					...statMeta.submitted_for_review
 				},
@@ -178,7 +176,7 @@ export const getPhaseStats = (rawStats: GetStatiticInPeriod | undefined, phase: 
 				},
 				{
 					status: 'awaiting_evaluation',
-					label: 'Chờ chấm',
+					label: 'Chờ ra hội đồng',
 					value: rawStats.readyForEvaluationNumber,
 					variant: 'warning',
 					...statMeta.awaiting_evaluation
@@ -225,7 +223,7 @@ export function getLabelForStatus(status: TopicStatus | 'all'): string {
 		delayed: 'Chậm tiến độ',
 		graded: 'Đã chấm điểm xong',
 		archived: 'Đã đưa vào lưu trữ',
-		awaiting_evaluation: 'Chờ giảng viên chấm',
+		awaiting_evaluation: 'Đã hoàn thành chờ ra hội đồng',
 		rejected_final: 'Không đạt yêu cầu cuối',
 		full: 'Đã đầy',
 		cancelled: 'Đã hủy'

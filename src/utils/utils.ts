@@ -54,12 +54,12 @@ export function decodeJwt<T = any>(token: string): T | null {
 }
 export const PhaseInfo: Record<
 	PhaseType,
-	{ order: number; continue: string; continueMessage: string; continuePhaseId: string; label: string }
+	{ order: number; continue: string | undefined; continueMessage: string | undefined; continuePhaseId: string | undefined; label: string }
 > = {
 	empty: {
 		order: 0,
 		continue: 'Nộp đề tài',
-		continueMessage: ' để thu thập để tài của giảng viên',
+		continueMessage: ' để thu thập đề tài của giảng viên',
 		continuePhaseId: 'submit_topic',
 		label: 'Khởi đầu'
 	},
@@ -80,16 +80,16 @@ export const PhaseInfo: Record<
 	execution: {
 		order: 3,
 		continue: 'Hoàn thành',
-		continuePhaseId: 'completion',
 		continueMessage: ' để ghi nhận kết quả bảo vệ của sinh viên',
+		continuePhaseId: 'completion',
 		label: 'Thực hiện'
 	},
 	completion: {
 		order: 4,
-		continue: 'end',
-		continuePhaseId: 'end',
-		continueMessage: ' để kết thúc kỳ học này',
-		label: 'Hoàn thành -   '
+		continue: undefined,
+		continueMessage: undefined,
+		continuePhaseId: undefined,
+		label: 'Hoàn thành'
 	}
 }
 

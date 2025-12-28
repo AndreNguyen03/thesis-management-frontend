@@ -30,6 +30,7 @@ import SubmitTopicsInPeriod from '@/features/lecturer/explore-periods/submit-top
 import TopicRegistration from '@/features/student/registration/partitions/TopicRegistration'
 import { ViewProfile } from '@/features/shared/profile/ViewProfile'
 import { ContactPage } from '@/features/shared/contact/ContactPage'
+import { DefenseAssignmentPage } from '@/features/faculty/manage_phase/completion-phase/manage-defense-milestone/DefenseAssignmentPage'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -121,6 +122,7 @@ export const router = createBrowserRouter([
 			},
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			{ path: 'manage-period', element: <ManagePeriodPage /> },
+			{ path: 'period/:id/manage-defense-assignment', element: <DefenseAssignmentPage /> },
 			{ path: 'period/:id', element: <DetailPeriodPage /> },
 			{ path: 'manage-faculty-students', element: <ManageFacultyStudentPage /> },
 			{ path: 'manage-faculty-lecturers', element: <ManageFacultyLecturerPage /> },

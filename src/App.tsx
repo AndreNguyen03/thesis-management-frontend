@@ -42,16 +42,14 @@ const App = () => {
 
 	const userId = 'userId' in userData ? userData.userId : userData._id
 
-    
-
 	return (
 		<ChatProvider userId={userId}>
 			{/* <NotificationSocketProvider userId={userId}> */}
-				<Layout>
-					<Outlet />
-					<Toaster />
-					<ToasterSonner />
-				</Layout>
+			<Layout>
+				<Outlet />
+				<Toaster />
+				<ToasterSonner />
+			</Layout>
 			{/* </NotificationSocketProvider> */}
 		</ChatProvider>
 	)
