@@ -180,10 +180,11 @@ export const topicApi = baseApi.injectEndpoints({
 			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),
 
-		markPausedTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
-			query: ({ topicId }) => ({
-				url: `/topics/${topicId}/mark-paused-topic`,
-				method: 'PATCH'
+		markPausedTopic: builder.mutation<{ message: string }, { topicIds: string[]; phaseId: string }>({
+			query: ({ topicIds }) => ({
+				url: `/topics/mark-paused-topic`,
+				method: 'PATCH',
+				body: { topicIds }
 			}),
 			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),

@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 // Badge màu cho trạng thái
-const statusMap: Record<string, { label: string; color: string }> = {
+export const statusMap: Record<string, { label: string; color: string }> = {
 	draft: { label: 'Bản nháp', color: 'text-center bg-gray-100 text-gray-700' },
 	submitted: { label: 'Đã nộp', color: 'text-center bg-yellow-100 text-yellow-700' },
 	under_review: { label: 'Đang xét duyệt', color: 'text-center bg-blue-100 text-blue-700' },
@@ -22,7 +22,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 	delayed: { label: 'Bị trì hoãn', color: 'text-center bg-yellow-300 text-yellow-800' },
 	paused: { label: 'Tạm ngưng', color: 'text-center bg-gray-300 text-gray-800' },
 	submitted_for_review: { label: 'Đã nộp báo cáo', color: 'text-center bg-yellow-100 text-yellow-700' },
-	awaiting_evaluation: { label: 'Chờ đánh giá', color: 'text-center bg-purple-100 text-purple-700' },
+	awaiting_evaluation: { label: 'Chờ ra hội đồng', color: 'text-center bg-purple-100 text-purple-700' },
 	assigned_defense: { label: 'Sẵn sàng bảo vệ', color: 'text-center bg-cyan-100 text-cyan-700' },
 	graded: { label: 'Đã chấm điểm', color: 'text-center bg-green-100 text-green-700' },
 	reviewed: { label: 'Đã kiểm tra', color: 'text-center bg-blue-100 text-blue-700' },

@@ -283,7 +283,7 @@ export const topicStatusLabels = {
 	delayed: { name: 'Bị trì hoãn', css: 'bg-yellow-400 text-yellow-900' },
 	paused: { name: 'Tạm ngưng', css: 'bg-gray-400 text-gray-900' },
 	submitted_for_review: { name: 'Đã nộp báo cáo', css: 'bg-yellow-200 text-yellow-800' },
-	awaiting_evaluation: { name: 'Chờ đánh giá', css: 'bg-purple-200 text-purple-800' },
+	awaiting_evaluation: { name: 'Chờ phân công vào hội đồng', css: 'bg-purple-200 text-purple-800' },
 	graded: { name: 'Đã chấm điểm', css: 'bg-green-200 text-green-800' },
 	reviewed: { name: 'Đã kiểm tra', css: 'bg-blue-200 text-blue-800' },
 	archived: { name: 'Đã lưu trữ', css: 'bg-gray-200 text-gray-800' },

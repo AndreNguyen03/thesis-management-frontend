@@ -65,6 +65,8 @@ export interface ResponseMilestone {
 	submissionHistory?: Submission[]
 	tasks?: TaskDto[]
 	progress: number
+	isAbleEdit: boolean
+	creatorType: string
 	//isCompleted: boolean
 }
 export interface TopicSnaps {

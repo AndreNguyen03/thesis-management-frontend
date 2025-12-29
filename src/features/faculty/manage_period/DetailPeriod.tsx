@@ -71,7 +71,6 @@ export default function DetailPeriodPage() {
 	const currentPhaseDetail = period.phases.find(
 		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
 	)
-	const isFinal =  period.phases.findIndex(p => p.phase === currentChosenPhase) !== -1
 	return (
 		<div className='flex h-[calc(100vh-10rem)] min-h-0 w-full overflow-auto'>
 			{/* Sidebar */}

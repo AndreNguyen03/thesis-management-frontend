@@ -110,7 +110,7 @@ export const baseApi = createApi({
 		'ChatbotConfig',
 		'ChatbotResources',
 		'KnowledgeSources',
-		"Milestone-Faculty"
+		"Milestone-Faculty",
 		'ListFields'
 	],
 	endpoints: () => ({})
