@@ -76,6 +76,22 @@ export interface TopicSnaps {
 	studentName: string[]
 	lecturers: ResponseMiniLecturerDto[]
 }
+export type CouncilMemberRole = 'chairperson' | 'secretary' | 'member'
+
+export const CouncilMemberRoleOptions: Record<
+	CouncilMemberRole,
+	{ label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' }
+> = {
+	chairperson: { label: 'Chủ tịch', variant: 'default' },
+	secretary: { label: 'Thư ký', variant: 'secondary' },
+	member: { label: 'Ủy viên', variant: 'outline' }
+}
+export interface DefenseCouncilMember {
+	memberId: string
+	role: CouncilMemberRole
+	title: string
+	fullName: string
+}
 export interface ResponseMilestoneWithTemplate {
 	_id: string
 	title: string
@@ -85,17 +101,11 @@ export interface ResponseMilestoneWithTemplate {
 	count: string
 	isActive: string
 	periodId: string
-	defenseCouncil: {
-		memberId: string
-
-		role: string
-
-		title: string
-
-		fullName: string
-	}[]
+	defenseCouncil: DefenseCouncilMember[]
 	topicSnaps?: TopicSnaps[]
 	location: string
+	isScorable: boolean
+	status: string
 }
 export interface ResponseFacultyMilestone {
 	_id: string
@@ -155,6 +165,11 @@ export const milestoneTypeMap: Record<string, { label: string; color: string }> 
 export const milestoneStatusMap: Record<string, { label: string; color: string }> = {
 	timeout: { label: 'Quá hạn', color: 'bg-red-100 text-red-700' },
 	active: { label: 'Còn hạn', color: 'bg-green-100 text-green-700' }
+}
+export const defenseStatusMap: Record<string, { label: string; color: string }> = {
+	pending: { label: 'Chưa diễn ra', color: 'bg-yellow-100 text-yellow-700' },
+	timeout: { label: 'Kết thúc', color: 'bg-red-100 text-red-700' },
+	active: { label: 'Đang diễn ra', color: 'bg-green-100 text-green-700' }
 }
 
 export const topicInMilestonesMap: Record<string, { label: string; color: string }> = {

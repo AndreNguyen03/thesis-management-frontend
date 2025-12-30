@@ -26,7 +26,8 @@ export const iconVariantStyles: Record<StatVariant | 'default', string> = {
 	info: 'bg-blue-100 text-blue-500',
 	neutral: 'bg-gray-100 text-gray-500',
 	purple: 'bg-purple-100 text-purple-500',
-	orange: 'bg-orange-100 text-orange-500'
+	orange: 'bg-orange-100 text-orange-500',
+	ready: 'bg-cyan-100 text-cyan-500'
 }
 
 export const statVariantClasses: Record<StatVariant, string> = {
@@ -37,7 +38,8 @@ export const statVariantClasses: Record<StatVariant, string> = {
 	info: 'border-blue-400/20 bg-blue-400/5',
 	neutral: 'border-gray-400/20 bg-gray-400/5',
 	purple: 'border-purple-400/20 bg-purple-400/5',
-	orange: 'border-orange-400/20 bg-orange-400/5'
+	orange: 'border-orange-400/20 bg-orange-400/5',
+	ready: ' border-cyan-400/20 bg-cyan-400/5'
 }
 
 export const statMeta = {
@@ -53,6 +55,7 @@ export const statMeta = {
 	submitted_for_review: { icon: BookCheck, description: 'Đã hoàn thành, chờ duyệt', iconVariant: 'success' },
 	delayed: { icon: AlertTriangle, description: 'Chậm tiến độ', iconVariant: 'warning' },
 	graded: { icon: CheckCircle, description: 'Đã chấm điểm xong', iconVariant: 'success' },
+	assigned_defense: { icon: CheckCircle, description: 'Sẵn sàng bảo vệ', iconVariant: 'ready' },
 	archived: { icon: Archive, description: 'Đã đưa vào lưu trữ', iconVariant: 'neutral' },
 	awaiting_evaluation: { icon: PenLine, description: 'Chờ giảng viên chấm', iconVariant: 'warning' },
 	rejected_final: { icon: XCircle, description: 'Không đạt yêu cầu cuối', iconVariant: 'destructive' }
@@ -161,6 +164,13 @@ export const getPhaseStats = (rawStats: GetStatiticInPeriod | undefined, phase: 
 		case 'completion':
 			return [
 				{
+					status: 'assigned_defense',
+					label: 'Sẵn sàng bảo vệ',
+					value: rawStats.assignedTopicsNumber,
+					variant: 'ready',
+					...statMeta.graded
+				},
+				{
 					status: 'graded',
 					label: 'Đã chấm điểm',
 					value: rawStats.gradedTopicsNumber,
@@ -224,6 +234,7 @@ export function getLabelForStatus(status: TopicStatus | 'all'): string {
 		graded: 'Đã chấm điểm xong',
 		archived: 'Đã đưa vào lưu trữ',
 		awaiting_evaluation: 'Đã hoàn thành chờ ra hội đồng',
+		assigned_defense: 'Sẵn sàng bảo vệ',
 		rejected_final: 'Không đạt yêu cầu cuối',
 		full: 'Đã đầy',
 		cancelled: 'Đã hủy'

@@ -34,6 +34,8 @@ export interface MiniPeriod {
 	year: string
 	semester: string
 	faculty: GetFaculty
+	currentPhase: string
+	type: string
 }
 export interface CreatePeriodPayload {
 	year: string
@@ -53,7 +55,16 @@ export interface PhaseStats {
 	iconVariant?: StatVariant
 }
 
-export type StatVariant = 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'neutral' | 'purple' | 'orange'
+export type StatVariant =
+	| 'primary'
+	| 'success'
+	| 'warning'
+	| 'destructive'
+	| 'info'
+	| 'neutral'
+	| 'purple'
+	| 'orange'
+	| 'ready'
 
 export interface PeriodBackend {
 	id: string

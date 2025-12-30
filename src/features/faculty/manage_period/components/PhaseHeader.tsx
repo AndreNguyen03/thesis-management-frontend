@@ -7,6 +7,7 @@ import { SendNotificationModal } from '@/components/NotificationModal'
 import type { ResponseMiniLecturerDto } from '@/models'
 import { set } from 'zod'
 import { cn } from '@/lib/utils'
+import { useNavigate, useParams } from 'react-router-dom'
 
 const MOCK_TOTAL_STUDENTS = 150
 const MOCK_TOTAL_INSTRUCTORS = 25
@@ -85,7 +86,8 @@ const calculateTimeRemaining = (endDate: string) => {
 export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHeader) {
 	const [currentTime, setCurrentTime] = useState(new Date())
 	const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining(phase.endTime))
-
+	const navigate = useNavigate()
+	const { id: periodId } = useParams()
 	const [isModalOpen, setIsModalOpen] = useState(false)
 
 	const handleOpenModal = () => setIsModalOpen(true)
@@ -164,6 +166,19 @@ export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHea
 											className='w-full px-4 py-2 text-left font-medium hover:bg-muted'
 										>
 											Quản lý các mốc quan trọng
+										</button>
+									</li>
+									<li>
+										<button
+											onMouseDown={() => {
+												onManageMilestone?.()
+												setIsCollapsed(true)
+												navigate(`/period/${periodId}/manage-defense-assignment`)
+											}}
+											type='button'
+											className='w-full px-4 py-2 text-left font-medium hover:bg-muted'
+										>
+											Quản lý các đợt bảo vệ
 										</button>
 									</li>
 								</ul>

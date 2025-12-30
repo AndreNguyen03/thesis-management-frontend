@@ -8,6 +8,7 @@ import type { RelatedStudentInTopic, StudentRegistrationStatus } from './registr
 import { PaginationQueryParamsDto } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+import type { ResponseMilestoneWithTemplate } from './milestone.model'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -284,6 +285,7 @@ export const topicStatusLabels = {
 	paused: { name: 'Tạm ngưng', css: 'bg-gray-400 text-gray-900' },
 	submitted_for_review: { name: 'Đã nộp báo cáo', css: 'bg-yellow-200 text-yellow-800' },
 	awaiting_evaluation: { name: 'Chờ phân công vào hội đồng', css: 'bg-purple-200 text-purple-800' },
+	assigned_defense: { name: 'Sẵn sàng bảo vệ', css: 'bg-purple-200 text-purple-800' },
 	graded: { name: 'Đã chấm điểm', css: 'bg-green-200 text-green-800' },
 	reviewed: { name: 'Đã kiểm tra', css: 'bg-blue-200 text-blue-800' },
 	archived: { name: 'Đã lưu trữ', css: 'bg-gray-200 text-gray-800' },
@@ -368,19 +370,10 @@ interface FileSnapshotDto {
 	size: number
 }
 
-interface FinalProduct {
+export interface FinalProduct {
 	thesisReport: FileSnapshotDto
-	sourceCodeUrl?: string
-	sourceCodeZip?: FileSnapshotDto[]
 }
-interface CouncilMemberSnapshot {
-	fullName: string
-	role: string // "Chủ tịch", "Thư ký"...
-	score: number
-	note: string
-}
-
-interface DefenseResult {
+export interface DefenseResult {
 	defenseDate: Date // Dùng để lọc theo "Năm bảo vệ"
 	periodName: string // Lưu tên đợt: "HK1 23-24" (để hiển thị nhanh)
 	finalScore: number // Điểm số: 9.5
@@ -390,4 +383,35 @@ interface DefenseResult {
 }
 export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
 	periodId?: string
+}
+
+//thành viên trong hội đồng
+export interface CouncilMemberSnapshot {
+	fullName: string
+	role: string // "Chủ tịch", "Thư ký"...
+	score: number
+	note: string
+}
+
+export interface DetailTopicsInDefenseMilestone {
+	_id: string
+	periodInfo: MiniPeriod
+	milestoneInfo: ResponseMilestoneWithTemplate
+	topics: TopicsInDefenseMilestone[]
+}
+export interface TopicsInDefenseMilestone {
+	_id: string
+	titleVN: string
+	titleEng: string
+	description: string
+	type: string
+	majorId: string
+	finalProduct: FinalProduct
+	isPublishedToLibrary: boolean
+	allowManualApproval: boolean
+	updatedAt: Date
+	currentStatus: string
+	defenseResult: DefenseResult
+	lecturers: ResponseMiniLecturerDto[]
+	students: ResponseMiniStudentDto[]
 }

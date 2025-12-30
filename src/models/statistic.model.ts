@@ -7,7 +7,7 @@ export interface GetStatiticInPeriod {
 	approvalTopicsNumber: number
 	submittedTopicsNumber: number
 	totalTopicsNumber: number
-    adjustRequestTopicsNumber: number // new
+	adjustRequestTopicsNumber: number // new
 
 	//config for open registration phase
 	emptyTopicsNumber: number
@@ -25,6 +25,7 @@ export interface GetStatiticInPeriod {
 	//config for completion phase
 	// readyForEvaluationNumber: number
 	gradedTopicsNumber: number
+	assignedTopicsNumber: number
 	achivedTopicsNumber: number
 	rejectedFinalTopicsNumber: number
 }

@@ -1,4 +1,5 @@
 import type {
+	DefenseCouncilMember,
 	FileInfo,
 	LecturerReviewDecision,
 	PaginatedTopicInBatchMilestone,
@@ -152,6 +153,7 @@ export const milestoneApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<ResponseMilestoneWithTemplate[]>) => response.data,
 			providesTags: (result, error, periodId) => [{ type: 'Milestones', id: periodId }]
 		}),
+
 		manageTopicsInDefenseMilestone: builder.mutation<
 			{ message: string },
 			{
@@ -167,12 +169,31 @@ export const milestoneApi = baseApi.injectEndpoints({
 					body: {
 						milestoneTemplateId: body.milestoneTemplateId,
 						action: body.action,
-						topicSnapshots: body.topicSnapshots,
+						topicSnapshots: body.topicSnapshots
 					}
 				}
 			},
 			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
 			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestones', id: 'defense' }]
+		}),
+		manageLecturersInDefenseMilestone: builder.mutation<
+			{ message: string },
+			{
+				milestoneTemplateId: string
+				action: 'add' | 'delete'
+				defenseCouncil: DefenseCouncilMember[]
+			}
+		>({
+			query: (body) => ({
+				url: `/milestones/defense-milestone/manage-lecturers`,
+				method: 'PATCH',
+				body
+			}),
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
+			invalidatesTags: (_result, _error, arg) => [
+				{ type: 'Milestones', id: 'defense' },
+				{ type: 'Milestones', id: arg.milestoneTemplateId }
+			]
 		})
 	}),
 	overrideExisting: false
@@ -191,5 +212,6 @@ export const {
 	useFacultyGetTopicsInBatchQuery,
 	useReviewMilestoneByLecturerMutation,
 	useGetDefenseAssignmentInPeriodQuery,
-	useManageTopicsInDefenseMilestoneMutation
+	useManageTopicsInDefenseMilestoneMutation,
+	useManageLecturersInDefenseMilestoneMutation
 } = milestoneApi
