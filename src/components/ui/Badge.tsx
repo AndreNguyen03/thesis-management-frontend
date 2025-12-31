@@ -27,7 +27,7 @@ interface BadgeProps {
 export const Badge = ({ children, variant = 'default', className }: BadgeProps) => {
 	const variantStyles: Record<BadgeVariant, string> = {
 		default: 'bg-primary text-primary-foreground transition-transform scale-100 hover:scale-105',
-		destructive: 'bg-red-600 text-white transition-transform scale-100 hover:scale-105',
+		destructive: 'bg-red-400 text-white transition-transform scale-100 hover:scale-105',
 		secondary: 'bg-gray-200 text-gray-800 transition-transform scale-100 hover:scale-105',
 		outline: 'border border-gray-300 text-gray-800 transition-transform scale-100 hover:scale-105',
 		registered: 'bg-green-600 text-white transition-transform scale-100 hover:scale-105',

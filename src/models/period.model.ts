@@ -1,7 +1,7 @@
 import type { ElementType } from 'react'
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
-import type { GeneralTopic, TopicStatus } from './topic.model'
+import type { DefenseResult, GeneralTopic, TopicStatus } from './topic.model'
 import type { PaginationQueryParamsDto } from './query-params'
 import { CalendarCheck, Clock, Lightbulb } from 'lucide-react'
 import type { Role } from './users'
@@ -100,6 +100,21 @@ export interface GetCurrentPeriod {
 	navItem: NavItem[]
 }
 
+export interface StudentRegistration {
+	_id: string
+	userId: string
+	topicId: string
+	status: 'pending' | 'approved' | 'rejected'
+	studentRole: 'leader' | 'member'
+	studentNote: string
+	lecturerResponse: string
+	topic: {
+		titleVN: string
+		titleEng: string
+		description: string
+	}
+}
+
 export interface GetDashboardCurrentPeriodType {
 	_id: string
 	year: string
@@ -112,10 +127,27 @@ export interface GetDashboardCurrentPeriodType {
 	endTime: Date
 	currentPhase: string
 	currentPhaseDetail: PeriodPhase
+	topics: {
+		titleEng: string
+		titleVN: string
+		defenseResult?: DefenseResult
+		type: string
+		isPublishedToLibrary: boolean
+	}[]
 }
 export interface GetDashboardCurrentPeriod {
 	thesisDashboard: GetDashboardCurrentPeriodType
 	researchDashboard: GetDashboardCurrentPeriodType
+	thesisRegistration: {
+		_id: string
+		type: string
+		studentRegisStatus: StudentRegistration[]
+	}
+	researchRegistration: {
+		_id: string
+		type: string
+		studentRegisStatus: StudentRegistration[]
+	}
 }
 
 export interface PaginationPeriodQueryParams extends PaginationQueryParamsDto {
@@ -244,4 +276,16 @@ export interface TopicsInPeriodMeta extends MetaDto {
 export interface PaginatedTopicsInPeriod {
 	data: GeneralTopic[]
 	meta: TopicsInPeriodMeta
+}
+
+export interface MiniPeriodInfo {
+	_id: string
+	year: string
+	semester: number
+    type: string
+}
+
+export interface PaginatedMiniPeriodInfo {
+    data: MiniPeriodInfo[]
+    meta: MetaDto
 }

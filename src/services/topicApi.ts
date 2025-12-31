@@ -6,14 +6,15 @@ import type {
 	PaginatedDraftTopics,
 	GetPaginatedTopics,
 	PaginatedSubmittedTopics,
-	PaginatedGeneralTopics,
 	UpdateTopicPayload,
 	CreateTopicRequest,
 	CreateTopicResponse,
 	RequestGradeTopicDto,
 	PaginationTopicsQueryParams,
 	PaginationLecturerGetTopicsInPhaseParams,
-	SubmittedTopicParamsDto
+	SubmittedTopicParamsDto,
+	PaginatedTopicApproval,
+    ApprovalTopicQueryParams
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
@@ -358,6 +359,17 @@ export const topicApi = baseApi.injectEndpoints({
 		getTopicsAwaitingEvaluationInPeriod: builder.query<PaginatedTopicInBatchMilestone, { periodId: string }>({
 			query: ({ periodId }) => `/topics/awaiting-evaluation/in-period/${periodId}`,
 			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data
+		}),
+		getTopicApprovalRegistration: builder.query<PaginatedTopicApproval, ApprovalTopicQueryParams>({
+			query: (query) => {
+				const queryString = buildQueryString(query)
+				return {
+					url: `/topics/registration-approvals?${queryString}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<PaginatedTopicApproval>) => response.data,
+            providesTags: ['TopicRegistration']
 		})
 	}),
 	overrideExisting: false
@@ -404,5 +416,6 @@ export const {
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicsMutation,
 	useLecturerGetTopicsInPhaseQuery,
-	useGetTopicsAwaitingEvaluationInPeriodQuery
+	useGetTopicsAwaitingEvaluationInPeriodQuery,
+	useGetTopicApprovalRegistrationQuery
 } = topicApi

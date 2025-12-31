@@ -17,6 +17,7 @@ import {
 import { buildQueryString } from '@/models/query-params'
 import type { GetStatiticInPeriod } from '@/models/statistic.model'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
+import type { PaginatedMiniPeriodInfo } from '../models/period.model'
 
 export const periodApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -145,8 +146,6 @@ export const periodApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<GetCurrentPeriod[] | null>) =>
 				response.data || ([] as GetCurrentPeriod[])
-			transformResponse: (response: ApiResponse<GetCurrentPeriod[] | null>) =>
-				response.data || ([] as GetCurrentPeriod[])
 		}),
 
 		//Lấy thông tin thống kê theo pha trong kì
@@ -190,7 +189,16 @@ export const periodApi = baseApi.injectEndpoints({
 				url: `/periods/dashboard-current-periods`
 			}),
 			transformResponse: (response: ApiResponse<GetDashboardCurrentPeriod>) => response.data,
-            providesTags: ['Periods']
+			providesTags: ['Periods']
+		}),
+		getAllMiniPeriodInfo: builder.query<PaginatedMiniPeriodInfo, PaginationPeriodQueryParams>({
+			query: (query) => {
+				const queryString = buildQueryString(query)
+                console.log('mini period info query string :::', queryString)
+				return `/periods/get-all-mini?${queryString}`
+			},
+			transformResponse: (response: ApiResponse<PaginatedMiniPeriodInfo>) => response.data,
+			providesTags: ['Periods']
 		})
 	})
 })
@@ -209,5 +217,6 @@ export const {
 	useAdjustPeriodMutation,
 	useGetCurrentPeriodsQuery,
 	useGetDashboardCurrentPeriodQuery,
-    useCompletePeriodMutation
+	useCompletePeriodMutation,
+	useGetAllMiniPeriodInfoQuery
 } = periodApi

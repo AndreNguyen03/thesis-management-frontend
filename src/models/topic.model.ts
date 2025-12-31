@@ -1,7 +1,7 @@
 import type { GetFieldNameReponseDto } from './field.model'
 import type { GetUploadedFileDto } from './file.model'
 import type { GetMajorMiniDto } from './major.model'
-import type { GetPaginatedObject } from './paginated-object.model'
+import type { GetPaginatedObject, MetaDto } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod, TopicsInPeriodMeta } from './period.model'
 import type { RelatedStudentInTopic, StudentRegistrationStatus } from './registration.model'
@@ -373,14 +373,14 @@ interface FinalProduct {
 	sourceCodeUrl?: string
 	sourceCodeZip?: FileSnapshotDto[]
 }
-interface CouncilMemberSnapshot {
+export interface CouncilMemberSnapshot {
 	fullName: string
 	role: string // "Chủ tịch", "Thư ký"...
 	score: number
 	note: string
 }
 
-interface DefenseResult {
+export interface DefenseResult {
 	defenseDate: Date // Dùng để lọc theo "Năm bảo vệ"
 	periodName: string // Lưu tên đợt: "HK1 23-24" (để hiển thị nhanh)
 	finalScore: number // Điểm số: 9.5
@@ -390,4 +390,39 @@ interface DefenseResult {
 }
 export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
 	periodId?: string
+}
+export interface StudentRegistration {
+    _id:string
+	studentId: string
+	studentName: string
+	status: 'pending' | 'approved' | 'rejected'
+	studentSkills: string[]
+	studentNote?: string
+	lecturerResponse?: string
+	processAt?: string // ISO date string
+	createdAt: string // ISO date string
+	rejectionReasonType?: string
+}
+export interface TopicApproval {
+	_id: string
+	titleVN: string
+	type: string
+	deleted_at: string | null
+    maxStudents: number
+	allowManualApproval: boolean
+	pendingStudents: StudentRegistration[]
+	approvedStudents: StudentRegistration[]
+	rejectedStudents: StudentRegistration[]
+}
+
+export interface PaginatedTopicApproval {
+	data: TopicApproval[]
+	meta: MetaDto
+}
+
+export interface ApprovalTopicQueryParams extends PaginationQueryParamsDto {
+	periodId?: string
+	type?: string 
+	allowManualApproval?: boolean | 'all'
+	onlyPending?: boolean | 'all'
 }

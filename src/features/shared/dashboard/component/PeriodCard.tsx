@@ -3,11 +3,15 @@ import { Badge } from '@/components/ui/badge'
 import { Check, FileText, UserPlus, Code, Award, BookOpen, AlertCircle, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, getDashboardPeriodTitle } from '@/utils/utils'
-import type { GetDashboardCurrentPeriodType } from '@/models/period.model'
+import type { GetDashboardCurrentPeriodType, StudentRegistration } from '@/models/period.model'
 import React from 'react'
+import { RegistrationCard } from './registration-card'
+// import { AISummaryCard } from './ai-summary-card'
+import { GradingResultCard } from './grading-result-card'
 
 interface PeriodCardProps {
 	period: GetDashboardCurrentPeriodType
+	studentRegistration: StudentRegistration[]
 }
 
 const phases = [
@@ -19,17 +23,20 @@ const phases = [
 
 const phaseOrder = ['empty', 'submit_topic', 'open_registration', 'execution', 'completion']
 
-export function PeriodCard({ period }: PeriodCardProps) {
+export function PeriodCard({ period, studentRegistration }: PeriodCardProps) {
 	const currentIndex = phaseOrder.indexOf(period.currentPhaseDetail.phase)
 
 	const currentPhaseStatus = period.currentPhaseDetail.status
+
+	const currentPhase = period.currentPhase
 
 	const getPhaseStatus = (phaseType: string) => {
 		const phaseIndex = phaseOrder.indexOf(phaseType) // current index 4, phase index: 5
 		if (phaseIndex < currentIndex) return 'completed'
 		if (phaseIndex === currentIndex && currentPhaseStatus === 'timeout') return 'timeout'
+		if (phaseIndex > currentIndex) return 'pending'
 		if (currentPhaseStatus === 'active') return 'active'
-		return 'inactive'
+		return 'pending'
 	}
 
 	const shouldHighlightLine = (phaseId: string) => {
@@ -45,7 +52,7 @@ export function PeriodCard({ period }: PeriodCardProps) {
 				return <Badge className='border-primary/20 bg-primary/10 text-xs text-primary'>Đang thực hiện</Badge>
 			case 'timeout':
 				return <Badge className='border-warning/20 bg-warning/10 text-xs text-warning'>Hết thời gian</Badge>
-			default:
+			case 'pending':
 				return (
 					<Badge variant='secondary' className='text-xs'>
 						Chờ
@@ -118,7 +125,7 @@ export function PeriodCard({ period }: PeriodCardProps) {
 			return (
 				<>
 					<span>Từ {formatDate(phase.startTime)}</span>
-                    <br/>
+					<br />
 					<span>Đến {formatDate(phase.endTime)}</span>
 				</>
 			)
@@ -142,7 +149,7 @@ export function PeriodCard({ period }: PeriodCardProps) {
 				<div className='flex items-center justify-between border-border'>
 					<div className='flex items-center gap-3'>
 						{content.icon}
-						<span className='text-lg font-medium text-foreground'>{content.title}</span>
+						<span className='text-lg font-semibold text-foreground'>{content.title}</span>
 					</div>
 					{content.badge}
 				</div>
@@ -155,7 +162,6 @@ export function PeriodCard({ period }: PeriodCardProps) {
 					{phases.map((phase, index) => {
 						const status = getPhaseStatus(phase.type)
 						const Icon = phase.icon
-
 						return (
 							<React.Fragment key={phase.type}>
 								{/* NODE */}
@@ -165,7 +171,7 @@ export function PeriodCard({ period }: PeriodCardProps) {
 											'flex h-10 w-10 items-center justify-center rounded-full',
 											status === 'completed' && 'bg-success/10 text-success',
 											status === 'active' && 'bg-primary text-primary-foreground',
-											status === 'inactive' && 'bg-muted text-muted-foreground',
+											status === 'pending' && 'bg-muted text-muted-foreground',
 											status === 'timeout' && 'bg-warning/20 text-warning'
 										)}
 									>
@@ -202,6 +208,20 @@ export function PeriodCard({ period }: PeriodCardProps) {
 						)
 					})}
 				</div>
+			</CardContent>
+			<CardContent>
+				{currentPhase === 'open_registration' && (
+					<RegistrationCard period={period} studentRegisStatus={studentRegistration} />
+				)}
+				{/* {currentPhase === 'execution' && <AISummaryCard />} */}
+				{currentPhase === 'completion' &&
+					period.topics.map((topic) => {
+						return (
+							<React.Fragment key={topic.titleVN}>
+								<GradingResultCard topic={topic} />
+							</React.Fragment>
+						)
+					})}
 			</CardContent>
 		</Card>
 	)

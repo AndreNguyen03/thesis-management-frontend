@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PaginatedStudentRegistration, QueryReplyRegistration, RegistrationHistoryQueryParams } from '@/models'
 import { baseApi, type ApiResponse } from './baseApi'
-import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
+import { buildQueryString } from '@/models/query-params'
 
 export const registrationApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -37,16 +37,19 @@ export const registrationApi = baseApi.injectEndpoints({
 				url: `/registrations/student-register-topic/${body.topicId}`,
 				method: 'POST'
 			}),
-			invalidatesTags: ['MyRegisteredTopics']
+			invalidatesTags: ['MyRegisteredTopics', 'TopicRegistration']
 		}),
 		leaveTopic: builder.mutation<ApiResponse<any>, { topicId: string }>({
 			query: (body) => ({
 				url: `/registrations/leave-topic/${body.topicId}`,
 				method: 'DELETE'
 			}),
-			invalidatesTags: ['MyRegisteredTopics']
+			invalidatesTags: ['MyRegisteredTopics', 'TopicRegistration']
 		}),
-		getRegistrationsHistory: builder.query<PaginatedStudentRegistration, { queries: RegistrationHistoryQueryParams }>({
+		getRegistrationsHistory: builder.query<
+			PaginatedStudentRegistration,
+			{ queries: RegistrationHistoryQueryParams }
+		>({
 			query: ({ queries }) => {
 				const queryString = buildQueryString(queries)
 				return `/registrations/student/history-registrations?${queryString}`
@@ -61,7 +64,8 @@ export const registrationApi = baseApi.injectEndpoints({
 				url: `/registrations/lecturer/reply-registration/${registrationId}`,
 				method: 'PATCH',
 				body: body
-			})
+			}),
+			invalidatesTags: ['TopicRegistration']
 		}),
 		unassignStudentFromTopic: builder.mutation<
 			ApiResponse<{ message: string }>,

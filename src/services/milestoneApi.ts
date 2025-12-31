@@ -1,6 +1,7 @@
 import type {
 	FileInfo,
 	LecturerReviewDecision,
+	MilestoneEvent,
 	PaginatedTopicInBatchMilestone,
 	PayloadCreateMilestone,
 	PayloadFacultyCreateMilestone,
@@ -167,12 +168,18 @@ export const milestoneApi = baseApi.injectEndpoints({
 					body: {
 						milestoneTemplateId: body.milestoneTemplateId,
 						action: body.action,
-						topicSnapshots: body.topicSnapshots,
+						topicSnapshots: body.topicSnapshots
 					}
 				}
 			},
 			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
 			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestones', id: 'defense' }]
+		}),
+		getAllUserMilestones: builder.query<MilestoneEvent[], void>({
+			query: () => {
+				return `/milestones/all-users-milestones`
+			},
+			transformResponse: (response: ApiResponse<MilestoneEvent[]>) => response.data
 		})
 	}),
 	overrideExisting: false
@@ -191,5 +198,6 @@ export const {
 	useFacultyGetTopicsInBatchQuery,
 	useReviewMilestoneByLecturerMutation,
 	useGetDefenseAssignmentInPeriodQuery,
-	useManageTopicsInDefenseMilestoneMutation
+	useManageTopicsInDefenseMilestoneMutation,
+	useGetAllUserMilestonesQuery
 } = milestoneApi

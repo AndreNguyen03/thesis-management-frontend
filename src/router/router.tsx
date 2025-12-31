@@ -31,6 +31,7 @@ import TopicRegistration from '@/features/student/registration/partitions/TopicR
 import { ViewProfile } from '@/features/shared/profile/ViewProfile'
 import { ContactPage } from '@/features/shared/contact/ContactPage'
 import { DefenseAssignmentPage } from '@/features/faculty/manage_phase/completion-phase/manage-defense-milestone/DefenseAssignmentPage'
+import { ManageApproveRegistration } from '@/features/lecturer/topic_registration/ApproveRegistration'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -100,6 +101,10 @@ export const router = createBrowserRouter([
 			{
 				path: 'manage-students',
 				element: <ManageStudentPage />
+			},
+			{
+				path: 'approve-registrations',
+				element: <ManageApproveRegistration />
 			},
 			// Giảng viên
 			{ path: 'create-topic', element: <CreateTopic /> },
