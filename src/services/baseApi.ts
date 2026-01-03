@@ -113,7 +113,9 @@ export const baseApi = createApi({
 		'Milestone-Faculty',
 		'ListFields',
 		'StudentTopicState',
-        "TopicRegistration"
+		'TopicRegistration',
+		'StudentDashboard',
+		'LecturerDashboard'
 	],
 	endpoints: () => ({})
 })

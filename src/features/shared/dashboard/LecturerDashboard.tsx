@@ -1,21 +1,19 @@
 import { SchedulePanel } from './component/schedule-panel'
-import { useGetDashboardCurrentPeriodQuery } from '@/services/periodApi'
-import { PeriodCard } from './component/PeriodCard'
+import { useGetLecturerDashboardQuery } from '@/services/periodApi'
 import { PeriodCardSkeleton } from './component/skeleton/PeriodSkeleton'
 import { SidebarSkeleton } from './component/skeleton/RightSidebarSkeleton'
 import { useGetAllUserMilestonesQuery } from '@/services/milestoneApi'
+import { LecturerPeriodCard } from './component/LecturerPeriodCard'
 
 export function LecturerDashboard() {
-	const { data, isLoading } = useGetDashboardCurrentPeriodQuery()
-
 	const { data: milestoneEvents, isLoading: isLoadingMilestoneEvent } = useGetAllUserMilestonesQuery()
 
-	const currentThesisPeriod = data?.thesisDashboard
-	const currentResearchPeriod = data?.researchDashboard
-	const thesisRegistration = data?.thesisRegistration
-	const researchRegistration = data?.researchRegistration
+	const { data, isLoading: isLoadingLecturerDashboard } = useGetLecturerDashboardQuery()
 
-	if (isLoading || isLoadingMilestoneEvent) {
+	const currentThesisDashboard = data?.thesis
+	const currentResearchDashboard = data?.scientificResearch
+
+	if (isLoadingMilestoneEvent || isLoadingLecturerDashboard) {
 		return (
 			<div className='min-h-screen w-full bg-background'>
 				<main className='mx-auto max-w-7xl px-4 py-6 lg:px-8'>
@@ -32,10 +30,8 @@ export function LecturerDashboard() {
 		)
 	}
 
-	if (!researchRegistration) return <div>không có đăng kí</div>
-	if (!thesisRegistration) return <div>không có đợt đề tài</div>
-	if (!currentThesisPeriod) return <div>không có đợt đề tài</div>
-	if (!currentResearchPeriod) return <div>không có đợt đề tài</div>
+	if (!currentResearchDashboard) return <div>không có đăng kí</div>
+	if (!currentThesisDashboard) return <div>không có đợt đề tài</div>
 	if (!milestoneEvents) return <div>không có sự kiện</div>
 
 	return (
@@ -44,14 +40,8 @@ export function LecturerDashboard() {
 				<div className='grid gap-6 lg:grid-cols-[1fr_320px]'>
 					{/* Main Content */}
 					<div className='space-y-6'>
-						<PeriodCard
-							period={currentThesisPeriod}
-							studentRegistration={thesisRegistration.studentRegisStatus}
-						/>
-						<PeriodCard
-							period={currentResearchPeriod}
-							studentRegistration={researchRegistration.studentRegisStatus}
-						/>
+						<LecturerPeriodCard dashboardData={currentThesisDashboard} />
+						<LecturerPeriodCard dashboardData={currentResearchDashboard} />
 					</div>
 					{/* Right Sidebar */}
 					<div className='space-y-6'>

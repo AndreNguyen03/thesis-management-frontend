@@ -2,16 +2,16 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Check, FileText, UserPlus, Code, Award, BookOpen, AlertCircle, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatDate, getDashboardPeriodTitle } from '@/utils/utils'
-import type { GetDashboardCurrentPeriodType, StudentRegistration } from '@/models/period.model'
+import { formatDate } from '@/utils/utils'
+import type { DashboardType, StudentTopicDashboard } from '@/models/period.model'
 import React from 'react'
-import { RegistrationCard } from './registration-card'
+import { RegistrationCard } from './StudentRegistrationCard'
 // import { AISummaryCard } from './ai-summary-card'
 import { GradingResultCard } from './grading-result-card'
+import { TopicExecutionCard } from './topicExecutionCard'
 
-interface PeriodCardProps {
-	period: GetDashboardCurrentPeriodType
-	studentRegistration: StudentRegistration[]
+interface StudentPeriodCardProps {
+	dashboardData: DashboardType
 }
 
 const phases = [
@@ -23,12 +23,42 @@ const phases = [
 
 const phaseOrder = ['empty', 'submit_topic', 'open_registration', 'execution', 'completion']
 
-export function PeriodCard({ period, studentRegistration }: PeriodCardProps) {
-	const currentIndex = phaseOrder.indexOf(period.currentPhaseDetail.phase)
+export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
+	const hasNoPeriod =
+		!dashboardData.currentPhase ||
+		!dashboardData.currentPhaseDetail ||
+		!dashboardData.phases ||
+		dashboardData.phases.length === 0
 
-	const currentPhaseStatus = period.currentPhaseDetail.status
+	if (hasNoPeriod) {
+		return (
+			<Card className='w-full rounded-xl border-border'>
+				<CardHeader>
+					<div className='flex items-center gap-3'>
+						<Clock className='h-5 w-5 text-muted-foreground' />
+						<span className='text-lg font-semibold'>{dashboardData.title ?? 'Chưa có đợt đề tài'}</span>
+					</div>
+				</CardHeader>
 
-	const currentPhase = period.currentPhase
+				<CardContent>
+					<p className='text-sm text-muted-foreground'>
+						{dashboardData.description ??
+							'Hiện tại khoa chưa mở đợt đăng ký đề tài nào. Vui lòng quay lại sau.'}
+					</p>
+
+					<div className='mt-4'>
+						<Badge variant='secondary'>Chưa mở đợt</Badge>
+					</div>
+				</CardContent>
+			</Card>
+		)
+	}
+    
+	const currentIndex = phaseOrder.indexOf(dashboardData.currentPhaseDetail.phase)
+
+	const currentPhaseStatus = dashboardData.currentPhaseDetail.status
+
+	const currentPhase = dashboardData.currentPhase
 
 	const getPhaseStatus = (phaseType: string) => {
 		const phaseIndex = phaseOrder.indexOf(phaseType) // current index 4, phase index: 5
@@ -61,44 +91,40 @@ export function PeriodCard({ period, studentRegistration }: PeriodCardProps) {
 		}
 	}
 
-	const title = getDashboardPeriodTitle(period)
-
 	const getStatusContent = () => {
-		switch (period.currentPhaseDetail.phase) {
+		switch (dashboardData.currentPhaseDetail.phase) {
 			case 'empty':
 				return {
-					title: 'Chưa bắt đầu đợt khóa luận mới',
-					description: 'Ban chủ nhiệm khoa chưa mở đợt đăng ký khóa luận. Vui lòng chờ thông báo.',
+					title: dashboardData.title,
+					description: dashboardData.description,
 					icon: <Clock className='h-5 w-5 text-muted-foreground' />,
 					badge: <Badge variant='secondary'>Đang trống</Badge>
 				}
 			case 'submit_topic':
 				return {
-					title,
-					description:
-						'Giảng viên đang trong giai đoạn nộp đề tài. Sinh viên vui lòng chờ giai đoạn đăng ký.',
+					title: dashboardData.title,
+					description: dashboardData.description,
 					icon: <BookOpen className='h-5 w-5 text-primary' />,
 					badge: <Badge className='border-info/20 bg-info/10 text-info'>Pha nộp đề tài</Badge>
 				}
 			case 'open_registration':
 				return {
-					title,
-					description:
-						'Giai đoạn đăng ký đề tài đang mở. Sinh viên có thể đăng ký đề tài từ danh sách có sẵn.',
+					title: dashboardData.title,
+					description: dashboardData.description,
 					icon: <AlertCircle className='h-5 w-5 text-warning' />,
 					badge: <Badge className='border-warning/20 bg-warning/10 text-warning'>Pha đăng kí</Badge>
 				}
 			case 'execution':
 				return {
-					title,
-					description: 'Bạn đang trong giai đoạn thực hiện đề tài. Hãy hoàn thành các mục tiêu đã đề ra.',
+					title: dashboardData.title,
+					description: dashboardData.description,
 					icon: <BookOpen className='h-5 w-5 text-primary' />,
 					badge: <Badge className='border-primary/20 bg-primary/10 text-primary'>Pha thực thi</Badge>
 				}
 			case 'completion':
 				return {
-					title,
-					description: 'Đề tài đã được nộp và đang chờ hội đồng chấm điểm.',
+					title: dashboardData.title,
+					description: dashboardData.description,
 					icon: <BookOpen className='h-5 w-5 text-info' />,
 					badge: <Badge className='border-info/20 bg-info/10 text-info'>Pha Chấm điểm & kết thúc</Badge>
 				}
@@ -115,7 +141,7 @@ export function PeriodCard({ period, studentRegistration }: PeriodCardProps) {
 	const content = getStatusContent()
 
 	const getPhaseTimeNode = (phaseType: string) => {
-		const phase = period.phases.find((p) => p.phase === phaseType)
+		const phase = dashboardData.phases.find((p) => p.phase === phaseType)
 
 		if (!phase) {
 			return <span className='text-muted-foreground'>Chưa thiết lập</span>
@@ -210,12 +236,11 @@ export function PeriodCard({ period, studentRegistration }: PeriodCardProps) {
 				</div>
 			</CardContent>
 			<CardContent>
-				{currentPhase === 'open_registration' && (
-					<RegistrationCard period={period} studentRegisStatus={studentRegistration} />
-				)}
+				{currentPhase === 'open_registration' && <RegistrationCard dashboardData={dashboardData} />}
+				{currentPhase === 'execution' && <TopicExecutionCard dashboardData={dashboardData} />}
 				{/* {currentPhase === 'execution' && <AISummaryCard />} */}
 				{currentPhase === 'completion' &&
-					period.topics.map((topic) => {
+					(dashboardData.topicData as StudentTopicDashboard[]).map((topic) => {
 						return (
 							<React.Fragment key={topic.titleVN}>
 								<GradingResultCard topic={topic} />

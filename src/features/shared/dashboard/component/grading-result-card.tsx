@@ -6,7 +6,6 @@ import type { DefenseResult } from '@/models'
 interface GradingResultCardProps {
 	topic: {
 		titleVN: string
-		titleEng: string
 		type: string
 		defenseResult?: DefenseResult
 		isPublishedToLibrary: boolean
@@ -16,7 +15,7 @@ interface GradingResultCardProps {
 export function GradingResultCard({ topic }: GradingResultCardProps) {
 	if (!topic.defenseResult) {
 		return (
-			<Card className='rounded-xl border-border p-0'>
+			<Card className='rounded-xl border-border p-0 m-2'>
 				<CardHeader className='pb-3'>
 					<div className='flex items-center justify-between'>
 						<CardTitle className='flex items-center gap-2 text-lg font-semibold text-foreground'>
@@ -44,12 +43,12 @@ export function GradingResultCard({ topic }: GradingResultCardProps) {
 	}
 
 	return (
-		<Card className='rounded-xl border-success/20 bg-success/5 p-0'>
+		<Card className='rounded-xl border-success/20 bg-success/5 p-0 m-2'>
 			<CardHeader className='pb-3'>
 				<div className='flex items-center justify-between'>
 					<CardTitle className='flex items-center gap-2 text-lg font-semibold text-foreground'>
-						<Award className='h-5 w-5 text-success' />
-						Kết quả {topic.type === 'thesis' ? 'khóa luận' : 'nghiên cứu khoa học'}
+						<Award className='h-5 w-5 text-primary' />
+						Kết quả chấm điểm đề tài: {topic.titleVN}
 					</CardTitle>
 					<Badge className='border-success/20 bg-success/10 text-success'>Hoàn thành</Badge>
 				</div>
@@ -59,9 +58,6 @@ export function GradingResultCard({ topic }: GradingResultCardProps) {
 				<div className='flex items-center justify-center py-4'>
 					<div className='text-center'>
 						<div className='text-5xl font-bold text-success'>{topic.defenseResult.finalScore}</div>
-						<div className='text-5xl font-bold text-success'>
-							Điểm bằng chữ : {topic.defenseResult.finalScore}
-						</div>
 					</div>
 				</div>
 

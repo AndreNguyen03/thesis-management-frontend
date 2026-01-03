@@ -150,6 +150,91 @@ export interface GetDashboardCurrentPeriod {
 	}
 }
 
+export interface LecturerTopicRegisration {
+	_id: string
+	titleVN: string
+	type: string
+	maxStudents: number
+	allowManualApproval: boolean
+	pendingCount: number
+	approvedCount: number
+	rejectedCount: number
+}
+
+export interface LecturerTopicExecution {
+	_id: string
+	titleVN: string
+	type: string
+	maxStudents: string
+}
+
+export interface LecturerTopicSubmit {
+	_id: string
+	titleVN: string
+	type: string
+	maxStudents: number
+    allowManualApproval: boolean,
+	currentStatus: string
+}
+
+export interface LecturerTopicCompletion {
+	_id: string
+	titleVN: string
+	type: string
+	maxStudents: number
+	isPublishedToLibrary: boolean
+	defenseResult?: DefenseResult
+}
+
+export interface StudentTopicDashboard {
+	_id: string
+	titleVN: string 
+	type: string
+	defenseResult: DefenseResult
+	isPublishedToLibrary: boolean
+	lecturer: {
+		email: string
+		fullName: string
+		title: string
+	}
+	studentRegistration: {
+		status: string
+		studentNote: string
+		lecturerResponse: string
+		rejectionReasonType: string
+		studentRole: string
+		updatedAt: string
+		createdAt: string
+	}
+}
+
+export type DashboardTopicData =
+	| StudentTopicDashboard
+	| LecturerTopicCompletion
+	| LecturerTopicSubmit
+	| LecturerTopicExecution
+	| LecturerTopicRegisration
+
+export interface DashboardType {
+	_id: string
+	title: string
+	description: string
+	type: PeriodType
+	facultyName: string
+	phases: PeriodPhase[]
+	status: string
+	startTime: Date
+	endTime: Date
+	currentPhase: string
+	currentPhaseDetail: PeriodPhase
+	topicData: DashboardTopicData[]
+}
+
+export interface CurrentPeriodDashboard {
+	thesis: DashboardType
+	scientificResearch: DashboardType
+}
+
 export interface PaginationPeriodQueryParams extends PaginationQueryParamsDto {
 	type?: PeriodType | 'all'
 	status?: PeriodStatus | 'all'
@@ -282,10 +367,10 @@ export interface MiniPeriodInfo {
 	_id: string
 	year: string
 	semester: number
-    type: string
+	type: string
 }
 
 export interface PaginatedMiniPeriodInfo {
-    data: MiniPeriodInfo[]
-    meta: MetaDto
+	data: MiniPeriodInfo[]
+	meta: MetaDto
 }

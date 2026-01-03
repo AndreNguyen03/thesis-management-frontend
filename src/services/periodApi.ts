@@ -1,6 +1,7 @@
 import type { PaginatedResponse } from '@/models'
 import type { Phase1Response, Phase2Response, Phase3Response } from '@/models/period-phase.models'
 import {
+	type CurrentPeriodDashboard,
 	type CreateCompletionPhaseDto,
 	type CreateExecutionPhaseDto,
 	type CreateOpenRegPhaseDto,
@@ -194,11 +195,21 @@ export const periodApi = baseApi.injectEndpoints({
 		getAllMiniPeriodInfo: builder.query<PaginatedMiniPeriodInfo, PaginationPeriodQueryParams>({
 			query: (query) => {
 				const queryString = buildQueryString(query)
-                console.log('mini period info query string :::', queryString)
+				console.log('mini period info query string :::', queryString)
 				return `/periods/get-all-mini?${queryString}`
 			},
 			transformResponse: (response: ApiResponse<PaginatedMiniPeriodInfo>) => response.data,
 			providesTags: ['Periods']
+		}),
+		getStudentDashboard: builder.query<CurrentPeriodDashboard, void>({
+			query: () => `/dashboard/student`,
+			transformResponse: (response: ApiResponse<CurrentPeriodDashboard>) => response.data,
+			providesTags: ['StudentDashboard']
+		}),
+		getLecturerDashboard: builder.query<CurrentPeriodDashboard, void>({
+			query: () => `/dashboard/lecturer`,
+			transformResponse: (response: ApiResponse<CurrentPeriodDashboard>) => response.data,
+			providesTags: ['LecturerDashboard']
 		})
 	})
 })
@@ -218,5 +229,7 @@ export const {
 	useGetCurrentPeriodsQuery,
 	useGetDashboardCurrentPeriodQuery,
 	useCompletePeriodMutation,
-	useGetAllMiniPeriodInfoQuery
+	useGetAllMiniPeriodInfoQuery,
+	useGetLecturerDashboardQuery,
+	useGetStudentDashboardQuery
 } = periodApi
