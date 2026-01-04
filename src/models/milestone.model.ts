@@ -1,7 +1,7 @@
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import { PaginationQueryParamsDto } from './query-params'
-import type { ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+import type { MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 
 export type MilestoneStatus = 'Todo' | 'In Progress' | 'Pending Review' | 'Completed' | 'Needs Revision' | 'Overdue'
 export const MilestoneStatusOptions = {
@@ -92,6 +92,18 @@ export interface DefenseCouncilMember {
 	title: string
 	fullName: string
 }
+
+export interface GetUploadedFileDto {
+	_id: string
+	fileNameBase: string
+	fileUrl?: string
+	type: string
+	fileType: string
+	size: number
+	actor: MiniActorInforDto
+	created_at: string
+}
+
 export interface ResponseMilestoneWithTemplate {
 	_id: string
 	title: string
@@ -106,6 +118,9 @@ export interface ResponseMilestoneWithTemplate {
 	location: string
 	isScorable: boolean
 	status: string
+	sampleScoringTemplate: GetUploadedFileDto | null
+	isBlock: boolean
+	isPublished: boolean
 }
 export interface ResponseFacultyMilestone {
 	_id: string
@@ -122,7 +137,6 @@ export interface ResponseFacultyMilestone {
 export interface PayloadCreateMilestone {
 	groupId: string
 	title: string
-	periodId: string
 	description: string
 	dueDate: string
 	type: MilestoneType
@@ -176,6 +190,7 @@ export const topicInMilestonesMap: Record<string, { label: string; color: string
 	unsubmit: { label: 'Chưa nộp', color: 'bg-yellow-100 text-yellow-700' },
 	submitted: { label: 'Đã nộp', color: 'bg-blue-100 text-blue-700' }
 }
+
 export class RequestTopicInMilestoneBatchQuery extends PaginationQueryParamsDto {}
 
 export interface GetTopicsInBatchMilestoneDto {

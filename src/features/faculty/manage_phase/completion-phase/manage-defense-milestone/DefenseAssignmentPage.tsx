@@ -55,9 +55,17 @@ export function DefenseAssignmentPage() {
 		search_by: ['fullName']
 	})
 	//endpoint lấy tất cả các milestone
-	const { data: milestonesData, refetch: refetchMilestones, isLoading: isLoadingMilestones } = useGetDefenseAssignmentInPeriodQuery(periodId!)
+	const {
+		data: milestonesData,
+		refetch: refetchMilestones,
+		isLoading: isLoadingMilestones
+	} = useGetDefenseAssignmentInPeriodQuery(periodId!)
 	//endpoint lấy tất cả các đề tài đang chờ đánh giá
-	const { data: lecturersData, refetch: refetchLecturers, isLoading: isLoadingLecturers } = useGetAllLecturersComboboxQuery(lecturerQueries)
+	const {
+		data: lecturersData,
+		refetch: refetchLecturers,
+		isLoading: isLoadingLecturers
+	} = useGetAllLecturersComboboxQuery(lecturerQueries)
 	const {
 		data: topicData,
 		isLoading: isLoadingTopics,
@@ -121,8 +129,15 @@ export function DefenseAssignmentPage() {
 			toast.error('Vui lòng chọn đợt bảo vệ')
 			return
 		}
+
 		if (selectedLecturers.length === 0) {
 			toast.error('Vui lòng chọn ít nhất một giảng viên')
+			return
+		}
+		const memberNum = selectedLecturers.length + selectedMilestoneData?.defenseCouncil.length!
+		const isLe = memberNum % 2
+		if (isLe === 0) {
+			toast.error('Số lượng thành viên trong hội đồng bảo vệ phải là số lẻ. Hãy chọn thêm 1 thành viên', { richColors: true })
 			return
 		}
 		const arrayLecturerEliminate = [

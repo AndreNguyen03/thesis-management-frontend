@@ -13,7 +13,7 @@ import {
 } from '@/services/todolistApi'
 import { toast } from 'sonner'
 import { useAppSelector } from '@/store'
-import { Calendar } from 'lucide-react'
+import { Calendar, Loader2 } from 'lucide-react'
 import { formatDate } from '@/utils/utils'
 import type { ResponseMilestone } from '@/models/milestone.model'
 import { EditMilestoneModal } from './modal/EditMilestoneModal'
@@ -22,12 +22,21 @@ interface TaskCardProps {
 	task: Task
 	setTasks?: React.Dispatch<React.SetStateAction<Task[]>>
 	onUpdateTask?: (taskId: string, update: RequestUpdate) => void
+	isUpdating?: boolean
 	onDeleteTask?: (taskId: string) => void
 	onUpdateMilestone?: (taskId: string, milestoneId: string | undefined) => void
 	milestones?: ResponseMilestone[]
 }
 
-const TaskCard = ({ task, onUpdateTask, setTasks, onDeleteTask, onUpdateMilestone, milestones }: TaskCardProps) => {
+const TaskCard = ({
+	task,
+	onUpdateTask,
+	setTasks,
+	onDeleteTask,
+	onUpdateMilestone,
+	isUpdating,
+	milestones
+}: TaskCardProps) => {
 	const [editingValue, setEditingValue] = useState<RequestUpdate>({
 		title: task.title,
 		description: task.description
@@ -150,6 +159,7 @@ const TaskCard = ({ task, onUpdateTask, setTasks, onDeleteTask, onUpdateMileston
 		if (onUpdateTask && task._id) {
 			onUpdateTask(task._id, editingValue)
 		}
+		setIsEditingInfo(false)
 	}
 
 	const handleCancelEdit = () => {
@@ -294,6 +304,9 @@ const TaskCard = ({ task, onUpdateTask, setTasks, onDeleteTask, onUpdateMileston
 								onClick={handleSaveEdit}
 								className='rounded bg-primary px-2 py-1 text-xs text-primary-foreground hover:bg-primary/90'
 							>
+								{isUpdating ? (
+									<Loader2 className='mr-2 inline-block h-3 w-3 animate-spin text-primary-foreground' />
+								) : null}
 								Lưu
 							</button>
 							<button

@@ -72,7 +72,9 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 			console.error('Lỗi cập nhật milestone:', error)
 		}
 	}
-	const [newMilestone, setNewMilestone] = useState<PayloadCreateMilestone>({} as PayloadCreateMilestone)
+	const [newMilestone, setNewMilestone] = useState<PayloadCreateMilestone>({
+		type: 'submission'
+	} as PayloadCreateMilestone)
 	//gọi endpoint tạo milestone
 	const [createMilestone] = useCreateMilestoneMutation()
 	const renderTab = () => {

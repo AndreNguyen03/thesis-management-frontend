@@ -7,6 +7,7 @@ import { CalendarCheck, Clock, Lightbulb } from 'lucide-react'
 import type { Role } from './users'
 import type { BadgeVariant } from '@/components/ui'
 import type { MetaDto } from './paginated-object.model'
+import type { FileInfo } from './milestone.model'
 
 export type PeriodStatus = 'timeout' | 'active' | 'pending'
 

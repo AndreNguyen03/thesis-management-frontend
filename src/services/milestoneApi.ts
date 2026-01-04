@@ -151,7 +151,7 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<ResponseMilestoneWithTemplate[]>) => response.data,
-			providesTags: (result, error, periodId) => [{ type: 'Milestones', id: periodId }]
+			providesTags: (result, error, periodId) => [{ type: 'Milestones', id: periodId }, { type: 'PeriodDetail', id: periodId }]
 		}),
 
 		manageTopicsInDefenseMilestone: builder.mutation<
@@ -194,6 +194,28 @@ export const milestoneApi = baseApi.injectEndpoints({
 				{ type: 'Milestones', id: 'defense' },
 				{ type: 'Milestones', id: arg.milestoneTemplateId }
 			]
+		}),
+		uploadScoringResultFile: builder.mutation<{ message: string }, { templateId: string; file: File }>({
+			query: ({ templateId, file }) => {
+				const formData = new FormData()
+				formData.append('file', file)
+				console.log('Uploading file for templateId:', templateId, file)
+				return {
+					url: `/milestones/${templateId}/upload-files/scoring-result`,
+					method: 'POST',
+					body: formData
+				}
+			}
+		}),
+		deleteScoringResultFile: builder.mutation<{ message: string }, { milestoneTemplateId: string }>({
+			query: ({ milestoneTemplateId }) => ({
+				url: `/milestones/${milestoneTemplateId}/delete-scoring-result`,
+				method: 'DELETE'
+			}),
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
+			invalidatesTags: (_result, _error, { milestoneTemplateId }) => [
+				{ type: 'Milestones', id: milestoneTemplateId }
+			]
 		})
 	}),
 	overrideExisting: false
@@ -213,5 +235,7 @@ export const {
 	useReviewMilestoneByLecturerMutation,
 	useGetDefenseAssignmentInPeriodQuery,
 	useManageTopicsInDefenseMilestoneMutation,
-	useManageLecturersInDefenseMilestoneMutation
+	useManageLecturersInDefenseMilestoneMutation,
+	useUploadScoringResultFileMutation,
+	useDeleteScoringResultFileMutation
 } = milestoneApi

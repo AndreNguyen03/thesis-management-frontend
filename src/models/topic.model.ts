@@ -380,6 +380,7 @@ export interface DefenseResult {
 	gradeText: string // Xếp loại: "Xuất sắc"
 	councilMembers: CouncilMemberSnapshot[]
 	councilName: string // VD: "Hội đồng CNPM 01"
+	isPublished: boolean
 }
 export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
 	periodId?: string
@@ -387,6 +388,7 @@ export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
 
 //thành viên trong hội đồng
 export interface CouncilMemberSnapshot {
+	memberId: string
 	fullName: string
 	role: string // "Chủ tịch", "Thư ký"...
 	score: number
@@ -414,4 +416,27 @@ export interface TopicsInDefenseMilestone {
 	defenseResult: DefenseResult
 	lecturers: ResponseMiniLecturerDto[]
 	students: ResponseMiniStudentDto[]
+}
+export interface CouncilMemberScoreDto {
+	memberId: string
+	fullName: string
+	role: string
+	score: number
+	note?: string
+}
+
+export interface UpdateDefenseResultDto {
+	topicId: string
+	defenseDate: Date
+	periodName: string
+	finalScore: number
+	gradeText: string
+	councilMembers: CouncilMemberScoreDto[]
+	councilName: string
+	isPublished?: boolean
+	isBlock?: boolean
+}
+
+export interface BatchUpdateDefenseResultDto {
+	results: UpdateDefenseResultDto[]
 }

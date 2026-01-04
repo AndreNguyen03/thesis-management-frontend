@@ -14,3 +14,10 @@ export function getGradeColor(score: number): string {
   if (score >= 5) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
   return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
 }
+
+export function calculateAverageScore(scores: number[]): number {
+  const validScores = scores.filter((score) => score !== undefined && score !== null)
+  if (validScores.length === 0) return 0
+  const total = validScores.reduce((sum, score) => sum + score, 0)
+  return parseFloat((total / validScores.length).toFixed(2))
+}
