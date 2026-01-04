@@ -15,9 +15,9 @@ interface TopicsTableProps {
 	importedScores?: Record<
 		string,
 		{
-			councilScores: Array<{ score?: number; note?: string }>
-			finalScore: number
-			gradeText: string
+			councilScores?: Array<{ score?: number; note?: string }>
+			finalScore?: number
+			gradeText?: string
 		}
 	>
 }
@@ -219,32 +219,43 @@ export function TopicsTable({
 							</TableCell>
 
 							{/* Render động các cột điểm cho từng thành viên hội đồng */}
-							{Array.from({ length: councilCount }, (_, i) => (
-								<TableCell
-									key={`score-${topic._id}-${i}`}
-									className='border border-gray-300 py-3 text-center align-middle'
-								>
-									{importedScores?.[topic._id]?.councilScores?.[i]?.score !== undefined ? (
-										<span className='text-sm font-semibold text-blue-600'>
-											{importedScores[topic._id].councilScores[i].score!.toFixed(1)}
-										</span>
-									) : topic.defenseResult?.councilMembers?.[i]?.score !== undefined ? (
-										<span className='text-sm font-medium text-foreground'>
-											{topic.defenseResult.councilMembers[i].score.toFixed(1)}
-										</span>
-									) : (
-										<span className='text-sm italic text-muted-foreground'>Chưa chấm</span>
-									)}
-								</TableCell>
-							))}
+							{Array.from({ length: councilCount }, (_, i) => {
+								const isChanged =
+									importedScores?.[topic._id]?.councilScores?.[i]?.score !==
+									topic.defenseResult?.councilMembers?.[i]?.score
+								return (
+									<TableCell
+										key={`score-${topic._id}-${i}`}
+										className='border border-gray-300 py-3 text-center align-middle'
+									>
+										{importedScores?.[topic._id]?.councilScores?.[i]?.score !== undefined &&
+											isChanged && (
+												<span className='text-sm font-semibold text-blue-600'>
+													{importedScores?.[topic._id]?.councilScores?.[i]?.score!.toFixed(1)}
+												</span>
+											)}{' '}
+										{topic.defenseResult?.councilMembers?.[i]?.score !== undefined ? (
+											<span className='text-sm font-medium text-foreground'>
+												{topic.defenseResult.councilMembers[i].score.toFixed(1)}
+											</span>
+										) : (
+											<span className='text-sm italic text-muted-foreground'>Chưa chấm</span>
+										)}
+									</TableCell>
+								)
+							})}
 
 							{/* Average Scores */}
 							<TableCell className='border border-gray-300 py-3 text-center align-middle'>
-								{importedScores?.[topic._id]?.finalScore !== undefined ? (
-									<span className='text-sm font-semibold text-blue-600'>
-										{importedScores[topic._id].finalScore!.toFixed(2)}
-									</span>
-								) : topic.defenseResult?.finalScore !== undefined ? (
+								{importedScores?.[topic._id]?.finalScore !== undefined &&
+									importedScores[topic._id].finalScore!.toFixed(2) !==
+										topic.defenseResult.finalScore.toFixed(2) && (
+										<span className='text-sm font-semibold text-blue-600'>
+											{importedScores[topic._id].finalScore!.toFixed(2)}
+										</span>
+									)}
+								{'  '}
+								{topic.defenseResult?.finalScore !== undefined ? (
 									<span className='text-sm font-medium text-foreground'>
 										{topic.defenseResult.finalScore.toFixed(2)}
 									</span>
@@ -262,25 +273,27 @@ export function TopicsTable({
 									const hasImportedNotes = importedScores?.[topic._id]?.councilScores?.some(
 										(cs) => cs.note
 									)
-
 									if (!hasDefenseNotes && !hasImportedNotes) {
 										return <span className='text-sm italic text-muted-foreground'>Không có</span>
 									}
-
 									return (
 										<div className='flex flex-col gap-2'>
+											{hasImportedNotes &&
+												Array.isArray(importedScores?.[topic._id]?.councilScores) && (
+													<span className='text-sm font-semibold text-blue-600'>
+														{importedScores?.[topic._id]?.councilScores?.map((cs, inx) => cs.note && cs.note !== topic.defenseResult.councilMembers[inx]?.note && `GV ${inx + 1}: ${cs.note}`)
+															.filter((note) => note)
+															.join('; ')}
+													</span>
+												)}
 											{hasDefenseNotes && (
 												<span className='text-sm text-foreground'>
 													{topic.defenseResult.councilMembers
-														.map((member, inx) => member.note && `GV ${inx + 1}: ${member.note}`)
-														.filter((note) => note)
-														.join('; ')}
-												</span>
-											)}
-											{hasImportedNotes && (
-												<span className='text-sm text-foreground'>
-													{importedScores![topic._id].councilScores
-														.map((cs, inx) => cs.note && `GV ${inx + 1}: ${cs.note}`)
+														.map(
+															(member, inx) =>
+																member.note && 
+																`GV ${inx + 1}: ${member.note}`
+														)
 														.filter((note) => note)
 														.join('; ')}
 												</span>

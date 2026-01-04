@@ -5,7 +5,6 @@ import { Eye, Loader2, XCircle } from 'lucide-react'
 import { topicStatusLabels, type ApiError, type GeneralTopic } from '@/models'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/ui/EmptyState'
-import type { is } from 'date-fns/locale'
 
 interface TopicsDataTableProps {
 	isLoading: boolean

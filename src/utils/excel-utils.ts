@@ -55,14 +55,15 @@ async function loadTemplate(templatePath: string): Promise<XLSX.WorkBook> {
  */
 export async function exportScoringTemplate(
 	data: DetailTopicsInDefenseMilestone,
-	fileName: string = 'BangChamDiem.xlsx'
+	fileName: string = 'BangChamDiem.xlsx',
+	includeScores: boolean = true
 ) {
-	const { topics, milestoneInfo, periodInfo } = data
+	const { data: topics, milestoneInfo, periodInfo } = data
 	const workbook = new ExcelJS.Workbook()
 
 	// Xác định số lượng thành viên hội đồng từ milestoneInfo
 	const councilCount = milestoneInfo?.defenseCouncil?.length || 3
-	const councilMembers = milestoneInfo?.defenseCouncil || []
+	// const councilMembers = milestoneInfo?.defenseCouncil || []
 
 	// ===== SHEET 1: THÔNG TIN ĐỢT BẢO VỆ =====
 	const infoSheet = workbook.addWorksheet('ℹ️ Thông tin bảo vệ', {
@@ -368,9 +369,15 @@ export async function exportScoringTemplate(
 		}
 
 		// Thêm điểm và ghi chú cho từng thành viên hội đồng
+
 		for (let i = 0; i < councilCount; i++) {
-			rowData[`score${i + 1}`] = topic.defenseResult?.councilMembers?.[i]?.score || ''
-			rowData[`note${i + 1}`] = topic.defenseResult?.councilMembers?.[i]?.note || ''
+			if (includeScores) {
+				rowData[`score${i + 1}`] = topic.defenseResult?.councilMembers?.[i]?.score || ''
+				rowData[`note${i + 1}`] = topic.defenseResult?.councilMembers?.[i]?.note || ''
+			} else {
+				rowData[`score${i + 1}`] = ''
+				rowData[`note${i + 1}`] = ''
+			}
 		}
 
 		rowData.finalScore = '' // Sẽ dùng công thức

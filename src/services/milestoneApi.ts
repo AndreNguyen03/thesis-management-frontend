@@ -216,7 +216,17 @@ export const milestoneApi = baseApi.injectEndpoints({
 			invalidatesTags: (_result, _error, { milestoneTemplateId }) => [
 				{ type: 'Milestones', id: milestoneTemplateId }
 			]
-		})
+		}),
+		blockGrade: builder.mutation<{ message: string }, { milestoneId: string }>({
+			query: ({ milestoneId }) => ({
+				url: `/milestones/${milestoneId}/block-grade`,
+				method: 'PATCH'
+			}),
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
+			invalidatesTags: (_result, _error, { milestoneId }) => [
+				{ type: 'Milestones', id: milestoneId }
+			]
+		}),
 	}),
 	overrideExisting: false
 })
@@ -237,5 +247,6 @@ export const {
 	useManageTopicsInDefenseMilestoneMutation,
 	useManageLecturersInDefenseMilestoneMutation,
 	useUploadScoringResultFileMutation,
-	useDeleteScoringResultFileMutation
+	useDeleteScoringResultFileMutation,
+	useBlockGradeMutation
 } = milestoneApi

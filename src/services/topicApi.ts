@@ -373,13 +373,16 @@ export const topicApi = baseApi.injectEndpoints({
 			},
 			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data
 		}),
-		getDetailTopicsInDefenseMilestones: builder.query<DetailTopicsInDefenseMilestone, string>({
-			query: (templateMilestoneId) => ({
-				url: `/topics/in-defense-template/${templateMilestoneId}`,
-				method: 'GET'
-			}),
+		getDetailTopicsInDefenseMilestones: builder.query<DetailTopicsInDefenseMilestone, { templateMilestoneId: string; queryParams: PaginationQueryParamsDto }>({
+			query: ({ templateMilestoneId, queryParams }) => {
+				const queryString = buildQueryString(queryParams)
+				return {
+					url: `/topics/in-defense-template/${templateMilestoneId}?${queryString}`,
+					method: 'GET'
+				}
+			},
 			transformResponse: (response: ApiResponse<DetailTopicsInDefenseMilestone>) => response.data,
-			providesTags: (result, error, templateMilestoneId) => [
+			providesTags: (result, error, { templateMilestoneId }) => [
 				{ type: 'DefenseMilestone', id: templateMilestoneId }
 			]
 		}),

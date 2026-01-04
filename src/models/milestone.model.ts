@@ -102,6 +102,7 @@ export interface GetUploadedFileDto {
 	size: number
 	actor: MiniActorInforDto
 	created_at: string
+	mimeType: string
 }
 
 export interface ResponseMilestoneWithTemplate {
@@ -118,7 +119,7 @@ export interface ResponseMilestoneWithTemplate {
 	location: string
 	isScorable: boolean
 	status: string
-	sampleScoringTemplate: GetUploadedFileDto | null
+	resultScoringTemplate: GetUploadedFileDto | null
 	isBlock: boolean
 	isPublished: boolean
 }

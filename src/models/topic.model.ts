@@ -1,7 +1,7 @@
 import type { GetFieldNameReponseDto } from './field.model'
 import type { GetUploadedFileDto } from './file.model'
 import type { GetMajorMiniDto } from './major.model'
-import type { GetPaginatedObject } from './paginated-object.model'
+import type { GetPaginatedObject, MetaDto } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod, TopicsInPeriodMeta } from './period.model'
 import type { RelatedStudentInTopic, StudentRegistrationStatus } from './registration.model'
@@ -399,7 +399,8 @@ export interface DetailTopicsInDefenseMilestone {
 	_id: string
 	periodInfo: MiniPeriod
 	milestoneInfo: ResponseMilestoneWithTemplate
-	topics: TopicsInDefenseMilestone[]
+	data: TopicsInDefenseMilestone[]
+	meta: MetaDto
 }
 export interface TopicsInDefenseMilestone {
 	_id: string
