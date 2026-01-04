@@ -18,12 +18,15 @@ const CreateMilestone = ({
 	return (
 		<Dialog open={open} onOpenChange={setShowCreateModal}>
 			<DialogContent>
-				<DialogTitle className='mb-4 text-xl font-bold text-slate-800'>Tạo Milestone Mới</DialogTitle>
+				<DialogTitle className='mb-4 text-xl font-bold text-slate-800'>Tạo mốc deadline Mới</DialogTitle>
 				<div className='relative w-full max-w-lg rounded-xl bg-white p-6 shadow-lg'>
-					<form onSubmit={(e)=> {
-                        e.preventDefault()
-                        onCreateMilestone()
-                    }} className='space-y-4'>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault()
+							onCreateMilestone()
+						}}
+						className='space-y-4'
+					>
 						{/* ...Các trường nhập liệu như cũ... */}
 						<div>
 							<label className='block text-sm font-medium text-slate-700'>Tiêu đề</label>
@@ -67,11 +70,9 @@ const CreateMilestone = ({
 								className='mt-1 w-full rounded-lg border px-3 py-2'
 							>
 								<option value='STANDARD' title='Deadline thông thường'>
-									Thông thường
+									Nộp báo cáo
 								</option>
-								<option value='STRICT' title='Deadline có tính nghiêm ngặt'>
-									Nghiêm ngặt
-								</option>
+							
 							</select>
 						</div>
 						<div className='flex items-center justify-end gap-2 pt-4'>

@@ -13,11 +13,13 @@ import type {
 	RequestGradeTopicDto,
 	PaginationTopicsQueryParams,
 	PaginationLecturerGetTopicsInPhaseParams,
-	SubmittedTopicParamsDto
+	SubmittedTopicParamsDto,
+	DetailTopicsInDefenseMilestone,
+	UpdateDefenseResultDto
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
-import type { PaginatedTopicInBatchMilestone } from '@/models/milestone.model'
+import type { PaginatedTopicInBatchMilestone, ResponseMilestoneWithTemplate } from '@/models/milestone.model'
 import type { PaginatedTopicsInPeriod } from '@/models/period.model'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -39,7 +41,8 @@ export const topicApi = baseApi.injectEndpoints({
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<PaginatedTopicsInPeriod>) => response.data
+			transformResponse: (response: ApiResponse<PaginatedTopicsInPeriod>) => response.data,
+			providesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
 		}),
 
 		getTopicById: builder.query<ITopicDetail, { id: string }>({
@@ -180,10 +183,11 @@ export const topicApi = baseApi.injectEndpoints({
 			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),
 
-		markPausedTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
-			query: ({ topicId }) => ({
-				url: `/topics/${topicId}/mark-paused-topic`,
-				method: 'PATCH'
+		markPausedTopic: builder.mutation<{ message: string }, { topicIds: string[]; phaseId: string }>({
+			query: ({ topicIds }) => ({
+				url: `/topics/mark-paused-topic`,
+				method: 'PATCH',
+				body: { topicIds }
 			}),
 			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),
@@ -355,9 +359,58 @@ export const topicApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<PaginatedTopicsInPeriod>) => response.data,
 			providesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
 		}),
-		getTopicsAwaitingEvaluationInPeriod: builder.query<PaginatedTopicInBatchMilestone, { periodId: string }>({
-			query: ({ periodId }) => `/topics/awaiting-evaluation/in-period/${periodId}`,
+		getTopicsAwaitingEvaluationInPeriod: builder.query<
+			PaginatedTopicInBatchMilestone,
+			{ periodId: string; queryParams: PaginationQueryParamsDto }
+		>({
+			query: ({ periodId, queryParams }) => {
+				const queryString = buildQueryString(queryParams)
+				console.log('Query String:', queryString)
+				return {
+					url: `/topics/awaiting-evaluation/in-period/${periodId}?${queryString}`,
+					method: 'GET'
+				}
+			},
 			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data
+		}),
+		getDetailTopicsInDefenseMilestones: builder.query<DetailTopicsInDefenseMilestone, { templateMilestoneId: string; queryParams: PaginationQueryParamsDto }>({
+			query: ({ templateMilestoneId, queryParams }) => {
+				const queryString = buildQueryString(queryParams)
+				return {
+					url: `/topics/in-defense-template/${templateMilestoneId}?${queryString}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<DetailTopicsInDefenseMilestone>) => response.data,
+			providesTags: (result, error, { templateMilestoneId }) => [
+				{ type: 'DefenseMilestone', id: templateMilestoneId }
+			]
+		}),
+		batchUpdateDefenseResults: builder.mutation<
+			{ success: number; failed: number },
+			{
+				results: UpdateDefenseResultDto[]
+			}
+		>({
+			query: ({ results }) => ({
+				url: `/topics/batch-update-defense-results`,
+				method: 'PATCH',
+				body: { results }
+			}),
+			transformResponse: (response: ApiResponse<{ success: number; failed: number }>) => response.data,
+			invalidatesTags: (result, error, { results }) => results.map((r) => ({ type: 'Topic', id: r.topicId }))
+		}),
+		batchPublishDefenseResults: builder.mutation<
+			{ success: number; failed: number },
+			{ topics: { topicId: string; isPublished: boolean }[]; templateMilestoneId: string }
+		>({
+			query: ({ topics, templateMilestoneId }) => ({
+				url: `/topics/batch-publish-defense-results?templateMilestoneId=${templateMilestoneId}`,
+				method: 'PATCH',
+				body: { topics }
+			}),
+			transformResponse: (response: ApiResponse<{ success: number; failed: number }>) => response.data,
+			invalidatesTags: (result, error, { topics }) => topics.map((t) => ({ type: 'Topic', id: t.topicId }))
 		})
 	}),
 	overrideExisting: false
@@ -404,5 +457,8 @@ export const {
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicsMutation,
 	useLecturerGetTopicsInPhaseQuery,
-	useGetTopicsAwaitingEvaluationInPeriodQuery
+	useGetTopicsAwaitingEvaluationInPeriodQuery,
+	useGetDetailTopicsInDefenseMilestonesQuery,
+	useBatchUpdateDefenseResultsMutation,
+	useBatchPublishDefenseResultsMutation
 } = topicApi

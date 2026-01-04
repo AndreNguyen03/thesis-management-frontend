@@ -27,7 +27,7 @@ import {
 } from '@/services/milestoneApi'
 import { CustomPagination } from '@/components/PaginationBar'
 import { cn } from '@/lib/utils'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 interface Props {
 	open: boolean
@@ -491,16 +491,42 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 														</span>
 													</td>
 													<td className='px-3 py-2'>
-														{m.isDownload ? (
-															<span
-																className='cursor-pointer text-gray-700 hover:underline'
-																onClick={() => handleDownloadZip(m._id)}
-															>
-																<Download className='inline-block h-4 w-4' />
-																Tải báo cáo
-															</span>
+														{m.type === MilestoneType.SUBMISSION ? (
+															<>
+																{m.isDownload ? (
+																	<span
+																		className='cursor-pointer text-gray-700 hover:underline'
+																		onClick={(e) => {
+																			e.stopPropagation()
+																			!isDownloading && handleDownloadZip(m._id)
+																		}}
+																	>
+																		{isDownloading ? (
+																			<Loader2 className='h-2 w-2' />
+																		) : (
+																			<Download className='inline-block h-4 w-4' />
+																		)}
+																		Tải báo cáo
+																	</span>
+																) : (
+																	<span> Chưa có báo cáo</span>
+																)}
+															</>
 														) : (
-															<span> Chưa có báo cáo</span>
+															<Button
+																className='w-fit'
+																onClick={() => {
+																	navigate(
+																		`/period/${periodId}/manage-defense-assignment`,
+																		{
+																			state: { milestoneId: m._id }
+																		}
+																	)
+																}}
+															>
+																{' '}
+																Tới phân công
+															</Button>
 														)}
 													</td>
 												</tr>

@@ -58,7 +58,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 	//gọi endpoint tạo task
 	const [createTask] = useCreateTaskMutation()
 	//gọi endpoint update task
-	const [updateTaskInfo] = useUpdateTaskInfoMutation()
+	const [updateTaskInfo, { isLoading: isUpdatingTaskInfo }] = useUpdateTaskInfoMutation()
 	//gọi endpoint xóa nhiệm vụ
 	const [deleteTask, { isLoading: isDeleteLoading }] = useDeleteTaskMutation()
 	//gọi endpoint cập nhật milestone của task
@@ -145,6 +145,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 		try {
 			const res = await updateTaskInfo({ taskId, updates: update }).unwrap()
 			setTasks((prev) => prev.map((task) => (task._id === taskId ? res : task)))
+			toast.success('Cập nhật nhiệm vụ thành công', { richColors: true })
 		} catch (error) {
 			console.error('Failed to update task:', error)
 			toast.error('Cập nhật nhiệm vụ thất bại. Vui lòng thử lại.', { richColors: true })
@@ -332,6 +333,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 							key={task._id + task.title}
 							task={task}
 							onUpdateTask={handleUpdateTask}
+							isUpdating={isUpdatingTaskInfo}
 							onUpdateMilestone={handleUpdateMilestone}
 							onDeleteTask={() => {
 								setIsOpenDeleteModal(true)

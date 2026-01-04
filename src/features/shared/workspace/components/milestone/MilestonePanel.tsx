@@ -11,7 +11,8 @@ import {
 	UserCircle,
 	Plus,
 	BarChart3,
-	GraduationCap
+	GraduationCap,
+	PencilOff
 } from 'lucide-react'
 import { StatusTag } from '../StatusTag'
 import { ProgressBar, StatusBadge } from './ProcessBar'
@@ -25,7 +26,7 @@ import {
 import { StudentMilestoneDrawer } from './StudentMilestoneDrawer'
 import { LecturerMilestoneDrawer } from './LecturerMilestoneDrawer'
 import { useAppSelector } from '@/store'
-import { ROLES } from '@/models'
+import { ROLES, topicStatusLabels } from '@/models'
 import CreateMilestone from './modal/CreateMilestone'
 import { useCreateMilestoneMutation, useUpdateMilestoneMutation } from '@/services/milestoneApi'
 import { toast } from 'sonner'
@@ -34,6 +35,7 @@ import { StatusOptions } from '@/models/todolist.model'
 import { useGetGroupDetailQuery } from '@/services/groupApi'
 import AskToGoToDefense from './modal/AskToGoToDefense'
 import { useSetAwaitingEvaluationMutation } from '@/services/topicApi'
+import { cn } from '@/lib/utils'
 
 interface MilestonePanelProps {
 	milestones: ResponseMilestone[]
@@ -70,7 +72,9 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 			console.error('Lỗi cập nhật milestone:', error)
 		}
 	}
-	const [newMilestone, setNewMilestone] = useState<PayloadCreateMilestone>({} as PayloadCreateMilestone)
+	const [newMilestone, setNewMilestone] = useState<PayloadCreateMilestone>({
+		type: 'submission'
+	} as PayloadCreateMilestone)
 	//gọi endpoint tạo milestone
 	const [createMilestone] = useCreateMilestoneMutation()
 	const renderTab = () => {
@@ -125,13 +129,8 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 		>
 			{/* Top Navigation Bar with Role Switcher */}
 			<div className='sticky top-0 z-10 flex items-center justify-between border-b bg-white/80 px-6 py-3 shadow-sm backdrop-blur-md'>
-				<div className='flex items-center gap-2'>
-					<div
-						className={`rounded-lg p-2 ${user.user?.role === ROLES.STUDENT ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}
-					>
-						<LayoutDashboard className='h-5 w-5' />
-					</div>
-					{groupDetail?.isAbleGoToDefense && user.user?.role === ROLES.LECTURER && (
+				{groupDetail?.isAbleGoToDefense && user.user?.role === ROLES.LECTURER && (
+					<div className='flex items-center gap-2'>
 						<div>
 							<span className='rounded-bl rounded-ss bg-green-600 px-2 py-1 font-semibold text-white'>
 								Đủ điều kiện bảo vệ
@@ -146,9 +145,18 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 								Xác nhận
 							</span>
 						</div>
-					)}
-				</div>
-
+					</div>
+				)}
+				{groupDetail?.topicStatus && (
+					<span
+						className={cn(
+							'rounded-bl rounded-ss px-2 py-1 font-semibold text-white',
+							topicStatusLabels[groupDetail?.topicStatus as keyof typeof topicStatusLabels].css
+						)}
+					>
+						{topicStatusLabels[groupDetail?.topicStatus as keyof typeof topicStatusLabels].name}
+					</span>
+				)}
 				{/* Role Switcher */}
 				{renderTab()}
 			</div>
@@ -157,10 +165,11 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 				{/* Dashboard Header */}
 				<div className='mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end'>
 					<div>
-						<h1 className='text-2xl font-bold text-slate-900'>
+						<h1 className='text-xl font-bold text-slate-900'>
 							{user.user?.role === ROLES.STUDENT ? 'Theo dõi Tiến độ Đồ án' : 'Quản lý Tiến độ Nhóm 01'}
 						</h1>
-						<p className='text-slate-500'>Đề tài: Hệ thống E-learning System</p>
+						<p className='font-semibold text-slate-500'>Đề tài: {groupDetail?.topicTitleVN}</p>
+						<p className='text-slate-500'>({groupDetail?.topicTitleEng})</p>
 					</div>
 					{user.user?.role === ROLES.LECTURER && (
 						<button
@@ -225,9 +234,9 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 							<div
 								key={milestone._id}
 								onClick={() => setSelectedId(milestone._id)}
-								className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-white p-5 transition-all hover:shadow-md ${isSelected ? `border-${themeColor}-500 ring-1 ring-${themeColor}-500` : `border-slate-200 hover:border-${themeColor}-300`} `}
+								className={`group relative cursor-pointer overflow-hidden rounded-xl border-2 bg-white p-5 transition-all hover:shadow-md ${isSelected ? `border-${themeColor}-600 ring-1 ring-${themeColor}-500` : `border-slate-200 hover:border-${themeColor}-300`} `}
 							>
-								<div className='flex items-start justify-between gap-4'>
+								<div className='relative z-20 flex items-start justify-between gap-4'>
 									<div className='flex-1'>
 										<div className='mb-1 flex items-center gap-3'>
 											<h3
@@ -262,12 +271,18 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 										{user.user?.role === ROLES.STUDENT ? (
 											<ChevronRight className='h-5 w-5 text-slate-300 group-hover:text-indigo-400' />
 										) : (
-											<Edit className='h-4 w-4 text-slate-300 group-hover:text-orange-400' />
+											<>
+												{!milestone.isAbleEdit ? (
+													<PencilOff className='h-4 w-4 text-slate-500' />
+												) : (
+													<Edit className='h-4 w-4 text-slate-300 group-hover:text-orange-400' />
+												)}
+											</>
 										)}
 									</div>
 								</div>
 
-								<div className='mt-2 flex items-center gap-3'>
+								<div className='relative z-20 mt-2 flex items-center gap-3'>
 									<ProgressBar progress={mProgress} className='h-1.5' />
 									<span className='w-8 text-right text-xs font-bold text-slate-600'>
 										{mProgress}%

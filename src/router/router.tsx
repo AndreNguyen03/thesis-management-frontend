@@ -31,6 +31,7 @@ import TopicRegistration from '@/features/student/registration/partitions/TopicR
 import { ViewProfile } from '@/features/shared/profile/ViewProfile'
 import { ContactPage } from '@/features/shared/contact/ContactPage'
 import { DefenseAssignmentPage } from '@/features/faculty/manage_phase/completion-phase/manage-defense-milestone/DefenseAssignmentPage'
+import DefenseScoringPage from '@/features/faculty/manage_phase/completion-phase/scoring/DefenseMilestonePage'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -123,6 +124,7 @@ export const router = createBrowserRouter([
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			{ path: 'manage-period', element: <ManagePeriodPage /> },
 			{ path: 'period/:id/manage-defense-assignment', element: <DefenseAssignmentPage /> },
+			{ path: 'defense-milestones/:id/scoring', element: <DefenseScoringPage /> },
 			{ path: 'period/:id', element: <DetailPeriodPage /> },
 			{ path: 'manage-faculty-students', element: <ManageFacultyStudentPage /> },
 			{ path: 'manage-faculty-lecturers', element: <ManageFacultyLecturerPage /> },

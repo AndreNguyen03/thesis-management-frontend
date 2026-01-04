@@ -1,4 +1,5 @@
 import type {
+	DefenseCouncilMember,
 	FileInfo,
 	LecturerReviewDecision,
 	PaginatedTopicInBatchMilestone,
@@ -150,8 +151,9 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<ResponseMilestoneWithTemplate[]>) => response.data,
-			providesTags: (result, error, periodId) => [{ type: 'Milestones', id: periodId }]
+			providesTags: (result, error, periodId) => [{ type: 'Milestones', id: periodId }, { type: 'PeriodDetail', id: periodId }]
 		}),
+
 		manageTopicsInDefenseMilestone: builder.mutation<
 			{ message: string },
 			{
@@ -167,13 +169,64 @@ export const milestoneApi = baseApi.injectEndpoints({
 					body: {
 						milestoneTemplateId: body.milestoneTemplateId,
 						action: body.action,
-						topicSnapshots: body.topicSnapshots,
+						topicSnapshots: body.topicSnapshots
 					}
 				}
 			},
 			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
 			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestones', id: 'defense' }]
-		})
+		}),
+		manageLecturersInDefenseMilestone: builder.mutation<
+			{ message: string },
+			{
+				milestoneTemplateId: string
+				action: 'add' | 'delete'
+				defenseCouncil: DefenseCouncilMember[]
+			}
+		>({
+			query: (body) => ({
+				url: `/milestones/defense-milestone/manage-lecturers`,
+				method: 'PATCH',
+				body
+			}),
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
+			invalidatesTags: (_result, _error, arg) => [
+				{ type: 'Milestones', id: 'defense' },
+				{ type: 'Milestones', id: arg.milestoneTemplateId }
+			]
+		}),
+		uploadScoringResultFile: builder.mutation<{ message: string }, { templateId: string; file: File }>({
+			query: ({ templateId, file }) => {
+				const formData = new FormData()
+				formData.append('file', file)
+				console.log('Uploading file for templateId:', templateId, file)
+				return {
+					url: `/milestones/${templateId}/upload-files/scoring-result`,
+					method: 'POST',
+					body: formData
+				}
+			}
+		}),
+		deleteScoringResultFile: builder.mutation<{ message: string }, { milestoneTemplateId: string }>({
+			query: ({ milestoneTemplateId }) => ({
+				url: `/milestones/${milestoneTemplateId}/delete-scoring-result`,
+				method: 'DELETE'
+			}),
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
+			invalidatesTags: (_result, _error, { milestoneTemplateId }) => [
+				{ type: 'Milestones', id: milestoneTemplateId }
+			]
+		}),
+		blockGrade: builder.mutation<{ message: string }, { milestoneId: string }>({
+			query: ({ milestoneId }) => ({
+				url: `/milestones/${milestoneId}/block-grade`,
+				method: 'PATCH'
+			}),
+			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
+			invalidatesTags: (_result, _error, { milestoneId }) => [
+				{ type: 'Milestones', id: milestoneId }
+			]
+		}),
 	}),
 	overrideExisting: false
 })
@@ -191,5 +244,9 @@ export const {
 	useFacultyGetTopicsInBatchQuery,
 	useReviewMilestoneByLecturerMutation,
 	useGetDefenseAssignmentInPeriodQuery,
-	useManageTopicsInDefenseMilestoneMutation
+	useManageTopicsInDefenseMilestoneMutation,
+	useManageLecturersInDefenseMilestoneMutation,
+	useUploadScoringResultFileMutation,
+	useDeleteScoringResultFileMutation,
+	useBlockGradeMutation
 } = milestoneApi
