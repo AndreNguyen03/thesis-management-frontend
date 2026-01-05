@@ -89,6 +89,8 @@ export interface GeneralTopic extends AbstractTopic {
 	year: number
 	original_id?: string
 	progress?: number
+	finalGrade?: number
+	defenseMilestoneDate?: Date
 }
 
 //Định nghĩa đề tài trong thư viện số

@@ -32,6 +32,8 @@ import { ViewProfile } from '@/features/shared/profile/ViewProfile'
 import { ContactPage } from '@/features/shared/contact/ContactPage'
 import { DefenseAssignmentPage } from '@/features/faculty/manage_phase/completion-phase/manage-defense-milestone/DefenseAssignmentPage'
 import DefenseScoringPage from '@/features/faculty/manage_phase/completion-phase/scoring/DefenseMilestonePage'
+import LecturerDefenseMilestonesPage from '@/features/lecturer/defense-milestones/LecturerDefenseMilestonesPage'
+import FacultyDefenseMilestonesPage from '@/features/faculty/defense-milestones/FacultyDefenseMilestonesPage'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -125,6 +127,9 @@ export const router = createBrowserRouter([
 			{ path: 'manage-period', element: <ManagePeriodPage /> },
 			{ path: 'period/:id/manage-defense-assignment', element: <DefenseAssignmentPage /> },
 			{ path: 'defense-milestones/:id/scoring', element: <DefenseScoringPage /> },
+			{ path: 'lecturer/defense-milestones', element: <LecturerDefenseMilestonesPage /> },
+			{ path: 'faculty/defense-milestones', element: <FacultyDefenseMilestonesPage /> },
+			
 			{ path: 'period/:id', element: <DetailPeriodPage /> },
 			{ path: 'manage-faculty-students', element: <ManageFacultyStudentPage /> },
 			{ path: 'manage-faculty-lecturers', element: <ManageFacultyLecturerPage /> },

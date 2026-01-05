@@ -56,7 +56,8 @@ const getGradeBadgeVariant = (grade?: string) => {
 // Badge màu cho trạng thái của đề tài trong milestones
 export const statusMap: Record<string, { label: string; color: string }> = {
 	assigned_defense: { label: 'Chưa chấm', color: 'text-center bg-gray-100 text-gray-700' },
-	graded: { label: 'Đã chấm', color: 'text-center bg-green-100 text-green-700' }
+	graded: { label: 'Đã chấm', color: 'text-center bg-green-100 text-green-700' },
+	archived: { label: 'Đã lưu trữ', color: 'text-center bg-blue-100 text-blue-700' }
 }
 
 export function TopicsTable({

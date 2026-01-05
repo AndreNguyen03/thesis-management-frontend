@@ -4,12 +4,14 @@ import {
 	type ResponseMilestoneWithTemplate
 } from '@/models/milestone.model'
 import { formatDate } from '@/utils/utils'
+import { useNavigate } from 'react-router-dom'
 interface MilestoneHeaderProps {
 	milestone: ResponseMilestoneWithTemplate
 	periodFacultyName: string
 }
 
 const MilestoneHeader = ({ milestone, periodFacultyName }: MilestoneHeaderProps) => {
+	const navigate = useNavigate()
 	return (
 		<div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
 			{/* Milestone Info */}
@@ -54,6 +56,12 @@ const MilestoneHeader = ({ milestone, periodFacultyName }: MilestoneHeaderProps)
 					<div className='flex items-center gap-2'>
 						<span className='text-sm font-medium text-gray-600'>Số lượng thành viên:</span>
 						<span className='text-sm text-gray-900'>{milestone.defenseCouncil?.length || 0}</span>
+						<span
+							className='cursor-pointer text-sm font-semibold text-blue-800 hover:underline'
+							onClick={() => navigate(`/period/${milestone.periodId}/manage-defense-assignment`)}
+						>
+							Đi tới phân công
+						</span>
 					</div>
 				</div>
 				{/* Council Members */}

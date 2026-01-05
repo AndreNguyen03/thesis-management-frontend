@@ -411,6 +411,19 @@ export const topicApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<{ success: number; failed: number }>) => response.data,
 			invalidatesTags: (result, error, { topics }) => topics.map((t) => ({ type: 'Topic', id: t.topicId }))
+		}),
+		archiveTopics: builder.mutation<
+			{ success: number; failed: number; message: string },
+			{ topicIds: string[] }
+		>({
+			query: (body) => ({
+				url: '/topics/batch-archive',
+				method: 'PATCH',
+				body
+			}),
+			transformResponse: (response: ApiResponse<{ success: number; failed: number; message: string }>) =>
+				response.data,
+			invalidatesTags: (result, error, { topicIds }) => topicIds.map((id) => ({ type: 'Topic', id }))
 		})
 	}),
 	overrideExisting: false
@@ -460,5 +473,6 @@ export const {
 	useGetTopicsAwaitingEvaluationInPeriodQuery,
 	useGetDetailTopicsInDefenseMilestonesQuery,
 	useBatchUpdateDefenseResultsMutation,
-	useBatchPublishDefenseResultsMutation
+	useBatchPublishDefenseResultsMutation,
+	useArchiveTopicsMutation
 } = topicApi

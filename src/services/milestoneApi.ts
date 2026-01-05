@@ -151,7 +151,10 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<ResponseMilestoneWithTemplate[]>) => response.data,
-			providesTags: (result, error, periodId) => [{ type: 'Milestones', id: periodId }, { type: 'PeriodDetail', id: periodId }]
+			providesTags: (result, error, periodId) => [
+				{ type: 'Milestones', id: periodId },
+				{ type: 'PeriodDetail', id: periodId }
+			]
 		}),
 
 		manageTopicsInDefenseMilestone: builder.mutation<
@@ -223,10 +226,23 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'PATCH'
 			}),
 			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
-			invalidatesTags: (_result, _error, { milestoneId }) => [
-				{ type: 'Milestones', id: milestoneId }
-			]
+			invalidatesTags: (_result, _error, { milestoneId }) => [{ type: 'Milestones', id: milestoneId }]
 		}),
+		getAllDefenseMilestones: builder.query<any[], void>({
+			query: () => ({
+				url: `/milestones/faculty/all`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<any[]>) => response.data
+		}),
+		// Giảng viên: Lấy đợt bảo vệ được phân công
+		getAssignedDefenseMilestones: builder.query<any[], { search?: string }>({
+			query: ({ search }) => ({
+				url: `/milestones/lecturer/assigned`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<any[]>) => response.data
+		})
 	}),
 	overrideExisting: false
 })
@@ -248,5 +264,7 @@ export const {
 	useManageLecturersInDefenseMilestoneMutation,
 	useUploadScoringResultFileMutation,
 	useDeleteScoringResultFileMutation,
-	useBlockGradeMutation
+	useBlockGradeMutation,
+	useGetAllDefenseMilestonesQuery,
+	useGetAssignedDefenseMilestonesQuery
 } = milestoneApi
