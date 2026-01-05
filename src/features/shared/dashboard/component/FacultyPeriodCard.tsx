@@ -3,15 +3,13 @@ import { Badge } from '@/components/ui/badge'
 import { Check, FileText, UserPlus, Code, Award, BookOpen, AlertCircle, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/utils/utils'
-import type { DashboardType, LecturerTopicCompletion } from '@/models/period.model'
+import type { DashboardType, StudentTopicDashboard } from '@/models/period.model'
 import React from 'react'
+import { RegistrationCard } from './StudentRegistrationCard'
 // import { AISummaryCard } from './ai-summary-card'
 import { GradingResultCard } from './grading-result-card'
-import { TopicExecutionCard } from './TopicExecutionCard'
-import { LecturerRegistrationCard } from './LecturerRegistrationCard'
-import { LecturerSubmitTopicCard } from './LecturerSubmitTopicCard'
 
-interface LecturerPeriodCardProps {
+interface FacultyPeriodCardProps {
 	dashboardData: DashboardType
 }
 
@@ -24,7 +22,7 @@ const phases = [
 
 const phaseOrder = ['empty', 'submit_topic', 'open_registration', 'execution', 'completion']
 
-export function LecturerPeriodCard({ dashboardData }: LecturerPeriodCardProps) {
+export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 	const hasNoPeriod =
 		!dashboardData.currentPhase ||
 		!dashboardData.currentPhaseDetail ||
@@ -54,6 +52,7 @@ export function LecturerPeriodCard({ dashboardData }: LecturerPeriodCardProps) {
 			</Card>
 		)
 	}
+    
 	const currentIndex = phaseOrder.indexOf(dashboardData.currentPhaseDetail.phase)
 
 	const currentPhaseStatus = dashboardData.currentPhaseDetail.status
@@ -236,12 +235,11 @@ export function LecturerPeriodCard({ dashboardData }: LecturerPeriodCardProps) {
 				</div>
 			</CardContent>
 			<CardContent>
-				{currentPhase === 'submit_topic' && <LecturerSubmitTopicCard dashboardData={dashboardData} />}
-				{currentPhase === 'open_registration' && <LecturerRegistrationCard dashboardData={dashboardData} />}
+				{currentPhase === 'open_registration' && <RegistrationCard dashboardData={dashboardData} />}
 				{currentPhase === 'execution' && <TopicExecutionCard dashboardData={dashboardData} />}
 				{/* {currentPhase === 'execution' && <AISummaryCard />} */}
 				{currentPhase === 'completion' &&
-					(dashboardData.topicData as LecturerTopicCompletion[]).map((topic) => {
+					(dashboardData.topicData as StudentTopicDashboard[]).map((topic) => {
 						return (
 							<React.Fragment key={topic.titleVN}>
 								<GradingResultCard topic={topic} />

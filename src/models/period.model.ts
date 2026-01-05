@@ -235,6 +235,28 @@ export interface CurrentPeriodDashboard {
 	scientificResearch: DashboardType
 }
 
+
+export interface FacultyDashboardType {
+	_id: string
+	title: string
+	description: string
+	type: PeriodType
+	facultyName: string
+	phases: PeriodPhase[]
+	status: string
+	startTime: Date
+	endTime: Date
+	currentPhase: string
+	currentPhaseDetail: PeriodPhase
+}
+
+export interface FacultyCurrentPeriodDashboard {
+	thesis: FacultyDashboardType
+	scientificResearch: FacultyDashboardType
+}
+
+
+
 export interface PaginationPeriodQueryParams extends PaginationQueryParamsDto {
 	type?: PeriodType | 'all'
 	status?: PeriodStatus | 'all'

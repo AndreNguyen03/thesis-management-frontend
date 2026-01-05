@@ -18,7 +18,7 @@ import {
 import { buildQueryString } from '@/models/query-params'
 import type { GetStatiticInPeriod } from '@/models/statistic.model'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
-import type { PaginatedMiniPeriodInfo } from '../models/period.model'
+import type { FacultyCurrentPeriodDashboard, PaginatedMiniPeriodInfo } from '../models/period.model'
 
 export const periodApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -209,6 +209,11 @@ export const periodApi = baseApi.injectEndpoints({
 		getLecturerDashboard: builder.query<CurrentPeriodDashboard, void>({
 			query: () => `/dashboard/lecturer`,
 			transformResponse: (response: ApiResponse<CurrentPeriodDashboard>) => response.data,
+			providesTags: ['LecturerDashboard']
+		}),
+		getFacultyDashboard: builder.query<FacultyCurrentPeriodDashboard, void>({
+			query: () => `/dashboard/faculty`,
+			transformResponse: (response: ApiResponse<FacultyCurrentPeriodDashboard>) => response.data,
 			providesTags: ['LecturerDashboard']
 		})
 	})
