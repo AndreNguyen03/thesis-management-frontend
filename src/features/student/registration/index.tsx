@@ -14,7 +14,6 @@ export const RegistrationPeriodsPage = () => {
 	// 👉 LẤY DATA TỪ RTK QUERY (CACHE)
 	const { data: periods = [], isLoading, isFetching } = useGetCurrentPeriodsQuery()
 	const [isRecommendOpen, setIsRecommendOpen] = useState(false)
-	const [hasProfile, setHasProfile] = useState(true)
 	console.log('periods', periods)
 
 	// ⛔ chưa có data thì không xử lý gì hết
@@ -120,14 +119,13 @@ export const RegistrationPeriodsPage = () => {
 					)}
 				</div>
 				{/* Recommendation Panel */}
-				<RecommendationPanel
+				{/* <RecommendationPanel
 					isOpen={isRecommendOpen}
 					onClose={() => setIsRecommendOpen(false)}
-					hasProfile={hasProfile}
 				/>
 
 				{/* Floating Button */}
-				<RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} />
+				{/* <RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} /> */} 
 			</div>
 		</div>
 	)
