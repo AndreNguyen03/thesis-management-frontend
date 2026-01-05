@@ -17,16 +17,6 @@ import { formatPeriodInfo, formatPeriodInfo2, PhaseInfo } from '@/utils/utils'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import {
-	Loader2,
-	XCircle,
-	Eye,
-	Edit,
-	Users,
-	BookOpen,
-	Calendar,
-	GraduationCap,
-	Check,
-	Circle,
 	ChevronRight
 } from 'lucide-react'
 import TopicsDataTable from './TopicsDataTableInPeriod'

@@ -115,7 +115,7 @@ export function PhaseContent({
 
 	const handleResolve = async () => {
 		try {
-			const res = await resolvePhase({ periodId, phase: phaseDetail.phase }).unwrap()
+			const res = await resolvePhase({ periodId, phase: phaseDetail.phase, phaseId: phaseDetail._id }).unwrap()
 			console.log('resovle phase :::', res)
 			setResolvePhaseData(res)
 		} catch (err) {

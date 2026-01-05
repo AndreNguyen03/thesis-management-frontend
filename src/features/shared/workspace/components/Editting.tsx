@@ -29,57 +29,62 @@ const Editting = ({
 	return (
 		<div
 			key={file.name + index}
-			className='group flex items-center gap-4 rounded-xl border border-border bg-card p-2 transition-shadow hover:shadow-md'
+			title={file.name}
+			className='group flex max-w-80 items-center gap-4 rounded-xl border border-border bg-card p-2 transition-shadow hover:shadow-md'
 		>
 			<div className='shrink-0 rounded-lg bg-secondary p-2'>{getFileIcon(file.type as any)}</div>
 
 			<div className='min-w-0 flex-1'>
 				<div className='flex items-center gap-2'>
 					{isEditing ? (
-						<>
-							<input
-								className='flex-1 rounded border border-border bg-background p-1 text-sm'
-								value={editedName}
-								onChange={(e) => setEditedName(e.target.value)}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter') {
+						<div>
+							<div className='flex items-center gap-2'>
+								<input
+									className='flex-1 rounded border border-border bg-background p-1 text-sm'
+									value={editedName}
+									onChange={(e) => setEditedName(e.target.value)}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter') {
+											const newFileName = extension ? `${editedName}.${extension}` : editedName
+											onEditting(newFileName.trim())
+											setEditting(false)
+										}
+										if (e.key === 'Escape') {
+											setEditedName(originalName)
+											setEditting(false)
+										}
+									}}
+									autoFocus
+								/>
+								{extension && <span className='text-xs text-muted-foreground'>.{extension}</span>}
+							</div>
+							<div>
+								<Button
+									size='sm'
+									className='h-7'
+									onMouseDown={(e) => {
+										e.preventDefault()
 										const newFileName = extension ? `${editedName}.${extension}` : editedName
-										onEditting(newFileName.trim())
+										onEditting(newFileName)
 										setEditting(false)
-									}
-									if (e.key === 'Escape') {
+									}}
+								>
+									Lưu
+								</Button>
+								<Button
+									size='sm'
+									variant='outline'
+									className='h-7'
+									onClick={() => {
 										setEditedName(originalName)
 										setEditting(false)
-									}
-								}}
-								autoFocus
-							/>
-							{extension && <span className='text-xs text-muted-foreground'>.{extension}</span>}
-							<Button
-								size='sm'
-								className='h-7'
-								onMouseDown={(e) => {
-									e.preventDefault()
-									const newFileName = extension ? `${editedName}.${extension}` : editedName
-									onEditting(newFileName)
-									setEditting(false)
-								}}
-							>
-								Lưu
-							</Button>
-							<Button
-								size='sm'
-								variant='outline'
-								className='h-7'
-								onClick={() => {
-									setEditedName(originalName)
-									setEditting(false)
-									onEditting(backupName)
-								}}
-							>
-								Hủy
-							</Button>
-						</>
+										onEditting(backupName)
+									}}
+								>
+									Hủy
+								</Button>
+							</div>
+						</div>
 					) : (
 						<>
 							<p className='truncate text-sm font-medium text-foreground'>{file.name}</p>
@@ -88,7 +93,7 @@ const Editting = ({
 									setBackupName(file.name)
 									setEditting(true)
 								}}
-								className='h-4 w-4 cursor-pointer text-gray-400 hover:text-gray-500'
+								className='h-8 w-8 cursor-pointer text-gray-400 hover:text-gray-500'
 							/>
 						</>
 					)}

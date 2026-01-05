@@ -30,6 +30,9 @@ export interface GroupSidebar {
 export interface GroupDetail {
 	id: string
 	topicId: string
+	topicStatus: string
+	topicTitleVN: string
+	topicTitleEng: string
 	type: 'direct' | 'group'
 	participants: Participant[]
 	lastMessage?: LastMessage

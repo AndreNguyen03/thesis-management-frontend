@@ -37,7 +37,7 @@ const LecturersCombobox = ({ selectedLecturers, onSelectionChange }: FieldsConta
 	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'fullName',
+		search_by: ['fullName'],
 		query: '',
 		sort_by: 'fullName',
 		sort_order: 'asc',

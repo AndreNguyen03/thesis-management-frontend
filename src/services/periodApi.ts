@@ -158,15 +158,18 @@ export const periodApi = baseApi.injectEndpoints({
 		}),
 		resolvePhase: builder.mutation<
 			Phase1Response | Phase2Response | Phase3Response,
-			{ periodId: string; phase: string }
+			{ periodId: string; phase: string; phaseId: string }
 		>({
-			query: ({ periodId, phase }) => ({
+			query: ({ periodId, phase, phaseId }) => ({
 				url: `/periods/${periodId}/phases/${phase}/resolve`,
 				method: 'POST'
 			}),
 			transformResponse: (response: ApiResponse<Phase1Response | Phase2Response | Phase3Response>) =>
 				response.data,
-			invalidatesTags: (result, error, { periodId }) => [{ type: 'PeriodDetail', id: periodId }]
+			invalidatesTags: (result, error, { periodId, phaseId }) => [
+				{ type: 'PeriodDetail', id: periodId },
+				{ type: 'PhaseTopics', id: phaseId }
+			]
 		}),
 		adjustPeriod: builder.mutation<Period, { periodId: string; body: UpdatePeriodDto }>({
 			query: ({ periodId, body }) => ({

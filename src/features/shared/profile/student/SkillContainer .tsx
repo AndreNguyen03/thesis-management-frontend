@@ -170,9 +170,8 @@ const SkillContainer = ({ selectedSkills, isEditing = true, onSelectionChange }:
 		<>
 			<div className='flex items-center gap-4'>
 				<h4 className='mb-2 text-lg font-semibold text-gray-800'>
-					Yêu cầu kỹ năng <span className='text-red-500'>*</span>
+					Kỹ năng <span className='text-red-500'>*</span>
 				</h4>
-				<h4 className='mb-2 text-sm font-semibold text-gray-500'>Chọn tối đa 15 kỹ năng </h4>
 				<h4 className='mb-2 text-lg font-semibold text-blue-600'>{`(${selectedSkills.length})`}</h4>
 			</div>
 			{/* 1. Hiển thị các tags đã chọn (có nút xóa) */}

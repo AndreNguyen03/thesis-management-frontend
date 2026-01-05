@@ -93,27 +93,17 @@ export interface OverdueTopic {
 export interface Phase3Response {
 	periodId: string
 	phase: 'execution'
-
-	// 1. Đề tài chưa nộp báo cáo cuối kỳ (đã có)
 	overdueTopics: OverdueTopic[]
-
-	// 2. Đề tài đang tạm dừng/bị delay
 	pausedOrDelayedTopics: PausedOrDelayedTopic[]
-
-	// 3. Đề tài chờ giảng viên đánh giá
 	pendingLecturerReview: PendingLecturerReviewTopic[]
-
 	canTriggerNextPhase: boolean
 }
 
 export interface Phase4Response {
 	periodId: string
 	phase: 'completion'
-	// // 1. Đề tài chưa nộp báo cáo cuối kỳ (đã có)
 	// overdueTopics: OverdueTopicInfo[]
-	// // 2. Đề tài đang tạm dừng/bị delay
 	// pausedOrDelayedTopics: PausedOrDelayedTopicInfo[]
-	// // 3. Đề tài chờ giảng viên đánh giá
 	// pendingLecturerReview: PendingLecturerReview[]
 	canTriggerNextPhase: boolean
 }

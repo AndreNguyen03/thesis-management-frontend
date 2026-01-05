@@ -36,11 +36,11 @@ const FieldsCombobox = ({ selectedFields, onSelectionChange }: FieldsContainerPr
 	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: 'name',
+		search_by: ['name'],
 		query: '',
 		sort_by: 'name',
 		sort_order: 'desc',
-		filter: selectedFields.join(','),
+		filter: selectedFields,
 		filter_by: '_id'
 	})
 

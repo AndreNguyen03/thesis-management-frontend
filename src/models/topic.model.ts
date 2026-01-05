@@ -8,6 +8,7 @@ import type { RelatedStudentInTopic, StudentRegistrationStatus } from './registr
 import { PaginationQueryParamsDto } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
+import type { ResponseMilestoneWithTemplate } from './milestone.model'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -283,7 +284,8 @@ export const topicStatusLabels = {
 	delayed: { name: 'Bị trì hoãn', css: 'bg-yellow-400 text-yellow-900' },
 	paused: { name: 'Tạm ngưng', css: 'bg-gray-400 text-gray-900' },
 	submitted_for_review: { name: 'Đã nộp báo cáo', css: 'bg-yellow-200 text-yellow-800' },
-	awaiting_evaluation: { name: 'Chờ đánh giá', css: 'bg-purple-200 text-purple-800' },
+	awaiting_evaluation: { name: 'Chờ phân công vào hội đồng', css: 'bg-purple-200 text-purple-800' },
+	assigned_defense: { name: 'Sẵn sàng bảo vệ', css: 'bg-purple-200 text-purple-800' },
 	graded: { name: 'Đã chấm điểm', css: 'bg-green-200 text-green-800' },
 	reviewed: { name: 'Đã kiểm tra', css: 'bg-blue-200 text-blue-800' },
 	archived: { name: 'Đã lưu trữ', css: 'bg-gray-200 text-gray-800' },
@@ -368,7 +370,7 @@ interface FileSnapshotDto {
 	size: number
 }
 
-interface FinalProduct {
+export interface FinalProduct {
 	thesisReport: FileSnapshotDto
 	sourceCodeUrl?: string
 	sourceCodeZip?: FileSnapshotDto[]
@@ -387,6 +389,7 @@ export interface DefenseResult {
 	gradeText: string // Xếp loại: "Xuất sắc"
 	councilMembers: CouncilMemberSnapshot[]
 	councilName: string // VD: "Hội đồng CNPM 01"
+	isPublished: boolean
 }
 export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
 	periodId?: string
@@ -425,4 +428,60 @@ export interface ApprovalTopicQueryParams extends PaginationQueryParamsDto {
 	type?: string 
 	allowManualApproval?: boolean | 'all'
 	onlyPending?: boolean | 'all'
+}
+
+//thành viên trong hội đồng
+export interface CouncilMemberSnapshot {
+	memberId: string
+	fullName: string
+	role: string // "Chủ tịch", "Thư ký"...
+	score: number
+	note: string
+}
+
+export interface DetailTopicsInDefenseMilestone {
+	_id: string
+	periodInfo: MiniPeriod
+	milestoneInfo: ResponseMilestoneWithTemplate
+	data: TopicsInDefenseMilestone[]
+	meta: MetaDto
+}
+export interface TopicsInDefenseMilestone {
+	_id: string
+	titleVN: string
+	titleEng: string
+	description: string
+	type: string
+	majorId: string
+	finalProduct: FinalProduct
+	isPublishedToLibrary: boolean
+	allowManualApproval: boolean
+	updatedAt: Date
+	currentStatus: string
+	defenseResult: DefenseResult
+	lecturers: ResponseMiniLecturerDto[]
+	students: ResponseMiniStudentDto[]
+}
+export interface CouncilMemberScoreDto {
+	memberId: string
+	fullName: string
+	role: string
+	score: number
+	note?: string
+}
+
+export interface UpdateDefenseResultDto {
+	topicId: string
+	defenseDate: Date
+	periodName: string
+	finalScore: number
+	gradeText: string
+	councilMembers: CouncilMemberScoreDto[]
+	councilName: string
+	isPublished?: boolean
+	isBlock?: boolean
+}
+
+export interface BatchUpdateDefenseResultDto {
+	results: UpdateDefenseResultDto[]
 }

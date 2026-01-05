@@ -1,5 +1,5 @@
 import type { RenameFilesBody } from '@/models/file.model'
-import { baseApi, type ApiResponse } from './baseApi'
+import { baseApi} from './baseApi'
 
 export const uploadFilesApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -9,7 +9,7 @@ export const uploadFilesApi = baseApi.injectEndpoints({
 				method: 'PATCH',
 				body: body
 			})
-		})
+		}),
 	}),
 	overrideExisting: false
 })

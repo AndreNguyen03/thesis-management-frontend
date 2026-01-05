@@ -112,7 +112,8 @@ export const baseApi = createApi({
 		'KnowledgeSources',
 		'Milestone-Faculty',
 		'ListFields',
-		'StudentTopicState',
+		'DefenseMilestone',
+		'Topic',
 		'TopicRegistration',
 		'StudentDashboard',
 		'LecturerDashboard'

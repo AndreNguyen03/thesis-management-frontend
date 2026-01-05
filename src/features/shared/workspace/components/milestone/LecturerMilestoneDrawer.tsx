@@ -82,7 +82,7 @@ export const LecturerMilestoneDrawer = ({
 			toast.error('Có lỗi xảy ra khi gửi nhận xét và quyết định.', { richColors: true })
 		}
 	}
-	const hasSubmission = !!milestone.submission
+	const hasSubmission = !!milestone.submission && milestone.submission.files.length > 0
 	const hasComment = milestone.submission?.lecturerDecision !== undefined
 	const [isCollapsed, setIsCollapsed] = useState(true)
 	//gọi endpoin tải file theo milesttonesid
@@ -163,6 +163,7 @@ export const LecturerMilestoneDrawer = ({
 								required
 								className='mt-1 w-full rounded-lg border px-3 py-2'
 								placeholder='Nhập tiêu đề...'
+								disabled={!milestone.isAbleEdit}
 							/>
 						</div>
 						<div>
@@ -172,6 +173,7 @@ export const LecturerMilestoneDrawer = ({
 									value={updateInfo.description}
 									onChange={(data) => setUpdateInfo({ ...updateInfo, description: data })}
 									placeholder='Nhập mô tả chi tiết về đề tài...'
+									disabled={!milestone.isAbleEdit}
 								/>
 							</div>
 						</div>
@@ -185,15 +187,16 @@ export const LecturerMilestoneDrawer = ({
 									onChange={(e) => setUpdateInfo({ ...updateInfo, dueDate: e.target.value })}
 									required
 									className='mt-1 w-full rounded-lg border px-3 py-2'
+									disabled={!milestone.isAbleEdit}
 								/>
 							</div>
 						</div>
 						<button
 							onClick={handleSaveSettings}
-							disabled={!isChanging}
+							disabled={!isChanging || !milestone.isAbleEdit}
 							className={cn(
 								'flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 py-2.5 text-sm font-medium text-white hover:bg-orange-700',
-								!isChanging && 'cursor-not-allowed opacity-50'
+								(!isChanging || !milestone.isAbleEdit) && 'cursor-not-allowed opacity-50'
 							)}
 						>
 							<Save className='h-4 w-4' /> Lưu Cài đặt
@@ -225,8 +228,12 @@ export const LecturerMilestoneDrawer = ({
 										</div>
 										<button
 											className='text-xs font-bold text-blue-600 hover:underline'
+											disabled={isDownloadingMilestone}
 											onClick={() => handleDownloadZip(milestone._id, milestone.title)}
 										>
+											{isDownloadingMilestone && (
+												<Loader2 className='inline-block h-4 w-4 animate-spin' />
+											)}
 											Tải xuống
 										</button>
 									</div>
@@ -293,7 +300,7 @@ export const LecturerMilestoneDrawer = ({
 																Chọn
 															</option>
 															<option value='approved'>Duyệt</option>
-															<option value='rejected'>Không duyệt</option>
+															<option value='rejected'>Yêu cầu nộp lại</option>
 														</select>
 														<span className='font-semibold'>(Quyết định cuối cùng)</span>
 													</div>

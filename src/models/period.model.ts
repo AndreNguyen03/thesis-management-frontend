@@ -7,6 +7,7 @@ import { CalendarCheck, Clock, Lightbulb } from 'lucide-react'
 import type { Role } from './users'
 import type { BadgeVariant } from '@/components/ui'
 import type { MetaDto } from './paginated-object.model'
+import type { FileInfo } from './milestone.model'
 
 export type PeriodStatus = 'timeout' | 'active' | 'pending'
 
@@ -34,6 +35,8 @@ export interface MiniPeriod {
 	year: string
 	semester: string
 	faculty: GetFaculty
+	currentPhase: string
+	type: string
 }
 export interface CreatePeriodPayload {
 	year: string
@@ -53,7 +56,16 @@ export interface PhaseStats {
 	iconVariant?: StatVariant
 }
 
-export type StatVariant = 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'neutral' | 'purple' | 'orange'
+export type StatVariant =
+	| 'primary'
+	| 'success'
+	| 'warning'
+	| 'destructive'
+	| 'info'
+	| 'neutral'
+	| 'purple'
+	| 'orange'
+	| 'ready'
 
 export interface PeriodBackend {
 	id: string
