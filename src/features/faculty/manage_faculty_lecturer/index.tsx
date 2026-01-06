@@ -9,7 +9,7 @@ export function ManageFacultyLecturerPage() {
 	])
 
 	return (
-		<div className='mx-10 h-[calc(100vh-10rem)] min-h-0 w-full overflow-auto'>
+		<div className='pt-4 mx-5 h-full w-full overflow-auto'>
 			{/* Header */}
 			<div className='flex flex-col' role='main'>
 				<header className='mb-6 mt-6 flex items-center justify-between px-2'>

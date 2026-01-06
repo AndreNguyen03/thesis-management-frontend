@@ -7,10 +7,7 @@ import { useGetAllUserMilestonesQuery } from '@/services/milestoneApi'
 
 export function StudentDashboard() {
 	const { data: milestoneEvents, isLoading: isLoadingMilestoneEvent } = useGetAllUserMilestonesQuery()
-
 	const { data: dashboardData, isLoading: newDashboardLoading } = useGetStudentDashboardQuery()
-
-	console.log(dashboardData)
 
 	const currentThesisPeriod = dashboardData?.thesis
 	const currentResearchPeriod = dashboardData?.scientificResearch
@@ -18,8 +15,8 @@ export function StudentDashboard() {
 	if (isLoadingMilestoneEvent || newDashboardLoading) {
 		return (
 			<div className='min-h-screen w-full bg-background'>
-				<main className='mx-auto max-w-7xl px-4 py-6 lg:px-8'>
-					<div className='grid gap-6 lg:grid-cols-[1fr_320px]'>
+				<main className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8'>
+					<div className='grid gap-6 lg:grid-cols-[1fr_320px] md:grid-cols-1 sm:grid-cols-1'>
 						<div className='space-y-6'>
 							<PeriodCardSkeleton />
 							<PeriodCardSkeleton />
@@ -38,15 +35,15 @@ export function StudentDashboard() {
 
 	return (
 		<div className='min-h-screen w-full bg-background'>
-			<main className='mx-auto max-w-7xl px-4 py-6 lg:px-8'>
-				<div className='grid gap-6 lg:grid-cols-[1fr_320px]'>
+			<main className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8'>
+				<div className='grid gap-6 lg:grid-cols-[1fr_320px] md:grid-cols-1 sm:grid-cols-1'>
 					{/* Main Content */}
 					<div className='space-y-6'>
 						<StudentPeriodCard dashboardData={currentThesisPeriod} />
 						<StudentPeriodCard dashboardData={currentResearchPeriod} />
 					</div>
 					{/* Right Sidebar */}
-					<div className='space-y-6'>
+					<div className='space-y-6 lg:sticky lg:top-6'>
 						<SchedulePanel milestones={milestoneEvents} />
 					</div>
 				</div>

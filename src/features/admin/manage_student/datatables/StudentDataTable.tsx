@@ -253,10 +253,19 @@ const StudentDataTable = () => {
 								<td className='px-3 py-2'>
 									<span className='font-semibold text-gray-900'>{student.studentCode}</span>
 								</td>
-								<td className='px-3 py-2'>
-									<span className='font-semibold text-gray-900'>{student.fullName}</span>
+								<td className='max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2 sm:max-w-[150px] lg:max-w-[150px]'>
+									<span
+										title={student.fullName}
+										className='cursor-pointer font-semibold text-gray-900'
+									>
+										{student.fullName}
+									</span>
 								</td>
-								<td className='px-3 py-2'>{student.email}</td>
+								<td className='max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2 sm:max-w-[150px] lg:max-w-[150px]'>
+									<span title={student.email} className='cursor-pointer'>
+										{student.email}
+									</span>
+								</td>
 								<td className='px-3 py-2'>{student.phone}</td>
 								<td className='px-3 py-2'>{student.class}</td>
 								<td className='px-3 py-2'>{student.major}</td>

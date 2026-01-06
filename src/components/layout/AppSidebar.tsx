@@ -11,7 +11,6 @@ import {
 	Library,
 	MessageCircle,
 	Search,
-	Settings,
 	UserCheck,
 	Users
 } from 'lucide-react'
@@ -33,7 +32,7 @@ type MenuItem = {
 	children?: MenuItem[]
 }
 
-const menuItems: Record<Role | 'common'  | 'chung', MenuItem[]> = {
+const menuItems: Record<Role | 'common' | 'chung', MenuItem[]> = {
 	common: [{ title: 'Dashboard', url: '/', icon: LayoutDashboard }],
 	chung: [
 		{ title: 'Liên hệ', url: '/chat', icon: MessageCircle },
@@ -75,7 +74,7 @@ const menuItems: Record<Role | 'common'  | 'chung', MenuItem[]> = {
 		{ title: 'Quản lý đợt đề tài', url: '/manage-period', icon: Users },
 		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 }
 		// { title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
-	],
+	]
 	// footer: [{ title: 'Cài đặt', url: '/settings', icon: Settings }]
 }
 const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
@@ -209,14 +208,16 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 
 			{/* Menu Sections */}
 			<div className='custom-scrollbar flex-1 space-y-6 overflow-y-auto'>
-				<div>
-					{isOpen && (
-						<div className='mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-400'>
-							Tổng quan
-						</div>
-					)}
-					{renderMenuItems(menuItems.common)}
-				</div>
+				{userRole !== 'admin' && (
+					<div>
+						{isOpen && (
+							<div className='mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-400'>
+								Tổng quan
+							</div>
+						)}
+						{renderMenuItems(menuItems.common)}
+					</div>
+				)}
 
 				<div>
 					{isOpen && (

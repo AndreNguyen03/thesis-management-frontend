@@ -55,7 +55,18 @@ export const ContactSidebar = ({
 				</div>
 			</div>
 
-			<div className='flex-1 overflow-y-auto p-2'>
+			<div className='h-50% flex-1 overflow-y-auto p-2'>
+				{/* Case 1: Không có group nào */}
+				{groups.length === 0 && (
+					<EmptyState
+						icon={<Search className='h-10 w-10' />}
+						title='Chưa có cuộc trò chuyện'
+						description='Bắt đầu liên hệ bằng cách tìm kiếm trên thanh search'
+					/>
+				)}
+
+				{/* Case 2: Có group nhưng search không ra */}
+
 				{groups.map((g) => {
 					// Lấy tin nhắn của group này từ context
 					const msgs = messagesByGroup?.[g._id] ?? []
@@ -80,11 +91,10 @@ export const ContactSidebar = ({
 							key={g._id}
 							onClick={() => handleSelectGroup(g._id)}
 							className={cn(
-								'group cursor-pointer rounded-lg px-3 py-2 transition-all duration-150',
-								'bg-sidebar-border',
-								'hover:scale-[1.01] hover:bg-secondary/50 hover:shadow-sm',
-								'border-b border-sidebar-border/20',
-								selectedGroupId === g._id && 'bg-primary/20 shadow-inner ring-1 ring-primary/50'
+								'group cursor-pointer px-3 py-3 transition-colors duration-150',
+								'border-b border-sidebar-foreground/20', // phân tách rõ ràng item
+								'hover:bg-secondary/50', // hover nhẹ
+								selectedGroupId === g._id && 'bg-primary/20 font-semibold text-primary' // highlight khi chọn
 							)}
 						>
 							<div className='flex items-center gap-3'>
@@ -93,10 +103,10 @@ export const ContactSidebar = ({
 										<img
 											src={g.otherUser?.avatarUrl}
 											alt={g.otherUser?.fullName || 'User Avatar'}
-											className='h-full w-full rounded-full object-cover'
+											className='h-full w-full object-cover'
 										/>
 									) : (
-										<div className='flex h-full w-full items-center justify-center rounded-full bg-blue-500 font-bold text-white'>
+										<div className='flex h-full w-full items-center justify-center bg-blue-500 font-bold text-white'>
 											{getAvatarInitials(g.otherUser?.fullName)}
 										</div>
 									)}
@@ -105,7 +115,7 @@ export const ContactSidebar = ({
 									<p className='truncate text-sm font-semibold text-gray-800'>
 										{g.otherUser?.fullName}
 									</p>
-									<div className='mt-0.5 flex items-center justify-between'>
+									<div className='mt-1 flex items-center justify-between'>
 										<p className='truncate text-xs text-gray-600'>{content}</p>
 										<div className='flex flex-col items-end gap-1'>
 											{unreadCount > 0 && (
@@ -122,6 +132,16 @@ export const ContactSidebar = ({
 					)
 				})}
 			</div>
+		</div>
+	)
+}
+
+const EmptyState = ({ icon, title, description }: { icon: React.ReactNode; title: string; description?: string }) => {
+	return (
+		<div className='flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground'>
+			<div className='opacity-60'>{icon}</div>
+			<p className='text-sm font-medium'>{title}</p>
+			{description && <p className='text-xs'>{description}</p>}
 		</div>
 	)
 }

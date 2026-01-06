@@ -2,17 +2,20 @@ import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
 import { useAppSelector } from '../../../store'
 import { AdminDashboard, LecturerDashboard, StudentDashboard } from './'
 import { FacultyDashboard } from './FacultyDashboard'
+import { ManageLecturerPage } from '@/features/admin/manage_lecturer'
 
 const Dashboard = () => {
-	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Dashboard' }])
-
 	const userRole = useAppSelector((state) => state.auth.user?.role)
+	const breadcrumbs =
+		userRole === 'admin'
+			? [{ label: 'Trang chủ', path: '/' }, { label: 'Quản lý giảng viên' }]
+			: [{ label: 'Trang chủ', path: '/' }, { label: 'Dashboard' }]
 
-	console.log(`Dash board userrole: ::`, userRole)
+	usePageBreadcrumb(breadcrumbs)
 
 	switch (userRole) {
 		case 'admin':
-			return <AdminDashboard />
+			return <ManageLecturerPage />
 		case 'lecturer':
 			return <LecturerDashboard />
 		case 'student':

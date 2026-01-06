@@ -6,9 +6,10 @@ import { useChat } from '@/hooks'
 import { useAppSelector } from '@/store'
 import { formatDateLabel, getUserIdFromAppUser, isSameDay } from '@/utils/utils'
 import type { ChatMessage } from '@/contexts/ChatSocketContext'
+import { Avatar } from './Avatar'
 
 interface Participant {
-	id: string
+	_id: string
 	fullName: string
 	avatarUrl?: string | undefined
 }
@@ -17,6 +18,8 @@ interface ChatPanelProps {
 	groupId: string
 	groupName: string
 	participants: Participant[]
+	onBack?: () => void
+	onOpenWork?: () => void
 }
 
 export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) => {
@@ -64,7 +67,7 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 
 	const participantMap = useMemo(() => {
 		const map = new Map<string, Participant>()
-		participants.forEach((p) => map.set(p.id, p))
+		participants.forEach((p) => map.set(p._id, p))
 		return map
 	}, [participants])
 
@@ -250,7 +253,7 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 	/* ================= RENDER ================= */
 
 	return (
-		<div className='flex h-full min-h-0 flex-col bg-chat'>
+		<div className='flex h-full flex-col bg-chat'>
 			{/* Header */}
 			<div className='panel-header flex items-center justify-between px-4 py-3'>
 				<div className='flex flex-col gap-1'>
@@ -259,13 +262,14 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 					</h2>
 					<div className='flex items-center gap-1'>
 						{participants.map((p) => {
-							const isOnline = onlineUserIds.includes(p.id)
+							const isOnline = onlineUserIds.includes(p._id)
 							return (
-								<div key={p.id} className='relative h-6 w-6 rounded-full' title={p.fullName}>
-									<img
-										src={p.avatarUrl || 'https://i.pravatar.cc/150?img=65'}
-										alt={p.fullName}
-										className='h-full w-full rounded-full object-cover'
+								<div key={p._id} className='relative h-6 w-6 rounded-full' title={p.fullName}>
+									<Avatar
+										fullName={p.fullName}
+										avatarUrl={p.avatarUrl}
+										size={24}
+										className='border-background'
 									/>
 									{isOnline && (
 										<span className='absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 ring-1 ring-white' />
@@ -319,7 +323,15 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 					</div>
 				)}
 
-				{!isInitialLoading && (
+				{/* EMPTY STATE */}
+				{!isInitialLoading && messages.length === 0 && !searchResults && (
+					<GroupChatEmptyState
+						groupName={groupName}
+						participants={participants.filter((p) => p._id !== userId)}
+					/>
+				)}
+
+				{!isInitialLoading && messages.length > 0 && (
 					<>
 						<div className='mb-2 flex flex-col items-center'>
 							{/* Button load older messages */}
@@ -350,6 +362,7 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 
 								const isMine = msg.senderId === userId
 								const sender = participantMap.get(msg.senderId)
+								console.log('participants map :::', participantMap)
 								let seenBy: Participant[] = []
 								if (isLastMessageOfMineBlock(messages, index, userId) && msg.lastSeenAtByUser) {
 									seenBy = Object.entries(msg.lastSeenAtByUser)
@@ -384,10 +397,10 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 										>
 											{!isMine && (!isSameSenderAsPrev || !isSameTimeAsPrev) && (
 												<div className='relative h-8 w-8'>
-													<img
-														src={sender?.avatarUrl || 'https://i.pravatar.cc/150?img=65'}
-														alt={sender?.fullName}
-														className='h-8 w-8 rounded-full object-cover'
+													<Avatar
+														fullName={sender?.fullName}
+														avatarUrl={sender?.avatarUrl}
+														size={24}
 													/>
 													{isSenderOnline && (
 														<span className='absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-background' />
@@ -437,7 +450,7 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 													<div className='mt-1 flex -space-x-2'>
 														{seenBy.map((p) => (
 															<img
-																key={p.id + msg._id}
+																key={p._id + msg._id}
 																src={p.avatarUrl || 'https://i.pravatar.cc/150?img=65'}
 																alt={p.fullName}
 																className='h-4 w-4 animate-slide-up rounded-full border-2 border-white'
@@ -524,6 +537,38 @@ const ChatSkeleton = () => {
 					</div>
 				)
 			})}
+		</div>
+	)
+}
+
+const GroupChatEmptyState = ({ groupName, participants }: { groupName: string; participants: Participant[] }) => {
+	const visibleParticipants = participants.slice(0, 5)
+	const remaining = participants.length - visibleParticipants.length
+
+	return (
+		<div className='flex h-full flex-col items-center justify-center text-center text-muted-foreground'>
+			{/* Avatar stack */}
+			<div className='mb-4 flex -space-x-3'>
+				{visibleParticipants.map((p) => (
+					<Avatar
+						fullName={p.fullName}
+						avatarUrl={p.avatarUrl}
+						size={40}
+						className='border-2 border-background'
+					/>
+				))}
+				{remaining > 0 && (
+					<div className='flex h-14 w-14 items-center justify-center rounded-full border-2 border-background bg-secondary text-sm font-medium'>
+						+{remaining}
+					</div>
+				)}
+			</div>
+
+			<h3 className='text-sm font-semibold text-foreground'>{groupName}</h3>
+
+			<p className='mt-1 max-w-xs text-xs'>
+				Nhóm này chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện với mọi người.
+			</p>
 		</div>
 	)
 }

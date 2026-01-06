@@ -6,9 +6,8 @@ import { formatDate } from '@/utils/utils'
 import type { DashboardType, StudentTopicDashboard } from '@/models/period.model'
 import React from 'react'
 import { RegistrationCard } from './StudentRegistrationCard'
-// import { AISummaryCard } from './ai-summary-card'
 import { GradingResultCard } from './grading-result-card'
-import { TopicExecutionCard } from './topicExecutionCard'
+import { TopicExecutionCard } from './TopicExecutionCard'
 
 interface StudentPeriodCardProps {
 	dashboardData: DashboardType
@@ -30,22 +29,27 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 		!dashboardData.phases ||
 		dashboardData.phases.length === 0
 
+	const periodTypeLabel = dashboardData.type === 'thesis' ? 'Đợt Khóa luận' : 'Đợt Nghiên cứu khoa học'
+
 	if (hasNoPeriod) {
 		return (
-			<Card className='w-full rounded-xl border-border'>
+			<Card className='w-full rounded-xl border-border p-0'>
 				<CardHeader>
-					<div className='flex items-center gap-3'>
-						<Clock className='h-5 w-5 text-muted-foreground' />
-						<span className='text-lg font-semibold'>{dashboardData.title ?? 'Chưa có đợt đề tài'}</span>
+					<div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+						<div className='flex items-center gap-3'>
+							<Clock className='h-5 w-5 text-muted-foreground' />
+							<span className='text-lg font-semibold text-foreground'>
+								{dashboardData.title ?? `${periodTypeLabel} chưa có đợt`}
+							</span>
+						</div>
+						<Badge variant='secondary'>{periodTypeLabel}</Badge>
 					</div>
 				</CardHeader>
-
 				<CardContent>
 					<p className='text-sm text-muted-foreground'>
 						{dashboardData.description ??
-							'Hiện tại khoa chưa mở đợt đăng ký đề tài nào. Vui lòng quay lại sau.'}
+							`Hiện tại khoa chưa mở ${periodTypeLabel.toLowerCase()}. Vui lòng quay lại sau.`}
 					</p>
-
 					<div className='mt-4'>
 						<Badge variant='secondary'>Chưa mở đợt</Badge>
 					</div>
@@ -53,15 +57,13 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 			</Card>
 		)
 	}
-    
+
 	const currentIndex = phaseOrder.indexOf(dashboardData.currentPhaseDetail.phase)
-
 	const currentPhaseStatus = dashboardData.currentPhaseDetail.status
-
 	const currentPhase = dashboardData.currentPhase
 
 	const getPhaseStatus = (phaseType: string) => {
-		const phaseIndex = phaseOrder.indexOf(phaseType) // current index 4, phase index: 5
+		const phaseIndex = phaseOrder.indexOf(phaseType)
 		if (phaseIndex < currentIndex) return 'completed'
 		if (phaseIndex === currentIndex && currentPhaseStatus === 'timeout') return 'timeout'
 		if (phaseIndex > currentIndex) return 'pending'
@@ -69,10 +71,7 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 		return 'pending'
 	}
 
-	const shouldHighlightLine = (phaseId: string) => {
-		const status = getPhaseStatus(phaseId)
-		return status === 'completed'
-	}
+	const shouldHighlightLine = (phaseId: string) => getPhaseStatus(phaseId) === 'completed'
 
 	const getStatusBadge = (status: string) => {
 		switch (status) {
@@ -128,13 +127,6 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 					icon: <BookOpen className='h-5 w-5 text-info' />,
 					badge: <Badge className='border-info/20 bg-info/10 text-info'>Pha Chấm điểm & kết thúc</Badge>
 				}
-			// case 'completed':
-			// 	return {
-			// 		title: 'Đợt Khóa luận Học kỳ 2 - 2024',
-			// 		description: 'Khóa luận đã hoàn thành. Đề tài đã được lưu vào thư viện số của trường.',
-			// 		icon: <BookOpen className='h-5 w-5 text-success' />,
-			// 		badge: <Badge className='border-success/20 bg-success/10 text-success'>Hoàn thành</Badge>
-			// 	}
 		}
 	}
 
@@ -142,37 +134,28 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 
 	const getPhaseTimeNode = (phaseType: string) => {
 		const phase = dashboardData.phases.find((p) => p.phase === phaseType)
-
-		if (!phase) {
-			return <span className='text-muted-foreground'>Chưa thiết lập</span>
-		}
-
-		if (phase.startTime && phase.endTime) {
+		if (!phase) return <span className='text-muted-foreground'>Chưa thiết lập</span>
+		if (phase.startTime && phase.endTime)
 			return (
 				<>
-					<span>Từ {formatDate(phase.startTime)}</span>
+					Từ {formatDate(phase.startTime)}
 					<br />
-					<span>Đến {formatDate(phase.endTime)}</span>
+					Đến {formatDate(phase.endTime)}
 				</>
 			)
-		}
-
-		if (phase.startTime) {
+		if (phase.startTime)
 			return (
 				<>
-					<span>{formatDate(phase.startTime)}</span>
-					<span className='text-muted-foreground'>—</span>
+					{formatDate(phase.startTime)} <span className='text-muted-foreground'>—</span>
 				</>
 			)
-		}
-
 		return <span className='text-muted-foreground'>Chưa thiết lập</span>
 	}
 
 	return (
 		<Card className='w-full rounded-xl border-border p-0'>
 			<CardHeader className='pb-2'>
-				<div className='flex items-center justify-between border-border'>
+				<div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
 					<div className='flex items-center gap-3'>
 						{content.icon}
 						<span className='text-lg font-semibold text-foreground'>{content.title}</span>
@@ -180,17 +163,18 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 					{content.badge}
 				</div>
 			</CardHeader>
+
 			<CardContent className='pt-0'>
 				<p className='text-sm leading-relaxed text-muted-foreground'>{content.description}</p>
 			</CardContent>
-			<CardContent className='py-6'>
-				<div className='flex w-full items-center'>
+
+			<CardContent className='overflow-x-auto py-6'>
+				<div className='flex w-full min-w-max items-center gap-2'>
 					{phases.map((phase, index) => {
 						const status = getPhaseStatus(phase.type)
 						const Icon = phase.icon
 						return (
 							<React.Fragment key={phase.type}>
-								{/* NODE */}
 								<div className='flex flex-col items-center gap-2'>
 									<div
 										className={cn(
@@ -207,21 +191,17 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 											<Icon className='h-5 w-5' />
 										)}
 									</div>
-
 									<div className='text-center'>
 										<p className='text-xs font-medium'>
 											<span className='hidden sm:inline'>{phase.label}</span>
 											<span className='sm:hidden'>{phase.shortLabel}</span>
 										</p>
 										<div className='mt-1'>{getStatusBadge(status)}</div>
-										{/* TIME */}
 										<p className='mt-1 text-[10px] text-muted-foreground'>
 											{getPhaseTimeNode(phase.type)}
 										</p>
 									</div>
 								</div>
-
-								{/* LINE (chỉ render nếu không phải item cuối) */}
 								{index < phases.length - 1 && (
 									<div
 										className={cn(
@@ -235,18 +215,14 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 					})}
 				</div>
 			</CardContent>
+
 			<CardContent>
 				{currentPhase === 'open_registration' && <RegistrationCard dashboardData={dashboardData} />}
 				{currentPhase === 'execution' && <TopicExecutionCard dashboardData={dashboardData} />}
-				{/* {currentPhase === 'execution' && <AISummaryCard />} */}
 				{currentPhase === 'completion' &&
-					(dashboardData.topicData as StudentTopicDashboard[]).map((topic) => {
-						return (
-							<React.Fragment key={topic.titleVN}>
-								<GradingResultCard topic={topic} />
-							</React.Fragment>
-						)
-					})}
+					(dashboardData.topicData as StudentTopicDashboard[]).map((topic) => (
+						<GradingResultCard key={topic.titleVN} topic={topic} />
+					))}
 			</CardContent>
 		</Card>
 	)

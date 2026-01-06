@@ -65,9 +65,9 @@ export function LecturerSubmitTopicCard({ dashboardData }: LecturerSubmitTopicCa
 
 	return (
 		<Card className='rounded-xl border-primary/20 bg-primary/5 p-0'>
-			{/* ---------------- Header ---------------- */}
+			{/* Header */}
 			<CardHeader className='pb-3'>
-				<div className='flex items-center justify-between'>
+				<div className='flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center'>
 					<CardTitle className='flex items-center gap-2 text-lg'>
 						<FileText className='h-5 w-5 text-primary' />
 						Đề tài đã nộp
@@ -80,18 +80,17 @@ export function LecturerSubmitTopicCard({ dashboardData }: LecturerSubmitTopicCa
 				</div>
 			</CardHeader>
 
-			{/* ---------------- Content ---------------- */}
+			{/* Content */}
 			<CardContent className='space-y-4'>
-				{/* -------- List Topics -------- */}
 				{topics.length > 0 ? (
-					<div className='space-y-3'>
+					<div className='flex flex-col gap-3'>
 						{topics.map((topic) => {
 							const status = STATUS_MAP[topic.currentStatus]
 
 							return (
 								<div
 									key={topic._id}
-									className='flex items-start justify-between rounded-lg border bg-card p-3'
+									className='flex flex-col items-start justify-between gap-2 rounded-lg border bg-card p-3 sm:flex-row sm:items-center'
 								>
 									<div>
 										<p className='font-medium leading-tight'>{topic.titleVN}</p>
@@ -99,7 +98,6 @@ export function LecturerSubmitTopicCard({ dashboardData }: LecturerSubmitTopicCa
 											Số SV tối đa: {topic.maxStudents}
 										</p>
 									</div>
-
 									<Badge variant={status?.variant ?? 'secondary'}>
 										{status?.label ?? topic.currentStatus}
 									</Badge>
@@ -111,10 +109,10 @@ export function LecturerSubmitTopicCard({ dashboardData }: LecturerSubmitTopicCa
 					<p className='text-sm text-muted-foreground'>Bạn chưa nộp đề tài nào trong đợt này.</p>
 				)}
 
-				{/* -------- CTA -------- */}
+				{/* CTA */}
 				<Button
 					size='lg'
-					className='w-full rounded-xl'
+					className='sm:w-auto w-full rounded-xl'
 					onClick={() => navigate(topics.length > 0 ? '/lecturer/my-topics' : '/lecturer/submit-topic')}
 					disabled={isExpired}
 				>

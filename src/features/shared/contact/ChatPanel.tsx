@@ -17,6 +17,32 @@ interface ChatPanelProps {
 	}
 }
 
+const ChatEmptyState = ({ otherPaticipant }: { otherPaticipant: ChatPanelProps['otherPaticipant'] }) => {
+	return (
+		<div className='flex h-full flex-col items-center justify-center text-center text-muted-foreground'>
+			<div className='mb-4 h-20 w-20 overflow-hidden rounded-full bg-secondary'>
+				{otherPaticipant.avatarUrl ? (
+					<img
+						src={otherPaticipant.avatarUrl}
+						alt={otherPaticipant.fullName}
+						className='h-full w-full object-cover'
+					/>
+				) : (
+					<div className='flex h-full w-full items-center justify-center bg-blue-500 text-2xl font-bold text-white'>
+						{getAvatarInitials(otherPaticipant.fullName)}
+					</div>
+				)}
+			</div>
+
+			<h3 className='text-sm font-semibold text-foreground'>{otherPaticipant.fullName}</h3>
+
+			<p className='mt-1 max-w-xs text-xs'>
+				Hãy bắt đầu cuộc trò chuyện với {otherPaticipant.fullName}. Mọi tin nhắn sẽ hiển thị tại đây.
+			</p>
+		</div>
+	)
+}
+
 export const ChatPanel = ({ groupId, otherPaticipant }: ChatPanelProps) => {
 	const dispatch = useDispatch()
 	const {
@@ -31,7 +57,12 @@ export const ChatPanel = ({ groupId, otherPaticipant }: ChatPanelProps) => {
 		markAllMessagesAsSeenLocal,
 		setHasUnreadDirect
 	} = useChat()
+
+	console.log(messagesByGroup)
+
 	const user = useAppSelector((state) => state.auth.user)
+
+    console.log(user)
 
 	const userId = getUserIdFromAppUser(user)
 
@@ -315,107 +346,123 @@ export const ChatPanel = ({ groupId, otherPaticipant }: ChatPanelProps) => {
 
 			{/* Messages */}
 			<div ref={scrollRef} className='flex-1 overflow-y-auto p-4' onScroll={handleScroll}>
-				<div className='mb-2 flex flex-col items-center'>
-					{/* Button load older messages */}
-					{hasMoreHistory && messages.length > 0 && (
-						<button
-							onClick={loadOlderMessages}
-							className='rounded-full bg-secondary px-3 py-1 text-xs text-foreground shadow'
-							disabled={loadingHistory}
-						>
-							{loadingHistory ? (
-								<div className='flex items-center gap-1'>
-									<Loader className='h-4 w-4 animate-spin' /> Đang tải...
-								</div>
-							) : (
-								'Xem tin nhắn cũ'
-							)}
-						</button>
-					)}
-					{!hasMoreHistory && messages.length > 0 && (
-						<span className='mt-2 text-xs text-muted-foreground'>Không còn tin nhắn cũ</span>
-					)}
-				</div>
-				<div className='space-y-1'>
-					{messagesToRender.map((msg, index) => {
-						const prevMsg = messagesToRender[index - 1]
-						const showDateSeparator = !prevMsg || !isSameDay(prevMsg.createdAt, msg.createdAt)
-						const dateLabel = showDateSeparator ? formatDateLabel(msg.createdAt) : null
+				{/* EMPTY STATE */}
+				{messages.length === 0 && !searchResults && <ChatEmptyState otherPaticipant={otherPaticipant} />}
 
-						const isMine = msg.senderId === userId
-						const isSenderOnline = onlineUserIds.includes(msg.senderId)
-						const isSameSenderAsPrev = prevMsg?.senderId === msg.senderId
-						const isSameTimeAsPrev = prevMsg && isSameTimeBlock(prevMsg, msg)
-						const showTime = shouldShowTime(prevMsg ?? null, msg)
-
-						return (
-							<React.Fragment key={msg._id + '-' + index}>
-								{showDateSeparator && (
-									<div className='my-3 flex justify-center'>
-										<span className='rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground'>
-											{dateLabel}
-										</span>
-									</div>
-								)}
-
-								<div
-									className={cn(
-										'flex gap-2',
-										isMine ? 'justify-end' : 'justify-start',
-										!isSameSenderAsPrev || !isSameTimeAsPrev ? 'mt-3' : 'mt-1'
-									)}
+				{messages.length > 0 && (
+					<>
+						<div className='mb-2 flex flex-col items-center'>
+							{/* Button load older messages */}
+							{hasMoreHistory && messages.length > 0 && (
+								<button
+									onClick={loadOlderMessages}
+									className='rounded-full bg-secondary px-3 py-1 text-xs text-foreground shadow'
+									disabled={loadingHistory}
 								>
-									{!isMine && (!isSameSenderAsPrev || !isSameTimeAsPrev) && (
-										<div className='relative h-8 w-8'>
-											<img
-												src={otherPaticipant.avatarUrl || 'https://i.pravatar.cc/150?img=65'}
-												alt={otherPaticipant.fullName}
-												className='h-8 w-8 rounded-full object-cover'
-											/>
-											{isSenderOnline && (
-												<span className='absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-background' />
-											)}
+									{loadingHistory ? (
+										<div className='flex items-center gap-1'>
+											<Loader className='h-4 w-4 animate-spin' /> Đang tải...
 										</div>
+									) : (
+										'Xem tin nhắn cũ'
 									)}
-									{!isMine && isSameSenderAsPrev && isSameTimeAsPrev && <div className='w-8' />}
-									<div className={cn('flex max-w-[70%] flex-col', isMine && 'items-end')}>
-										{!isMine && (!isSameSenderAsPrev || !isSameTimeAsPrev) && (
-											<span className='mb-0.5 text-xs font-medium text-muted-foreground'>
-												{otherPaticipant.fullName}
-											</span>
-										)}
-										<div
-											className={cn(
-												'max-w-[250px] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm shadow-sm',
-												isMine
-													? 'self-end bg-primary text-primary-foreground'
-													: 'border border-border bg-muted text-foreground shadow',
-												isSameSenderAsPrev &&
-													isSameTimeAsPrev &&
-													(isMine ? 'rounded-tr-md' : 'rounded-tl-md')
-											)}
-										>
-											{msg.content}
-										</div>
-										{showTime && (
-											<div className={cn('mt-0.5 flex items-center', isMine && 'justify-end')}>
-												<span className='text-[10px] text-muted-foreground'>
-													{new Date(msg.createdAt).toLocaleTimeString('vi-VN', {
-														hour: '2-digit',
-														minute: '2-digit'
-													})}
+								</button>
+							)}
+							{!hasMoreHistory && messages.length > 0 && (
+								<span className='mt-2 text-xs text-muted-foreground'>Không còn tin nhắn cũ</span>
+							)}
+						</div>
+						<div className='space-y-1'>
+							{messagesToRender.map((msg, index) => {
+								const prevMsg = messagesToRender[index - 1]
+								const showDateSeparator = !prevMsg || !isSameDay(prevMsg.createdAt, msg.createdAt)
+								const dateLabel = showDateSeparator ? formatDateLabel(msg.createdAt) : null
+								const isMine = msg.senderId === userId
+								const isSenderOnline = onlineUserIds.includes(msg.senderId)
+								const isSameSenderAsPrev = prevMsg?.senderId === msg.senderId
+								const isSameTimeAsPrev = prevMsg && isSameTimeBlock(prevMsg, msg)
+								const showTime = shouldShowTime(prevMsg ?? null, msg)
+
+								return (
+									<React.Fragment key={msg._id + '-' + index}>
+										{showDateSeparator && (
+											<div className='my-3 flex justify-center'>
+												<span className='rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground'>
+													{dateLabel}
 												</span>
-												{isLastMessageOfMineBlock(messagesToRender, index, userId) &&
-													isMine && <MessageStatus status={msg.status} />}
 											</div>
 										)}
-									</div>
-								</div>
-							</React.Fragment>
-						)
-					})}
-					<div ref={bottomRef} />
-				</div>
+
+										<div
+											className={cn(
+												'flex gap-2',
+												isMine ? 'justify-end' : 'justify-start',
+												!isSameSenderAsPrev || !isSameTimeAsPrev ? 'mt-3' : 'mt-1'
+											)}
+										>
+											{!isMine && (!isSameSenderAsPrev || !isSameTimeAsPrev) && (
+												<div className='relative h-8 w-8'>
+													<img
+														src={
+															otherPaticipant.avatarUrl ||
+															'https://i.pravatar.cc/150?img=65'
+														}
+														alt={otherPaticipant.fullName}
+														className='h-8 w-8 rounded-full object-cover'
+													/>
+													{isSenderOnline && (
+														<span className='absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-background' />
+													)}
+												</div>
+											)}
+											{!isMine && isSameSenderAsPrev && isSameTimeAsPrev && (
+												<div className='w-8' />
+											)}
+											<div className={cn('flex max-w-[70%] flex-col', isMine && 'items-end')}>
+												{!isMine && (!isSameSenderAsPrev || !isSameTimeAsPrev) && (
+													<span className='mb-0.5 text-xs font-medium text-muted-foreground'>
+														{otherPaticipant.fullName}
+													</span>
+												)}
+												<div
+													className={cn(
+														'max-w-[250px] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm shadow-sm',
+														isMine
+															? 'self-end bg-primary text-primary-foreground'
+															: 'border border-border bg-muted text-foreground shadow',
+														isSameSenderAsPrev &&
+															isSameTimeAsPrev &&
+															(isMine ? 'rounded-tr-md' : 'rounded-tl-md')
+													)}
+												>
+													{msg.content}
+												</div>
+												{showTime && (
+													<div
+														className={cn(
+															'mt-0.5 flex items-center',
+															isMine && 'justify-end'
+														)}
+													>
+														<span className='text-[10px] text-muted-foreground'>
+															{new Date(msg.createdAt).toLocaleTimeString('vi-VN', {
+																hour: '2-digit',
+																minute: '2-digit'
+															})}
+														</span>
+														{isLastMessageOfMineBlock(messagesToRender, index, userId) &&
+															isMine && <MessageStatus status={msg.status} />}
+													</div>
+												)}
+											</div>
+										</div>
+									</React.Fragment>
+								)
+							})}
+							<div ref={bottomRef} />
+						</div>
+					</>
+				)}
 			</div>
 
 			{/* New messages button */}

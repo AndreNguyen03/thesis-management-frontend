@@ -20,7 +20,7 @@ import { ManageFacultyLecturerPage } from '@/features/faculty/manage_faculty_lec
 import DetailPeriodPage from '@/features/faculty/manage_period/DetailPeriod'
 import LecturerManageTopics from '@/features/lecturer/manage_topic'
 import RegistrationHistory from '@/features/student/TopicList/registered/children/RegistrationHistory'
-import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
+// import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_topic/ManageSubmittedTopics'
 import { LibraryPage } from '@/features/page/LibraryPage'
 import { GroupWorkspacePage } from '@/features/shared/workspace'
@@ -33,6 +33,8 @@ import { ContactPage } from '@/features/shared/contact/ContactPage'
 import { DefenseAssignmentPage } from '@/features/faculty/manage_phase/completion-phase/manage-defense-milestone/DefenseAssignmentPage'
 import { ManageApproveRegistration } from '@/features/lecturer/topic_registration/ApproveRegistration'
 import DefenseScoringPage from '@/features/faculty/manage_phase/completion-phase/scoring/DefenseMilestonePage'
+import ManageTopicDraft2 from '@/features/lecturer/manage_topic/draft/ManageDraftTopic2'
+import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -113,8 +115,8 @@ export const router = createBrowserRouter([
 				path: 'manage-topics',
 				element: <LecturerManageTopics />,
 				children: [
-					{ index: true, element: <ManageTopicDraft /> },
-					{ path: 'draft', element: <ManageTopicDraft /> },
+					{ index: true, element: <ManageTopicDraft2 /> },
+					{ path: 'draft', element: <ManageTopicDraft2 /> },
 					{ path: 'submitted', element: <ManageSubmittedTopics /> }
 				]
 			},

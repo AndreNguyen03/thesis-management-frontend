@@ -239,5 +239,6 @@ export const {
 	useCompletePeriodMutation,
 	useGetAllMiniPeriodInfoQuery,
 	useGetLecturerDashboardQuery,
-	useGetStudentDashboardQuery
+	useGetStudentDashboardQuery,
+    useGetFacultyDashboardQuery
 } = periodApi

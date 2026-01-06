@@ -82,7 +82,7 @@ export function RegistrationCard({ dashboardData }: RegistrationCardProps) {
 
 						<Button
 							size='lg'
-							className='rounded-xl'
+							className='w-full rounded-xl sm:w-auto'
 							onClick={() => navigate('/registration')}
 							disabled={isExpired}
 						>
@@ -103,13 +103,13 @@ export function RegistrationCard({ dashboardData }: RegistrationCardProps) {
 		<Card className='rounded-xl border-primary/20 bg-primary/5 p-0'>
 			{Header}
 
-			<CardContent className='space-y-3'>
+			<CardContent className='space-y-4 sm:space-y-3 md:space-y-4'>
 				{topics.map((topic) => {
 					const statusConfig = STATUS_MAP[topic.studentRegistration.status]
 					const Icon = statusConfig.icon
 
 					return (
-						<div key={topic._id} className='space-y-2 rounded-lg border bg-card p-4'>
+						<div key={topic._id} className='space-y-2 rounded-lg border bg-card sm:p-3 md:p-4 lg:p-6'>
 							<div className='flex items-start justify-between gap-3'>
 								<div>
 									<p className='font-medium leading-tight'>{topic.titleVN}</p>

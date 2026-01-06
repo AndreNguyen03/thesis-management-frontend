@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useMemo, useEffect } from 'react'
+import {  useEffect } from 'react'
 import { GroupSidebar } from './components/GroupSidebar'
 import { ChatPanel } from './components/ChatPanel'
 import { WorkPanel } from './components/WorkPanel'
@@ -56,12 +56,12 @@ export const GroupWorkspacePage = () => {
 				<div className='flex flex-1 items-center justify-center'>
 					<div className='text-center'>
 						<h2 className='mb-2 text-lg font-medium text-gray-900'>Chưa có nhóm nào</h2>
-						<p className='text-sm text-gray-500'>Hãy tạo nhóm mới để bắt đầu</p>
 					</div>
 				</div>
 			</div>
 		)
 	}
+
 
 	return (
 		<div className='flex h-full w-full overflow-hidden'>

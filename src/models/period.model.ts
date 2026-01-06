@@ -185,7 +185,7 @@ export interface LecturerTopicSubmit {
 	titleVN: string
 	type: string
 	maxStudents: number
-    allowManualApproval: boolean,
+	allowManualApproval: boolean
 	currentStatus: string
 }
 
@@ -200,7 +200,7 @@ export interface LecturerTopicCompletion {
 
 export interface StudentTopicDashboard {
 	_id: string
-	titleVN: string 
+	titleVN: string
 	type: string
 	defenseResult: DefenseResult
 	isPublishedToLibrary: boolean
@@ -247,7 +247,6 @@ export interface CurrentPeriodDashboard {
 	scientificResearch: DashboardType
 }
 
-
 export interface FacultyDashboardType {
 	_id: string
 	title: string
@@ -266,8 +265,6 @@ export interface FacultyCurrentPeriodDashboard {
 	thesis: FacultyDashboardType
 	scientificResearch: FacultyDashboardType
 }
-
-
 
 export interface PaginationPeriodQueryParams extends PaginationQueryParamsDto {
 	type?: PeriodType | 'all'

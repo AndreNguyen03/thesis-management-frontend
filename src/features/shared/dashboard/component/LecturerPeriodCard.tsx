@@ -31,22 +31,26 @@ export function LecturerPeriodCard({ dashboardData }: LecturerPeriodCardProps) {
 		!dashboardData.phases ||
 		dashboardData.phases.length === 0
 
+	const periodTypeLabel = dashboardData.type === 'thesis' ? 'Đợt Khóa luận' : 'Đợt Nghiên cứu khoa học'
 	if (hasNoPeriod) {
 		return (
-			<Card className='w-full rounded-xl border-border'>
+			<Card className='w-full rounded-xl border-border p-0'>
 				<CardHeader>
-					<div className='flex items-center gap-3'>
-						<Clock className='h-5 w-5 text-muted-foreground' />
-						<span className='text-lg font-semibold'>{dashboardData.title ?? 'Chưa có đợt đề tài'}</span>
+					<div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+						<div className='flex items-center gap-3'>
+							<Clock className='h-5 w-5 text-muted-foreground' />
+							<span className='text-lg font-semibold text-foreground'>
+								{dashboardData.title ?? `${periodTypeLabel} chưa có đợt`}
+							</span>
+						</div>
+						<Badge variant='secondary'>{periodTypeLabel}</Badge>
 					</div>
 				</CardHeader>
-
 				<CardContent>
 					<p className='text-sm text-muted-foreground'>
 						{dashboardData.description ??
-							'Hiện tại khoa chưa mở đợt đăng ký đề tài nào. Vui lòng quay lại sau.'}
+							`Hiện tại khoa chưa mở ${periodTypeLabel.toLowerCase()}. Vui lòng quay lại sau.`}
 					</p>
-
 					<div className='mt-4'>
 						<Badge variant='secondary'>Chưa mở đợt</Badge>
 					</div>
@@ -184,7 +188,7 @@ export function LecturerPeriodCard({ dashboardData }: LecturerPeriodCardProps) {
 				<p className='text-sm leading-relaxed text-muted-foreground'>{content.description}</p>
 			</CardContent>
 			<CardContent className='py-6'>
-				<div className='flex w-full items-center'>
+				<div className='flex w-full flex-col items-center gap-2 overflow-x-auto sm:flex-row'>
 					{phases.map((phase, index) => {
 						const status = getPhaseStatus(phase.type)
 						const Icon = phase.icon
@@ -225,7 +229,7 @@ export function LecturerPeriodCard({ dashboardData }: LecturerPeriodCardProps) {
 								{index < phases.length - 1 && (
 									<div
 										className={cn(
-											'mx-2 h-0.5 flex-1',
+											'mx-2 h-4 w-0.5 sm:h-0.5 sm:w-auto sm:flex-1',
 											shouldHighlightLine(phase.type) ? 'bg-primary/50' : 'bg-muted'
 										)}
 									/>

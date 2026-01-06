@@ -33,9 +33,9 @@ export function LecturerRegistrationCard({ dashboardData }: LecturerRegistration
 
 	return (
 		<Card className='rounded-xl border-primary/20 bg-primary/5 p-0'>
-			{/* ---------------- Header ---------------- */}
+			{/* Header */}
 			<CardHeader className='pb-3'>
-				<div className='flex items-center justify-between'>
+				<div className='flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center'>
 					<CardTitle className='flex items-center gap-2 text-lg'>
 						<FileSearch className='h-5 w-5 text-primary' />
 						Xét duyệt đăng ký đề tài
@@ -48,26 +48,24 @@ export function LecturerRegistrationCard({ dashboardData }: LecturerRegistration
 				</div>
 			</CardHeader>
 
-			{/* ---------------- Content ---------------- */}
+			{/* Content */}
 			<CardContent className='space-y-4'>
-				<div className='grid grid-cols-2 gap-3'>
+				<div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
 					{/* Pending */}
-					<div className='rounded-lg border bg-card p-4'>
+					<div className='flex flex-col gap-2 rounded-lg border bg-card p-4'>
 						<div className='flex items-center gap-2'>
 							<Users className='h-4 w-4 text-warning' />
 							<p className='text-sm text-muted-foreground'>Đề tài chờ xét duyệt</p>
 						</div>
-
 						<p className='mt-1 text-2xl font-semibold'>{pendingTopics.length}</p>
 					</div>
 
 					{/* Full */}
-					<div className='rounded-lg border bg-card p-4'>
+					<div className='flex flex-col gap-2 rounded-lg border bg-card p-4'>
 						<div className='flex items-center gap-2'>
 							<CheckCircle className='h-4 w-4 text-success' />
 							<p className='text-sm text-muted-foreground'>Đề tài đã đủ SV</p>
 						</div>
-
 						<p className='mt-1 text-2xl font-semibold'>{fullTopics.length}</p>
 					</div>
 				</div>

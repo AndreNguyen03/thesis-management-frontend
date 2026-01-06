@@ -30,7 +30,7 @@ const getSenderName = (group: GroupSidebarType) => {
 	if (lastMessage.fullName) return lastMessage.fullName
 
 	// 2️⃣ Map senderId -> participant
-	const sender = participants.find((p) => p.id === lastMessage.senderId)
+	const sender = participants.find((p) => p._id === lastMessage.senderId)
 	return sender?.fullName ?? 'Unknown'
 }
 
@@ -55,7 +55,7 @@ export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup, isLoading
 	}
 
 	return (
-		<div className='flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar'>
+		<div className='flex h-full w-full flex-col border-r bg-sidebar md:w-64'>
 			<nav className='flex-1 space-y-2 overflow-y-auto p-2'>
 				{groups.map((group) => {
 					const msgs = messagesByGroup?.[group._id] ?? []
@@ -84,8 +84,12 @@ export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup, isLoading
 							<div className='flex flex-col truncate'>
 								<p className='truncate text-sm font-semibold'>{group.titleVN}</p>
 								<div className='flex items-center gap-1 truncate text-xs text-gray-600'>
-									<p className='truncate font-medium'>{senderName.split(' ').pop()}</p>
-									<span>-</span>
+									{senderName !== 'Unknown' && (
+										<>
+											<p className='truncate font-medium'>{senderName.split(' ').pop()}</p>
+											<span>-</span>
+										</>
+									)}
 									<p className='max-w-[120px] truncate'>{content}</p>
 								</div>
 							</div>

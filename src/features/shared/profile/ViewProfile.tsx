@@ -23,7 +23,11 @@ export function ViewProfile() {
 		error
 	} = useGetUserQuery({ id: id!, role: roleParam! as Role }, { skip: !id || !isValidRole(roleParam) })
 	if (isLoading) {
-		return <LoadingState />
+		return (
+			<div className='h-full w-full'>
+				<LoadingState />
+			</div>
+		)
 	}
 
 	if (error || !profileUser) {

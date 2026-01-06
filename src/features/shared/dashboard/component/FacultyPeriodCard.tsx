@@ -1,17 +1,36 @@
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Check, FileText, UserPlus, Code, Award, BookOpen, AlertCircle, Clock } from 'lucide-react'
+import { Button } from '@/components/ui'
+
+import {
+	Check,
+	FileText,
+	UserPlus,
+	Code,
+	Award,
+	BookOpen,
+	AlertCircle,
+	Clock,
+	Settings,
+	Plus,
+	Lock,
+	ArrowRight
+} from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/utils/utils'
-import type { DashboardType, StudentTopicDashboard } from '@/models/period.model'
-import React from 'react'
-import { RegistrationCard } from './StudentRegistrationCard'
-// import { AISummaryCard } from './ai-summary-card'
-import { GradingResultCard } from './grading-result-card'
+import type { FacultyDashboardType } from '@/models/period.model'
+
+/* ---------------------------------- Types --------------------------------- */
 
 interface FacultyPeriodCardProps {
-	dashboardData: DashboardType
+	dashboardData: FacultyDashboardType
 }
+
+/* --------------------------------- Consts --------------------------------- */
 
 const phases = [
 	{ type: 'submit_topic', label: 'Nộp đề tài', shortLabel: 'GV nộp', icon: FileText },
@@ -22,45 +41,128 @@ const phases = [
 
 const phaseOrder = ['empty', 'submit_topic', 'open_registration', 'execution', 'completion']
 
+/* ------------------------------ Component ---------------------------------- */
+
 export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
-	const hasNoPeriod =
-		!dashboardData.currentPhase ||
-		!dashboardData.currentPhaseDetail ||
-		!dashboardData.phases ||
-		dashboardData.phases.length === 0
+	const navigate = useNavigate()
 
-	if (hasNoPeriod) {
+	/* --------------------------- State flags --------------------------- */
+
+	const isNoPeriod = !dashboardData || !dashboardData._id
+
+	const isNeedSetupPhase =
+		!!dashboardData?._id &&
+		(dashboardData.currentPhase === 'empty' || !dashboardData.phases || dashboardData.phases.length === 0)
+
+	const isFinished = dashboardData?.status === 'timeout'
+
+	const isActivePeriod = !!dashboardData?._id && !isNeedSetupPhase && !isFinished
+
+	const periodTypeName = dashboardData.type === 'thesis' ? 'Khóa luận' : 'Nghiên cứu khoa học'
+
+	/* ----------------------------- CTA block ---------------------------- */
+
+	const renderAction = () => {
+		const baseClasses = 'flex flex-col gap-4 sm:flex-row sm:justify-between rounded-lg p-4'
+
+		// 🔴 Chưa có đợt
+		if (isNoPeriod) {
+			return (
+				<div className={cn(baseClasses, 'border border-dashed bg-muted/30')}>
+					<div>
+						<h4 className='text-sm font-semibold'>Chưa có đợt đề tài {periodTypeName}</h4>
+						<p className='mt-1 text-xs text-muted-foreground'>
+							Khoa hiện chưa mở đợt đề tài {periodTypeName} nào. Hãy tạo đợt mới để bắt đầu.
+						</p>
+					</div>
+
+					<Button onClick={() => navigate('/manage-period')} className='sm:ml-4'>
+						<Plus className='h-4 w-4' />
+						Tạo đợt đề tài
+					</Button>
+				</div>
+			)
+		}
+
+		// 🟡 Chưa thiết lập pha
+		if (isNeedSetupPhase) {
+			return (
+				<div className={cn(baseClasses, 'border border-dashed bg-muted/30')}>
+					<div>
+						<h4 className='text-sm font-semibold'>Chưa thiết lập pha</h4>
+						<p className='mt-1 text-xs text-muted-foreground'>
+							Đợt đề tài đã được tạo nhưng chưa cấu hình quy trình thực hiện.
+						</p>
+					</div>
+
+					<Button onClick={() => navigate(`/period/${dashboardData._id}`)} className='sm:ml-4'>
+						<Settings className='mr-2 h-4 w-4' />
+						Thiết lập các pha
+					</Button>
+				</div>
+			)
+		}
+
+		// ⚫ Đợt đã kết thúc
+		if (isFinished) {
+			return (
+				<div className={cn(baseClasses, 'border bg-muted/20')}>
+					<div>
+						<h4 className='text-sm font-semibold text-muted-foreground'>Đợt đề tài đã kết thúc</h4>
+						<p className='mt-1 text-xs text-muted-foreground'>
+							Đợt này đã hoàn thành và không còn thao tác nào khả dụng.
+						</p>
+					</div>
+
+					<Button disabled className='sm:ml-4'>
+						<Lock className='mr-2 h-4 w-4' />
+						Đã kết thúc
+					</Button>
+				</div>
+			)
+		}
+
+		// 🟢 Đang hoạt động
 		return (
-			<Card className='w-full rounded-xl border-border'>
-				<CardHeader>
-					<div className='flex items-center gap-3'>
-						<Clock className='h-5 w-5 text-muted-foreground' />
-						<span className='text-lg font-semibold'>{dashboardData.title ?? 'Chưa có đợt đề tài'}</span>
-					</div>
-				</CardHeader>
-
-				<CardContent>
-					<p className='text-sm text-muted-foreground'>
-						{dashboardData.description ??
-							'Hiện tại khoa chưa mở đợt đăng ký đề tài nào. Vui lòng quay lại sau.'}
+			<div className={cn(baseClasses, 'border bg-background')}>
+				<div>
+					<h4 className='text-sm font-semibold'>Đợt đang hoạt động</h4>
+					<p className='mt-1 text-xs text-muted-foreground'>
+						Xem chi tiết tiến trình và thao tác quản lý đợt đề tài.
 					</p>
+				</div>
 
-					<div className='mt-4'>
-						<Badge variant='secondary'>Chưa mở đợt</Badge>
-					</div>
-				</CardContent>
-			</Card>
+				<Button onClick={() => navigate(`/period/${dashboardData._id}`)} className='sm:ml-4'>
+					<ArrowRight className='h-4 w-4' />
+					Xem chi tiết đợt
+				</Button>
+			</div>
 		)
 	}
-    
-	const currentIndex = phaseOrder.indexOf(dashboardData.currentPhaseDetail.phase)
 
-	const currentPhaseStatus = dashboardData.currentPhaseDetail.status
+	/* -------------------------- Header content -------------------------- */
 
-	const currentPhase = dashboardData.currentPhase
+	const content = dashboardData?.currentPhaseDetail
+		? getStatusContent()
+		: {
+				title: `Chưa có đợt đề tài ${periodTypeName}`,
+				description: `Khoa hiện chưa mở đợt đề tài ${periodTypeName} nào.`,
+				icon: <Clock className='h-5 w-5 text-muted-foreground' />,
+				badge: <Badge variant='secondary'>Chưa mở</Badge>
+			}
+
+	/* -------------------------- Phase helpers --------------------------- */
+
+	const currentIndex = dashboardData?.currentPhaseDetail
+		? phaseOrder.indexOf(dashboardData.currentPhaseDetail.phase)
+		: -1
+
+	const currentPhaseStatus = dashboardData?.currentPhaseDetail?.status
 
 	const getPhaseStatus = (phaseType: string) => {
-		const phaseIndex = phaseOrder.indexOf(phaseType) // current index 4, phase index: 5
+		if (currentIndex === -1) return 'pending'
+
+		const phaseIndex = phaseOrder.indexOf(phaseType)
 		if (phaseIndex < currentIndex) return 'completed'
 		if (phaseIndex === currentIndex && currentPhaseStatus === 'timeout') return 'timeout'
 		if (phaseIndex > currentIndex) return 'pending'
@@ -68,10 +170,7 @@ export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 		return 'pending'
 	}
 
-	const shouldHighlightLine = (phaseId: string) => {
-		const status = getPhaseStatus(phaseId)
-		return status === 'completed'
-	}
+	const shouldHighlightLine = (phaseId: string) => getPhaseStatus(phaseId) === 'completed'
 
 	const getStatusBadge = (status: string) => {
 		switch (status) {
@@ -81,7 +180,7 @@ export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 				return <Badge className='border-primary/20 bg-primary/10 text-xs text-primary'>Đang thực hiện</Badge>
 			case 'timeout':
 				return <Badge className='border-warning/20 bg-warning/10 text-xs text-warning'>Hết thời gian</Badge>
-			case 'pending':
+			default:
 				return (
 					<Badge variant='secondary' className='text-xs'>
 						Chờ
@@ -90,15 +189,8 @@ export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 		}
 	}
 
-	const getStatusContent = () => {
+	function getStatusContent() {
 		switch (dashboardData.currentPhaseDetail.phase) {
-			case 'empty':
-				return {
-					title: dashboardData.title,
-					description: dashboardData.description,
-					icon: <Clock className='h-5 w-5 text-muted-foreground' />,
-					badge: <Badge variant='secondary'>Đang trống</Badge>
-				}
 			case 'submit_topic':
 				return {
 					title: dashboardData.title,
@@ -111,7 +203,7 @@ export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 					title: dashboardData.title,
 					description: dashboardData.description,
 					icon: <AlertCircle className='h-5 w-5 text-warning' />,
-					badge: <Badge className='border-warning/20 bg-warning/10 text-warning'>Pha đăng kí</Badge>
+					badge: <Badge className='border-warning/20 bg-warning/10 text-warning'>Pha đăng ký</Badge>
 				}
 			case 'execution':
 				return {
@@ -125,26 +217,21 @@ export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 					title: dashboardData.title,
 					description: dashboardData.description,
 					icon: <BookOpen className='h-5 w-5 text-info' />,
-					badge: <Badge className='border-info/20 bg-info/10 text-info'>Pha Chấm điểm & kết thúc</Badge>
+					badge: <Badge className='border-info/20 bg-info/10 text-info'>Chấm điểm & kết thúc</Badge>
 				}
-			// case 'completed':
-			// 	return {
-			// 		title: 'Đợt Khóa luận Học kỳ 2 - 2024',
-			// 		description: 'Khóa luận đã hoàn thành. Đề tài đã được lưu vào thư viện số của trường.',
-			// 		icon: <BookOpen className='h-5 w-5 text-success' />,
-			// 		badge: <Badge className='border-success/20 bg-success/10 text-success'>Hoàn thành</Badge>
-			// 	}
+			default:
+				return {
+					title: dashboardData.title,
+					description: dashboardData.description,
+					icon: <Clock className='h-5 w-5 text-muted-foreground' />,
+					badge: <Badge variant='secondary'>Đang trống</Badge>
+				}
 		}
 	}
 
-	const content = getStatusContent()
-
 	const getPhaseTimeNode = (phaseType: string) => {
-		const phase = dashboardData.phases.find((p) => p.phase === phaseType)
-
-		if (!phase) {
-			return <span className='text-muted-foreground'>Chưa thiết lập</span>
-		}
+		const phase = dashboardData?.phases?.find((p) => p.phase === phaseType)
+		if (!phase) return <span className='text-muted-foreground'>Chưa thiết lập</span>
 
 		if (phase.startTime && phase.endTime) {
 			return (
@@ -156,97 +243,75 @@ export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 			)
 		}
 
-		if (phase.startTime) {
-			return (
-				<>
-					<span>{formatDate(phase.startTime)}</span>
-					<span className='text-muted-foreground'>—</span>
-				</>
-			)
-		}
-
 		return <span className='text-muted-foreground'>Chưa thiết lập</span>
 	}
 
+	/* -------------------------------- Render ------------------------------- */
+
 	return (
 		<Card className='w-full rounded-xl border-border p-0'>
-			<CardHeader className='pb-2'>
-				<div className='flex items-center justify-between border-border'>
-					<div className='flex items-center gap-3'>
-						{content.icon}
-						<span className='text-lg font-semibold text-foreground'>{content.title}</span>
-					</div>
-					{content.badge}
+			<CardHeader className='flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between'>
+				<div className='flex items-center gap-3'>
+					{content.icon}
+					<span className='text-lg font-semibold'>{content.title}</span>
 				</div>
+				{content.badge}
 			</CardHeader>
-			<CardContent className='pt-0'>
-				<p className='text-sm leading-relaxed text-muted-foreground'>{content.description}</p>
-			</CardContent>
-			<CardContent className='py-6'>
-				<div className='flex w-full items-center'>
-					{phases.map((phase, index) => {
-						const status = getPhaseStatus(phase.type)
-						const Icon = phase.icon
-						return (
-							<React.Fragment key={phase.type}>
-								{/* NODE */}
-								<div className='flex flex-col items-center gap-2'>
-									<div
-										className={cn(
-											'flex h-10 w-10 items-center justify-center rounded-full',
-											status === 'completed' && 'bg-success/10 text-success',
-											status === 'active' && 'bg-primary text-primary-foreground',
-											status === 'pending' && 'bg-muted text-muted-foreground',
-											status === 'timeout' && 'bg-warning/20 text-warning'
-										)}
-									>
-										{status === 'completed' ? (
-											<Check className='h-5 w-5' />
-										) : (
-											<Icon className='h-5 w-5' />
-										)}
-									</div>
 
-									<div className='text-center'>
-										<p className='text-xs font-medium'>
-											<span className='hidden sm:inline'>{phase.label}</span>
-											<span className='sm:hidden'>{phase.shortLabel}</span>
-										</p>
-										<div className='mt-1'>{getStatusBadge(status)}</div>
-										{/* TIME */}
-										<p className='mt-1 text-[10px] text-muted-foreground'>
+			<CardContent className='pt-0'>
+				<p className='text-sm text-muted-foreground'>{content.description}</p>
+			</CardContent>
+
+			{isActivePeriod && (
+				<CardContent className='overflow-x-auto py-4'>
+					<div className='flex min-w-max items-center gap-4'>
+						{phases.map((phase, index) => {
+							const status = getPhaseStatus(phase.type)
+							const Icon = phase.icon
+
+							return (
+								<React.Fragment key={phase.type}>
+									<div className='flex min-w-[80px] flex-col items-center gap-1'>
+										<div
+											className={cn(
+												'flex h-10 w-10 items-center justify-center rounded-full',
+												status === 'completed' && 'bg-success/10 text-success',
+												status === 'active' && 'bg-primary text-primary-foreground',
+												status === 'pending' && 'bg-muted text-muted-foreground',
+												status === 'timeout' && 'bg-warning/20 text-warning'
+											)}
+										>
+											{status === 'completed' ? (
+												<Check className='h-5 w-5' />
+											) : (
+												<Icon className='h-5 w-5' />
+											)}
+										</div>
+
+										<p className='text-center text-[10px] font-medium'>{phase.shortLabel}</p>
+										{getStatusBadge(status)}
+										<p className='mt-1 text-center text-[9px] text-muted-foreground'>
 											{getPhaseTimeNode(phase.type)}
 										</p>
 									</div>
-								</div>
 
-								{/* LINE (chỉ render nếu không phải item cuối) */}
-								{index < phases.length - 1 && (
-									<div
-										className={cn(
-											'mx-2 h-0.5 flex-1',
-											shouldHighlightLine(phase.type) ? 'bg-primary/50' : 'bg-muted'
-										)}
-									/>
-								)}
-							</React.Fragment>
-						)
-					})}
-				</div>
-			</CardContent>
-			<CardContent>
-				{currentPhase === 'open_registration' && <RegistrationCard dashboardData={dashboardData} />}
-				{currentPhase === 'execution' && <TopicExecutionCard dashboardData={dashboardData} />}
-				{/* {currentPhase === 'execution' && <AISummaryCard />} */}
-				{currentPhase === 'completion' &&
-					(dashboardData.topicData as StudentTopicDashboard[]).map((topic) => {
-						return (
-							<React.Fragment key={topic.titleVN}>
-								<GradingResultCard topic={topic} />
-							</React.Fragment>
-						)
-					})}
-			</CardContent>
+									{/* Highlight line giữa các pha */}
+									{index < phases.length - 1 && (
+										<div
+											className={cn(
+												'mt-5 h-0.5 flex-1',
+												shouldHighlightLine(phase.type) ? 'bg-primary/50' : 'bg-muted'
+											)}
+										/>
+									)}
+								</React.Fragment>
+							)
+						})}
+					</div>
+				</CardContent>
+			)}
+
+			<CardContent>{renderAction()}</CardContent>
 		</Card>
 	)
 }

@@ -6,8 +6,6 @@ import {
 	useSetAllowManualApprovalMutation,
 	useSubmitTopicMutation
 } from '@/services/topicApi'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
-import { CreateTopic } from '../../new_topic'
 import { Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
@@ -17,8 +15,10 @@ import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { CustomPagination } from '@/components/PaginationBar'
 import DeleteTopicModal from '../modal/delete-topic-modal'
+import { CreateTopic2 } from '../../new_topic/new_topic'
+import { CreateTopic } from '../../new_topic'
 
-const ManageTopicDraft = () => {
+const ManageTopicDraft2 = () => {
 	const [queries, setQueries] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 5,
@@ -42,7 +42,7 @@ const ManageTopicDraft = () => {
 		debounceOnChange(val)
 	}
 	const [selectedTopicId, setSelectedTopicId] = useState<string[] | null>(null)
-    const [showCreate, setShowCreate] = useState(false)
+	const [showCreate, setShowCreate] = useState(false)
 	const [showSelection, setShowSelection] = useState(false)
 	const [openDeleteConfirmModal, setOpenDeleteConfirmModal] = useState(false)
 	//lấ thong tin của kì
@@ -129,11 +129,11 @@ const ManageTopicDraft = () => {
 
 	return (
 		<div className='h-full'>
-			<ResizablePanelGroup direction='horizontal' className='h-full rounded-lg border'>
-				<ResizablePanel defaultSize={65}>
+			{!showCreate ? (
+				<>
 					<div className='flex flex-col gap-2 p-2'>
 						<div className='flex w-fit flex-row items-center gap-2'>
-							<h3 className='m-4 text-xl font-semibold'>Kho đề tài của bạn</h3>
+							<h3 className='mx-2 text-xl font-semibold'>Kho đề tài của bạn</h3>
 						</div>
 						<div className='relative flex flex-1 items-center gap-4'>
 							<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
@@ -144,6 +144,12 @@ const ManageTopicDraft = () => {
 								onChange={(e) => onEdit(e.target.value)}
 							/>
 
+							<button
+								onClick={() => setShowCreate(true)}
+								className='whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90'
+							>
+								+ Tạo đề tài mới
+							</button>
 						</div>
 						<div className='min-h-0 flex-1'>
 							<DataTable
@@ -161,21 +167,18 @@ const ManageTopicDraft = () => {
 							/>
 						)}
 					</div>
-				</ResizablePanel>
-				<ResizableHandle withHandle />
-
-				<ResizablePanel defaultSize={30} minSize={30} className='pt-2'>
-					<CreateTopic refetchDraftTopics={refetch} />
-				</ResizablePanel>
-			</ResizablePanelGroup>
-			<DeleteTopicModal
-				open={openDeleteConfirmModal}
-				onClose={() => setOpenDeleteConfirmModal(false)}
-				onConfirm={() => handleDeleteTopics()}
-				isLoading={false}
-			/>
+					<DeleteTopicModal
+						open={openDeleteConfirmModal}
+						onClose={() => setOpenDeleteConfirmModal(false)}
+						onConfirm={() => handleDeleteTopics()}
+						isLoading={false}
+					/>
+				</>
+			) : (
+				<CreateTopic2 refetchDraftTopics={refetch} onBack={() => setShowCreate(false)} />
+			)}
 		</div>
 	)
 }
 
-export default ManageTopicDraft
+export default ManageTopicDraft2

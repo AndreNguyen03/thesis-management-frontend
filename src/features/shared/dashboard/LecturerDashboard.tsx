@@ -7,7 +7,6 @@ import { LecturerPeriodCard } from './component/LecturerPeriodCard'
 
 export function LecturerDashboard() {
 	const { data: milestoneEvents, isLoading: isLoadingMilestoneEvent } = useGetAllUserMilestonesQuery()
-
 	const { data, isLoading: isLoadingLecturerDashboard } = useGetLecturerDashboardQuery()
 
 	const currentThesisDashboard = data?.thesis
@@ -43,8 +42,9 @@ export function LecturerDashboard() {
 						<LecturerPeriodCard dashboardData={currentThesisDashboard} />
 						<LecturerPeriodCard dashboardData={currentResearchDashboard} />
 					</div>
+
 					{/* Right Sidebar */}
-					<div className='space-y-6'>
+					<div className='space-y-6 lg:col-start-2'>
 						<SchedulePanel milestones={milestoneEvents} />
 					</div>
 				</div>

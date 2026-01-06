@@ -11,7 +11,7 @@ export function LecturerProfilePage({ lecturer, viewerId }: { lecturer: Lecturer
 	const isOwner = lecturer.userId === viewerId
 
 	return (
-		<div className='mx-auto min-h-screen space-y-6 px-6'>
+		<div className='mx-4 min-h-screen space-y-6 px-6 pt-10'>
 			{/* Header + Conditional buttons */}
 			<div className='mb-6'>
 				{isOwner ? (
@@ -35,7 +35,7 @@ export function LecturerProfilePage({ lecturer, viewerId }: { lecturer: Lecturer
 				)}
 			</div>
 
-			<LecturerProfileHeader lecturer={lecturer} isOwner={isOwner}/>
+			<LecturerProfileHeader lecturer={lecturer} isOwner={isOwner} />
 
 			{/* Nội dung gộp: 2 cột */}
 			<LecturerProfileContent lecturer={lecturer} />
