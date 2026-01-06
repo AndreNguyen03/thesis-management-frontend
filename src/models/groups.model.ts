@@ -1,7 +1,7 @@
 import type { GetPaginatedObject } from './paginated-object.model'
 
 export interface Participant {
-	id: string
+	_id: string
 	fullName: string
 	avatarUrl?: string
 }

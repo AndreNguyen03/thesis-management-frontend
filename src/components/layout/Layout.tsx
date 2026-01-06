@@ -37,7 +37,6 @@ const Layout = ({ children }: LayoutProps) => {
 function LayoutContent({ user, children }: { user: AppUser; children: ReactNode }) {
 	const { isOpen } = useSidebar()
 	const sidebarWidth = isOpen ? 'w-56' : 'w-16'
-	const mainMargin = isOpen ? 'ml-56' : 'ml-16'
 	const [openAI, setOpenAI] = useState(true)
 	const { hidden } = useBreadcrumb()
 	return (
@@ -50,17 +49,27 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 					'flex w-full bg-[#fafafa] selection:bg-blue-100 selection:text-blue-900',
 					hidden
 						? 'mt-16 h-[calc(100vh-4rem)] overflow-hidden' // WORKSPACE MODE
-						: 'mt-16 min-h-screen pt-10' // NORMAL MODE
+						: 'mt-20 h-[calc(100vh-6rem)]' // NORMAL MODE
 				)}
 			>
 				{/* Sidebar fixed to left, below header */}
 				<div
-					className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r bg-white shadow-lg transition-all duration-300 ${sidebarWidth}`}
+					className={cn(
+						'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r bg-white shadow-lg transition-all duration-300',
+						'hidden lg:block',
+						sidebarWidth
+					)}
 				>
 					<AppSidebar userRole={user?.role} />
 				</div>
 				{/* Main content area with left margin for sidebar, responsive to sidebar open/close */}
-				<div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${mainMargin}`}>
+				<div
+					className={cn(
+						'flex flex-1 flex-col overflow-hidden transition-all duration-300',
+						'lg:ml-16',
+						isOpen && 'lg:ml-56'
+					)}
+				>
 					{/* Breadcrumbs sticky below header, always visible */}
 					{!hidden && (
 						<div className='fixed top-16 z-40 w-full border-b bg-gray-50'>
@@ -69,8 +78,8 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 							</div>
 						</div>
 					)}
-					<main className='flex w-full flex-1 overflow-hidden'>
-						<div className='flex h-full w-full overflow-hidden'>{children}</div>
+					<main className='flex w-full flex-1 overflow-auto'>
+						<div className='flex h-full w-full'>{children}</div>
 						<FlashBanner />
 					</main>
 				</div>

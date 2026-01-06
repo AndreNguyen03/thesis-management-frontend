@@ -1,24 +1,54 @@
-import { useAppSelector } from '@/store'
-import { LecturerSubmissionCard } from './component/LecturerSubmissionCard'
+import { SchedulePanel } from './component/schedule-panel'
+import { useGetLecturerDashboardQuery } from '@/services/periodApi'
+import { PeriodCardSkeleton } from './component/skeleton/PeriodSkeleton'
+import { SidebarSkeleton } from './component/skeleton/RightSidebarSkeleton'
+import { useGetAllUserMilestonesQuery } from '@/services/milestoneApi'
+import { LecturerPeriodCard } from './component/LecturerPeriodCard'
 
 export function LecturerDashboard() {
-	const { currentPeriod } = useAppSelector((state) => state.period)
+	const { data: milestoneEvents, isLoading: isLoadingMilestoneEvent } = useGetAllUserMilestonesQuery()
+	const { data, isLoading: isLoadingLecturerDashboard } = useGetLecturerDashboardQuery()
+
+	const currentThesisDashboard = data?.thesis
+	const currentResearchDashboard = data?.scientificResearch
+
+	if (isLoadingMilestoneEvent || isLoadingLecturerDashboard) {
+		return (
+			<div className='min-h-screen w-full bg-background'>
+				<main className='mx-auto max-w-7xl px-4 py-6 lg:px-8'>
+					<div className='grid gap-6 lg:grid-cols-[1fr_320px]'>
+						<div className='space-y-6'>
+							<PeriodCardSkeleton />
+							<PeriodCardSkeleton />
+						</div>
+
+						<SidebarSkeleton />
+					</div>
+				</main>
+			</div>
+		)
+	}
+
+	if (!currentResearchDashboard) return <div>không có đăng kí</div>
+	if (!currentThesisDashboard) return <div>không có đợt đề tài</div>
+	if (!milestoneEvents) return <div>không có sự kiện</div>
+
 	return (
-		<div className='min-h-screen w-full bg-gray-50 p-4'>
-			{/* Tiêu đề */}
-			<h1 className='mb-6 text-2xl font-bold text-gray-800'>Dashboard</h1>
+		<div className='min-h-screen w-full bg-background'>
+			<main className='mx-auto max-w-7xl px-4 py-6 lg:px-8'>
+				<div className='grid gap-6 lg:grid-cols-[1fr_320px]'>
+					{/* Main Content */}
+					<div className='space-y-6'>
+						<LecturerPeriodCard dashboardData={currentThesisDashboard} />
+						<LecturerPeriodCard dashboardData={currentResearchDashboard} />
+					</div>
 
-			{/* --- KHU VỰC HIỂN THỊ ĐỢT NỘP (QUAN TRỌNG NHẤT) --- */}
-			<div className='mb-8'>
-				{currentPeriod && (
-					<LecturerSubmissionCard period={currentPeriod} submittedCount={5} requiredCount={6} />
-				)}
-			</div>
-
-			{/* Các phần khác của Dashboard (Menu nhanh, Thống kê...) */}
-			<div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4'>
-				{/* ... Render các thẻ menu "Đăng đề tài", "Quản lý"... như cũ */}
-			</div>
+					{/* Right Sidebar */}
+					<div className='space-y-6 lg:col-start-2'>
+						<SchedulePanel milestones={milestoneEvents} />
+					</div>
+				</div>
+			</main>
 		</div>
 	)
 }

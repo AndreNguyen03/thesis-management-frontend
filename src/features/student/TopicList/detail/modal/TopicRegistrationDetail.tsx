@@ -186,8 +186,8 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 												<div className='w-full space-y-1'>
 													<div className='flex flex-wrap items-center gap-2'>
 														{/* Tên sinh viên (Xử lý Ẩn danh) */}
-														<h4 className={`text-sm font-semibold italic text-gray-500`}>
-															{`Ứng viên ẩn danh #${index + 1}`}
+														<h4 className={`text-sm font-semibold italic`}>
+															{req.student.fullName}
 														</h4>
 
 														{/* Badge gợi ý */}
@@ -204,7 +204,7 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 													)} */}
 													</div>
 
-													{/* Thông tin năng lực (Luôn hiển thị) */}
+													{/* Thông tin năng lực (Luôn hiển thị)
 													<div className='flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600'>
 														<span className='rounded bg-blue-50 px-1.5 font-medium text-blue-600'>
 															GPA: X
@@ -216,7 +216,7 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 															<Clock className='h-3 w-3' />
 															{new Date(req.createdAt).toLocaleString('vi-VN')}
 														</span>
-													</div>
+													</div> */}
 
 													{/* Kỹ năng */}
 													<div className='mt-1.5 flex flex-wrap gap-1'>

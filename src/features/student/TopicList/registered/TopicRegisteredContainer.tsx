@@ -3,18 +3,21 @@ export const RegisteredTopicContainer = () => {
 	//const user = useAppSelector((state) => state.auth.user)
 
 	return (
-		<div className='mx-10 w-full pb-5'>
+		<div className='mx-10 w-full overflow-y-auto pt-10'>
 			{/* Results */}
 			<div className='space-y-4'>
 				{/* Navbar with 2 options: Registered & Cancelled */}
-				<div>
-					{/* Navigation với NavLink */}
-					<div className='mb-4 flex gap-2'>
+				<div className='mb-6 border-b'>
+					<nav className='flex gap-6'>
 						<NavLink
 							to='/topics/registered'
 							end
 							className={({ isActive }) =>
-								`rounded px-4 py-2 ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-200'}`
+								`pb-3 text-sm font-medium transition-colors ${
+									isActive
+										? 'border-b-2 border-primary text-primary'
+										: 'text-muted-foreground hover:text-primary'
+								}`
 							}
 						>
 							Đã đăng ký
@@ -23,12 +26,16 @@ export const RegisteredTopicContainer = () => {
 						<NavLink
 							to='canceled'
 							className={({ isActive }) =>
-								`rounded px-4 py-2 ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-200'}`
+								`pb-3 text-sm font-medium transition-colors ${
+									isActive
+										? 'border-b-2 border-primary text-primary'
+										: 'text-muted-foreground hover:text-primary'
+								}`
 							}
 						>
 							Lịch sử đăng ký
 						</NavLink>
-					</div>
+					</nav>
 				</div>
 
 				<Outlet />

@@ -1,7 +1,6 @@
 import { baseApi, type ApiResponse } from './baseApi'
 import type {
 	CreateDirectGroupDto,
-	CreateDirectGroupResponse,
 	DirectSidebarGroup,
 	GroupDetail,
 	MessageDto,

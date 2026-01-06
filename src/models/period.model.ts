@@ -1,7 +1,7 @@
 import type { ElementType } from 'react'
 import type { GetFaculty } from './faculty.model'
 import type { PeriodPhase } from './period-phase.models'
-import type { GeneralTopic, TopicStatus } from './topic.model'
+import type { DefenseResult, GeneralTopic, TopicStatus } from './topic.model'
 import type { PaginationQueryParamsDto } from './query-params'
 import { CalendarCheck, Clock, Lightbulb } from 'lucide-react'
 import type { Role } from './users'
@@ -112,6 +112,21 @@ export interface GetCurrentPeriod {
 	navItem: NavItem[]
 }
 
+export interface StudentRegistration {
+	_id: string
+	userId: string
+	topicId: string
+	status: 'pending' | 'approved' | 'rejected'
+	studentRole: 'leader' | 'member'
+	studentNote: string
+	lecturerResponse: string
+	topic: {
+		titleVN: string
+		titleEng: string
+		description: string
+	}
+}
+
 export interface GetDashboardCurrentPeriodType {
 	_id: string
 	year: string
@@ -124,10 +139,131 @@ export interface GetDashboardCurrentPeriodType {
 	endTime: Date
 	currentPhase: string
 	currentPhaseDetail: PeriodPhase
+	topics: {
+		titleEng: string
+		titleVN: string
+		defenseResult?: DefenseResult
+		type: string
+		isPublishedToLibrary: boolean
+	}[]
 }
 export interface GetDashboardCurrentPeriod {
 	thesisDashboard: GetDashboardCurrentPeriodType
 	researchDashboard: GetDashboardCurrentPeriodType
+	thesisRegistration: {
+		_id: string
+		type: string
+		studentRegisStatus: StudentRegistration[]
+	}
+	researchRegistration: {
+		_id: string
+		type: string
+		studentRegisStatus: StudentRegistration[]
+	}
+}
+
+export interface LecturerTopicRegisration {
+	_id: string
+	titleVN: string
+	type: string
+	maxStudents: number
+	allowManualApproval: boolean
+	pendingCount: number
+	approvedCount: number
+	rejectedCount: number
+}
+
+export interface LecturerTopicExecution {
+	_id: string
+	titleVN: string
+	type: string
+	maxStudents: string
+}
+
+export interface LecturerTopicSubmit {
+	_id: string
+	titleVN: string
+	type: string
+	maxStudents: number
+	allowManualApproval: boolean
+	currentStatus: string
+}
+
+export interface LecturerTopicCompletion {
+	_id: string
+	titleVN: string
+	type: string
+	maxStudents: number
+	isPublishedToLibrary: boolean
+	defenseResult?: DefenseResult
+}
+
+export interface StudentTopicDashboard {
+	_id: string
+	titleVN: string
+	type: string
+	defenseResult: DefenseResult
+	isPublishedToLibrary: boolean
+	lecturer: {
+		email: string
+		fullName: string
+		title: string
+	}
+	studentRegistration: {
+		status: string
+		studentNote: string
+		lecturerResponse: string
+		rejectionReasonType: string
+		studentRole: string
+		updatedAt: string
+		createdAt: string
+	}
+}
+
+export type DashboardTopicData =
+	| StudentTopicDashboard
+	| LecturerTopicCompletion
+	| LecturerTopicSubmit
+	| LecturerTopicExecution
+	| LecturerTopicRegisration
+
+export interface DashboardType {
+	_id: string
+	title: string
+	description: string
+	type: PeriodType
+	facultyName: string
+	phases: PeriodPhase[]
+	status: string
+	startTime: Date
+	endTime: Date
+	currentPhase: string
+	currentPhaseDetail: PeriodPhase
+	topicData: DashboardTopicData[]
+}
+
+export interface CurrentPeriodDashboard {
+	thesis: DashboardType
+	scientificResearch: DashboardType
+}
+
+export interface FacultyDashboardType {
+	_id: string
+	title: string
+	description: string
+	type: PeriodType
+	facultyName: string
+	phases: PeriodPhase[]
+	status: string
+	startTime: Date
+	endTime: Date
+	currentPhase: string
+	currentPhaseDetail: PeriodPhase
+}
+
+export interface FacultyCurrentPeriodDashboard {
+	thesis: FacultyDashboardType
+	scientificResearch: FacultyDashboardType
 }
 
 export interface PaginationPeriodQueryParams extends PaginationQueryParamsDto {
@@ -256,4 +392,16 @@ export interface TopicsInPeriodMeta extends MetaDto {
 export interface PaginatedTopicsInPeriod {
 	data: GeneralTopic[]
 	meta: TopicsInPeriodMeta
+}
+
+export interface MiniPeriodInfo {
+	_id: string
+	year: string
+	semester: number
+	type: string
+}
+
+export interface PaginatedMiniPeriodInfo {
+	data: MiniPeriodInfo[]
+	meta: MetaDto
 }

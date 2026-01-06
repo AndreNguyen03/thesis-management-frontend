@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { DescriptionOptimizer } from './components/DescriptionOptimizer'
 import { toast } from '@/hooks/use-toast'
-import { Save, X, Link, Plus, FileText, Loader2 } from 'lucide-react'
+import { Save, X, Link, Plus, FileText, Loader2, ArrowRight, ArrowLeft } from 'lucide-react'
 
 import { usePageBreadcrumb } from '@/hooks'
 import { Button } from '@/components/ui'
@@ -223,7 +223,7 @@ function CreateTopic({
 		}
 	}
 	return (
-		<div className='h-full pt-2 w-full mx-10'>
+		<div className='mx-10 h-full w-full pt-2'>
 			<div className='mx-auto h-full'>
 				<div className='flex h-full flex-col rounded-2xl border border-border bg-card p-6 pt-6 shadow-lg'>
 					<div className='mb-4'>

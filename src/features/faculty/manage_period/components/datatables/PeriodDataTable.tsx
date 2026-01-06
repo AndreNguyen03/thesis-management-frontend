@@ -133,64 +133,70 @@ const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 			</div>
 
 			<div className='overflow-x-auto rounded-lg border'>
-				<table className='min-w-full bg-white'>
+				<table className='min-w-full table-auto bg-white'>
 					<thead>
 						<tr className='bg-gray-50 text-gray-700'>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Năm học</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Học kỳ</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Loại đợt</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Thời gian</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái kì</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Pha hiện tại</th>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái của pha</th>
-							<th className='px-3 py-2 text-center text-[15px] font-semibold'>Hành động</th>
+							<th className='w-[100px] px-3 py-2 text-left text-[15px] font-semibold'>Năm học</th>
+							<th className='w-[80px] px-3 py-2 text-left text-[15px] font-semibold'>Học kỳ</th>
+							<th className='w-[150px] px-3 py-2 text-left text-[15px] font-semibold'>Loại đợt</th>
+							<th className='w-[200px] px-3 py-2 text-left text-[15px] font-semibold'>Thời gian</th>
+							<th className='w-[150px] px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái kì</th>
+							<th className='w-[150px] px-3 py-2 text-left text-[15px] font-semibold'>Pha hiện tại</th>
+							<th className='w-[150px] px-3 py-2 text-left text-[15px] font-semibold'>
+								Trạng thái của pha
+							</th>
+							<th className='w-[120px] px-3 py-2 text-center text-[15px] font-semibold'>Hành động</th>
 						</tr>
 					</thead>
 					<tbody>
 						{periodData?.map((pe) => (
 							<tr key={pe._id} className='border-b last:border-b-0 hover:bg-gray-50'>
-								<td className='px-3 py-2'>
-									<span className='font-semibold text-gray-900'>{pe.year}</span>
+								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
+									<span title={pe.year} className='font-semibold text-gray-900'>
+										{pe.year}
+									</span>
 								</td>
-								<td className='px-3 py-2'>
-									<span className='font-semibold text-gray-900'>{pe.semester}</span>
+								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
+									<span title={`${pe.semester}`} className='font-semibold text-gray-900'>
+										{pe.semester}
+									</span>
 								</td>
-								<td className='px-3 py-2'>{periodTypeMap[pe.type]}</td>
-								<td className='px-3 py-2'>
-									<span>
+								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
+									<span title={periodTypeMap[pe.type]}>{periodTypeMap[pe.type]}</span>
+								</td>
+								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
+									<span
+										title={`${new Date(pe.startTime).toLocaleString()} - ${new Date(pe.endTime).toLocaleString()}`}
+									>
 										{new Date(pe.startTime).toLocaleString('vi-VN')} -{' '}
 										{new Date(pe.endTime).toLocaleString('vi-VN')}
 									</span>
 								</td>
-								{/* <td className='px-3 py-2'>
-									<span>
-										{topicStatusLabels[hic.topicStatus as keyof typeof topicStatusLabels].name}
-									</span>
-								</td> */}
-								<td className='px-3 py-2'>
+								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
 									<span
 										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[pe.status].color}`}
+										title={statusMap[pe.status].label}
 									>
 										{statusMap[pe.status].label}
 									</span>
 								</td>
-								{/* current phase */}
-								<td className='px-3 py-2'>
+								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
 									<span
 										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${phaseMap[pe.currentPhase].color}`}
+										title={phaseMap[pe.currentPhase].label}
 									>
 										{phaseMap[pe.currentPhase].label}
 									</span>
 								</td>
-								{/* Phase status */}
-								<td className='px-3 py-2'>
+								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
 									<span
 										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[pe.currentPhaseDetail.status].color}`}
+										title={statusMap[pe.currentPhaseDetail.status].label}
 									>
 										{statusMap[pe.currentPhaseDetail.status].label}
 									</span>
 								</td>
-								<td className='px-3 py-2 text-center'>
+								<td className='whitespace-nowrap px-3 py-2 text-center'>
 									<button
 										className='rounded-full p-2 transition-colors hover:bg-gray-100'
 										onClick={() => navigate(`/period/${pe._id}`)}
@@ -218,37 +224,9 @@ const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 								</td>
 							</tr>
 						))}
-						{isLoading && (
-							<tr>
-								<td colSpan={7} className='py-12 text-center'>
-									<div className='flex flex-col items-center justify-center gap-2'>
-										<Loader2 className='h-8 w-8 animate-spin text-blue-500' />
-										<span className='text-gray-500'>Đang tải dữ liệu...</span>
-									</div>
-								</td>
-							</tr>
-						)}
-						{error && (
-							<tr>
-								<td colSpan={7} className='py-12 text-center'>
-									<div className='flex flex-col items-center justify-center gap-2'>
-										<XCircle className='h-8 w-8 text-red-500' />
-										<span className='text-gray-500'>
-											{(error as ApiError).data?.message || 'Đã có lỗi xảy ra khi tải dữ liệu'}
-										</span>
-									</div>
-								</td>
-							</tr>
-						)}
-						{!isLoading && !error && periodData?.length === 0 && (
-							<tr>
-								<td colSpan={7} className='py-12 text-center'>
-									<EmptyState title='Không có dữ liệu' />
-								</td>
-							</tr>
-						)}
 					</tbody>
 				</table>
+
 				{/* Edit Period Modal */}
 				{selectedPeriod && (
 					<EditPeriodModal

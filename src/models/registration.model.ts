@@ -18,6 +18,7 @@ export function renderRegistrationStatus(status: StudentRegistrationStatus): { l
 import type { GetPaginatedObject, MetaDto } from './paginated-object.model'
 import type { GetCurrentPeriod, MiniPeriod } from './period.model'
 import type { PaginationQueryParamsDto } from './query-params'
+import type { DefenseResult } from './topic.model'
 import type { ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 export const StudentRegistrationStatus = {
 	PENDING: 'pending',
@@ -50,6 +51,24 @@ export interface MetaCustom extends MetaDto {
 export interface PaginatedStudentRegistration {
 	data: IStudentRegistration[]
 	meta: MetaCustom
+}
+
+export interface StudentTopicState {
+	_id: string
+	userId: string
+	topicId: string
+	status: string
+	topic: {
+		titleVN: string
+		titleEng: string
+		description: string
+		type: string
+		majorId: string
+		currentStatus: string
+		currentPhase: string
+		periodId: string
+		defenseResult: DefenseResult
+	}
 }
 
 export interface RelatedStudentInTopic {

@@ -13,7 +13,7 @@ export function ManagePeriodPage() {
 	])
 
 	return (
-		<div className='mx-10 h-[calc(100vh-10rem)] min-h-0 w-full overflow-auto'>
+		<div className='mx-5 pt-4 h-full min-h-0 w-full overflow-auto'>
 			{/* Header */}
 			<div className='flex flex-col' role='main'>
 				<header className='mb-6 mt-6 flex items-center justify-between px-2'>

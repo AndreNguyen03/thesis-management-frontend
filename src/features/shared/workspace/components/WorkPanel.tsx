@@ -23,7 +23,7 @@ export const WorkPanel = () => {
 		{ groupId: group.activeGroup?._id! },
 		{ skip: !group.activeGroup?._id }
 	)
-	
+
 	// Thay 'example-group-id' bằng ID nhóm thực tế
 	const [milestones, setMilestones] = useState<ResponseMilestone[]>([]) // Empty array ban đầu, thay bằng real data sau
 	//console.log('milestonesData', milestonesData)

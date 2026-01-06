@@ -1,6 +1,7 @@
 import type { PaginatedResponse } from '@/models'
 import type { Phase1Response, Phase2Response, Phase3Response } from '@/models/period-phase.models'
 import {
+	type CurrentPeriodDashboard,
 	type CreateCompletionPhaseDto,
 	type CreateExecutionPhaseDto,
 	type CreateOpenRegPhaseDto,
@@ -17,6 +18,7 @@ import {
 import { buildQueryString } from '@/models/query-params'
 import type { GetStatiticInPeriod } from '@/models/statistic.model'
 import { baseApi, type ApiResponse } from '@/services/baseApi'
+import type { FacultyCurrentPeriodDashboard, PaginatedMiniPeriodInfo } from '../models/period.model'
 
 export const periodApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -192,6 +194,30 @@ export const periodApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<GetDashboardCurrentPeriod>) => response.data,
 			providesTags: ['Periods']
+		}),
+		getAllMiniPeriodInfo: builder.query<PaginatedMiniPeriodInfo, PaginationPeriodQueryParams>({
+			query: (query) => {
+				const queryString = buildQueryString(query)
+				console.log('mini period info query string :::', queryString)
+				return `/periods/get-all-mini?${queryString}`
+			},
+			transformResponse: (response: ApiResponse<PaginatedMiniPeriodInfo>) => response.data,
+			providesTags: ['Periods']
+		}),
+		getStudentDashboard: builder.query<CurrentPeriodDashboard, void>({
+			query: () => `/dashboard/student`,
+			transformResponse: (response: ApiResponse<CurrentPeriodDashboard>) => response.data,
+			providesTags: ['StudentDashboard']
+		}),
+		getLecturerDashboard: builder.query<CurrentPeriodDashboard, void>({
+			query: () => `/dashboard/lecturer`,
+			transformResponse: (response: ApiResponse<CurrentPeriodDashboard>) => response.data,
+			providesTags: ['LecturerDashboard']
+		}),
+		getFacultyDashboard: builder.query<FacultyCurrentPeriodDashboard, void>({
+			query: () => `/dashboard/faculty`,
+			transformResponse: (response: ApiResponse<FacultyCurrentPeriodDashboard>) => response.data,
+			providesTags: ['LecturerDashboard']
 		})
 	})
 })
@@ -210,5 +236,9 @@ export const {
 	useAdjustPeriodMutation,
 	useGetCurrentPeriodsQuery,
 	useGetDashboardCurrentPeriodQuery,
-	useCompletePeriodMutation
+	useCompletePeriodMutation,
+	useGetAllMiniPeriodInfoQuery,
+	useGetLecturerDashboardQuery,
+	useGetStudentDashboardQuery,
+    useGetFacultyDashboardQuery
 } = periodApi

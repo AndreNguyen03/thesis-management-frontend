@@ -58,7 +58,7 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 	return (
 		<Card className='w-full space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
 			{!periodId && (
-				<div className='w-fit bg-slate-200'>
+				<div className='w-fit'>
 					<h2 className='mb-1 text-xl font-bold text-gray-900'>Lịch Sử Đăng Ký Đề Tài</h2>
 					<p className='mb-6 text-sm text-gray-500'>Xem lịch sử và trạng thái của các lần đăng ký trước đó</p>
 				</div>

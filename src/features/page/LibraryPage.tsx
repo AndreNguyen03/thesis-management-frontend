@@ -356,15 +356,9 @@ export const LibraryPage = () => {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Thư viện số' }])
 
 	return (
-		<div className='h-[calc(100vh-6rem)] w-full overflow-auto bg-white'>
+		<div className='h-100vh w-full overflow-auto bg-white'>
 			{/* 1. HERO SECTION (Search Centric) */}
 			<div className='relative overflow-hidden bg-slate-900 px-4 py-12 text-white'>
-				{/* Abstract Background Pattern */}
-				<div className='pointer-events-none absolute left-0 top-0 h-full w-full opacity-10'>
-					<div className='absolute right-0 top-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 transform rounded-full bg-blue-500 mix-blend-screen blur-3xl'></div>
-					<div className='absolute bottom-0 left-0 h-72 w-72 -translate-x-1/3 translate-y-1/3 transform rounded-full bg-emerald-500 mix-blend-screen blur-3xl'></div>
-				</div>
-
 				<div className='container relative z-10 mx-auto max-w-4xl space-y-6 text-center'>
 					<div className='space-y-2'>
 						<div className='mb-4 flex justify-center'>
@@ -372,26 +366,30 @@ export const LibraryPage = () => {
 								<BookOpen className='h-8 w-8 text-blue-400' />
 							</div>
 						</div>
-						<h1 className='text-3xl font-bold tracking-tight md:text-4xl'>Thư viện Khóa luận & Đồ án số</h1>
-						<p className='text-lg text-slate-300'>
+						<h1 className='text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl'>
+							Thư viện Khóa luận & Đồ án số
+						</h1>
+						<p className='text-sm text-slate-300 sm:text-base md:text-lg'>
 							Khám phá, tra cứu và tham khảo hàng ngàn công trình nghiên cứu của sinh viên.
 						</p>
 					</div>
 
-					<div className='relative mx-auto max-w-2xl'>
+					{/* Search Box */}
+					<div className='relative mx-auto w-full max-w-2xl'>
 						<Search className='absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400' />
 						<Input
 							placeholder='Nhập tên đề tài, tác giả, hoặc từ khóa chuyên ngành...'
-							className='h-14 rounded-full border-0 bg-white pl-12 pr-4 text-lg text-slate-900 shadow-xl focus-visible:ring-2 focus-visible:ring-blue-500'
+							className='h-12 w-full rounded-full border-0 bg-white pl-12 pr-24 text-sm text-slate-900 shadow-xl focus-visible:ring-2 focus-visible:ring-blue-500 sm:h-14 sm:text-lg'
 							value={queries.query}
 							onChange={(e) => handleSearch(e.target.value)}
 						/>
-						<Button className='absolute right-2 top-2 h-10 rounded-full bg-blue-600 px-6 hover:bg-blue-700'>
+						<Button className='absolute right-2 top-1/2 h-10 -translate-y-1/2 rounded-full bg-blue-600 px-4 hover:bg-blue-700 sm:px-6'>
 							Tìm kiếm
 						</Button>
 					</div>
 
-					<div className='flex flex-wrap justify-center gap-2 text-sm text-slate-400'>
+					{/* Keywords */}
+					<div className='flex flex-wrap justify-center gap-2 text-xs text-slate-400 sm:text-sm'>
 						<span>Từ khóa phổ biến:</span>
 						{['Machine Learning', 'Blockchain', 'IoT', 'Mobile App', 'E-commerce'].map((k) => (
 							<span
@@ -410,12 +408,12 @@ export const LibraryPage = () => {
 				<div className='flex flex-col gap-8 lg:flex-row'>
 					{/* SIDEBAR FILTER */}
 					<aside className='w-full shrink-0 space-y-6 lg:w-64'>
-						<div className='sticky top-24 space-y-6'>
+						<div className='sticky top-24 space-y-6 lg:top-20'>
 							<div className='flex items-center gap-2 text-lg font-bold text-slate-800'>
 								<Filter className='h-5 w-5' /> Bộ lọc
 							</div>
 
-							{/* Năm học */}
+							{/* Chuyển Select và Checkbox thành full width & touch-friendly */}
 							<div className='space-y-3'>
 								<label className='text-sm font-semibold text-slate-700'>Năm bảo vệ</label>
 								{isLoadingYears ? (
@@ -442,61 +440,38 @@ export const LibraryPage = () => {
 
 							<Separator />
 
-							{/* Chuyên ngành */}
 							<div className='space-y-3'>
 								<label className='text-sm font-semibold text-slate-700'>Chuyên ngành</label>
-								{isLoadingMajors ? (
-									<Loader2 className='h-5 w-5 animate-spin' />
-								) : (
-									<div className='space-y-2'>
-										{majorOptions &&
-											majorOptions.map((major) => (
-												<div
-													key={major._id}
-													className='flex items-center space-x-2'
-													title={major.facultyName}
+								<div className='space-y-2'>
+									{majorOptions &&
+										majorOptions.map((major) => (
+											<div
+												key={major._id}
+												className='flex items-center space-x-2'
+												title={major.facultyName}
+											>
+												<Checkbox
+													id={major._id}
+													checked={queries.majorIds?.includes(major._id) ?? false}
+													onCheckedChange={(c) => {
+														if (c) {
+															//truyền majorId
+															selectMajor(major._id)
+														} else {
+															selectMajor('Tất cả')
+														}
+													}}
+												/>
+												<label
+													htmlFor={major.name}
+													className='cursor-pointer text-sm font-medium leading-none text-slate-600 peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
 												>
-													<Checkbox
-														id={major._id}
-														checked={queries.majorIds?.includes(major._id) ?? false}
-														onCheckedChange={(c) => {
-															if (c) {
-																//truyền majorId
-																selectMajor(major._id)
-															} else {
-																selectMajor('Tất cả')
-															}
-														}}
-													/>
-													<label
-														htmlFor={major.name}
-														className='cursor-pointer text-sm font-medium leading-none text-slate-600 peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-													>
-														{major.name}
-													</label>
-													<span className='text-xs text-slate-500'>({major.count})</span>
-												</div>
-											))}
-									</div>
-								)}
-							</div>
-
-							<Separator />
-
-							<div className='rounded-xl border border-blue-100 bg-blue-50 p-4'>
-								<h4 className='mb-2 flex items-center gap-2 text-sm font-semibold text-blue-900'>
-									<Star className='h-4 w-4 fill-blue-500 text-blue-500' /> Đề tài xuất sắc
-								</h4>
-								<p className='mb-3 text-xs text-blue-700'>
-									Xem danh sách các đề tài đạt điểm 9.0+ và được hội đồng đánh giá cao.
-								</p>
-								<Button
-									variant='outline'
-									size='sm'
-									className='w-full border-blue-200 bg-white text-blue-700 hover:bg-blue-100'
-								>
-									Xem ngay
-								</Button>
+													{major.name}
+												</label>
+												<span className='text-xs text-slate-500'>({major.count})</span>
+											</div>
+										))}
+								</div>
 							</div>
 						</div>
 					</aside>

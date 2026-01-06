@@ -19,7 +19,7 @@ export const StudentProfile = ({ student, viewerId }: StudentProfileProps) => {
 	const isOwner = student.userId === viewerId
 
 	return (
-		<div className='min-h-screen'>
+		<div className='h-full w-full pt-10'>
 			<div className='container mx-auto'>
 				{/* Header + Conditional buttons */}
 				<div className='mb-6'>

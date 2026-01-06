@@ -96,7 +96,8 @@ export const TopicDetailContainer = () => {
 	const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 	// modal
 	const [openConfirmModal, setOpenConfirmModal] = useState(false)
-	// Modal xét duyệt đề tài đăng ký
+	// Modal xét duyệt đề tài đăng kýmaxStudents={currentTopic.maxStudents}
+					
 	const [modalRegisterModalOpen, setModalRegisterModalOpen] = useState(false)
 	//Modal hủy đăng ký
 	const [openCancelRegistrationModal, setOpenCancelRegistrationModal] = useState(false)

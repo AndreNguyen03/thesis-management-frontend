@@ -41,6 +41,7 @@ import { useGetRegisteredTopicQuery, useLazyGetTopicByIdQuery } from '@/services
 import RegistrationHistory from '../../TopicList/registered/children/RegistrationHistory'
 import { RecommendationPanel } from '../recommendation/RecommendationPanel'
 import { RecommendationButton } from '../recommendation/RecommendationButton'
+import { TopicRegistrationSkeleton } from './TopicRegistrationSkeleton'
 
 export default function TopicRegistration() {
 	// ------------------ PAGINATION STATE ------------------
@@ -181,6 +182,10 @@ export default function TopicRegistration() {
 
 	// ------------------ UI ------------------
 	const canRegister = period?.currentPhaseDetail?.phase === PeriodPhaseName.OPEN_REGISTRATION && !registeredTopic
+
+    if (!period || isLoadingTopics) {
+        return <TopicRegistrationSkeleton />
+    }
 
 	return (
 		<div className='max-h-[calc(100vh)] w-full overflow-y-auto bg-background'>
@@ -401,6 +406,7 @@ export default function TopicRegistration() {
 				isOpen={isRecommendOpen}
 				onClose={() => setIsRecommendOpen(false)}
 				hasProfile={hasProfile}
+                periodId={id!}
 			/>
 
 			{/* Floating Button */}
