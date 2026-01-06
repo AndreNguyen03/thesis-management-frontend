@@ -9,7 +9,7 @@ const ManageChatbot = () => {
 		<ChatbotSocketProvider>
 			<TabsContent value='manageChatbot' className='space-y-4'>
 				<Tabs defaultValue='config' className='w-full'>
-					<TabsList className='grid w-full grid-cols-2'>
+					<TabsList className='grid w-fit grid-cols-2 gap-2'>
 						<TabsTrigger value='config'>Cấu hình</TabsTrigger>
 						<TabsTrigger value='resources'>Tài nguyên</TabsTrigger>
 					</TabsList>

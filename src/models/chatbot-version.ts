@@ -4,7 +4,6 @@ export interface GetChatbotVerDto {
 	description: string
 	status: string
 	query_suggestions: GetQuerySuggestionDto[]
-	query_unenable_suggestions: GetQuerySuggestionDto[]
 	createdAt: Date
 	updatedAt: Date
 }

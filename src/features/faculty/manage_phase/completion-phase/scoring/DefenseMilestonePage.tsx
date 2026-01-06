@@ -29,7 +29,7 @@ import {
 	useBlockGradeMutation
 } from '@/services/milestoneApi'
 import { formatFileSize } from '@/utils/format-file-size'
-import { Button, Input } from '@/components/ui'
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
 import { exportScoringTemplate, importScoringFile, validateScores, calculateGradeText } from '@/utils/excel-utils'
 import { formatPeriodInfoMiniPeriod } from '@/utils/utils'
 import { ConfirmDialog } from '../manage-defense-milestone/ConfirmDialog'
@@ -38,6 +38,7 @@ import { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useAppSelector } from '@/store'
 import { downloadFileWithURL } from '@/lib/utils'
+import { set } from 'zod'
 type ActionType = 'save-draft' | 'publish' | 'block-grade' | 'submit-graded-list' | 'archive-topics'
 const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 export default function DefenseScoringPage() {
@@ -60,7 +61,7 @@ export default function DefenseScoringPage() {
 	//query params:
 	const [queryParams, setQueryParams] = useState<PaginationQueryParamsDto>({
 		page: 1,
-		limit: 1,
+		limit: 10,
 		query: '',
 		search_by: ['titleVN', 'titleEng']
 	})
@@ -76,8 +77,6 @@ export default function DefenseScoringPage() {
 		templateMilestoneId: milestoneId!,
 		queryParams: { page: 1, limit: 0 }
 	})
-	//gọi endpoint để xóa file template
-	const [deleteScoringResultFile, { isLoading: isDeletingTemplate }] = useDeleteScoringResultFileMutation()
 	//gọi endpoint để lưu defenseResult xuống database
 	const [batchUpdateDefenseResults, { isLoading: isSavingDraft }] = useBatchUpdateDefenseResultsMutation()
 	//gọi endpoint để ông bố kết quả
@@ -546,7 +545,11 @@ export default function DefenseScoringPage() {
 
 							<button
 								onClick={() => setConfirmDialog({ open: true, type: 'publish' })}
-								disabled={isPublishing || detailTopicsData?.data.length === 0 || detailTopicsData?.milestoneInfo.isPublished}
+								disabled={
+									isPublishing ||
+									detailTopicsData?.data.length === 0 ||
+									detailTopicsData?.milestoneInfo.isPublished
+								}
 								className={`flex items-center gap-2 rounded px-5 py-2 text-sm font-medium shadow-sm transition-colors ${
 									detailTopicsData?.milestoneInfo.isPublished
 										? 'cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400'
@@ -559,7 +562,9 @@ export default function DefenseScoringPage() {
 
 							<button
 								onClick={() => setConfirmDialog({ open: true, type: 'block-grade' })}
-								disabled={detailTopicsData?.milestoneInfo.isBlock || detailTopicsData?.data.length === 0 }
+								disabled={
+									detailTopicsData?.milestoneInfo.isBlock || detailTopicsData?.data.length === 0
+								}
 								className={`flex items-center gap-2 rounded px-5 py-2 text-sm font-medium shadow-sm transition-colors ${
 									detailTopicsData?.milestoneInfo.isBlock
 										? 'cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400'
@@ -612,10 +617,10 @@ export default function DefenseScoringPage() {
 								</div>
 								<button
 									onClick={handleApplyResultTemplate}
-									disabled={detailTopicsData?.milestoneInfo.isBlock}
+									disabled={detailTopicsData?.milestoneInfo.isBlock || !isChanged}
 									className='cursor-pointer rounded bg-blue-600 px-3 py-1 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
 								>
-									Áp dụng
+									{isChanged ? 'Áp dụng' : 'Đã áp dụng'}
 								</button>
 							</div>
 						) : (
@@ -721,12 +726,43 @@ export default function DefenseScoringPage() {
 			)}
 
 			<div className='flex items-center justify-between gap-2'>
-				<Input
-					placeholder='Tìm kiếm đề tài theo tiêu đề...'
-					value={searchTerm}
-					onChange={(e) => onEdit(e.target.value)}
-					className='w-[500px] border-gray-300 bg-white'
-				/>
+				<div className='flex gap-2'>
+					<Input
+						placeholder='Tìm kiếm đề tài theo tiêu đề...'
+						value={searchTerm}
+						onChange={(e) => onEdit(e.target.value)}
+						className='w-[500px] border-gray-300 bg-white'
+					/>
+					<div className='flex items-center gap-2'>
+						<label className='font-medium'>Hiển thị</label>
+						<div className='space-y-3'>
+							<Select
+								value={queryParams.limit?.toString()}
+								onValueChange={(value) =>
+									setQueryParams((prev) => ({ ...prev, limit: Number(value), page: 1 }))
+								}
+							>
+								<SelectTrigger className='w-full bg-white'>
+									<SelectValue placeholder='Chọn năm' />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem key={'100'} value={'100'}>
+										{100}
+									</SelectItem>
+									<SelectItem key={'50'} value={'50'}>
+										{50}
+									</SelectItem>
+									<SelectItem key={'20'} value={'20'}>
+										{20}
+									</SelectItem>
+									<SelectItem key={'10'} value={'10'}>
+										{10}
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+				</div>
 				{isChanged ? (
 					<span className='text-[14px] font-semibold text-orange-500'>Phiên bản dữ liệu chưa được lưu </span>
 				) : (

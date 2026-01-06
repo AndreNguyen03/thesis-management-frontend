@@ -1,5 +1,6 @@
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
+import type { MiniPeriod } from './period.model'
 import { PaginationQueryParamsDto } from './query-params'
 import type { MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 
@@ -207,4 +208,24 @@ export interface GetTopicsInBatchMilestoneDto {
 }
 export interface PaginatedTopicInBatchMilestone extends GetPaginatedObject {
 	data: GetTopicsInBatchMilestoneDto[]
+}
+
+// all defense milestones for faculty board
+export interface PaginationAllDefenseMilestonesQuery extends PaginationQueryParamsDto {
+	year?: string
+}
+export interface ResponseDefenseMilestone {
+	_id:string 
+	title: string
+	location: string
+	dueDate: string
+	isPublished: boolean
+	isBlock: boolean
+	defenseCouncil: DefenseCouncilMember[]
+	councilMembers: number
+	topicsCount: number
+	periodInfo: MiniPeriod
+}
+export interface PaginatedFacultyMilestones extends GetPaginatedObject {
+	data: ResponseDefenseMilestone[]
 }

@@ -68,7 +68,9 @@ export default function LecturerDefenseMilestonesPage() {
 											{formatPeriodInfoMiniPeriod(milestone.periodInfo) || 'Kỳ học'}
 										</CardDescription>
 									</div>
-									{CouncilMemberRoleOptions[milestone.myRole as CouncilMemberRole].label}
+									<span className='rounded-md bg-blue-600 px-2 py-1 font-medium text-white'>
+										{CouncilMemberRoleOptions[milestone.myRole as CouncilMemberRole].label}
+									</span>
 								</div>
 							</CardHeader>
 							<CardContent className='space-y-3'>

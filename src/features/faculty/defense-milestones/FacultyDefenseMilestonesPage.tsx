@@ -1,26 +1,47 @@
 import { useAppSelector } from '@/store'
-import { useGetAllDefenseMilestonesQuery } from '@/services/milestoneApi'
+import { useGetAllDefenseMilestonesQuery, useGetDefenseMilestoneYearsQuery } from '@/services/milestoneApi'
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
 import { Calendar, Clock, MapPin, Users, ChevronRight, Loader2, Filter } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { Input } from '@/components/ui'
+import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
 import { useDebounce } from '@/hooks/useDebounce'
 import { formatPeriodInfoMiniPeriod } from '@/utils/utils'
+import {
+	CouncilMemberRoleOptions,
+	type CouncilMemberRole,
+	type PaginationAllDefenseMilestonesQuery
+} from '@/models/milestone.model'
 
 export default function FacultyDefenseMilestonesPage() {
 	const user = useAppSelector((state) => state.auth.user)
 	const navigate = useNavigate()
 	const [searchTerm, setSearchTerm] = useState('')
-	const [debouncedSearch, setDebouncedSearch] = useState('')
+
 	const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'blocked' | 'pending'>('all')
-
-	const { data: milestonesData, isLoading } = useGetAllDefenseMilestonesQuery()
-
-	const debounceOnChange = useDebounce({ onChange: setDebouncedSearch, duration: 400 })
-
+	//query params
+	const [queryParams, setQueryParams] = useState<PaginationAllDefenseMilestonesQuery>({
+		page: 1,
+		limit: 10,
+		search_by: ['title', 'location', 'periodInfo.year'],
+		query: '',
+		year: undefined,
+		sort_by: 'dueDate',
+		sort_order: 'desc'
+	})
+	//endpoint lấy các mốc bảo vệ
+	const { data: milestonesData, isLoading } = useGetAllDefenseMilestonesQuery(queryParams)
+	//endpoint lấy combobox option cho năm
+	const { data: yearOptions, isLoading: isYearOptionsLoading } = useGetDefenseMilestoneYearsQuery()
+	const setQuerySearch = (val: string) => {
+		setQueryParams((prev) => ({
+			...prev,
+			query: val
+		}))
+	}
+	const debounceOnChange = useDebounce({ onChange: setQuerySearch, duration: 400 })
 	const handleSearch = (val: string) => {
 		setSearchTerm(val)
 		debounceOnChange(val)
@@ -47,7 +68,12 @@ export default function FacultyDefenseMilestonesPage() {
 			</Badge>
 		)
 	}
-
+	const handleYear = (value: string) => {
+		setQueryParams((prev) => ({
+			...prev,
+			year: value === 'Tất cả' ? undefined : value
+		}))
+	}
 	return (
 		<div className='container mx-auto space-y-6 p-6'>
 			{/* Header */}
@@ -65,8 +91,27 @@ export default function FacultyDefenseMilestonesPage() {
 					className='max-w-md'
 				/>
 
-				<div className='flex items-center gap-2'>
+				<div className='flex items-center gap-4'>
 					<Filter className='h-4 w-4 text-muted-foreground' />
+					{/* Năm học */}
+					<div className='space-y-3'>
+						<Select
+							value={queryParams.year === undefined ? 'Tất cả' : queryParams.year}
+							onValueChange={(value) => handleYear(value)}
+						>
+							<SelectTrigger className='w-full bg-white'>
+								<SelectValue placeholder='Chọn năm' />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value='Tất cả'>Tất cả</SelectItem>
+								{yearOptions?.map((y) => (
+									<SelectItem key={y} value={y}>
+										{y}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
 					<div className='flex gap-2'>
 						<Button
 							variant={statusFilter === 'all' ? 'default' : 'outline'}
@@ -105,14 +150,14 @@ export default function FacultyDefenseMilestonesPage() {
 				<Card className='p-0'>
 					<CardHeader className='pb-3'>
 						<CardDescription>Tổng số đợt</CardDescription>
-						<CardTitle className='text-3xl'>{milestonesData?.length || 0}</CardTitle>
+						<CardTitle className='text-3xl'>{milestonesData?.data.length || 0}</CardTitle>
 					</CardHeader>
 				</Card>
 				<Card className='p-0'>
 					<CardHeader className='pb-3'>
 						<CardDescription>Chờ xử lý</CardDescription>
 						<CardTitle className='text-3xl text-blue-600'>
-							{milestonesData?.filter((m) => !m.isPublished && !m.isBlock).length || 0}
+							{milestonesData?.data.filter((m) => !m.isPublished && !m.isBlock).length || 0}
 						</CardTitle>
 					</CardHeader>
 				</Card>
@@ -120,7 +165,7 @@ export default function FacultyDefenseMilestonesPage() {
 					<CardHeader className='pb-3'>
 						<CardDescription>Đã công bố</CardDescription>
 						<CardTitle className='text-3xl text-green-600'>
-							{milestonesData?.filter((m) => m.isPublished).length || 0}
+							{milestonesData?.data.filter((m) => m.isPublished).length || 0}
 						</CardTitle>
 					</CardHeader>
 				</Card>
@@ -128,7 +173,7 @@ export default function FacultyDefenseMilestonesPage() {
 					<CardHeader className='pb-3'>
 						<CardDescription>Đã khóa</CardDescription>
 						<CardTitle className='text-3xl text-orange-600'>
-							{milestonesData?.filter((m) => m.isBlock).length || 0}
+							{milestonesData?.data.filter((m) => m.isBlock).length || 0}
 						</CardTitle>
 					</CardHeader>
 				</Card>
@@ -139,9 +184,9 @@ export default function FacultyDefenseMilestonesPage() {
 				<div className='flex items-center justify-center py-12'>
 					<Loader2 className='h-8 w-8 animate-spin text-primary' />
 				</div>
-			) : milestonesData && milestonesData.length > 0 ? (
+			) : milestonesData && milestonesData.data.length > 0 ? (
 				<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-					{milestonesData.map((milestone) => (
+					{milestonesData.data.map((milestone) => (
 						<Card
 							key={milestone._id}
 							className='cursor-pointer p-0 transition-all hover:border-primary/50 hover:shadow-lg'
@@ -198,29 +243,36 @@ export default function FacultyDefenseMilestonesPage() {
 									</div>
 									<div className='flex items-center gap-2'>
 										<Users className='h-4 w-4 text-muted-foreground' />
-										<span>{milestone.lecturersCount || 0} GV</span>
+										<span>{milestone.councilMembers || 0} trong hội đồng</span>
 									</div>
 								</div>
 
 								{/* Council Info */}
-								{milestone.councilMembers && milestone.councilMembers.length > 0 && (
+								{milestone.defenseCouncil && milestone.defenseCouncil.length > 0 ? (
 									<div className='rounded-md bg-muted/50 p-2 text-xs'>
 										<div className='font-semibold'>Hội đồng:</div>
 										<div className='mt-1 space-y-0.5'>
-											{milestone.councilMembers.slice(0, 2).map((member: any, idx: number) => (
+											{milestone.defenseCouncil.slice(0, 2).map((member: any, idx: number) => (
 												<div key={idx} className='flex items-center justify-between'>
 													<span className='truncate'>{member.fullName}</span>
 													<Badge variant='outline' className='ml-2 text-xs'>
-														{member.role}
+														{
+															CouncilMemberRoleOptions[member.role as CouncilMemberRole]
+																.label
+														}
 													</Badge>
 												</div>
 											))}
-											{milestone.councilMembers.length > 2 && (
+											{milestone.defenseCouncil.length > 2 && (
 												<div className='text-muted-foreground'>
-													+{milestone.councilMembers.length - 2} thành viên khác
+													+{milestone.defenseCouncil.length - 2} thành viên khác
 												</div>
 											)}
 										</div>
+									</div>
+								) : (
+									<div className='rounded-md bg-muted/50 p-2 text-xs'>
+										<div className='font-semibold'>Hội đồng:</div>
 									</div>
 								)}
 

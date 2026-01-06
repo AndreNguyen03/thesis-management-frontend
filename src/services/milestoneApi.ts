@@ -2,7 +2,9 @@ import type {
 	DefenseCouncilMember,
 	FileInfo,
 	LecturerReviewDecision,
+	PaginatedFacultyMilestones,
 	PaginatedTopicInBatchMilestone,
+	PaginationAllDefenseMilestonesQuery,
 	PayloadCreateMilestone,
 	PayloadFacultyCreateMilestone,
 	RequestTopicInMilestoneBatchQuery,
@@ -13,7 +15,7 @@ import type {
 } from '@/models/milestone.model'
 import { baseApi, type ApiResponse } from './baseApi'
 import type { CreateTaskPayload, Task } from '@/models/todolist.model'
-import { buildQueryString } from '@/models/query-params'
+import { buildQueryString, PaginationQueryParamsDto } from '@/models/query-params'
 export const milestoneApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getMilestonesOfGroup: builder.query<ResponseMilestone[], { groupId: string; periodId?: string }>({
@@ -202,7 +204,6 @@ export const milestoneApi = baseApi.injectEndpoints({
 			query: ({ templateId, file }) => {
 				const formData = new FormData()
 				formData.append('file', file)
-				console.log('Uploading file for templateId:', templateId, file)
 				return {
 					url: `/milestones/${templateId}/upload-files/scoring-result`,
 					method: 'POST',
@@ -228,12 +229,15 @@ export const milestoneApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
 			invalidatesTags: (_result, _error, { milestoneId }) => [{ type: 'Milestones', id: milestoneId }]
 		}),
-		getAllDefenseMilestones: builder.query<any[], void>({
-			query: () => ({
-				url: `/milestones/faculty/all`,
-				method: 'GET'
-			}),
-			transformResponse: (response: ApiResponse<any[]>) => response.data
+		getAllDefenseMilestones: builder.query<PaginatedFacultyMilestones, PaginationAllDefenseMilestonesQuery>({
+			query: (query) => {
+				const queryString = buildQueryString(query)
+				return {
+					url: `/milestones/faculty/all?${queryString}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<PaginatedFacultyMilestones>) => response.data
 		}),
 		// Giảng viên: Lấy đợt bảo vệ được phân công
 		getAssignedDefenseMilestones: builder.query<any[], { search?: string }>({
@@ -242,7 +246,14 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<any[]>) => response.data
-		})
+		}),
+		getDefenseMilestoneYears: builder.query<string[], void>({
+			query: () => ({
+				url: '/milestones/manage-defense-milestones/years-combobox',
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<string[]>) => response.data
+		}),
 	}),
 	overrideExisting: false
 })
@@ -266,5 +277,6 @@ export const {
 	useDeleteScoringResultFileMutation,
 	useBlockGradeMutation,
 	useGetAllDefenseMilestonesQuery,
-	useGetAssignedDefenseMilestonesQuery
+	useGetAssignedDefenseMilestonesQuery,
+	useGetDefenseMilestoneYearsQuery
 } = milestoneApi

@@ -373,7 +373,7 @@ interface FileSnapshotDto {
 }
 
 export interface FinalProduct {
-	thesisReport: FileSnapshotDto
+	thesisReport?: FileSnapshotDto
 }
 export interface DefenseResult {
 	defenseDate: Date // Dùng để lọc theo "Năm bảo vệ"
