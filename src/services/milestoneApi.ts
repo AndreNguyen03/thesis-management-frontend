@@ -2,6 +2,7 @@ import type {
 	DefenseCouncilMember,
 	FileInfo,
 	LecturerReviewDecision,
+	MilestoneEvent,
 	PaginatedTopicInBatchMilestone,
 	PayloadCreateMilestone,
 	PayloadFacultyCreateMilestone,
@@ -176,6 +177,12 @@ export const milestoneApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
 			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestones', id: 'defense' }]
 		}),
+		getAllUserMilestones: builder.query<MilestoneEvent[], void>({
+			query: () => {
+				return `/milestones/all-users-milestones`
+			},
+			transformResponse: (response: ApiResponse<MilestoneEvent[]>) => response.data
+		}),
 		manageLecturersInDefenseMilestone: builder.mutation<
 			{ message: string },
 			{
@@ -245,6 +252,7 @@ export const {
 	useReviewMilestoneByLecturerMutation,
 	useGetDefenseAssignmentInPeriodQuery,
 	useManageTopicsInDefenseMilestoneMutation,
+	useGetAllUserMilestonesQuery,
 	useManageLecturersInDefenseMilestoneMutation,
 	useUploadScoringResultFileMutation,
 	useDeleteScoringResultFileMutation,

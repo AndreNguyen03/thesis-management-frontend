@@ -172,6 +172,14 @@ export interface UploadReportPayload {
 	dueDate: string
 }
 
+export interface MilestoneEvent {
+	_id: string
+	groupId: string
+	title: string
+	dueDate: string
+	type: 'submission' | 'defense'
+}
+
 export const milestoneTypeMap: Record<string, { label: string; color: string }> = {
 	submission: { label: 'Nộp báo cáo', color: 'bg-blue-100 text-blue-700' },
 	defense: { label: 'Bảo vệ', color: 'bg-purple-100 text-purple-700' }

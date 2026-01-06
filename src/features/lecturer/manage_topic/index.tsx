@@ -19,7 +19,7 @@ const LecturerManageTopics = () => {
 	}
 
 	return (
-		<div className='mt-10 max-h-[calc(100vh)] flex-1 overflow-auto'>
+		<div className='pt-6 h-full flex-1 overflow-auto'>
 			<Tabs value={currentTab} onValueChange={handleTabChange} className='h-full w-full'>
 				<TabsList variant='underline'>
 					<TabsTrigger variant='underline' value='draft'>

@@ -5,7 +5,6 @@ import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tan
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui'
 import { Loader2 } from 'lucide-react'
-import DeleteTopicModal from '../modal/delete-topic-modal'
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -58,7 +57,7 @@ export function DataTable<TData, TValue>({
 					</span>
 				</div>
 			)}
-			<div className='max-h-[400px] overflow-auto'>
+			<div className=' overflow-auto'>
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (

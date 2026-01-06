@@ -6,7 +6,6 @@ import type {
 	PaginatedDraftTopics,
 	GetPaginatedTopics,
 	PaginatedSubmittedTopics,
-	PaginatedGeneralTopics,
 	UpdateTopicPayload,
 	CreateTopicRequest,
 	CreateTopicResponse,
@@ -14,6 +13,8 @@ import type {
 	PaginationTopicsQueryParams,
 	PaginationLecturerGetTopicsInPhaseParams,
 	SubmittedTopicParamsDto,
+	PaginatedTopicApproval,
+    ApprovalTopicQueryParams,
 	DetailTopicsInDefenseMilestone,
 	UpdateDefenseResultDto
 } from '@/models'
@@ -373,6 +374,17 @@ export const topicApi = baseApi.injectEndpoints({
 			},
 			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data
 		}),
+		getTopicApprovalRegistration: builder.query<PaginatedTopicApproval, ApprovalTopicQueryParams>({
+			query: (query) => {
+				const queryString = buildQueryString(query)
+				return {
+					url: `/topics/registration-approvals?${queryString}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<PaginatedTopicApproval>) => response.data,
+            providesTags: ['TopicRegistration']
+		}),
 		getDetailTopicsInDefenseMilestones: builder.query<DetailTopicsInDefenseMilestone, { templateMilestoneId: string; queryParams: PaginationQueryParamsDto }>({
 			query: ({ templateMilestoneId, queryParams }) => {
 				const queryString = buildQueryString(queryParams)
@@ -458,6 +470,7 @@ export const {
 	useFacuBoardRejectTopicsMutation,
 	useLecturerGetTopicsInPhaseQuery,
 	useGetTopicsAwaitingEvaluationInPeriodQuery,
+	useGetTopicApprovalRegistrationQuery,
 	useGetDetailTopicsInDefenseMilestonesQuery,
 	useBatchUpdateDefenseResultsMutation,
 	useBatchPublishDefenseResultsMutation

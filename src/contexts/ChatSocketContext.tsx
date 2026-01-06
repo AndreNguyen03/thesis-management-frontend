@@ -125,7 +125,7 @@ const ChatProvider: React.FC<{
 
 	/* ========== SUBSCRIBE EVENTS ========== */
 	useEffect(() => {
-        console.log('group sidebar :::', groupSidebars)
+		console.log('group sidebar :::', groupSidebars)
 		const unsubNewMessage = socketService.on(
 			CHAT_NS,
 			'new_group_message',
@@ -355,6 +355,8 @@ const ChatProvider: React.FC<{
 			try {
 				const result = await triggerFetchGroupMessages({ groupId, limit, before }).unwrap()
 
+                console.log('message fetch :::',result)
+                
 				const newMessages: ChatMessage[] = result.map((m: MessageDto) => ({
 					_id: m._id,
 					groupId: m.groupId,
@@ -367,6 +369,8 @@ const ChatProvider: React.FC<{
 					status: m.status ?? 'sent',
 					lastSeenAtByUser: { [userId]: new Date().toISOString() }
 				}))
+
+				console.log('new message group ::: ', newMessages)
 
 				setMessagesByGroup((prev) => {
 					const existing = prev[groupId] ?? []

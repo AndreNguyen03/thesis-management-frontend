@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { useGetPaginateDirectGroupsQuery } from '@/services/groupApi'
 import { useBreadcrumb, useChat } from '@/hooks'
-// import { useAppSelector } from '@/store'
-// import { getUserIdFromAppUser } from '@/utils/utils'
+import { useAppSelector } from '@/store'
+import { getUserIdFromAppUser } from '@/utils/utils'
 import { ChatPanel } from './ChatPanel'
 import { ContactSidebar } from './ContactSidebar'
 import { LoadingState } from '@/components/ui/LoadingState'
@@ -15,8 +15,8 @@ export const ContactPage = () => {
 	const [searchQuery, setSearchQuery] = useState('')
 
 	const { directSidebars, setDirectSidebars, fetchGroupMessages, setHasUnreadDirect } = useChat()
-	// const user = useAppSelector((state) => state.auth.user)
-	// const userId = getUserIdFromAppUser(user)
+	const user = useAppSelector((state) => state.auth.user)
+	const userId = getUserIdFromAppUser(user)
 
 	useEffect(() => {
 		setHasUnreadDirect(false)

@@ -42,7 +42,7 @@ const ManageTopicDraft = () => {
 		debounceOnChange(val)
 	}
 	const [selectedTopicId, setSelectedTopicId] = useState<string[] | null>(null)
-
+    const [showCreate, setShowCreate] = useState(false)
 	const [showSelection, setShowSelection] = useState(false)
 	const [openDeleteConfirmModal, setOpenDeleteConfirmModal] = useState(false)
 	//lấ thong tin của kì
@@ -128,14 +128,14 @@ const ManageTopicDraft = () => {
 	}, [submitError])
 
 	return (
-		<div className='h-screen max-h-[740px] p-1'>
+		<div className='h-full'>
 			<ResizablePanelGroup direction='horizontal' className='h-full rounded-lg border'>
 				<ResizablePanel defaultSize={65}>
 					<div className='flex flex-col gap-2 p-2'>
 						<div className='flex w-fit flex-row items-center gap-2'>
 							<h3 className='m-4 text-xl font-semibold'>Kho đề tài của bạn</h3>
 						</div>
-						<div className='relative flex flex-1 items-center'>
+						<div className='relative flex flex-1 items-center gap-4'>
 							<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground' />
 							<Input
 								placeholder='Tìm kiếm theo tên đề tài, giảng viên...'
@@ -143,6 +143,7 @@ const ManageTopicDraft = () => {
 								value={searchTerm}
 								onChange={(e) => onEdit(e.target.value)}
 							/>
+
 						</div>
 						<div className='min-h-0 flex-1'>
 							<DataTable

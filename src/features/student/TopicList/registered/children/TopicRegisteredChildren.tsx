@@ -99,7 +99,7 @@ export const TopicRegisteredChildren = () => {
 						</CardContent>
 					</Card>
 					<div className='flex w-full gap-6'>
-						<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+						<div className='grid w-full grid-cols-1 gap-6 lg:grid-cols-2'>
 							{registerTopics && registerTopics?.data.length > 0 ? (
 								<>
 									{registerTopics?.data.map((topic) => (

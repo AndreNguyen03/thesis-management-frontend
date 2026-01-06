@@ -53,7 +53,12 @@ export default function DetailPeriodPage() {
 		}
 	}, [period])
 
-	if (isLoading) return <LoadingState message='Đang tải dữ liệu pha...' />
+	if (isLoading)
+		return (
+			<div className='w-full'>
+				<LoadingState message='Đang tải dữ liệu pha...' />
+			</div>
+		)
 
 	if (!id) return <NotFound />
 
@@ -72,7 +77,7 @@ export default function DetailPeriodPage() {
 		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
 	)
 	return (
-		<div className='flex h-[calc(100vh-10rem)] min-h-0 w-full overflow-auto'>
+		<div className='flex h-full w-full overflow-auto'>
 			{/* Sidebar */}
 			<aside className={cn('h-fit transition-all duration-300', isSidebarHidden ? 'w-12' : 'w-24')}>
 				<PhaseStepBar
@@ -88,7 +93,7 @@ export default function DetailPeriodPage() {
 			{/* Main Content */}
 			<main className='min-h-0 flex-1 overflow-y-auto px-4 pt-12'>
 				<div className='h-full'>
-					{currentPhaseDetail  ? (
+					{currentPhaseDetail ? (
 						<>
 							<PhaseContent
 								phaseDetail={currentPhaseDetail}

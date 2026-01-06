@@ -1,22 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Award, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react'
+import { Award, AlertCircle, BookOpen } from 'lucide-react'
+import type { DefenseResult } from '@/models'
 
 interface GradingResultCardProps {
-	isCompleted: boolean
+	topic: {
+		titleVN: string
+		type: string
+		defenseResult?: DefenseResult
+		isPublishedToLibrary: boolean
+	}
 }
 
-export function GradingResultCard({ isCompleted }: GradingResultCardProps) {
-	if (!isCompleted) {
+export function GradingResultCard({ topic }: GradingResultCardProps) {
+	if (!topic.defenseResult) {
 		return (
-			<Card className='rounded-xl border-border p-0'>
+			<Card className='m-2 rounded-xl border-border p-0'>
 				<CardHeader className='pb-3'>
-					<div className='flex items-center justify-between'>
-						<CardTitle className='flex items-center gap-2 text-lg font-semibold text-foreground'>
+					<div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+						<CardTitle className='flex items-center gap-2 break-words text-lg font-semibold text-foreground'>
 							<Award className='h-5 w-5 text-primary' />
-							Kết quả chấm điểm
+							Kết quả chấm điểm đề tài: {topic.titleVN}
 						</CardTitle>
-						<Badge className='border-info/20 bg-info/10 text-info'>Đang chờ</Badge>
+						<Badge className='border-success/20 bg-success/10 text-success'>Hoàn thành</Badge>
 					</div>
 				</CardHeader>
 				<CardContent>
@@ -37,12 +43,12 @@ export function GradingResultCard({ isCompleted }: GradingResultCardProps) {
 	}
 
 	return (
-		<Card className='rounded-xl border-success/20 bg-success/5 p-0'>
+		<Card className='m-2 rounded-xl border-success/20 bg-success/5 p-2 sm:p-4'>
 			<CardHeader className='pb-3'>
 				<div className='flex items-center justify-between'>
 					<CardTitle className='flex items-center gap-2 text-lg font-semibold text-foreground'>
-						<Award className='h-5 w-5 text-success' />
-						Kết quả khóa luận
+						<Award className='h-5 w-5 text-primary' />
+						Kết quả chấm điểm đề tài: {topic.titleVN}
 					</CardTitle>
 					<Badge className='border-success/20 bg-success/10 text-success'>Hoàn thành</Badge>
 				</div>
@@ -51,34 +57,43 @@ export function GradingResultCard({ isCompleted }: GradingResultCardProps) {
 				{/* Score */}
 				<div className='flex items-center justify-center py-4'>
 					<div className='text-center'>
-						<div className='text-5xl font-bold text-success'>8.5</div>
-						<p className='mt-1 text-sm text-muted-foreground'>Điểm trung bình</p>
+						<div className='text-center'>
+							<div className='text-4xl font-bold text-success sm:text-5xl'>
+								{topic.defenseResult.finalScore}
+							</div>
+						</div>
 					</div>
 				</div>
 
 				{/* Feedback */}
-				<div className='rounded-lg border border-border bg-card p-4'>
+				<div className='space-y-3 rounded-lg border border-border bg-card p-4'>
 					<p className='mb-2 text-sm font-medium text-foreground'>Nhận xét của hội đồng</p>
-					<p className='text-sm leading-relaxed text-muted-foreground'>
-						Đề tài được thực hiện tốt, có tính ứng dụng cao. Sinh viên nắm vững kiến thức và trình bày rõ
-						ràng. Cần cải thiện thêm phần tối ưu hiệu suất.
-					</p>
-				</div>
-
-				{/* Completion status */}
-				<div className='flex items-center gap-3 rounded-lg bg-success/10 p-3'>
-					<CheckCircle2 className='h-5 w-5 flex-shrink-0 text-success' />
-					<div>
-						<p className='text-sm font-medium text-foreground'>Không có yêu cầu bổ sung</p>
-						<p className='text-xs text-muted-foreground'>Khóa luận đã được phê duyệt hoàn toàn</p>
+					<div className='flex flex-col gap-2'>
+						{topic.defenseResult.councilMembers.map((member, idx) => (
+							<div
+								key={idx}
+								className='flex flex-col gap-1 rounded-md border border-border bg-muted/5 p-3 sm:flex-row sm:items-center sm:justify-between'
+							>
+								<div className='flex flex-col sm:flex-row sm:items-center sm:gap-2'>
+									<span className='text-sm font-semibold text-foreground'>{member.role}</span>
+									<span className='text-sm text-foreground'>{member.fullName}</span>
+								</div>
+								<div className='mt-1 text-sm text-muted-foreground sm:mt-0'>{member.note}</div>
+								<div className='mt-1 text-base font-bold text-success sm:mt-0'>{member.score}</div>
+							</div>
+						))}
 					</div>
 				</div>
 
 				{/* Library notice */}
-				<div className='flex items-center gap-2 border-t border-border pt-2'>
-					<BookOpen className='h-4 w-4 text-muted-foreground' />
-					<p className='text-xs text-muted-foreground'>Đề tài đã được lưu vào thư viện số của trường</p>
-				</div>
+				{topic.isPublishedToLibrary && (
+					<div className='flex flex-wrap items-center gap-1 border-t border-border pt-2 sm:gap-2'>
+						<BookOpen className='h-4 w-4 text-muted-foreground' />
+						<p className='text-xs text-muted-foreground sm:text-sm'>
+							Đề tài đã được lưu vào thư viện số của trường
+						</p>
+					</div>
+				)}
 			</CardContent>
 		</Card>
 	)

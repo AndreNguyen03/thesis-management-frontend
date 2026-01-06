@@ -21,15 +21,6 @@ function Login() {
 					{/* Login Form */}
 					<LoginForm />
 
-					<div className='my-3 h-[1px] bg-slate-400'></div>
-
-					{/* Register Link */}
-					<div className='text-center text-sm text-muted-foreground'>
-						Chưa có tài khoản?{' '}
-						<Link to='/register' className='font-medium text-primary hover:underline'>
-							Liên hệ admin để đăng ký
-						</Link>
-					</div>
 				</Card>
 			</div>
 			<ToastContainer

@@ -157,11 +157,11 @@ const FacultyLecturerDataTable = () => {
 					<tbody>
 						{lecturerDataState?.map((lec) => (
 							<tr key={lec.id} className='border-b last:border-b-0 hover:bg-gray-50'>
-								<td className='px-3 py-2'>
-									<span className='font-semibold text-gray-900'>{lec.fullName}</span>
+								<td className='max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2 sm:max-w-[200px] lg:max-w-[250px]'>
+									<span title={lec.fullName}>{lec.fullName}</span>
 								</td>
-								<td className='px-3 py-2'>
-									<span className='font-semibold text-gray-900'>{lec.email}</span>
+								<td className='max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2 sm:max-w-[300px]'>
+									<span title={lec.email}>{lec.email}</span>
 								</td>
 								<td className='px-3 py-2'>{lec.facultyName}</td>
 								<td className='px-3 py-2'>{lec.title}</td>
