@@ -1,7 +1,7 @@
 import type { SendRemainIssueNoti } from '@/models/period.model'
 import { baseApi, type ApiResponse } from './baseApi'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
-import type { NotificationItem, PaginatedNotifications } from '@/models/notification.model'
+import type { NotificationItem, PaginatedNotifications, SendCustomNotificationPayload } from '@/models/notification.model'
 import { waitForSocket } from '@/utils/socket-client'
 
 export const notificationApi = baseApi.injectEndpoints({
@@ -34,8 +34,7 @@ export const notificationApi = baseApi.injectEndpoints({
 					}
 					const markNoti = (notificationId: string) => {
 						updateCachedData((draft) => {
-							const index = draft.data.findIndex((n) => String(n._id) === 
-							String(notificationId))
+							const index = draft.data.findIndex((n) => String(n._id) === String(notificationId))
 							if (index !== -1) {
 								draft.data[index].isRead = true
 							}
@@ -71,6 +70,16 @@ export const notificationApi = baseApi.injectEndpoints({
 				url: `/notifications/${id}/mark-read`,
 				method: 'POST'
 			})
+		}),
+		sendCustomNotification: builder.mutation<
+			ApiResponse<{ message: string; sentCount: number }>,
+			SendCustomNotificationPayload
+		>({
+			query: (data) => ({
+				url: '/notifications/send-custom',
+				method: 'POST',
+				body: data
+			})
 		})
 	})
 })
@@ -79,5 +88,6 @@ export const {
 	useSendRemainIssueNotiMutation,
 	useGetNotificationsQuery,
 	useMarkAllNotificationsReadMutation,
-	useMarkNotificationReadMutation
+	useMarkNotificationReadMutation,
+	useSendCustomNotificationMutation
 } = notificationApi

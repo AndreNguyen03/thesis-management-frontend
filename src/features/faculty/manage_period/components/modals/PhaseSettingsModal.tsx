@@ -2,7 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Users } from 'lucide-react'
+import { Calendar, Loader2, Users } from 'lucide-react'
 import { useState, useEffect, type SetStateAction, type Dispatch, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { PhaseInfo, PhaseStatusMap } from '@/utils/utils'
@@ -13,11 +13,13 @@ import {
 	useCreateCompletionPhaseMutation,
 	useCreateExecutionPhaseMutation,
 	useCreateOpenRegPhaseMutation,
-	useCreateSubmitTopicPhaseMutation
+	useCreateSubmitTopicPhaseMutation,
+	useGetPeriodDetailQuery
 } from '@/services/periodApi'
 import { toast } from '@/hooks/use-toast'
 import { toInputDateTime } from '../../utils'
 import type { ResponseMiniLecturerDto } from '@/models'
+import { getDurationString } from '@/lib/utils'
 interface Props {
 	open: boolean
 	onOpenChange: Dispatch<SetStateAction<boolean>>
@@ -36,7 +38,8 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 	const [selectedLecturerIds, setSelectedLecturerIds] = useState<string[]>(
 		phase?.requiredLecturers?.map((lec) => lec._id) ?? []
 	)
-
+	//lấy thông tin kỳ hiện
+	const { data: periodDetail, isLoading: isLoadingPeriodDetail } = useGetPeriodDetailQuery(periodId)
 	const isPhase1 = currentPhase === 'empty' || currentPhase === 'submit_topic'
 	const effectivePhaseKey = currentPhase === 'empty' ? 'submit_topic' : currentPhase
 
@@ -109,11 +112,27 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className='flex max-w-xl flex-col'>
 				<DialogHeader>
-					<DialogTitle className='flex items-center gap-2 text-lg font-semibold'>
-						Thiết lập pha{' '}
-						<span className='text-lg font-semibold text-blue-600'>
-							{PhaseInfo[currentPhase ?? 'empty']?.label ?? 'Không xác định'}
-						</span>
+					<DialogTitle className='flex flex-col items-start gap-2 text-lg font-semibold'>
+						<div className='flex gap-2'>
+							Thiết lập pha{' '}
+							<span className='text-lg font-semibold text-blue-600'>
+								{PhaseInfo[currentPhase ?? 'empty']?.label ?? 'Không xác định'}
+							</span>
+						</div>
+						{isLoadingPeriodDetail ? (
+							<Loader2 className='h-4 w-4 animate-spin' />
+						) : (
+							<div className='flex gap-1'>
+								<span className='text-sm font-medium'>Thời gian của kỳ</span>
+								<span
+									className='text-sm font-medium'
+									title={`${new Date(periodDetail!.startTime).toLocaleString()} - ${new Date(periodDetail!.endTime).toLocaleString()}`}
+								>
+									{new Date(periodDetail!.startTime).toLocaleString('vi-VN')} -{' '}
+									{new Date(periodDetail!.endTime).toLocaleString('vi-VN')}
+								</span>
+							</div>
+						)}
 					</DialogTitle>
 				</DialogHeader>
 
@@ -132,29 +151,52 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 									type='datetime-local'
 									className='w-full rounded border px-3 py-2'
 									value={startTime}
-									min={new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
+									min={
+										new Date(periodDetail!.startTime) > new Date(Date.now())
+											? new Date(periodDetail!.startTime).toISOString().slice(0, 16)
+											: new Date(Date.now() + 86400000).toISOString().slice(0, 16)
+									}
 									step='60'
 									onChange={(e) => setStartTime(e.target.value)}
 									placeholder='dd/mm/yyyy hh:mm'
 								/>
 							</div>
+
 							<div>
 								<label className='text-sm font-medium'>Kết thúc </label>
-								<input
-									disabled={!startTime}
-									type='datetime-local'
-									className={`w-full rounded border px-3 py-2 ${!isChangeAvailable && 'border-red-500'}`}
-									min={startTime || new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
-									value={endTime}
-									step='60'
-									onChange={(e) => setEndTime(e.target.value)}
-									placeholder='dd/mm/yyyy hh:mm'
-								/>
-								{!isChangeAvailable && (
-									<p className='text-xs text-red-500'>* Kết thúc phải sau bắt đầu</p>
+								{isLoadingPeriodDetail ? (
+									<Loader2 className='h-4 w-4 animate-spin' />
+								) : (
+									<>
+										<input
+											disabled={!startTime}
+											type='datetime-local'
+											className={`w-full rounded border px-3 py-2 ${!isChangeAvailable && 'border-red-500'}`}
+											min={new Date(periodDetail!.startTime).toISOString().slice(0, 16)}
+											max={new Date(periodDetail!.endTime).toISOString().slice(0, 16)}
+											value={endTime}
+											step='60'
+											onChange={(e) => setEndTime(e.target.value)}
+											placeholder='dd/mm/yyyy hh:mm'
+										/>
+										{!isChangeAvailable && (
+											<p className='text-xs text-red-500'>* Kết thúc phải sau bắt đầu</p>
+										)}
+									</>
 								)}
 							</div>
 						</div>
+						{startTime && endTime && (
+							<div>
+								<span className='text-sm font-semibold'>Dự kiến</span>
+								<span></span>
+								{startTime && endTime && isChangeAvailable && (
+									<span className='ml-2 text-sm text-blue-600'>
+										{getDurationString(startTime, endTime)}
+									</span>
+								)}
+							</div>
+						)}
 					</section>
 
 					{/* PHASE 1 SETTINGS */}
@@ -165,10 +207,11 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 								Cài đặt dành riêng cho Pha 1
 							</div>
 
-							<div>
+							<div className='flex items-center gap-2'>
 								<label className='text-sm font-medium'>Số đề tài tối thiểu mỗi giảng viên</label>
 								<Input
 									type='number'
+									className='w-fit'
 									min={1}
 									value={minTopics}
 									onChange={(e) => setMinTopics(Number(e.target.value))}
@@ -187,9 +230,11 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 				</div>
 
 				<DialogFooter>
-					<Button onClick={handleSave} disabled={!isChangeAvailable}>
-						{phaseLoadingMap[effectivePhaseKey] ? 'Đang lưu...' : 'Lưu thay đổi'}
-					</Button>
+					<div className='flex justify-between'>
+						<Button onClick={handleSave} disabled={!isChangeAvailable}>
+							{phaseLoadingMap[effectivePhaseKey] ? 'Đang lưu...' : 'Lưu thay đổi'}
+						</Button>
+					</div>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

@@ -13,12 +13,13 @@ import {
 	PaginationNext,
 	PaginationPrevious
 } from '@/components/ui/pagination'
-import type {
-	GeneralTopic,
-	GetFieldNameReponseDto,
-	ITopicDetail,
-	PaginationTopicsRegistrationQueryParams,
-	ResponseMiniLecturerDto
+import {
+	StudentRegistrationStatus,
+	type GeneralTopic,
+	type GetFieldNameReponseDto,
+	type ITopicDetail,
+	type PaginationTopicsRegistrationQueryParams,
+	type ResponseMiniLecturerDto
 } from '@/models'
 import { PeriodPhaseName, type GetCurrentPeriod } from '@/models/period.model'
 import { getPeriodTitle } from '@/utils/utils'
@@ -95,10 +96,15 @@ export default function TopicRegistration() {
 	const { data: registeredPaginated } = useGetRegisteredTopicQuery({
 		queries: {
 			page: 1,
-			limit: 1
+			limit: 1,
+			periodId: id!
 		}
 	})
+
 	const registeredTopic = registeredPaginated?.data?.[0] ?? null
+
+	console.log('registeredTopic', registeredTopic)
+
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng kí đề tài' }])
 
 	// ------------------ HANDLERS ------------------`
@@ -183,9 +189,9 @@ export default function TopicRegistration() {
 	// ------------------ UI ------------------
 	const canRegister = period?.currentPhaseDetail?.phase === PeriodPhaseName.OPEN_REGISTRATION && !registeredTopic
 
-    if (!period || isLoadingTopics) {
-        return <TopicRegistrationSkeleton />
-    }
+	if (!period || isLoadingTopics) {
+		return <TopicRegistrationSkeleton />
+	}
 
 	return (
 		<div className='max-h-[calc(100vh)] w-full overflow-y-auto bg-background'>
@@ -263,7 +269,7 @@ export default function TopicRegistration() {
 										onRegister={() => handleRegisterClick(topic)}
 										isRegistering={isRegistering && topicToRegister?._id === topic._id}
 										disabled={!canRegister}
-										isRegistered={registeredTopic?._id === topic._id}
+										isRegistered={false}
 									/>
 								))}
 							</div>
@@ -406,7 +412,7 @@ export default function TopicRegistration() {
 				isOpen={isRecommendOpen}
 				onClose={() => setIsRecommendOpen(false)}
 				hasProfile={hasProfile}
-                periodId={id!}
+				periodId={id!}
 			/>
 
 			{/* Floating Button */}

@@ -46,7 +46,7 @@ export const StudentMilestoneDrawer = ({
 	const canResubmit = hasSubmission && isBeforeDeadline && milestone.status !== 'Completed'
 
 	// Kiểm tra điều kiện cho phép nộp bài
-	const canSubmit = milestone.progress >= 100 || isResubmit
+	const canSubmit = milestone.progress >= 100 || isResubmit || true
 
 	// Xử lý chọn file
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

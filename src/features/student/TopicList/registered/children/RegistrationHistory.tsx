@@ -84,7 +84,7 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value='Tất cả'>Tất cả</SelectItem>
-							{registrationHistoryData?.meta.periodOptions.map((y) => (
+							{registrationHistoryData?.meta.periodOptions?.map((y) => (
 								<SelectItem key={y._id} value={y._id}>
 									{formatPeriodInfoMiniPeriod(y)}
 								</SelectItem>

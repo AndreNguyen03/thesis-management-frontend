@@ -1,5 +1,17 @@
-import  { useState } from 'react'
-import { Search, Filter, Star, Download, Eye, BookOpen, ArrowUpRight, Loader2, FileText, User, Database } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import {
+	Search,
+	Filter,
+	Star,
+	Download,
+	Eye,
+	BookOpen,
+	ArrowUpRight,
+	Loader2,
+	FileText,
+	User,
+	Database
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +28,12 @@ import type { RequestGetTopicsInAdvanceSearch } from '@/models/topicVector.model
 import type { TopicInLibrary } from '@/models'
 import { stripHtml } from '@/utils/lower-case-html'
 import { useGetMajorComboboxQuery, useGetYearComboboxQuery } from '@/services/topicApi'
+import { useLogTopicInteractionMutation } from '@/services/topic-interactionApi'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import DOMPurify from 'dompurify'
+import { downloadFileWithURL } from '@/lib/utils'
+import Evaluation from './Evaluation'
+import { useGetTopicStatsQuery } from '@/services/ratingApi'
 
 // --- TYPES ---
 interface DocumentLinks {
@@ -177,7 +194,6 @@ const LibraryCard = ({ thesis, index }: { thesis: TopicInLibrary; index: number 
 						<Star className='h-3.5 w-3.5 fill-current' /> {thesis.stats.averageRating.toFixed(1)}
 					</div>
 				</div>
-				Actions
 				<Dialog>
 					<DialogTrigger asChild>
 						<Button
@@ -197,33 +213,73 @@ const LibraryCard = ({ thesis, index }: { thesis: TopicInLibrary; index: number 
 
 // --- COMPONENT: DETAIL DIALOG CONTENT ---
 const DetailDialogContent = ({ thesis }: { thesis: TopicInLibrary }) => {
+	const [loading, setLoading] = useState(false)
+	const [logTopicInteraction] = useLogTopicInteractionMutation()
+	const viewTimerRef = useRef<NodeJS.Timeout | null>(null)
+	const hasLoggedView = useRef(false)
+
+	//endpoint lấy các đánh giá
+	const { data: topicStats, isLoading: isLoadingTopicStats } = useGetTopicStatsQuery(thesis._id)
+
+	// Chỉ tính lượt xem khi người dùng xem đề tài ít nhất 2 phút
+	useEffect(() => {
+		// Đặt timer 2 phút (120000ms)
+		viewTimerRef.current = setTimeout(() => {
+			if (!hasLoggedView.current) {
+				logTopicInteraction({
+					topicId: thesis._id,
+					action: 'view'
+				})
+				hasLoggedView.current = true
+			}
+		}, 120000) // 2 phút
+
+		// Cleanup: Hủy timer khi component unmount (đóng dialog trước 2 phút)
+		return () => {
+			if (viewTimerRef.current) {
+				clearTimeout(viewTimerRef.current)
+			}
+		}
+	}, [thesis._id, logTopicInteraction])
+
 	return (
-		<DialogContent className='flex max-h-[90vh] max-w-4xl flex-col gap-0 overflow-hidden p-0'>
-			<div className='grid h-full grid-cols-12'>
-				Left Column: Info
+		<DialogContent className='flex max-h-[100vh] min-h-[70vh] max-w-5xl flex-col gap-0 overflow-hidden p-0'>
+			<div className='grid min-h-[70vh] grid-cols-12'>
+				{/* Left Column: Info */}
 				<div className='col-span-12 h-full max-h-[90vh] overflow-y-auto bg-white p-6 md:col-span-8 md:p-8'>
 					<div className='mb-6'>
 						<Badge variant='outline' className='mb-3'>
 							{thesis.major.name} • {thesis.year}
 						</Badge>
 						<h2 className='mb-2 text-2xl font-bold text-slate-900'>{thesis.titleVN}</h2>
-						<h3 className='text-lg font-medium italic text-slate-500'>{thesis.titleEng}</h3>
+						<h3 className='text-lg font-medium italic text-slate-500'>({thesis.titleEng})</h3>
 					</div>
 
 					<Tabs defaultValue='abstract' className='w-full'>
 						<TabsList className='mb-4'>
-							<TabsTrigger value='abstract'>Tóm tắt</TabsTrigger>
-							<TabsTrigger value='reviews'>Đánh giá ('thesis.stats.reviews')</TabsTrigger>
+							<TabsTrigger
+								value='abstract'
+								className='data-[state=active]:bg-blue-600 data-[state=active]:text-white'
+							>
+								Tóm tắt
+							</TabsTrigger>
+							<TabsTrigger
+								value='reviews'
+								className='data-[state=active]:bg-blue-600 data-[state=active]:text-white'
+							>
+								Đánh giá {`${thesis.stats.reviewCount}`}
+							</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value='abstract' className='space-y-6'>
 							<div className='prose prose-sm max-w-none text-slate-600'>
-								<p>{thesis.description}</p>
-								<p>
-									Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-									incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-									exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-								</p>
+								<div
+									className='prose max-w-none rounded-lg bg-gray-50 p-4 text-gray-700'
+									// Sử dụng DOMPurify để đảm bảo an toàn, tránh XSS
+									dangerouslySetInnerHTML={{
+										__html: DOMPurify.sanitize(thesis.description || '<p>Chưa có mô tả</p>')
+									}}
+								/>
 							</div>
 
 							<div className='rounded-lg border border-slate-100 bg-slate-50 p-4'>
@@ -250,7 +306,12 @@ const DetailDialogContent = ({ thesis }: { thesis: TopicInLibrary }) => {
 						</TabsContent>
 
 						<TabsContent value='reviews'>
-							<div className='py-10 text-center text-slate-500'>Chưa có đánh giá nào cho đề tài này.</div>
+							<Evaluation
+								topicId={thesis._id}
+								averageRating={topicStats?.averageRating}
+								reviewCount={topicStats?.totalRatings}
+								distribution={topicStats?.distribution || {}}
+							/>
 						</TabsContent>
 					</Tabs>
 				</div>
@@ -261,14 +322,39 @@ const DetailDialogContent = ({ thesis }: { thesis: TopicInLibrary }) => {
 						<h4 className='flex items-center gap-2 font-bold text-slate-900'>
 							<Download className='h-4 w-4' /> Tài liệu
 						</h4>
-						<Button className='w-full justify-start' variant='default'>
-							<FileText className='mr-2 h-4 w-4' /> Báo cáo toàn văn (.pdf)
+						<Button
+							className='w-full justify-start'
+							variant='default'
+							onClick={async () => {
+								if (thesis.finalProduct?.thesisReport?.fileUrl) {
+									setLoading(true)
+									await new Promise((resolve) => setTimeout(resolve, 1000))
+									downloadFileWithURL(
+										thesis.finalProduct?.thesisReport?.fileUrl,
+										`Bao_cao_toan_van_${thesis._id}.pdf`
+									)
+									setLoading(false)
+								} else {
+									setLoading(true)
+									await new Promise((resolve) => setTimeout(resolve, 3000))
+									setLoading(false)
+								}
+							}}
+							disabled={loading}
+						>
+							{loading ? (
+								<>
+									<Loader2 className='mr-2 h-4 w-4 animate-spin' /> Đang kiểm tra...
+								</>
+							) : (
+								<>
+									<Download className='mr-2 h-4 w-4' /> Tải báo cáo toàn văn (.pdf)
+								</>
+							)}
 						</Button>
-						{thesis.finalProduct.thesisReport && (
-							<Button className='w-full justify-start' variant='outline'>
-								<Database className='mr-2 h-4 w-4' /> Dataset
-							</Button>
-						)}
+						<Button className='w-full justify-start' variant='gray'>
+							<FileText className='mr-2 h-4 w-4' /> Xem bản báo cáo (online)
+						</Button>
 					</div>
 
 					<Separator />
@@ -299,7 +385,7 @@ const DetailDialogContent = ({ thesis }: { thesis: TopicInLibrary }) => {
 
 					<div className='mt-auto'>
 						<p className='text-center text-xs text-slate-400'>
-							Tài liệu được lưu trữ & bảo vệ bản quyền bởi Khoa CNTT.
+							Tài liệu được lưu trữ & bảo vệ bản quyền bởi {thesis.periodInfo.faculty.name}
 						</p>
 					</div>
 				</div>

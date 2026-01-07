@@ -37,8 +37,7 @@ import { CustomPagination } from '@/components/PaginationBar'
 import { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useAppSelector } from '@/store'
-import { downloadFileWithURL } from '@/lib/utils'
-import { set } from 'zod'
+import { cn, downloadFileWithURL } from '@/lib/utils'
 type ActionType = 'save-draft' | 'publish' | 'block-grade' | 'submit-graded-list' | 'archive-topics'
 const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 export default function DefenseScoringPage() {
@@ -207,17 +206,19 @@ export default function DefenseScoringPage() {
 
 		try {
 			// Chuyển đổi scoringData thành format cho API
-			const results = Object.entries(scoringData).map(([topicId, result]) => ({
-				topicId,
-				defenseDate: result.defenseDate,
-				periodName: formatPeriodInfoMiniPeriod(detailTopicsData!.periodInfo),
-				finalScore: result.finalScore,
-				gradeText: result.gradeText,
-				councilMembers: result.councilMembers,
-				councilName: result.councilName,
-				isPublished: false,
-				isBlock: false
-			}))
+			const results = Object.entries(scoringData)
+				.filter(([_, result]) => result.finalScore !== undefined)
+				.map(([topicId, result]) => ({
+					topicId,
+					defenseDate: result.defenseDate,
+					periodName: formatPeriodInfoMiniPeriod(detailTopicsData!.periodInfo),
+					finalScore: result.finalScore as number,
+					gradeText: result.gradeText,
+					councilMembers: result.councilMembers,
+					councilName: result.councilName,
+					isPublished: false,
+					isBlock: false
+				}))
 
 			// Gọi API để lưu xuống database
 			const response = await batchUpdateDefenseResults({ results }).unwrap()
@@ -446,6 +447,12 @@ export default function DefenseScoringPage() {
 		if (!detailTopicsData?.data) {
 			return false
 		}
+
+		// Nếu có resultScoringTemplate thì luôn coi là đã thay đổi
+		if (detailTopicsData.milestoneInfo.resultScoringTemplate) {
+			return true
+		}
+
 		return detailTopicsData.data.some((topic) => {
 			const imported = scoringData[topic._id]
 			if (!imported) return false
@@ -462,7 +469,7 @@ export default function DefenseScoringPage() {
 				imported.councilMembers &&
 				topic.defenseResult?.councilMembers &&
 				imported.councilMembers.some(
-					(member, idx) => member.note !== topic.defenseResult.councilMembers[idx]?.note
+					(member, idx) => member.note !== topic.defenseResult?.councilMembers[idx]?.note
 				)
 			) {
 				return true
@@ -481,7 +488,7 @@ export default function DefenseScoringPage() {
 		debounceOnChange(val)
 	}
 	return (
-		<div className='flex w-full flex-col gap-4 p-6'>
+		<div className={cn('flex h-screen w-full flex-col gap-4', 'p-6')}>
 			{detailTopicsData && (
 				<MilestoneHeader
 					milestone={detailTopicsData.milestoneInfo}
@@ -786,6 +793,7 @@ export default function DefenseScoringPage() {
 					])
 				)}
 			/>
+			<div className='pb-20'></div>
 			{detailTopicsData?.meta && (
 				<CustomPagination
 					meta={detailTopicsData?.meta}

@@ -75,6 +75,8 @@ export interface AbstractTopic {
 	currentPhase: string
 
 	allowManualApproval: boolean
+
+	registrationStatus: StudentRegistrationStatus
 }
 export interface SubmittedTopic extends AbstractTopic {
 	submittedAt: string
@@ -99,7 +101,7 @@ export interface TopicInLibrary extends AbstractTopic {
 	periodInfo: MiniPeriod
 	stats: TopicStatsDto
 	year: number
-	finalProduct: FinalProduct
+	finalProduct?: FinalProduct
 	studentsRegistered: ResponseMiniStudentDto[]
 	defenseResult: DefenseResult
 }
@@ -148,7 +150,7 @@ export interface Topic {
 
 	maxStudents: number
 
-	deadline: Date
+	deadline?: Date
 
 	createdAt: Date
 
@@ -156,9 +158,9 @@ export interface Topic {
 
 	registrationStatus?: StudentRegistrationStatus
 
-	isSaved: boolean
+	isSaved?: boolean
 
-	isEditable: boolean
+	isEditable?: boolean
 
 	allowManualApproval: boolean
 
@@ -378,7 +380,7 @@ export interface FinalProduct {
 export interface DefenseResult {
 	defenseDate: Date // Dùng để lọc theo "Năm bảo vệ"
 	periodName: string // Lưu tên đợt: "HK1 23-24" (để hiển thị nhanh)
-	finalScore: number // Điểm số: 9.5
+	finalScore?: number // Điểm số: 9.5
 	gradeText: string // Xếp loại: "Xuất sắc"
 	councilMembers: CouncilMemberSnapshot[]
 	councilName: string // VD: "Hội đồng CNPM 01"
@@ -451,7 +453,7 @@ export interface TopicsInDefenseMilestone {
 	allowManualApproval: boolean
 	updatedAt: Date
 	currentStatus: string
-	defenseResult: DefenseResult
+	defenseResult?: DefenseResult
 	lecturers: ResponseMiniLecturerDto[]
 	students: ResponseMiniStudentDto[]
 }
@@ -478,3 +480,8 @@ export interface UpdateDefenseResultDto {
 export interface BatchUpdateDefenseResultDto {
 	results: UpdateDefenseResultDto[]
 }
+
+export interface PaginationRegisteredTopicsQueryParams extends PaginationQueryParamsDto {
+	periodId?: string
+}
+

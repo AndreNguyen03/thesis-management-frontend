@@ -23,6 +23,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui'
 import { CustomPagination } from '@/components/PaginationBar'
 import { SelectValue } from '@radix-ui/react-select'
+import { cn } from '@/lib/utils'
 
 const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 	// search input handler
@@ -190,10 +191,15 @@ const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 								</td>
 								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
 									<span
-										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[pe.currentPhaseDetail.status].color}`}
-										title={statusMap[pe.currentPhaseDetail.status].label}
+										className={cn(
+											`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium`,
+											statusMap[
+												pe.currentPhaseDetail ? pe.currentPhaseDetail.status : 'un-configured'
+											].color
+										)}
+										title={statusMap[pe.currentPhaseDetail ? pe.currentPhaseDetail.status : 'un-configured'].label}
 									>
-										{statusMap[pe.currentPhaseDetail.status].label}
+										{statusMap[pe.currentPhaseDetail ? pe.currentPhaseDetail.status : 'un-configured'].label}
 									</span>
 								</td>
 								<td className='whitespace-nowrap px-3 py-2 text-center'>

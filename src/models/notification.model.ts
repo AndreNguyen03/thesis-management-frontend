@@ -90,3 +90,13 @@ export interface PaginatedNotifications extends GetPaginatedObject {
 // 		link: '/topics/topic_888'
 // 	}
 // ]
+export type RecipientMode = 'custom-instructors' | 'all-students' | 'all-instructors'
+
+export interface SendCustomNotificationPayload {
+	periodId: string
+	recipientType: RecipientMode
+	recipientIds?: string[]
+	subject: string
+	content: string
+	templateId?: string
+}

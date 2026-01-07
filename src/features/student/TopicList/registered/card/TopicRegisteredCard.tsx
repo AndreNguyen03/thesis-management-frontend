@@ -1,10 +1,10 @@
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
 import { Eye, Users, Clock, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { topicStatusLabels, type Topic } from '@/models'
+import { topicStatusLabels, type GeneralTopic, type Topic } from '@/models'
 
 export const TopicRegisteredCard: React.FC<{
-	topic: Topic
+	topic: GeneralTopic
 }> = ({ topic }) => {
 	const isFullSlot = topic.maxStudents === topic.studentsNum
 	const navigate = useNavigate()

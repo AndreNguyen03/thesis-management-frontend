@@ -90,7 +90,7 @@ export function TopicsTable({
 	}
 
 	return (
-		<div className='w-full overflow-x-auto rounded-lg border bg-card'>
+		<div className='w-full rounded-lg border bg-card'>
 			<Table className='min-w-[900px] table-fixed text-sm md:text-base'>
 				<TableHeader>
 					<TableRow className='bg-muted/50'>
@@ -240,7 +240,9 @@ export function TopicsTable({
 												{topic.defenseResult.councilMembers[i].score.toFixed(1)}
 											</span>
 										) : (
-											<span className='text-sm italic text-muted-foreground'>Chưa chấm</span>
+											importedScores?.[topic._id]?.finalScore === undefined && (
+												<span className='text-sm italic text-muted-foreground'>Chưa chấm</span>
+											)
 										)}
 									</TableCell>
 								)
@@ -250,7 +252,7 @@ export function TopicsTable({
 							<TableCell className='border border-gray-300 py-3 text-center align-middle'>
 								{importedScores?.[topic._id]?.finalScore !== undefined &&
 									importedScores[topic._id].finalScore!.toFixed(2) !==
-										topic.defenseResult.finalScore.toFixed(2) && (
+										topic.defenseResult?.finalScore?.toFixed(2) && (
 										<span className='text-sm font-semibold text-blue-600'>
 											{importedScores[topic._id].finalScore!.toFixed(2)}
 										</span>
@@ -261,7 +263,9 @@ export function TopicsTable({
 										{topic.defenseResult.finalScore.toFixed(2)}
 									</span>
 								) : (
-									<span className='text-sm italic text-muted-foreground'>Chưa chấm</span>
+									importedScores?.[topic._id]?.finalScore === undefined && (
+										<span className='text-sm italic text-muted-foreground'>Chưa chấm</span>
+									)
 								)}
 							</TableCell>
 
@@ -282,18 +286,25 @@ export function TopicsTable({
 											{hasImportedNotes &&
 												Array.isArray(importedScores?.[topic._id]?.councilScores) && (
 													<span className='text-sm font-semibold text-blue-600'>
-														{importedScores?.[topic._id]?.councilScores?.map((cs, inx) => cs.note && cs.note !== topic.defenseResult.councilMembers[inx]?.note && `GV ${inx + 1}: ${cs.note}`)
+														{importedScores?.[topic._id]?.councilScores
+															?.map(
+																(cs, inx) =>
+																	cs.note &&
+																	cs.note !==
+																		topic.defenseResult?.councilMembers[inx]
+																			?.note &&
+																	`GV ${inx + 1}: ${cs.note}`
+															)
 															.filter((note) => note)
 															.join('; ')}
 													</span>
 												)}
 											{hasDefenseNotes && (
 												<span className='text-sm text-foreground'>
-													{topic.defenseResult.councilMembers
+													{topic.defenseResult?.councilMembers
 														.map(
 															(member, inx) =>
-																member.note && 
-																`GV ${inx + 1}: ${member.note}`
+																member.note && `GV ${inx + 1}: ${member.note}`
 														)
 														.filter((note) => note)
 														.join('; ')}

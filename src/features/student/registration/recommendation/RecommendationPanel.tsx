@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Sparkles, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { RecommendationCard } from './RecommendationCard'
@@ -19,7 +19,7 @@ export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: R
 	const [expandedVisibleCards, setExpandedVisibleCards] = useState<number[]>([])
 
 	const {
-		data: recommendations = [],
+		data: recommendations,
 		isLoading: loadingRecommend,
 		isFetching,
 		isError
@@ -27,13 +27,20 @@ export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: R
 		skip: !isOpen
 	})
 
-	const recommendTopics = recommendations.filter((r) => r.type === 'recommend').map((r) => r.topic)
+	console.log('recommendations', recommendations)
 
-	const fallbackTopics = recommendations.filter((r) => r.type === 'fallback').map((r) => r.topic)
+	const recommendTopics = useMemo(() => {
+		return recommendations?.data?.filter((r) => r.type === 'recommend').map((r) => r.topic) ?? []
+	}, [recommendations])
+
+	const fallbackTopics = useMemo(() => {
+		return recommendations?.data?.filter((r) => r.type === 'fallback').map((r) => r.topic) ?? []
+	}, [recommendations])
 
 	const hasRecommend = recommendTopics.length > 0
 
-	const personalizedTopics = recommendTopics.slice(0, 3)
+	const personalizedTopics = useMemo(() => recommendTopics.slice(0, 3), [recommendTopics])
+
 	const allRecommendedTopics = recommendTopics
 
 	useEffect(() => {
@@ -45,7 +52,7 @@ export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: R
 				}, index * 300)
 			})
 		}
-	}, [loadingRecommend, personalizedTopics])
+	}, [loadingRecommend, personalizedTopics.length])
 
 	useEffect(() => {
 		if (isExpanded) {
@@ -56,7 +63,7 @@ export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: R
 				}, index * 100)
 			})
 		}
-	}, [isExpanded, allRecommendedTopics])
+	}, [isExpanded, allRecommendedTopics.length])
 	const handleExpand = () => {
 		setIsExpanded(true)
 	}
@@ -71,7 +78,6 @@ export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: R
 			<div className='p-6 text-sm text-muted-foreground'>Không thể tải gợi ý đề tài. Vui lòng thử lại sau.</div>
 		)
 	}
-
 	return (
 		<>
 			<div

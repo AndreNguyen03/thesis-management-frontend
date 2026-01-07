@@ -39,3 +39,20 @@ export function fromDatetimeLocal(local: string) {
 	date.setMinutes(date.getMinutes() + date.getTimezoneOffset())
 	return date.toISOString()
 }
+
+export function getDurationString(start: string, end: string) {
+	const startDate = new Date(start)
+	const endDate = new Date(end)
+	let diff = Math.floor((endDate.getTime() - startDate.getTime()) / 1000)
+	if (diff <= 0) return '0 phút'
+	const days = Math.floor(diff / (3600 * 24))
+	diff -= days * 3600 * 24
+	const hours = Math.floor(diff / 3600)
+	diff -= hours * 3600
+	const minutes = Math.floor(diff / 60)
+	let result = ''
+	if (days > 0) result += `${days} ngày `
+	if (hours > 0) result += `${hours} giờ `
+	if (minutes > 0) result += `${minutes} phút`
+	return result.trim()
+}

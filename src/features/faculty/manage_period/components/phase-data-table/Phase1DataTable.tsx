@@ -13,7 +13,7 @@ import {
 } from '@/services/topicApi'
 import { Check, CheckCircle, Eye, Loader2, XCircle } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 // Badge màu cho trạng thái
@@ -61,6 +61,7 @@ const Phase1DataTable = ({
 	const handleGoDetail = (_id: string) => {
 		navigate(`/detail-topic/${_id}`)
 	}
+	const { id: periodId } = useParams()
 	const [isChoosingMany, setIsChoosingMany] = useState(false)
 	const [approveTopic, { isLoading: isLoadingApprove }] = useFacuBoardApproveTopicMutation()
 	const [approveTopics, { isLoading: isLoadingApproveMany }] = useFacuBoardApproveTopicsMutation()
@@ -68,7 +69,7 @@ const Phase1DataTable = ({
 	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()
 	const handleApprove = async (topicId: string) => {
 		try {
-			await approveTopic({ topicId, phaseId: phaseId }).unwrap()
+			await approveTopic({ topicId, phaseId: phaseId, periodId: periodId! }).unwrap()
 			toast.success('Duyệt đề tài thành công', { richColors: true })
 			refetch()
 		} catch (err) {
@@ -78,7 +79,7 @@ const Phase1DataTable = ({
 
 	const handleReject = async (topicId: string) => {
 		try {
-			await rejectTopic({ topicId, phaseId: phaseId }).unwrap()
+			await rejectTopic({ topicId, phaseId: phaseId, periodId: periodId! }).unwrap()
 			toast.success('Từ chối đề tài thành công', { richColors: true })
 			refetch()
 		} catch (err) {
@@ -87,7 +88,7 @@ const Phase1DataTable = ({
 	}
 	const handleApproveMany = async () => {
 		try {
-			await approveTopics({ topicIds: selectedTopics, phaseId: phaseId }).unwrap()
+			await approveTopics({ topicIds: selectedTopics, phaseId: phaseId, periodId: periodId! }).unwrap()
 			toast.success('Duyệt đề tài thành công', { richColors: true })
 			refetch()
 		} catch (err) {
@@ -96,7 +97,7 @@ const Phase1DataTable = ({
 	}
 	const handleRejectMany = async () => {
 		try {
-			await rejectTopics({ topicIds: selectedTopics }).unwrap()
+			await rejectTopics({ topicIds: selectedTopics, periodId: periodId! }).unwrap()
 			toast.success('Từ chối đề tài thành công', { richColors: true })
 			refetch()
 		} catch (err) {

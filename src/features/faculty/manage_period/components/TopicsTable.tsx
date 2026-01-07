@@ -22,7 +22,7 @@ interface TopicsTableProps {
 	periodId: string
 	statFilter: TopicStatus | 'all'
 	queryParams: PaginationTopicsQueryParams
-	setQueryParams:  Dispatch<SetStateAction<PaginationTopicsQueryParams>>
+	setQueryParams: Dispatch<SetStateAction<PaginationTopicsQueryParams>>
 }
 
 export function TopicsTable({ phase, statFilter, periodId, queryParams, setQueryParams }: TopicsTableProps) {
@@ -43,13 +43,16 @@ export function TopicsTable({ phase, statFilter, periodId, queryParams, setQuery
 
 	useEffect(() => {
 		if (statFilter !== 'all') {
-			setQueryParams((prev) => ({
-				...prev,
-				query: '',
-				page: 1,
-				search_by: [],
-				status: statFilter
-			} as PaginationTopicsQueryParams))
+			setQueryParams(
+				(prev) =>
+					({
+						...prev,
+						query: '',
+						page: 1,
+						search_by: [],
+						status: statFilter
+					}) as PaginationTopicsQueryParams
+			)
 		} else {
 			setQueryParams((prev) => ({ ...prev, query: '', page: 1 }))
 		}
@@ -62,7 +65,7 @@ export function TopicsTable({ phase, statFilter, periodId, queryParams, setQuery
 
 	const handleApprove = async (topicId: string) => {
 		try {
-			await approveTopic({ topicId, phaseId: phase._id }).unwrap()
+			await approveTopic({ topicId, phaseId: phase._id, periodId }).unwrap()
 			toast({ title: 'Duyệt đề tài thành công', variant: 'success' })
 			refetch()
 		} catch (err) {
@@ -72,7 +75,7 @@ export function TopicsTable({ phase, statFilter, periodId, queryParams, setQuery
 
 	const handleReject = async (topicId: string) => {
 		try {
-			await rejectTopic({ topicId, phaseId: phase._id }).unwrap()
+			await rejectTopic({ topicId, phaseId: phase._id, periodId }).unwrap()
 			toast({ title: 'Từ chối đề tài thành công', variant: 'success' })
 			refetch()
 		} catch (err) {
@@ -87,7 +90,7 @@ export function TopicsTable({ phase, statFilter, periodId, queryParams, setQuery
 
 		submit_topic: ['draft', 'submitted', 'under_review', 'approved', 'rejected'],
 
-		open_registration: ['pending_registration', 'registered', 'full', 'cancelled', 'available'],
+		open_registration: ['pending_registration', 'registered', 'full', 'cancelled'],
 
 		execution: ['in_progress', 'delayed', 'paused', 'submitted_for_review', 'awaiting_evaluation'],
 
@@ -103,7 +106,7 @@ export function TopicsTable({ phase, statFilter, periodId, queryParams, setQuery
 			approved: { label: 'Được duyệt', variant: 'success' },
 			rejected: { label: 'Bị từ chối', variant: 'destructive' },
 			// Phase 2
-			available: { label: 'Đang trống', variant: 'default' },
+			//available: { label: 'Đang trống', variant: 'default' },
 			pending_registration: { label: 'Chờ đăng ký', variant: 'outline' },
 			registered: { label: 'Đã đăng ký', variant: 'registered' },
 			full: { label: 'Đã đầy', variant: 'gray' },
@@ -114,6 +117,7 @@ export function TopicsTable({ phase, statFilter, periodId, queryParams, setQuery
 			paused: { label: 'Tạm dừng', variant: 'secondary' },
 			submitted_for_review: { label: 'Nộp để xét duyệt', variant: 'lightBlue' },
 			awaiting_evaluation: { label: 'Chờ đánh giá', variant: 'outline' },
+			assigned_defense: { label: 'Đã phân hội đồng', variant: 'purple' }, // Added missing status
 			// Phase 4
 			graded: { label: 'Đã chấm', variant: 'success' },
 			reviewed: { label: 'Đã duyệt cuối', variant: 'success' },
