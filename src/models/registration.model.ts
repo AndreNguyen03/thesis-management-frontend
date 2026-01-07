@@ -46,7 +46,7 @@ export interface IStudentRegistration {
 	processedBy: ResponseMiniLecturerDto
 }
 export interface MetaCustom extends MetaDto {
-	periodOptions: MiniPeriod[]
+	periodOptions?: MiniPeriod[]
 }
 export interface PaginatedStudentRegistration {
 	data: IStudentRegistration[]

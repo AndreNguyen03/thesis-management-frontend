@@ -7,7 +7,7 @@ export interface PeriodPhase {
 	startTime: string
 	endTime: string
 	status: PeriodPhaseStatus
-	minTopicsPerLecturer?: number
+	minTopicsPerLecturer: number
 	requiredLecturers?: ResponseMiniLecturerDto[]
 	allowManualApproval?: boolean
 }
@@ -38,14 +38,15 @@ export interface Phase1Response {
 	periodId: string
 	phase: 'submit_topic'
 	missingTopics: {
-		lecturerId: string
+		userId: string
 		lecturerName: string
 		lecturerEmail: string
 		minTopicsRequired: number
-		submittedTopicsCount: number
+		approvalTopicsCount: number
 		missingTopicsCount: number
 	}[]
 	pendingTopics: number
+	currentApprovedTopics: number
 	canTriggerNextPhase: boolean
 }
 

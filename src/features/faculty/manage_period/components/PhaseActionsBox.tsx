@@ -43,6 +43,7 @@ export function PhaseActionsBox({
 						data={resolvePhaseData as Phase1Response}
 						onCompletePhase={onCompletePhase}
 						onProcess={onGoProcess}
+						phase= {phase}
 					/>
 				)
 				break
@@ -57,9 +58,7 @@ export function PhaseActionsBox({
 				)
 				break
 			case 'completion':
-				phaseContent = (
-					<Phase4Handler data={resolvePhaseData as Phase4Response}  />
-				)
+				phaseContent = <Phase4Handler data={resolvePhaseData as Phase4Response} />
 				break
 		}
 	}
@@ -75,7 +74,7 @@ export function PhaseActionsBox({
 					{phaseCompleted && (
 						<Badge variant='outline' className='border-success/20 bg-success/10 text-success'>
 							<CheckCircle2 className='mr-1 h-3 w-3' />
-							Đã xử lý xong
+							Đáp ứng yêu cầu
 						</Badge>
 					)}
 				</div>

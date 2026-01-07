@@ -126,7 +126,7 @@ export default function DetailPeriodPage() {
 							</span>
 
 							{/* Nút thiết lập nhiều pha nếu đang ở pha execution */}
-							{period.currentPhase === 'execution' && (
+							{/* {period.currentPhase === 'execution' && (
 								<div className='flex flex-col items-center gap-2'>
 									<Button
 										variant='default'
@@ -139,7 +139,7 @@ export default function DetailPeriodPage() {
 									</Button>
 									<span className='text-xs text-muted-foreground'>Hoặc</span>
 								</div>
-							)}
+							)} */}
 
 							<div className='flex gap-2'>
 								<Button
@@ -152,9 +152,9 @@ export default function DetailPeriodPage() {
 									Thiết lập pha {PhaseInfo[period.currentPhase].continue}
 								</Button>
 
-								<Button size='sm' onClick={() => setCurrentChosenPhase(period.currentPhase)}>
+								{/* <Button size='sm' onClick={() => setCurrentChosenPhase(period.currentPhase)}>
 									Quay lại pha {PhaseInfo[period.currentPhase].label}
-								</Button>
+								</Button> */}
 							</div>
 						</div>
 					)}

@@ -8,6 +8,8 @@ import type { ResponseMiniLecturerDto } from '@/models'
 import { set } from 'zod'
 import { cn } from '@/lib/utils'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useSendCustomNotificationMutation } from '@/services/notificationApi'
+import type { SendCustomNotificationPayload } from '@/models/notification.model'
 
 const MOCK_TOTAL_STUDENTS = 150
 const MOCK_TOTAL_INSTRUCTORS = 25
@@ -92,11 +94,10 @@ export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHea
 
 	const handleOpenModal = () => setIsModalOpen(true)
 	const handleCloseModal = () => setIsModalOpen(false)
-
-	const handleSendNotification = async (data: any) => {
-		console.log('Gửi Thông báo Thủ công Data:', data)
-		// TODO: Gọi API POST /api/v1/notifications/send với data JSON
-		await new Promise((resolve) => setTimeout(resolve, 1000)) // Giả lập delay
+	//endpoint gọi gửi thoogn báo tùy chỉnh
+	const [sendCustomNotification, { isLoading: isSendingNotification }] = useSendCustomNotificationMutation()
+	const handleSendNotification = async (data: SendCustomNotificationPayload) => {
+		sendCustomNotification(data)
 		handleCloseModal() // Đóng sau khi gửi thành công
 	}
 
@@ -239,6 +240,7 @@ export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHea
 				totalStudents={MOCK_TOTAL_STUDENTS}
 				totalLecturers={MOCK_TOTAL_INSTRUCTORS}
 				availableLecturers={MOCK_AVAILABLE_INSTRUCTORS} // Truyền data giảng viên
+				isSending={isSendingNotification}
 			/>
 		</div>
 	)

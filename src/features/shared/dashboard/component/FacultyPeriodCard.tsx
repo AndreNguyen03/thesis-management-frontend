@@ -49,12 +49,13 @@ export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 	/* --------------------------- State flags --------------------------- */
 
 	const isNoPeriod = !dashboardData || !dashboardData._id
+	console.log('dashboardData', dashboardData)
 
 	const isNeedSetupPhase =
 		!!dashboardData?._id &&
 		(dashboardData.currentPhase === 'empty' || !dashboardData.phases || dashboardData.phases.length === 0)
 
-	const isFinished = dashboardData?.status === 'timeout'
+	const isFinished = dashboardData?.status === 'completed'
 
 	const isActivePeriod = !!dashboardData?._id && !isNeedSetupPhase && !isFinished
 

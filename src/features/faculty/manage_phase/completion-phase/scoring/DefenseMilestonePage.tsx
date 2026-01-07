@@ -5,11 +5,23 @@ import { toast } from 'sonner'
 import {
 	useGetDetailTopicsInDefenseMilestonesQuery,
 	useBatchUpdateDefenseResultsMutation,
-	useBatchPublishDefenseResultsMutation
+	useBatchPublishDefenseResultsMutation,
+	useArchiveTopicsMutation
 } from '@/services/topicApi'
 import MilestoneHeader from './components/MilestoneHeader'
 import { TopicsTable } from './components/TopicsTable'
-import { Download, DownloadIcon, Earth, FileSpreadsheet, Loader2, Lock, Save, Upload, UploadIcon } from 'lucide-react'
+import {
+	Download,
+	DownloadIcon,
+	Earth,
+	FileSpreadsheet,
+	Loader2,
+	Lock,
+	Save,
+	Upload,
+	UploadIcon,
+	Archive
+} from 'lucide-react'
 import Editting from '@/features/shared/workspace/components/Editting'
 import {
 	useUploadScoringResultFileMutation,
@@ -17,7 +29,7 @@ import {
 	useBlockGradeMutation
 } from '@/services/milestoneApi'
 import { formatFileSize } from '@/utils/format-file-size'
-import { Button, Input } from '@/components/ui'
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
 import { exportScoringTemplate, importScoringFile, validateScores, calculateGradeText } from '@/utils/excel-utils'
 import { formatPeriodInfoMiniPeriod } from '@/utils/utils'
 import { ConfirmDialog } from '../manage-defense-milestone/ConfirmDialog'
@@ -25,8 +37,8 @@ import { CustomPagination } from '@/components/PaginationBar'
 import { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useAppSelector } from '@/store'
-import { downloadFileWithURL } from '@/lib/utils'
-type ActionType = 'save-draft' | 'publish' | 'block-grade' | 'submit-graded-list'
+import { cn, downloadFileWithURL } from '@/lib/utils'
+type ActionType = 'save-draft' | 'publish' | 'block-grade' | 'submit-graded-list' | 'archive-topics'
 const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 export default function DefenseScoringPage() {
 	const { id: milestoneId } = useParams()
@@ -34,6 +46,7 @@ export default function DefenseScoringPage() {
 	const user = useAppSelector((state) => state.auth.user)
 	const importInputRef = useRef<HTMLInputElement>(null)
 	const [selectedDraftFile, setSelectedDraftFile] = useState<File | null>(null)
+	const [selectedTopicsForArchive, setSelectedTopicsForArchive] = useState<Set<string>>(new Set())
 	//điều khiển diaglog
 	const [confirmDialog, setConfirmDialog] = useState<{
 		open: boolean
@@ -57,14 +70,20 @@ export default function DefenseScoringPage() {
 		isLoading: isLoadingMilestones,
 		refetch: refetchMilestones
 	} = useGetDetailTopicsInDefenseMilestonesQuery({ templateMilestoneId: milestoneId!, queryParams })
-	//gọi endpoint để xóa file template
-	const [deleteScoringResultFile, { isLoading: isDeletingTemplate }] = useDeleteScoringResultFileMutation()
+
+	//endpoitn thứ hai để lấy toàn bộ các đề tài
+	const { data: allTopicsData, isLoading: isLoadingAllTopics } = useGetDetailTopicsInDefenseMilestonesQuery({
+		templateMilestoneId: milestoneId!,
+		queryParams: { page: 1, limit: 0 }
+	})
 	//gọi endpoint để lưu defenseResult xuống database
 	const [batchUpdateDefenseResults, { isLoading: isSavingDraft }] = useBatchUpdateDefenseResultsMutation()
 	//gọi endpoint để ông bố kết quả
 	const [batchPublishDefenseResults, { isLoading: isPublishing }] = useBatchPublishDefenseResultsMutation()
 	//gọi endpoint để khóa bảng điểm
 	const [blockGrade, { isLoading: isLockingGrade }] = useBlockGradeMutation()
+	//gọi endpoint để archive topics
+	const [archiveTopics, { isLoading: isArchiving }] = useArchiveTopicsMutation()
 
 	// Load draft từ localStorage khi component mount
 	useEffect(() => {
@@ -86,14 +105,14 @@ export default function DefenseScoringPage() {
 	}, [milestoneId])
 
 	const handleExportExcel = async () => {
-		if (!detailTopicsData?.data || detailTopicsData.data.length === 0) {
+		if (!allTopicsData?.data || allTopicsData.data.length === 0) {
 			toast.error('Không có dữ liệu để xuất', { richColors: true })
 			return
 		}
 
 		try {
-			const fileName = `BangChamDiem_${detailTopicsData.milestoneInfo.title}_${new Date().toISOString().split('T')[0]}.xlsx`
-			await exportScoringTemplate(detailTopicsData, fileName)
+			const fileName = `BangChamDiem_${allTopicsData.milestoneInfo.title}_${new Date().toISOString().split('T')[0]}.xlsx`
+			await exportScoringTemplate(allTopicsData, fileName)
 			toast.success('Xuất file Excel thành công!', { richColors: true })
 		} catch (error) {
 			toast.error('Xuất file thất bại: ' + (error as Error).message, { richColors: true })
@@ -187,17 +206,19 @@ export default function DefenseScoringPage() {
 
 		try {
 			// Chuyển đổi scoringData thành format cho API
-			const results = Object.entries(scoringData).map(([topicId, result]) => ({
-				topicId,
-				defenseDate: result.defenseDate,
-				periodName: formatPeriodInfoMiniPeriod(detailTopicsData!.periodInfo),
-				finalScore: result.finalScore,
-				gradeText: result.gradeText,
-				councilMembers: result.councilMembers,
-				councilName: result.councilName,
-				isPublished: false,
-				isBlock: false
-			}))
+			const results = Object.entries(scoringData)
+				.filter(([_, result]) => result.finalScore !== undefined)
+				.map(([topicId, result]) => ({
+					topicId,
+					defenseDate: result.defenseDate,
+					periodName: formatPeriodInfoMiniPeriod(detailTopicsData!.periodInfo),
+					finalScore: result.finalScore as number,
+					gradeText: result.gradeText,
+					councilMembers: result.councilMembers,
+					councilName: result.councilName,
+					isPublished: false,
+					isBlock: false
+				}))
 
 			// Gọi API để lưu xuống database
 			const response = await batchUpdateDefenseResults({ results }).unwrap()
@@ -268,14 +289,14 @@ export default function DefenseScoringPage() {
 		}
 	}
 	const handleDownloadSampleFile = async () => {
-		if (!detailTopicsData?.data || detailTopicsData.data.length === 0) {
+		if (!allTopicsData?.data || allTopicsData.data.length === 0) {
 			toast.error('Không có dữ liệu để xuất', { richColors: true })
 			return
 		}
 
 		try {
-			const fileName = `BangChamDiem_${detailTopicsData.milestoneInfo.title.trim()}_${new Date().toISOString().split('T')[0]}_sample.xlsx`
-			await exportScoringTemplate(detailTopicsData, fileName, false)
+			const fileName = `BangChamDiem_${allTopicsData.milestoneInfo.title.trim()}_${new Date().toISOString().split('T')[0]}_sample.xlsx`
+			await exportScoringTemplate(allTopicsData, fileName, false)
 			toast.success('Xuất file Excel mẫu thành công!', { richColors: true })
 		} catch (error) {
 			toast.error('Xuất file mẫuthất bại: ' + (error as Error).message, { richColors: true })
@@ -373,12 +394,65 @@ export default function DefenseScoringPage() {
 		}
 	}
 
+	// Lọc các đề tài đã được chấm điểm và chưa archive
+	const eligibleTopicsForArchive = useMemo(() => {
+		if (!detailTopicsData?.data) return []
+		return detailTopicsData.data.filter(
+			(topic) => topic.defenseResult?.finalScore !== undefined && topic.currentStatus !== 'archived'
+		)
+	}, [detailTopicsData])
+
+	const handleSelectTopicForArchive = (topicId: string) => {
+		setSelectedTopicsForArchive((prev) => {
+			const newSet = new Set(prev)
+			if (newSet.has(topicId)) {
+				newSet.delete(topicId)
+			} else {
+				newSet.add(topicId)
+			}
+			return newSet
+		})
+	}
+
+	const handleSelectAllForArchive = () => {
+		if (selectedTopicsForArchive.size === eligibleTopicsForArchive.length) {
+			setSelectedTopicsForArchive(new Set())
+		} else {
+			setSelectedTopicsForArchive(new Set(eligibleTopicsForArchive.map((t) => t._id)))
+		}
+	}
+
+	const handleArchiveTopics = async () => {
+		if (selectedTopicsForArchive.size === 0) {
+			toast.warning('Vui lòng chọn ít nhất một đề tài để lưu vào thư viện', { richColors: true })
+			return
+		}
+
+		try {
+			const result = await archiveTopics({ topicIds: Array.from(selectedTopicsForArchive) }).unwrap()
+			toast.success(`Đã lưu ${result.success} đề tài vào thư viện thành công!`, {
+				richColors: true,
+				description: result.failed > 0 ? `${result.failed} đề tài lưu thất bại` : undefined
+			})
+			setSelectedTopicsForArchive(new Set())
+			refetchMilestones()
+		} catch (error) {
+			toast.error('Lưu đề tài vào thư viện thất bại: ' + (error as Error).message, { richColors: true })
+		}
+	}
+
 	// Kiểm tra xem dữ liệu đã thay đổi so với dữ liệu gốc hay chưa
 
 	const isChanged = useMemo(() => {
 		if (!detailTopicsData?.data) {
 			return false
 		}
+
+		// Nếu có resultScoringTemplate thì luôn coi là đã thay đổi
+		if (detailTopicsData.milestoneInfo.resultScoringTemplate) {
+			return true
+		}
+
 		return detailTopicsData.data.some((topic) => {
 			const imported = scoringData[topic._id]
 			if (!imported) return false
@@ -395,7 +469,7 @@ export default function DefenseScoringPage() {
 				imported.councilMembers &&
 				topic.defenseResult?.councilMembers &&
 				imported.councilMembers.some(
-					(member, idx) => member.note !== topic.defenseResult.councilMembers[idx]?.note
+					(member, idx) => member.note !== topic.defenseResult?.councilMembers[idx]?.note
 				)
 			) {
 				return true
@@ -414,7 +488,7 @@ export default function DefenseScoringPage() {
 		debounceOnChange(val)
 	}
 	return (
-		<div className='flex w-full flex-col gap-4 p-6'>
+		<div className={cn('flex h-screen w-full flex-col gap-4', 'p-6')}>
 			{detailTopicsData && (
 				<MilestoneHeader
 					milestone={detailTopicsData.milestoneInfo}
@@ -478,7 +552,11 @@ export default function DefenseScoringPage() {
 
 							<button
 								onClick={() => setConfirmDialog({ open: true, type: 'publish' })}
-								disabled={isPublishing}
+								disabled={
+									isPublishing ||
+									detailTopicsData?.data.length === 0 ||
+									detailTopicsData?.milestoneInfo.isPublished
+								}
 								className={`flex items-center gap-2 rounded px-5 py-2 text-sm font-medium shadow-sm transition-colors ${
 									detailTopicsData?.milestoneInfo.isPublished
 										? 'cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400'
@@ -491,7 +569,9 @@ export default function DefenseScoringPage() {
 
 							<button
 								onClick={() => setConfirmDialog({ open: true, type: 'block-grade' })}
-								disabled={detailTopicsData?.milestoneInfo.isBlock}
+								disabled={
+									detailTopicsData?.milestoneInfo.isBlock || detailTopicsData?.data.length === 0
+								}
 								className={`flex items-center gap-2 rounded px-5 py-2 text-sm font-medium shadow-sm transition-colors ${
 									detailTopicsData?.milestoneInfo.isBlock
 										? 'cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400'
@@ -544,10 +624,10 @@ export default function DefenseScoringPage() {
 								</div>
 								<button
 									onClick={handleApplyResultTemplate}
-									disabled={detailTopicsData?.milestoneInfo.isBlock}
+									disabled={detailTopicsData?.milestoneInfo.isBlock || !isChanged}
 									className='cursor-pointer rounded bg-blue-600 px-3 py-1 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
 								>
-									Áp dụng
+									{isChanged ? 'Áp dụng' : 'Đã áp dụng'}
 								</button>
 							</div>
 						) : (
@@ -580,13 +660,116 @@ export default function DefenseScoringPage() {
 					</div>
 				)}
 			</div>
+
+			{/* Section cho Archive Topics */}
+			{user?.role === ROLES.FACULTY_BOARD && (
+				<div className='rounded-lg border border-blue-200 bg-blue-50 p-4'>
+					<div className='mb-3 flex items-center justify-between'>
+						<div>
+							<h3 className='font-semibold text-blue-900'>Lưu đề tài vào thư viện số</h3>
+							<p className='text-sm text-blue-700'>
+								Chọn các đề tài đã được chấm điểm để lưu vào thư viện số của khoa
+							</p>
+						</div>
+						<div className='flex gap-2'>
+							<button
+								onClick={handleSelectAllForArchive}
+								disabled={eligibleTopicsForArchive.length === 0}
+								className='rounded border border-blue-300 bg-white px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								{selectedTopicsForArchive.size === eligibleTopicsForArchive.length
+									? 'Bỏ chọn tất cả'
+									: `Chọn tất cả (${eligibleTopicsForArchive.length})`}
+							</button>
+							<button
+								onClick={() => setConfirmDialog({ open: true, type: 'archive-topics' })}
+								disabled={isArchiving || selectedTopicsForArchive.size === 0}
+								className='flex items-center gap-2 rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								{isArchiving ? (
+									<>
+										<Loader2 className='h-4 w-4 animate-spin' />
+										Đang lưu...
+									</>
+								) : (
+									<>
+										<Archive className='h-4 w-4' />
+										Lưu vào thư viện ({selectedTopicsForArchive.size})
+									</>
+								)}
+							</button>
+						</div>
+					</div>
+
+					<div className='max-h-60 space-y-2 overflow-y-auto'>
+						{eligibleTopicsForArchive.map((topic) => (
+							<div
+								key={topic._id}
+								className='flex items-center gap-3 rounded border border-blue-200 bg-white p-3 transition-colors hover:bg-blue-50'
+							>
+								<input
+									type='checkbox'
+									checked={selectedTopicsForArchive.has(topic._id)}
+									onChange={() => handleSelectTopicForArchive(topic._id)}
+									className='h-4 w-4 cursor-pointer accent-blue-600'
+								/>
+								<div className='flex-1'>
+									<p className='font-medium text-gray-900'>{topic.titleVN}</p>
+									<p className='text-sm text-gray-600'>{topic.titleEng}</p>
+									<div className='mt-1 flex items-center gap-4 text-xs text-gray-500'>
+										<span className='font-semibold'>
+											Điểm: {topic.defenseResult?.finalScore?.toFixed(2) || 'N/A'}
+										</span>
+										<span>Xếp loại: {topic.defenseResult?.gradeText || 'N/A'}</span>
+										<span>
+											Sinh viên: {topic.students?.map((s) => s.fullName).join(', ') || 'N/A'}
+										</span>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
 			<div className='flex items-center justify-between gap-2'>
-				<Input
-					placeholder='Tìm kiếm đề tài theo tiêu đề...'
-					value={searchTerm}
-					onChange={(e) => onEdit(e.target.value)}
-					className='w-[500px] border-gray-300 bg-white'
-				/>
+				<div className='flex gap-2'>
+					<Input
+						placeholder='Tìm kiếm đề tài theo tiêu đề...'
+						value={searchTerm}
+						onChange={(e) => onEdit(e.target.value)}
+						className='w-[500px] border-gray-300 bg-white'
+					/>
+					<div className='flex items-center gap-2'>
+						<label className='font-medium'>Hiển thị</label>
+						<div className='space-y-3'>
+							<Select
+								value={queryParams.limit?.toString()}
+								onValueChange={(value) =>
+									setQueryParams((prev) => ({ ...prev, limit: Number(value), page: 1 }))
+								}
+							>
+								<SelectTrigger className='w-full bg-white'>
+									<SelectValue placeholder='Chọn năm' />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem key={'100'} value={'100'}>
+										{100}
+									</SelectItem>
+									<SelectItem key={'50'} value={'50'}>
+										{50}
+									</SelectItem>
+									<SelectItem key={'20'} value={'20'}>
+										{20}
+									</SelectItem>
+									<SelectItem key={'10'} value={'10'}>
+										{10}
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+				</div>
 				{isChanged ? (
 					<span className='text-[14px] font-semibold text-orange-500'>Phiên bản dữ liệu chưa được lưu </span>
 				) : (
@@ -610,6 +793,7 @@ export default function DefenseScoringPage() {
 					])
 				)}
 			/>
+			<div className='pb-20'></div>
 			{detailTopicsData?.meta && (
 				<CustomPagination
 					meta={detailTopicsData?.meta}
@@ -624,10 +808,12 @@ export default function DefenseScoringPage() {
 					confirmDialog.type === 'save-draft'
 						? 'Xác nhận lưu phiên bản này'
 						: confirmDialog.type === 'publish'
-							? 'Xác nhận xóa giảng viên'
+							? 'Xác nhận công bố điểm'
 							: confirmDialog.type === 'block-grade'
 								? 'Xác nhận khóa điểm'
-								: 'Xác nhận nộp bảng điểm'
+								: confirmDialog.type === 'archive-topics'
+									? 'Xác nhận lưu vào thư viện'
+									: 'Xác nhận nộp bảng điểm'
 				}
 				description={
 					confirmDialog.type === 'save-draft'
@@ -636,7 +822,9 @@ export default function DefenseScoringPage() {
 							? `Khi đã công bố điểm sẽ không thể ẩn đi.`
 							: confirmDialog.type === 'block-grade'
 								? `Khi khóa bảng điểm sẽ không thể chỉnh sửa được nữa. Hãy chắc chắn mọi thứ đã hoàn thành, không còn khiếu nại gì`
-								: 'Xác nhận nộp bảng điểm cho khoa. Phiên bản này sẽ thay thế phiên bản trước đó'
+								: confirmDialog.type === 'archive-topics'
+									? `Bạn có chắc chắn muốn lưu ${selectedTopicsForArchive.size} đề tài đã chọn vào thư viện số? Đề tài sẽ được công khai cho sinh viên và giảng viên xem.`
+									: 'Xác nhận nộp bảng điểm cho khoa. Phiên bản này sẽ thay thế phiên bản trước đó'
 				}
 				onConfirm={
 					confirmDialog.type === 'save-draft'
@@ -645,7 +833,9 @@ export default function DefenseScoringPage() {
 							? () => handlePublish()
 							: confirmDialog.type === 'block-grade'
 								? () => handleLockGrade()
-								: () => handleUploadGradedListFile()
+								: confirmDialog.type === 'archive-topics'
+									? () => handleArchiveTopics()
+									: () => handleUploadGradedListFile()
 				}
 				isLoading={
 					confirmDialog.type === 'save-draft'
@@ -654,7 +844,9 @@ export default function DefenseScoringPage() {
 							? isPublishing
 							: confirmDialog.type === 'block-grade'
 								? isLockingGrade
-								: isUploadingGradedList
+								: confirmDialog.type === 'archive-topics'
+									? isArchiving
+									: isUploadingGradedList
 				}
 				confirmText={
 					confirmDialog.type === 'save-draft'
@@ -663,7 +855,9 @@ export default function DefenseScoringPage() {
 							? 'Công bố điểm'
 							: confirmDialog.type === 'block-grade'
 								? 'Khóa bảng điểm'
-								: 'Xác nhận nộp bảng điểm cho khoa'
+								: confirmDialog.type === 'archive-topics'
+									? 'Lưu vào thư viện'
+									: 'Xác nhận nộp bảng điểm cho khoa'
 				}
 			/>
 		</div>

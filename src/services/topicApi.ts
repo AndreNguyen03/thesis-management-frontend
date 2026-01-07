@@ -14,9 +14,10 @@ import type {
 	PaginationLecturerGetTopicsInPhaseParams,
 	SubmittedTopicParamsDto,
 	PaginatedTopicApproval,
-    ApprovalTopicQueryParams,
+	ApprovalTopicQueryParams,
 	DetailTopicsInDefenseMilestone,
-	UpdateDefenseResultDto
+	UpdateDefenseResultDto,
+	PaginationRegisteredTopicsQueryParams
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
@@ -70,7 +71,7 @@ export const topicApi = baseApi.injectEndpoints({
 				method: 'DELETE'
 			})
 		}),
-		getRegisteredTopic: builder.query<GetPaginatedTopics, { queries: PaginationQueryParamsDto }>({
+		getRegisteredTopic: builder.query<GetPaginatedTopics, { queries: PaginationRegisteredTopicsQueryParams }>({
 			query: ({ queries }) => {
 				const queryString = buildQueryString(queries)
 				return `/topics/registered-topics?${queryString}`
@@ -95,7 +96,8 @@ export const topicApi = baseApi.injectEndpoints({
 				const queryString = buildQueryString(queries)
 				return `/topics/lecturer/get-submitted-topics?${queryString}`
 			},
-			transformResponse: (response: ApiResponse<PaginatedSubmittedTopics>) => response.data
+			transformResponse: (response: ApiResponse<PaginatedSubmittedTopics>) => response.data,
+			providesTags: (result, error, args) => [{ type: 'LecturerSubmittedTopics', id: args.periodId }]
 		}),
 		createTopic: builder.mutation<CreateTopicResponse, CreateTopicRequest>({
 			query: ({ topicData, files }) => {
@@ -144,20 +146,32 @@ export const topicApi = baseApi.injectEndpoints({
 			invalidatesTags: (_result, _error, { periodId }) => [{ type: 'PhaseTopics', id: periodId }]
 		}),
 
-		facuBoardApproveTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+		facuBoardApproveTopic: builder.mutation<
+			{ message: string },
+			{ topicId: string; phaseId: string; periodId: string }
+		>({
 			query: ({ topicId }) => ({
 				url: `/topics/faculty-board/approve-topic/${topicId}`,
 				method: 'PATCH'
 			}),
-			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+			invalidatesTags: (_result, _error, { phaseId, periodId }) => [
+				{ type: 'PhaseTopics', id: phaseId },
+				{ type: 'LecturerSubmittedTopics', id: periodId }
+			]
 		}),
 
-		facuBoardRejectTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
+		facuBoardRejectTopic: builder.mutation<
+			{ message: string },
+			{ topicId: string; phaseId: string; periodId: string }
+		>({
 			query: ({ topicId }) => ({
 				url: `/topics/faculty-board/reject-topic/${topicId}`,
 				method: 'PATCH'
 			}),
-			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+			invalidatesTags: (_result, _error, { phaseId, periodId }) => [
+				{ type: 'PhaseTopics', id: phaseId },
+				{ type: 'LecturerSubmittedTopics', id: periodId }
+			]
 		}),
 
 		markUnderReviewingTopic: builder.mutation<{ message: string }, { topicId: string; phaseId: string }>({
@@ -330,21 +344,28 @@ export const topicApi = baseApi.injectEndpoints({
 				responseHandler: (response) => response.blob()
 			})
 		}),
-		facuBoardApproveTopics: builder.mutation<{ message: string }, { topicIds: string[]; phaseId: string }>({
+		facuBoardApproveTopics: builder.mutation<
+			{ message: string },
+			{ topicIds: string[]; phaseId: string; periodId: string }
+		>({
 			query: ({ topicIds }) => ({
 				url: `/topics/faculty-board/approve-topics`,
 				method: 'PATCH',
 				body: { topicIds }
 			}),
-			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
+			invalidatesTags: (_result, _error, { phaseId, periodId }) => [
+				{ type: 'PhaseTopics', id: phaseId },
+				{ type: 'LecturerSubmittedTopics', id: periodId }
+			]
 		}),
 
-		facuBoardRejectTopics: builder.mutation<{ message: string }, { topicIds: string[] }>({
+		facuBoardRejectTopics: builder.mutation<{ message: string }, { topicIds: string[]; periodId: string }>({
 			query: ({ topicIds }) => ({
 				url: `/topics/faculty-board/reject-topics`,
 				method: 'PATCH',
 				body: { topicIds }
-			})
+			}),
+			invalidatesTags: (_result, _error, { periodId }) => [{ type: 'LecturerSubmittedTopics', id: periodId }]
 		}),
 		lecturerGetTopicsInPhase: builder.query<
 			PaginatedTopicsInPeriod,
@@ -383,9 +404,12 @@ export const topicApi = baseApi.injectEndpoints({
 				}
 			},
 			transformResponse: (response: ApiResponse<PaginatedTopicApproval>) => response.data,
-            providesTags: ['TopicRegistration']
+			providesTags: ['TopicRegistration']
 		}),
-		getDetailTopicsInDefenseMilestones: builder.query<DetailTopicsInDefenseMilestone, { templateMilestoneId: string; queryParams: PaginationQueryParamsDto }>({
+		getDetailTopicsInDefenseMilestones: builder.query<
+			DetailTopicsInDefenseMilestone,
+			{ templateMilestoneId: string; queryParams: PaginationQueryParamsDto }
+		>({
 			query: ({ templateMilestoneId, queryParams }) => {
 				const queryString = buildQueryString(queryParams)
 				return {
@@ -423,6 +447,16 @@ export const topicApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<{ success: number; failed: number }>) => response.data,
 			invalidatesTags: (result, error, { topics }) => topics.map((t) => ({ type: 'Topic', id: t.topicId }))
+		}),
+		archiveTopics: builder.mutation<{ success: number; failed: number; message: string }, { topicIds: string[] }>({
+			query: (body) => ({
+				url: '/topics/batch-archive',
+				method: 'PATCH',
+				body
+			}),
+			transformResponse: (response: ApiResponse<{ success: number; failed: number; message: string }>) =>
+				response.data,
+			invalidatesTags: (result, error, { topicIds }) => topicIds.map((id) => ({ type: 'Topic', id }))
 		})
 	}),
 	overrideExisting: false
@@ -473,5 +507,6 @@ export const {
 	useGetTopicApprovalRegistrationQuery,
 	useGetDetailTopicsInDefenseMilestonesQuery,
 	useBatchUpdateDefenseResultsMutation,
-	useBatchPublishDefenseResultsMutation
+	useBatchPublishDefenseResultsMutation,
+	useArchiveTopicsMutation
 } = topicApi

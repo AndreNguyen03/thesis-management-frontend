@@ -22,7 +22,7 @@ import LecturerManageTopics from '@/features/lecturer/manage_topic'
 import RegistrationHistory from '@/features/student/TopicList/registered/children/RegistrationHistory'
 // import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 import ManageSubmittedTopics from '@/features/lecturer/manage_topic/submitted_topic/ManageSubmittedTopics'
-import { LibraryPage } from '@/features/page/LibraryPage'
+import { LibraryPage } from '@/features/lecturer/library/LibraryPage'
 import { GroupWorkspacePage } from '@/features/shared/workspace'
 import { RegistrationPeriodsPage } from '@/features/student/registration'
 import ManageTopicsInPeriods from '@/features/lecturer/explore-periods/manage-topics-in-period/ManageTopicsInPeriods'
@@ -33,6 +33,8 @@ import { ContactPage } from '@/features/shared/contact/ContactPage'
 import { DefenseAssignmentPage } from '@/features/faculty/manage_phase/completion-phase/manage-defense-milestone/DefenseAssignmentPage'
 import { ManageApproveRegistration } from '@/features/lecturer/topic_registration/ApproveRegistration'
 import DefenseScoringPage from '@/features/faculty/manage_phase/completion-phase/scoring/DefenseMilestonePage'
+import LecturerDefenseMilestonesPage from '@/features/lecturer/defense-milestones/LecturerDefenseMilestonesPage'
+import FacultyDefenseMilestonesPage from '@/features/faculty/defense-milestones/FacultyDefenseMilestonesPage'
 import ManageTopicDraft2 from '@/features/lecturer/manage_topic/draft/ManageDraftTopic2'
 import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 // Mock user data
@@ -132,6 +134,9 @@ export const router = createBrowserRouter([
 			{ path: 'manage-period', element: <ManagePeriodPage /> },
 			{ path: 'period/:id/manage-defense-assignment', element: <DefenseAssignmentPage /> },
 			{ path: 'defense-milestones/:id/scoring', element: <DefenseScoringPage /> },
+			{ path: 'lecturer/defense-milestones', element: <LecturerDefenseMilestonesPage /> },
+			{ path: 'faculty/defense-milestones', element: <FacultyDefenseMilestonesPage /> },
+			
 			{ path: 'period/:id', element: <DetailPeriodPage /> },
 			{ path: 'manage-faculty-students', element: <ManageFacultyStudentPage /> },
 			{ path: 'manage-faculty-lecturers', element: <ManageFacultyLecturerPage /> },

@@ -157,7 +157,7 @@ const ResourceList = () => {
 
 	return (
 		<>
-			<Card>
+			<Card className='p-0'>
 				<CardHeader>
 					<div className='flex items-center justify-between'>
 						<div>

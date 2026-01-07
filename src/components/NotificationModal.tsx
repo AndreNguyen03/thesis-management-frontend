@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { CalendarIcon, Send } from 'lucide-react'
+import { CalendarIcon, Loader2, Send } from 'lucide-react'
 
 // Import từ file types.ts đã được sửa đổi
 import type { RecipientMode, SendData } from './types'
@@ -25,6 +25,9 @@ import RecipientSelector from './RecipientSelector' // Giả định đường d
 import RichTextEditor from './common/RichTextEditor'
 import type { ResponseMiniLecturerDto } from '@/models'
 import { toast } from '@/hooks/use-toast'
+import type { SendCustomNotificationPayload } from '@/models/notification.model'
+import type { is } from 'date-fns/locale'
+import { useParams } from 'react-router-dom'
 
 // --- SCHEMA VALIDATION (Loại bỏ templateId) ---
 const notificationSchema = z
@@ -52,10 +55,11 @@ type NotificationFormValues = z.infer<typeof notificationSchema>
 interface SendNotificationModalProps {
 	isOpen: boolean
 	onClose: () => void
-	onSubmit: (data: SendData) => Promise<void>
+	onSubmit: (data: SendCustomNotificationPayload) => Promise<void>
 	totalStudents: number
 	totalLecturers: number
 	availableLecturers: ResponseMiniLecturerDto[]
+	isSending?: boolean
 }
 export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 	isOpen,
@@ -63,9 +67,10 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 	onSubmit,
 	totalStudents,
 	totalLecturers,
-	availableLecturers
+	availableLecturers,
+	isSending
 }) => {
-	const [isSubmitting, setIsSubmitting] = useState(false)
+	const { id: periodId } = useParams()
 
 	const methods = useForm<NotificationFormValues>({
 		resolver: zodResolver(notificationSchema),
@@ -81,11 +86,11 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 
 	// Xử lý gửi form (Luôn là Tùy chỉnh/Thủ công)
 	const onSubmitHandler = async (values: NotificationFormValues) => {
-		setIsSubmitting(true)
 		try {
-			const data: SendData = {
-				recipientMode: values.recipientMode,
-				recipients: values.recipients || [],
+			const data: SendCustomNotificationPayload = {
+				periodId: periodId!,
+				recipientType: values.recipientMode,
+				recipientIds: values.recipients || [],
 				subject: values.subject,
 				content: values.content
 			}
@@ -97,7 +102,6 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 				description: `Lỗi ${error}`
 			})
 		} finally {
-			setIsSubmitting(false)
 			reset()
 			onClose()
 		}
@@ -194,7 +198,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 												value={field.value}
 												onChange={field.onChange}
 												placeholder='Nhập nội dung email chi tiết ở đây...'
-												disabled={isSubmitting}
+												disabled={isSending}
 											/>
 										</FormControl>
 										<FormMessage />
@@ -204,13 +208,13 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 						</div>
 
 						<DialogFooter className='flex items-center space-x-2 pt-4 sm:justify-end'>
-							<Button type='button' variant='ghost' onClick={onClose} disabled={isSubmitting}>
+							<Button type='button' variant='ghost' onClick={onClose} disabled={isSending}>
 								Hủy
 							</Button>
-							<Button type='submit' disabled={isSubmitting}>
-								{isSubmitting ? (
+							<Button type='submit' disabled={isSending}>
+								{isSending ? (
 									<>
-										<CalendarIcon className='mr-2 h-4 w-4 animate-spin' /> Đang gửi...
+										<Loader2 className='mr-2 h-4 w-4 animate-spin' />
 									</>
 								) : (
 									<>
