@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Loader2, BookOpen, Users, Tag } from 'lucide-react'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:3000/api'
+const MAX_WIDTH_NORMAL = 'max-w-[70%]'
+const MAX_WIDTH_WITH_TOPICS = 'max-w-[85%]'
+const DESCRIPTION_PREVIEW_LENGTH = 150
 import { useNavigate } from 'react-router-dom'
+import { renderMarkdown } from '@/lib/utils'
 
 interface TopicResult {
 	index: number
@@ -84,7 +90,7 @@ export const AgentChat: React.FC = () => {
 	 */
 	const sendNormalChat = async (message: string) => {
 		try {
-			const response = await fetch('http://localhost:3000/api/chatbot-agent/chat', {
+			const response = await fetch(`${API_BASE}/chatbot-agent/chat`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -147,10 +153,9 @@ export const AgentChat: React.FC = () => {
 	}
 
 	/**
-	 * 2. STREAMING CHAT - EventSource (SSE)
+	 * 2. STREAMING CHAT - fetch() với ReadableStream
 	 */
-	const sendStreamingChat = (message: string) => {
-		// Tạo message placeholder cho streaming
+	const sendStreamingChat = async (message: string) => {
 		const streamingMessageId = Date.now().toString()
 		const streamingMessage: Message = {
 			id: streamingMessageId,
@@ -162,51 +167,113 @@ export const AgentChat: React.FC = () => {
 
 		setMessages((prev) => [...prev, streamingMessage])
 
-		// Tạo EventSource
-		const encodedMessage = encodeURIComponent(message)
-		const eventSource = new EventSource(`http://localhost:3000/chatbot-agent/stream-chat?message=${encodedMessage}`)
+		try {
+			const response = await fetch(`${API_BASE}/chatbot-agent/stream-chat`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					message,
+					chatHistory: messages.map((m) => ({
+						role: m.role,
+						content: m.content
+					}))
+				})
+			})
 
-		eventSourceRef.current = eventSource
-
-		// Lắng nghe message events
-		eventSource.onmessage = (event) => {
-			try {
-				const data = JSON.parse(event.data)
-
-				if (data.done) {
-					// Stream hoàn thành
-					setMessages((prev) =>
-						prev.map((m) => (m.id === streamingMessageId ? { ...m, isStreaming: false } : m))
-					)
-					eventSource.close()
-					eventSourceRef.current = null
-				} else if (data.content) {
-					// Append chunk vào message
-					setMessages((prev) =>
-						prev.map((m) => (m.id === streamingMessageId ? { ...m, content: m.content + data.content } : m))
-					)
-				}
-			} catch (error) {
-				console.error('Error parsing SSE data:', error)
+			if (!response.ok) {
+				throw new Error('Stream failed')
 			}
-		}
 
-		// Xử lý errors
-		eventSource.onerror = (error) => {
-			console.error('❌ SSE Error:', error)
+			const reader = response.body?.getReader()
+			const decoder = new TextDecoder()
+			let buffer = ''
+			let fullContent = ''
+
+			while (true) {
+				const { done, value } = await reader!.read()
+				if (done) break
+
+				buffer += decoder.decode(value, { stream: true })
+
+				// Xử lý từng message SSE (kết thúc bằng \n\n)
+				let lines = buffer.split('\n\n')
+				buffer = lines.pop() || '' // Giữ lại phần chưa hoàn chỉnh
+
+				for (const line of lines) {
+					if (!line.startsWith('data: ')) continue
+
+					try {
+						const jsonStr = line.slice(6)
+						const data = JSON.parse(jsonStr)
+
+						if (data.error) throw new Error(data.error)
+
+						if (data.done) {
+							// Parse topics từ fullContent nếu có
+							const topicsMatch = fullContent.match(
+								/__TOPICS_DATA_START__\n([\s\S]*?)\n__TOPICS_DATA_END__/
+							)
+							let topics: TopicResult[] | undefined
+
+							if (topicsMatch) {
+								try {
+									const topicsData = JSON.parse(topicsMatch[1])
+									topics = topicsData.topics || []
+									console.log('📚 Parsed topics:', topics?.length)
+
+									// Remove markers từ content để không hiển thị
+									fullContent = fullContent
+										.replace(/__TOPICS_DATA_START__[\s\S]*?__TOPICS_DATA_END__/g, '')
+										.trim()
+								} catch (e) {
+									console.error('Failed to parse topics:', e)
+								}
+							}
+
+							// Update message với content đã clean và topics
+							setMessages((prev) =>
+								prev.map((m) =>
+									m.id === streamingMessageId
+										? {
+												...m,
+												content: fullContent,
+												isStreaming: false,
+												topics: topics
+											}
+										: m
+								)
+							)
+						} else if (data.content) {
+							// Tích lũy content
+							fullContent += data.content
+
+							// Update UI (hiển thị real-time, kể cả markers)
+							setMessages((prev) =>
+								prev.map((m) =>
+									m.id === streamingMessageId ? { ...m, content: m.content + data.content } : m
+								)
+							)
+						}
+					} catch (e) {
+						console.error('Parse error:', e)
+					}
+				}
+			}
+		} catch (error: any) {
+			console.error('❌ Stream error:', error)
 			setMessages((prev) =>
 				prev.map((m) =>
 					m.id === streamingMessageId
 						? {
 								...m,
-								content: m.content || 'Xin lỗi, đã có lỗi xảy ra với streaming.',
+								content: m.content || `Xin lỗi, đã có lỗi xảy ra: ${error.message}`,
 								isStreaming: false
 							}
 						: m
 				)
 			)
-			eventSource.close()
-			eventSourceRef.current = null
 		}
 	}
 
@@ -229,10 +296,12 @@ export const AgentChat: React.FC = () => {
 
 		try {
 			if (useStreaming) {
-				sendStreamingChat(userMessage.content)
+				await sendStreamingChat(userMessage.content)
 			} else {
 				await sendNormalChat(userMessage.content)
 			}
+		} catch (error) {
+			console.error('Send error:', error)
 		} finally {
 			setIsLoading(false)
 		}
@@ -268,10 +337,10 @@ export const AgentChat: React.FC = () => {
 				<div
 					className='mb-3 line-clamp-3 text-sm text-gray-600'
 					dangerouslySetInnerHTML={{
-						__html: topic.description.replace(/<[^>]*>/g, '').substring(0, 150) + '...'
+						__html:
+							topic.description.replace(/<[^>]*>/g, '').substring(0, DESCRIPTION_PREVIEW_LENGTH) + '...'
 					}}
 				/>
-
 				<div className='space-y-2 text-xs'>
 					<div className='flex items-start gap-2'>
 						<Tag className='h-4 w-4 flex-shrink-0 text-purple-500' />
@@ -344,9 +413,9 @@ export const AgentChat: React.FC = () => {
 					</div>
 				)}
 
-				{messages.map((message) => (
+				{messages.map((message, index) => (
 					<div
-						key={message.id}
+						key={index}
 						className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
 					>
 						{message.role === 'assistant' && (
@@ -358,20 +427,17 @@ export const AgentChat: React.FC = () => {
 						<div
 							className={`rounded-2xl px-4 py-3 ${
 								message.role === 'user'
-									? 'max-w-[70%] bg-blue-500 text-white'
+									? `${MAX_WIDTH_NORMAL} bg-blue-500 text-white`
 									: message.topics && message.topics.length > 0
-										? 'max-w-[85%] border border-gray-200 bg-white text-gray-800 shadow-sm'
-										: 'max-w-[70%] border border-gray-200 bg-white text-gray-800 shadow-sm'
+										? `${MAX_WIDTH_WITH_TOPICS} border border-gray-200 bg-white text-gray-800 shadow-sm`
+										: `${MAX_WIDTH_NORMAL} border border-gray-200 bg-white text-gray-800 shadow-sm`
 							}`}
 						>
 							{/* Text response */}
-							<div className='whitespace-pre-wrap'>
-								{message.topics
-									? // Nếu có topics, chỉ hiển thị text không có JSON
-										message.content.split(/\{[\s\S]*"topics"[\s\S]*\}/)[0].trim() ||
-										'Chào bạn, mình đã tìm thấy một số đề tài phù hợp:'
-									: message.content}
-							</div>
+							<div
+								className='whitespace-pre-wrap'
+								dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
+							/>
 
 							{/* Topic cards */}
 							{message.topics && message.topics.length > 0 && (
@@ -426,13 +492,15 @@ export const AgentChat: React.FC = () => {
 						onChange={(e) => setInput(e.target.value)}
 						onKeyDown={handleKeyPress}
 						placeholder='Nhập câu hỏi của bạn...'
+						aria-label='Nhập câu hỏi'
 						className='flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500'
 						rows={1}
-						disabled={isLoading}
+						disabled={isLoading || messages.some((m) => m.isStreaming)}
 					/>
 					<button
 						onClick={handleSend}
-						disabled={isLoading || !input.trim()}
+						disabled={isLoading || messages.some((m) => m.isStreaming) || !input.trim()}
+						aria-label='Gửi tin nhắn'
 						className='flex items-center gap-2 rounded-xl bg-blue-500 px-6 py-3 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300'
 					>
 						{isLoading ? (

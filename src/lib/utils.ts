@@ -56,3 +56,14 @@ export function getDurationString(start: string, end: string) {
 	if (minutes > 0) result += `${minutes} phút`
 	return result.trim()
 }
+export function renderMarkdown(text: string): string {
+	// Bold: **text**
+	let html = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+	// List: * item
+	html = html.replace(/^\s*\*\s+(.*)$/gm, '<li>$1</li>')
+	// Gom các <li> liên tiếp thành 1 <ul>
+	html = html.replace(/(<li>[\s\S]*?<\/li>)+/g, (match) => `<ul>${match}</ul>`)
+	// Line breaks: \n
+	html = html.replace(/\n{2,}/g, '<br/><br/>').replace(/\n/g, '<br/>')
+	return html
+}
