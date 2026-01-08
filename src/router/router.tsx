@@ -37,6 +37,7 @@ import LecturerDefenseMilestonesPage from '@/features/lecturer/defense-milestone
 import FacultyDefenseMilestonesPage from '@/features/faculty/defense-milestones/FacultyDefenseMilestonesPage'
 import ManageTopicDraft2 from '@/features/lecturer/manage_topic/draft/ManageDraftTopic2'
 import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
+import { ChatbotPage } from '@/features/chatbot/pages/ChatbotPage'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -85,6 +86,10 @@ export const router = createBrowserRouter([
 			{
 				path: 'registration/:periodId/manage-topics',
 				element: <ManageTopicsInPeriods />
+			},
+			{
+				path: '/chatbot-test',
+				element: <ChatbotPage />
 			},
 			{
 				path: 'registration/:periodId/submit-topics',
@@ -136,7 +141,7 @@ export const router = createBrowserRouter([
 			{ path: 'defense-milestones/:id/scoring', element: <DefenseScoringPage /> },
 			{ path: 'lecturer/defense-milestones', element: <LecturerDefenseMilestonesPage /> },
 			{ path: 'faculty/defense-milestones', element: <FacultyDefenseMilestonesPage /> },
-			
+
 			{ path: 'period/:id', element: <DetailPeriodPage /> },
 			{ path: 'manage-faculty-students', element: <ManageFacultyStudentPage /> },
 			{ path: 'manage-faculty-lecturers', element: <ManageFacultyLecturerPage /> },
