@@ -38,6 +38,7 @@ import FacultyDefenseMilestonesPage from '@/features/faculty/defense-milestones/
 import ManageTopicDraft2 from '@/features/lecturer/manage_topic/draft/ManageDraftTopic2'
 import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 import { ChatbotPage } from '@/features/chatbot/pages/ChatbotPage'
+import { AIAssistantPage } from '@/features/shared/ai-assistant'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -156,7 +157,7 @@ export const router = createBrowserRouter([
 				path: 'chat', // THÊM: Route mới cho ContactPage
 				element: <ContactPage />
 			},
-			//   { path: 'ai-chat', element: <AIChatPage /> },
+			 { path: 'ai-chat', element: <AIAssistantPage /> },
 			{
 				path: 'settings',
 				element: (

@@ -7,20 +7,9 @@ const MAX_WIDTH_WITH_TOPICS = 'max-w-[85%]'
 const DESCRIPTION_PREVIEW_LENGTH = 150
 import { useNavigate } from 'react-router-dom'
 import { renderMarkdown } from '@/lib/utils'
+import type { TopicResult } from '@/models/chatbot-conversation.model'
 
-interface TopicResult {
-	index: number
-	id: string
-	titleVN: string
-	titleENG: string
-	description: string
-	fields: string
-	requirements: string
-	major: string
-	lecturers: string
-	maxStudents: number
-	type: string
-}
+
 
 interface Message {
 	id: string

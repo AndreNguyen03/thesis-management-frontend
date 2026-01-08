@@ -118,7 +118,8 @@ export const baseApi = createApi({
 		'StudentDashboard',
 		'LecturerDashboard',
 		"LecturerSubmittedTopics",
-		"TopicRatingStats"
+		"TopicRatingStats",
+		"ConversationsChatBot"
 	],
 	endpoints: () => ({})
 })

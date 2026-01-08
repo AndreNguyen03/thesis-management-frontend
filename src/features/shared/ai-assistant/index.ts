@@ -1,1 +1,1 @@
-export * from './AIAssistant'
+export * from './AIAssistantPage'
