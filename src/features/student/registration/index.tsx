@@ -4,15 +4,20 @@ import { useAppSelector } from '@/store'
 import PeriodCard from './partitions/PeriodCard'
 import { useGetCurrentPeriodsQuery } from '@/services/periodApi'
 import { LoadingOverlay } from '@/components/ui'
-import { RecommendationPanel } from './recommendation/RecommendationPanel'
-import { RecommendationButton } from './recommendation/RecommendationButton'
-import { useState } from 'react'
+
 
 // sinh viên sẽ truy cập vào đây trong khi kỳ mở pha đăng ký
 export const RegistrationPeriodsPage = () => {
 	const user = useAppSelector((state) => state.auth.user)
 	// 👉 LẤY DATA TỪ RTK QUERY (CACHE)
-	const { data: periods = [], isLoading, isFetching } = useGetCurrentPeriodsQuery()
+	const {
+		data: periods = [],
+		isLoading,
+		isFetching,
+	} = useGetCurrentPeriodsQuery(undefined, {
+		refetchOnMountOrArgChange: true,
+		refetchOnFocus: true
+	})
 	// const [isRecommendOpen, setIsRecommendOpen] = useState(false)
 	// ⛔ chưa có data thì không xử lý gì hết
 	if (isLoading) {
@@ -124,7 +129,7 @@ export const RegistrationPeriodsPage = () => {
 				/>
 
 				{/* Floating Button */}
-				{/* <RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} /> */} 
+				{/* <RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} /> */}
 			</div>
 		</div>
 	)

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 // Icons
 import { Loader2, FileText, Search, PanelLeftOpen, PanelLeftClose, ChevronLeft } from 'lucide-react'
@@ -30,10 +30,15 @@ import ManageSubmittedTopics from '../../manage_topic/submitted_topic/ManageSubm
 import DraftTopicsDatatable from './DraftTopicsDatatable'
 import { useDebounce } from '@/hooks/useDebounce'
 import { statusMap } from '@/models/period.model'
-import { formatPeriodInfo2 } from '@/utils/utils'
+import { formatPeriodInfo2, getUserIdFromAppUser } from '@/utils/utils'
+import { useAppSelector } from '@/store'
+import { socketService } from '@/services/socket.service'
 
 const SubmitTopicsInPeriod = () => {
 	const { periodId } = useParams<{ periodId: string }>()
+
+	const userId = getUserIdFromAppUser(useAppSelector((state) => state.auth.user))
+
 	const location = useLocation()
 	const navigate = useNavigate()
 	const [activeTab, setActiveTab] = useState<'draft' | 'submitted'>('submitted')
@@ -72,6 +77,22 @@ const SubmitTopicsInPeriod = () => {
 		isLoading: isSubmittedLoading,
 		refetch: refetchSubmitted
 	} = useGetSubmittedTopicsQuery(submittedQueries)
+
+	useEffect(() => {
+		if (!userId) return
+		socketService.connect(userId,'/period')
+
+        const cleanupFunc = socketService.on('/period', 'periodDashboard:update', () => {
+            console.log('Received periodDashboard:update event, refetching submitted topics...')
+            refetchSubmitted()
+        })
+
+        return () => {
+            cleanupFunc()
+            socketService.disconnect('/period')
+        }
+
+	}, [userId, refetchSubmitted])
 
 	const toggleCreatePanel = () => {
 		const panel = panelRef.current

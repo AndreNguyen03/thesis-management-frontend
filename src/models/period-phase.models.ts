@@ -1,5 +1,4 @@
 import type { PhaseType } from './period.model'
-import type { ResponseMiniLecturerDto } from './users'
 
 export interface PeriodPhase {
 	_id: string
@@ -8,7 +7,7 @@ export interface PeriodPhase {
 	endTime: string
 	status: PeriodPhaseStatus
 	minTopicsPerLecturer?: number
-	requiredLecturers?: ResponseMiniLecturerDto[]
+	requiredLecturerIds?: string[]
 	allowManualApproval?: boolean
 }
 

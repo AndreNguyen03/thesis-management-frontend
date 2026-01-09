@@ -42,6 +42,36 @@ export function GradingResultCard({ topic }: GradingResultCardProps) {
 		)
 	}
 
+	// Nếu đã có defenseResult nhưng chưa công bố điểm
+	if (topic.defenseResult && topic.defenseResult.isPublished === false) {
+		return (
+			<Card className='m-2 rounded-xl border-border p-0'>
+				<CardHeader className='pb-3'>
+					<div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+						<CardTitle className='flex items-center gap-2 break-words text-lg font-semibold text-foreground'>
+							<Award className='h-5 w-5 text-primary' />
+							Kết quả chấm điểm đề tài: {topic.titleVN}
+						</CardTitle>
+						<Badge className='border-warning/20 bg-warning/10 text-warning'>Chuẩn bị công bố điểm</Badge>
+					</div>
+				</CardHeader>
+				<CardContent>
+					<div className='flex items-center justify-center py-8'>
+						<div className='text-center'>
+							<div className='mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-warning/10 text-warning'>
+								<AlertCircle className='h-6 w-6' />
+							</div>
+							<p className='mt-3 text-sm text-muted-foreground'>
+								Điểm số và nhận xét sẽ được công bố sau khi hội đồng xác nhận kết quả.
+							</p>
+							<p className='mt-1 text-xs text-muted-foreground'>Vui lòng chờ thông báo từ hội đồng.</p>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
+		)
+	}
+
 	return (
 		<Card className='m-2 rounded-xl border-success/20 bg-success/5 p-2 sm:p-4'>
 			<CardHeader className='pb-3'>
