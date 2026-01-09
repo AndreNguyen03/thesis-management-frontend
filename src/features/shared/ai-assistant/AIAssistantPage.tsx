@@ -24,10 +24,12 @@ import {
 	Trash2,
 	Clock,
 	Tag,
-	Users
+	Users,
+	Menu,
+	Loader2
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { renderMarkdown } from '@/lib/utils'
+import { cn, renderMarkdown } from '@/lib/utils'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -49,8 +51,11 @@ import type {
 import {
 	useAddMessageMutation,
 	useCreateConversationMutation,
-	useGetConversationsQuery
+	useDeleteConversationMutation,
+	useGetConversationsQuery,
+	useUpdateConversationMutation
 } from '@/services/chatbotConversationApi'
+import { useAppSelector } from '@/store'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:3000/api'
 const DESCRIPTION_PREVIEW_LENGTH = 150
@@ -74,6 +79,12 @@ export const AIAssistantPage = () => {
 	const [addMessage, { isLoading: isAddingMessage }] = useAddMessageMutation()
 	//endpoint lấy danh sách các cuộc trò chuyện
 	const { data: conversations, isLoading: isLoadingConversations } = useGetConversationsQuery({ status: 'active' })
+	//gọi endpoint ddeeer xóa cuộc trò chuyện
+	const [deleteConversation, { isLoading: isDeletingConversation }] = useDeleteConversationMutation()
+	//gọi endpoint để cập nhật title cuộc trò chuyện
+	const [updateConversation, { isLoading: isUpdatingConversation }] = useUpdateConversationMutation()
+	const { data: chatbot, isLoading: isLoadingChatbot } = useGetChatbotVersionQuery()
+	const user = useAppSelector((state) => state.auth.user)
 	const [currentChatId, setCurrentChatId] = useState<string>('default')
 	const [chatHistories, setChatHistories] = useState<GetConversationsDto[]>([
 		{
@@ -93,8 +104,6 @@ export const AIAssistantPage = () => {
 			lastMessageAt: new Date()
 		}
 	])
-	console.log('currentChatId', currentChatId)
-
 	useEffect(() => {
 		if (conversations && conversations.length > 0) {
 			setChatHistories(conversations)
@@ -108,7 +117,7 @@ export const AIAssistantPage = () => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 	const [chatToDelete, setChatToDelete] = useState<string | null>(null)
 	const navigate = useNavigate()
-
+	const [isEdittingId, setIsEdittingId] = useState<string | null>(null)
 	const messagesEndRef = useRef<HTMLDivElement>(null)
 	const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -124,32 +133,6 @@ export const AIAssistantPage = () => {
 		inputRef.current?.focus()
 	}, [])
 
-	// Chat history management functions
-	// const createNewChat = () => {
-	// 	const newChatId = Date.now().toString()
-	// 	const newChat: GetConversationsDto = {
-	// 		_id: newChatId,
-	// 		title: 'Chat mới',
-	// 		messages: [
-	// 			{
-	// 				id: '1',
-	// 				content:
-	// 					'Chào bạn! Tôi là AI Assistant của hệ thống UIT Thesis Management. Tôi có thể hỗ trợ bạn:\n\n• 🎯 Gợi ý đề tài phù hợp\n• 🔍 Tìm kiếm thông tin trong thư viện số\n• 📊 Đánh giá tiến độ nghiên cứu\n• 🛡️ Kiểm tra đạo văn\n• 📈 Phân tích xu hướng đề tài\n\nBạn cần hỗ trợ gì hôm nay?',
-	// 				role: 'assistant',
-	// 				timestamp: new Date(),
-	// 				topics: []
-	// 			}
-	// 		],
-	// 		lastMessageAt: new Date(),
-	// 		status: 'archived'
-	// 	}
-
-	// 	setChatHistories((prev) => [newChat, ...prev])
-	// 	setCurrentChatId(newChatId)
-	// 	setMessages(newChat.messages)
-	// 	setInputValue('')
-	// }
-
 	const selectChat = (chatId: string) => {
 		const chat = chatHistories.find((c) => c._id === chatId)
 		if (chat) {
@@ -158,7 +141,7 @@ export const AIAssistantPage = () => {
 		}
 	}
 
-	const confirmDeleteChat = () => {
+	const confirmDeleteChat = async () => {
 		if (!chatToDelete) return
 
 		if (chatHistories.length === 1) {
@@ -172,7 +155,7 @@ export const AIAssistantPage = () => {
 		}
 
 		setChatHistories((prev) => prev.filter((c) => c._id !== chatToDelete))
-
+		await deleteConversation(chatToDelete)
 		if (currentChatId === chatToDelete) {
 			const remainingChats = chatHistories.filter((c) => c._id !== chatToDelete)
 			const newCurrentChat = remainingChats[0]
@@ -249,19 +232,22 @@ export const AIAssistantPage = () => {
 	}
 
 	// TopicCard Component
-	const TopicCard: React.FC<{ topic: TopicResult }> = ({ topic }) => {
+	const TopicCard: React.FC<{ topic: TopicSnapshot }> = ({ topic }) => {
 		return (
 			<div
 				className='mb-3 cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md'
-				onClick={() => navigate(`/detail-topic/${topic.id}`)}
+				onClick={() => navigate(`/detail-topic/${topic._id}`)}
 			>
 				<div className='mb-2 flex items-start justify-between'>
 					<div className='flex-1'>
 						<h3 className='text-base font-semibold leading-snug text-gray-800'>{topic.titleVN}</h3>
-						<p className='text-sm italic text-gray-500'>{topic.titleENG}</p>
+						<p className='text-sm italic text-gray-500'>{topic.titleEng}</p>
 					</div>
 					<span className='ml-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700'>
 						{topic.major}
+					</span>
+					<span className='ml-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700'>
+						{topic.similarityScore.toFixed(2)}%
 					</span>
 				</div>
 
@@ -305,85 +291,9 @@ export const AIAssistantPage = () => {
 			</div>
 		)
 	}
-	// Normal Chat - POST request, đợi full response
-	const sendNormalChat = async (message: string, chatId: string) => {
-		try {
-			const response = await fetch(`${API_BASE}/chatbot-agent/chat`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					message,
-					chatHistory: messages.map((m) => ({
-						role: m.role,
-						content: m.content
-					}))
-				})
-			})
-
-			if (!response.ok) {
-				throw new Error('Failed to get response')
-			}
-
-			const data: ChatResponse = await response.json().then((res) => res.data)
-
-			// Parse topics từ step cuối nếu có
-			let topics: TopicSnapshot[] | null = null
-			if (data.steps && data.steps.length > 0) {
-				const lastStep = data.steps[data.steps.length - 1]
-				if (lastStep.output) {
-					topics = parseTopicsFromContent(lastStep.output)
-				}
-			}
-
-			// Thêm response vào messages
-			const assistantMessage: ConversationMessage = {
-				id: Date.now().toString(),
-				role: 'assistant',
-				content: data.response,
-				timestamp: new Date(),
-				topics: topics || undefined
-			}
-
-			setMessages((prev) => [...prev, assistantMessage])
-
-			// Save to database
-			const newPayload: AddMessgePayload = {
-				role: 'assistant',
-				content: data.response,
-				topics: topics || undefined
-			}
-			await addMessage({ id: chatId, data: newPayload })
-
-			// Log debug info
-			if (data.steps && data.steps.length > 0) {
-				console.log(
-					'🔧 Tools used:',
-					data.steps.map((s) => s.tool)
-				)
-			}
-		} catch (error) {
-			console.error('❌ Chat error:', error)
-			const errorMessage: ConversationMessage = {
-				id: Date.now().toString(),
-				role: 'assistant',
-				content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.',
-				timestamp: new Date()
-			}
-			setMessages((prev) => [...prev, errorMessage])
-			await addMessage({
-				id: chatId,
-				data: {
-					role: 'assistant',
-					content: errorMessage.content
-				}
-			})
-		}
-	}
 
 	const handleSend = async () => {
-		//if (!inputValue.trim() ) return
+		if (!inputValue.trim()) return
 
 		const payload: AddMessgePayload = {
 			role: 'user',
@@ -477,7 +387,7 @@ export const AIAssistantPage = () => {
 							const topicsMatch = fullContent.match(
 								/__TOPICS_DATA_START__\n([\s\S]*?)\n__TOPICS_DATA_END__/
 							)
-							let topics: TopicSnapshot[] | undefined
+							let topics: TopicResult[] | undefined
 
 							if (topicsMatch) {
 								try {
@@ -493,14 +403,20 @@ export const AIAssistantPage = () => {
 									console.error('Failed to parse topics:', e)
 								}
 							}
-
+							console.log('topics', topics)
 							// Update message với content đã clean và topics
-							//tạo mới messgae
+							// Loại bỏ field 'index' từ mỗi topic
+							const cleanedTopics = topics?.map(({ index, ...rest }) => rest)
+
 							const newPayload: AddMessgePayload = {
 								role: 'assistant',
 								content: fullContent,
-								topics: topics
+								topics: cleanedTopics
 							}
+
+							console.log('newPayload.topics', newPayload.topics)
+							console.log('Is Array?', Array.isArray(newPayload.topics))
+
 							setMessages((prev) =>
 								prev.map((m) =>
 									m.id === streamingMessageId
@@ -586,68 +502,128 @@ export const AIAssistantPage = () => {
 			}
 		])
 	}
+
+	// Parse agent response để loại bỏ cấu trúc ReAct (Question, Thought, Final Answer)
+	const parseAgentResponse = (content: string): string => {
+		if (!content) return content
+
+		// Tìm "Final Answer:" và lấy phần sau nó
+		const finalAnswerMatch = content.match(/Final Answer:\s*([\s\S]*)/i)
+		if (finalAnswerMatch && finalAnswerMatch[1]) {
+			return finalAnswerMatch[1].trim()
+		}
+
+		// Nếu không tìm thấy Final Answer, trả về content gốc
+		return content
+	}
+
 	return (
-		<div className='flex h-full'>
+		<div className='flex h-full w-full'>
 			{/* Sidebar lịch sử */}
 			{showSidebar && (
 				<div className='flex w-80 flex-col border-r bg-muted/30'>
 					{/* Header sidebar */}
 					<div className='border-b p-4'>
 						<div className='mb-3 flex items-center justify-between'>
-							<h2 className='flex items-center gap-2 text-lg font-semibold'>
+							<h2 className='flex items-center gap-2 text-[15px] font-semibold'>
 								<History className='h-5 w-5 text-primary' />
 								Lịch sử chat
 							</h2>
-							<Button size='sm' onClick={handleCreateNewChat}>
-								<Plus className='mr-1 h-4 w-4' />
-								Mới
+							<Button size='sm' className='gap-0' onClick={handleCreateNewChat}>
+								<Plus className='mr-1 h-4 w-4 text-white' />
+								<span className='text-[12px]'>Mới</span>
 							</Button>
 						</div>
 					</div>
 
 					{/* Danh sách chat */}
-					<ScrollArea className='flex-1'>
-						<div className='space-y-1 p-2'>
-							{chatHistories.map((chat) => (
-								<div
-									key={chat._id}
-									className={`group flex cursor-pointer items-center gap-2 rounded-lg p-3 transition-colors hover:bg-muted ${
-										currentChatId === chat._id ? 'border border-primary/20 bg-primary/10' : ''
-									}`}
-									onClick={() => selectChat(chat._id)}
-								>
-									<MessageSquare className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
-									<div className='min-w-0 flex-1'>
-										<p className='truncate text-sm font-medium'>{chat.title}</p>
-										<p className='text-xs text-muted-foreground'>
-											<Clock className='mr-1 inline h-3 w-3' />
-											{new Date(chat.lastMessageAt).toLocaleDateString('vi-VN')}
-										</p>
-									</div>
-									{chatHistories.length > 1 && (
-										<Button
-											variant='ghost'
-											size='sm'
-											className='h-6 w-6 p-0 opacity-0 hover:bg-red-100 group-hover:opacity-100'
-											onClick={(e) => {
-												e.stopPropagation()
-												deleteChat(chat._id)
-											}}
-										>
-											<Trash2 className='h-3 w-3 text-red-500' />
-										</Button>
-									)}
-								</div>
-							))}
+					{isLoadingConversations ? (
+						<div className='flex h-full w-full items-center justify-center'>
+							<Loader2 className='h-8 w-8 animate-spin' />
 						</div>
-					</ScrollArea>
+					) : (
+						<ScrollArea className='h-full flex-1'>
+							<div className='space-y-1 p-2'>
+								{chatHistories.map((chat) => (
+									<div
+										key={chat._id}
+										className={`group flex cursor-pointer items-center gap-2 rounded-lg p-3 transition-colors hover:bg-muted ${
+											currentChatId === chat._id ? 'border border-primary/20 bg-primary/10' : ''
+										}`}
+										onClick={() => selectChat(chat._id)}
+									>
+										<MessageSquare className='h-4 w-4 flex-shrink-0 text-muted-foreground' />
+										<div className='min-w-0 flex-1'>
+											{isEdittingId === chat._id ? (
+												<input
+													type='text'
+													className='w-full rounded-md border border-gray-300 px-2 py-1 text-sm'
+													value={chat.title}
+													onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+														const updatedTitle = e.target.value
+														setChatHistories((prev) =>
+															prev.map((c) =>
+																c._id === chat._id ? { ...c, title: updatedTitle } : c
+															)
+														)
+													}}
+													onBlur={async () => {
+														setIsEdittingId(null)
+														await updateConversation({
+															id: chat._id,
+															data: { title: chat.title }
+														})
+													}}
+													onKeyDown={async (e: React.KeyboardEvent<HTMLInputElement>) => {
+														if (e.key === 'Enter') {
+															setIsEdittingId(null)
+															await updateConversation({
+																id: chat._id,
+																data: { title: chat.title }
+															})
+														}
+													}}
+													autoFocus
+												/>
+											) : (
+												<p
+													className='truncate text-sm font-medium text-gray-900 hover:bg-gray-200'
+													onDoubleClick={() => setIsEdittingId(chat._id)}
+													title='Nhấn đúp để đổi tên'
+												>
+													{chat.title}
+												</p>
+											)}
+											<p className='text-xs text-muted-foreground'>
+												<Clock className='mr-1 inline h-3 w-3' />
+												{new Date(chat.lastMessageAt).toLocaleString('vi-VN')}
+											</p>
+										</div>
+										{chatHistories.length > 1 && (
+											<Button
+												variant='ghost'
+												size='sm'
+												className='h-6 w-6 p-0 opacity-0 hover:bg-red-100 group-hover:opacity-100'
+												onClick={(e) => {
+													e.stopPropagation()
+													deleteChat(chat._id)
+												}}
+											>
+												<Trash2 className='h-3 w-3 text-red-500' />
+											</Button>
+										)}
+									</div>
+								))}
+							</div>
+						</ScrollArea>
+					)}
 				</div>
 			)}
 
 			{/* Khu vực chat chính */}
-			<div className='mx-auto flex w-full max-w-4xl flex-1 flex-col'>
+			<div className={`mx-auto flex w-full flex-1 flex-col`}>
 				{/* Header */}
-				{/* <div className='flex items-center justify-between border-b bg-gradient-to-r from-primary/5 to-primary/10 p-6'>
+				<div className='flex items-center justify-between border-b bg-gradient-to-r from-primary/5 to-primary/10 p-4'>
 					<div className='flex items-center gap-3'>
 						<Button
 							variant='ghost'
@@ -659,53 +635,67 @@ export const AIAssistantPage = () => {
 						</Button>
 						<div className='relative'>
 							<Bot className='h-8 w-8 text-primary' />
-							<div className='absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full bg-green-500' />
+
+							<div
+								className={cn(
+									'absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full',
+									chatbot?.status === 'enabled' ? 'bg-green-500' : 'bg-gray-500'
+								)}
+							/>
 						</div>
 						<div>
-							<h1 className='text-2xl font-bold text-primary'>{chatbot?.name}</h1>
-							<p className='text-sm text-muted-foreground'>
+							<h1 className='text-[14px] font-bold text-primary'>{chatbot?.name}</h1>
+							<p className='text-[12px] text-muted-foreground'>
 								{chatbot?.description || 'Hỗ trợ nghiên cứu và quản lý đề tài thông minh'}
 							</p>
 						</div>
 					</div>
 					<div className='flex items-center gap-2'>
-						<Badge variant='outline' className='border-green-200 bg-green-50 text-green-700'>
-							<div className='mr-1 h-2 w-2 rounded-full bg-green-500' />
-							Trực tuyến
-						</Badge>
+						{chatbot?.status === 'enabled' ? (
+							<Badge variant='outline' className='border-green-200 bg-green-50 text-xs text-green-700'>
+								<div className='mr-1 h-2 w-2 rounded-full bg-green-500' />
+								Trực tuyến
+							</Badge>
+						) : (
+							<Badge variant='outline' className='border-gray-200 bg-gray-50 text-xs text-gray-700'>
+								<div className='mr-1 h-2 w-2 rounded-full bg-gray-500' />
+								Ngoại tuyến
+							</Badge>
+						)}
+
 						<Button
 							variant='outline'
 							size='sm'
 							onClick={() => setShowSidebar(!showSidebar)}
 							className='hidden lg:flex'
 						>
-							<History className='mr-2 h-4 w-4' />
-							{showSidebar ? 'Ẩn lịch sử' : 'Hiện lịch sử'}
+							<History className='mr-2 h-3 w-3' />
+							<span className='text-xs'>{showSidebar ? 'Ẩn lịch sử' : 'Hiện lịch sử'}</span>
 						</Button>
 					</div>
-				</div> */}
+				</div>
 
 				{/* Quick Prompts */}
-				{/* <div className="p-4 border-b bg-muted/30">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">💡 Gợi ý câu hỏi:</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {quickPrompts.map((prompt, index) => {
-              const IconComponent = prompt.icon;
-              return (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="justify-start h-auto p-3 text-left hover:bg-primary/5 hover:border-primary/20"
-                  onClick={() => handleQuickPrompt(prompt.text)}
-                >
-                  <IconComponent className="h-4 w-4 mr-2 text-primary flex-shrink-0" />
-                  <span className="text-xs">{prompt.text}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </div> */}
+				<div className='flex items-center gap-1 border-b bg-muted/30 p-2'>
+					<h3 className='text-sm font-medium text-muted-foreground'>💡 Gợi ý câu hỏi:</h3>
+					<div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4'>
+						{chatbot?.query_suggestions.map((prompt, index) => {
+							//const IconComponent = prompt.icon;
+							return (
+								<Button
+									key={index}
+									variant='outline'
+									size='sm'
+									className='h-auto justify-start p-3 text-left hover:border-primary/20 hover:bg-primary/5'
+									onClick={() => handleQuickPrompt(prompt.content)}
+								>
+									{/* <IconComponent className="h-4 w-4 mr-2 text-primary flex-shrink-0" /> */}
+									<span className='text-xs'>{prompt.content}</span>
+								</Button>
+							)
+						})}
+					</div>
+				</div>
 
 				{/* Messages */}
 				<div className='flex-1 overflow-hidden'>
@@ -714,21 +704,35 @@ export const AIAssistantPage = () => {
 							{messages.map((message) => (
 								<div
 									key={message.id}
-									className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+									className={`flex gap-4 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
 								>
-									{message.role === 'assistant' && (
+									{message.role === 'assistant' ? (
 										<Avatar className='h-10 w-10 border-2 border-primary/20'>
-											<AvatarFallback className='bg-gradient-primary text-primary-foreground'>
-												<Bot className='h-5 w-5' />
+											<AvatarFallback className='bg-blue-700 text-primary-foreground'>
+												{chatbot?.avatarUrl ? (
+													<img src={chatbot.avatarUrl} alt='Bot Avatar' />
+												) : (
+													<Bot className='h-5 w-5' />
+												)}
+											</AvatarFallback>
+										</Avatar>
+									) : (
+										<Avatar className='h-10 w-10 border-2 border-muted'>
+											<AvatarFallback className='bg-muted'>
+												{user?.avatarUrl ? (
+													<img src={user.avatarUrl} alt='User Avatar' />
+												) : (
+													<User className='h-5 w-5' />
+												)}
 											</AvatarFallback>
 										</Avatar>
 									)}
 
-									<div className={`max-w-[85%] ${message.role === 'user' ? 'order-last' : ''}`}>
+									<div className='max-w-[85%]'>
 										<div
 											className={`rounded-2xl p-4 ${
 												message.role === 'user'
-													? 'ml-auto rounded-br-md bg-blue-600 text-primary-foreground'
+													? 'rounded-br-md bg-blue-600 text-primary-foreground'
 													: 'rounded-bl-md border bg-card shadow-sm'
 											}`}
 										>
@@ -736,7 +740,13 @@ export const AIAssistantPage = () => {
 												className={`text-sm leading-relaxed ${
 													message.role === 'user' ? 'text-white' : 'text-black'
 												}`}
-												dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
+												dangerouslySetInnerHTML={{
+													__html: renderMarkdown(
+														message.role === 'assistant'
+															? parseAgentResponse(message.content)
+															: message.content
+													)
+												}}
 											/>
 											{message.isStreaming && (
 												<span className='ml-1 inline-block h-4 w-2 animate-pulse bg-gray-400'></span>
@@ -749,6 +759,9 @@ export const AIAssistantPage = () => {
 												<div className='mb-2 text-sm font-medium text-gray-700'>
 													📚 Tìm thấy {message.topics.length} đề tài:
 												</div>
+												{message.topics.map((topic) => (
+													<TopicCard key={topic._id} topic={topic} />
+												))}
 											</div>
 										)}
 
@@ -779,21 +792,13 @@ export const AIAssistantPage = () => {
 											)}
 										</div>
 									</div>
-
-									{message.role === 'user' && (
-										<Avatar className='h-10 w-10 border-2 border-muted'>
-											<AvatarFallback className='bg-muted'>
-												<User className='h-5 w-5' />
-											</AvatarFallback>
-										</Avatar>
-									)}
 								</div>
 							))}
 
 							{isLoading && (
 								<div className='flex gap-4'>
 									<Avatar className='h-10 w-10 border-2 border-primary/20'>
-										<AvatarFallback className='bg-gradient-primary text-primary-foreground'>
+										<AvatarFallback className='bg-blue-700 text-primary-foreground'>
 											<Bot className='h-5 w-5' />
 										</AvatarFallback>
 									</Avatar>
@@ -822,7 +827,7 @@ export const AIAssistantPage = () => {
 				</div>
 
 				{/* Input */}
-				<div className='border-t bg-background p-4'>
+				<div className='border-t bg-background p-2'>
 					<div className='mx-auto max-w-4xl'>
 						<div className='flex items-end gap-3'>
 							<div className='flex-1'>
@@ -837,17 +842,17 @@ export const AIAssistantPage = () => {
 								/>
 							</div>
 							<div className='flex gap-2'>
-								<Button
+								{/* <Button
 									variant='outline'
 									size='icon'
 									className='h-12 w-12 rounded-xl'
 									title='Đính kèm file'
 								>
 									<Paperclip className='h-5 w-5' />
-								</Button>
+								</Button> */}
 								<Button
 									size='icon'
-									className='bg-gradient-primary hover:bg-gradient-primary/90 h-12 w-12 rounded-xl'
+									className='h-12 w-12 rounded-xl bg-blue-700 hover:bg-blue-600'
 									onClick={handleSend}
 									disabled={!inputValue.trim() || isLoading}
 									title='Gửi tin nhắn (Enter)'
@@ -857,12 +862,12 @@ export const AIAssistantPage = () => {
 							</div>
 						</div>
 
-						<div className='mt-3 flex items-center justify-between text-xs text-muted-foreground'>
+						<div className='mt-2 flex items-center justify-between text-xs text-muted-foreground'>
 							<div className='flex items-center gap-4'>
 								<span>💡 Nhấn Enter để gửi, Shift+Enter để xuống dòng</span>
-								<Badge variant='outline' className='text-xs'>
+								{/* <Badge variant='outline' className='text-xs'>
 									🔒 Chat được mã hóa và chỉ dùng cho mục đích học thuật
-								</Badge>
+								</Badge> */}
 							</div>
 							<span className={`${inputValue.length > 1800 ? 'text-red-500' : ''}`}>
 								{inputValue.length}/2000
@@ -884,6 +889,7 @@ export const AIAssistantPage = () => {
 					<AlertDialogFooter>
 						<AlertDialogCancel onClick={() => setChatToDelete(null)}>Hủy</AlertDialogCancel>
 						<AlertDialogAction onClick={confirmDeleteChat} className='bg-red-600 hover:bg-red-700'>
+							{isDeletingConversation && <Loader2 className='h-5 w-5' />}
 							Xóa
 						</AlertDialogAction>
 					</AlertDialogFooter>

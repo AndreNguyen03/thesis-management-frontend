@@ -42,7 +42,11 @@ export const chatbotConversationApi = baseApi.injectEndpoints({
 			query: ({ id, data }) => ({
 				url: `/chatbot/conversations/${id}/messages`,
 				method: 'POST',
-				body: data
+				body: {
+                    role: data.role,
+                    content: data.content,
+                    topics: data.topics
+                }
 			}),
 			transformResponse: (response: ApiResponse<ConversationMessage>) => response.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'ConversationsChatBot' }]

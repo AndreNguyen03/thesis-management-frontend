@@ -311,12 +311,12 @@ export const AgentChat: React.FC = () => {
 		return (
 			<div
 				className='mb-3 cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md'
-				onClick={() => navigate(`/detail-topic/${topic.id}`)}
+				onClick={() => navigate(`/detail-topic/${topic._id}`)}
 			>
 				<div className='mb-2 flex items-start justify-between'>
 					<div className='flex-1'>
 						<h3 className='text-base font-semibold leading-snug text-gray-800'>{topic.titleVN}</h3>
-						<p className='text-sm italic text-gray-500'>{topic.titleENG}</p>
+						<p className='text-sm italic text-gray-500'>{topic.titleEng}</p>
 					</div>
 					<span className='ml-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700'>
 						{topic.major}
@@ -435,7 +435,7 @@ export const AgentChat: React.FC = () => {
 										📚 Tìm thấy {message.topics.length} đề tài:
 									</div>
 									{message.topics.map((topic) => (
-										<TopicCard key={topic.id} topic={topic} />
+										<TopicCard key={topic._id} topic={topic} />
 									))}
 								</div>
 							)}

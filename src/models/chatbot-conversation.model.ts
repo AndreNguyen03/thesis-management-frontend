@@ -3,19 +3,8 @@ import type { GetMajorMiniDto } from './major.model'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { ResponseMiniLecturerDto } from './users'
 
-export interface TopicSnapshot {
-	_id: string
-	titleVN: string
-	titleEng: string
-	description: string
-	fields: GetFieldNameReponseDto[]
-	requirements: GetRequirementNameReponseDto[]
-	major: GetMajorMiniDto
-	lecturers: ResponseMiniLecturerDto[]
-	maxStudents: number
-	type: string
-}
 export interface ConversationMessage {
+	index?: string
 	id: string
 	role: 'user' | 'assistant'
 	content: string
@@ -30,11 +19,13 @@ export interface GetConversationsDto {
 	status: 'active' | 'archived'
 	lastMessageAt: Date
 }
-export interface TopicResult {
-	index: number
-	id: string
+export interface TopicResult extends TopicSnapshot {
+	index: string
+}
+export interface TopicSnapshot {
+	_id: string
 	titleVN: string
-	titleENG: string
+	titleEng: string
 	description: string
 	fields: string
 	requirements: string
@@ -42,9 +33,10 @@ export interface TopicResult {
 	lecturers: string
 	maxStudents: number
 	type: string
+	similarityScore: number
 }
 export interface AddMessgePayload {
-	role: 'user' | 'assistant'
+	role: string
 	content: string
 	topics?: TopicSnapshot[]
 }

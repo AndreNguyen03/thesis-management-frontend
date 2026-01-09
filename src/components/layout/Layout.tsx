@@ -7,6 +7,7 @@ import { Breadcrumbs } from '../ui/Breadcrumbs'
 import { BreadcrumbProvider } from '../../contexts/BreadcrumbContext'
 import { useAppSelector } from '../../store'
 import { AIAssistant } from '../ai-assistant/AIAssistant'
+import { useLocation } from 'react-router-dom'
 
 import type { AppUser } from '@/models'
 import { LoadingOverlay } from '../ui'
@@ -39,6 +40,8 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 	const sidebarWidth = isOpen ? 'w-56' : 'w-16'
 	const [openAI, setOpenAI] = useState(true)
 	const { hidden } = useBreadcrumb()
+	const location = useLocation()
+	const isAICurrentPage = location.pathname === '/ai-chat'
 	return (
 		<>
 			{/* Header fixed at top */}
@@ -84,7 +87,7 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 					</main>
 				</div>
 				{/* AI Assistant floating or fixed as needed */}
-				<AIAssistant open={openAI} onClose={() => setOpenAI(false)} />
+				{!isAICurrentPage && <AIAssistant open={openAI} onClose={() => setOpenAI(false)} />}
 			</div>
 		</>
 	)
