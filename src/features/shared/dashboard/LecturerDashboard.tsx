@@ -9,8 +9,12 @@ export function LecturerDashboard() {
 	const { data: milestoneEvents, isLoading: isLoadingMilestoneEvent } = useGetAllUserMilestonesQuery()
 	const { data, isLoading: isLoadingLecturerDashboard } = useGetLecturerDashboardQuery()
 
+    console.log('lecturer dashboard data', data)
+
 	const currentThesisDashboard = data?.thesis
 	const currentResearchDashboard = data?.scientificResearch
+
+    
 
 	if (isLoadingMilestoneEvent || isLoadingLecturerDashboard) {
 		return (
