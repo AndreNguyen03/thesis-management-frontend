@@ -1,69 +1,115 @@
-import { useState, useEffect } from 'react'
-import { X, Sparkles, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { X, Sparkles, Loader2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { RecommendationCard } from './RecommendationCard'
 import { FallbackState } from './FallbackState'
 import { useRecommendTopicInPeriodQuery } from '@/services/recommendApi'
-import type { FallbackTopic, RecommendTopic } from '@/models/recommend.model'
+import type { FallbackTopic, RecommendationResult, RecommendTopic } from '@/models/recommend.model'
+import { ConfirmRecommendModal } from '../topics/ConfirmRecommendModal'
+import { useCreateRegistrationMutation } from '@/services/registrationApi'
+import { toast } from '@/hooks/use-toast'
 
 interface RecommendationPanelProps {
 	isOpen: boolean
 	onClose: () => void
-	hasProfile: boolean
 	periodId: string
 }
 
-export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: RecommendationPanelProps) {
+export function RecommendationPanel({ isOpen, onClose, periodId }: RecommendationPanelProps) {
 	const [visibleCards, setVisibleCards] = useState<number[]>([])
 	const [isExpanded, setIsExpanded] = useState(false)
-	const [expandedVisibleCards, setExpandedVisibleCards] = useState<number[]>([])
+	// const [expandedVisibleCards, setExpandedVisibleCards] = useState<number[]>([])
+	const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+	const [isRegistering, setIsRegistering] = useState(false)
+	const [activeTab, setActiveTab] = useState('list')
+	const [selectedTopic, setSelectedTopic] = useState<RecommendTopic | FallbackTopic | null>(null)
 
+	const [createRegistration] = useCreateRegistrationMutation()
 	const {
-		data: recommendations = [],
+		data: recommendations,
 		isLoading: loadingRecommend,
 		isFetching,
 		isError
 	} = useRecommendTopicInPeriodQuery(periodId, {
-		skip: !isOpen
+		skip: !isOpen || !periodId
 	})
 
-	const recommendTopics = recommendations.filter((r) => r.type === 'recommend').map((r) => r.topic)
+	console.log('recommendations', recommendations)
 
-	const fallbackTopics = recommendations.filter((r) => r.type === 'fallback').map((r) => r.topic)
+	const recommendTopics = useMemo(() => {
+		return (
+			recommendations?.data
+				.filter((r) => r.type === 'recommend')
+				.map((r) => ({ ...r.topic, rank: r.rank, badges: r.badges, badgeSummary: r.badgeSummary })) ?? []
+		)
+	}, [recommendations?.data])
 
-	const hasRecommend = recommendTopics.length > 0
+	const fallbackTopics = useMemo(() => {
+		return (
+			recommendations?.data
+				.filter((r) => r.type === 'fallback')
+				.map((r) => ({ ...r.topic, rank: r.rank, badges: r.badges, badgeSummary: r.badgeSummary })) ?? []
+		)
+	}, [recommendations?.data])
 
-	const personalizedTopics = recommendTopics.slice(0, 3)
-	const allRecommendedTopics = recommendTopics
+	const hasRecommend = recommendTopics?.length ?? 0 > 0
+
+	const personalizedTopics = recommendTopics?.slice(0, 3)
+	// const allRecommendedTopics = recommendTopics
 
 	useEffect(() => {
-		if (!loadingRecommend && personalizedTopics.length > 0) {
+		if (!loadingRecommend && recommendTopics.length > 0) {
 			setVisibleCards([])
-			personalizedTopics.forEach((_, index) => {
+			recommendTopics.slice(0, 3).forEach((_, index) => {
 				setTimeout(() => {
 					setVisibleCards((prev) => [...prev, index])
 				}, index * 300)
 			})
 		}
-	}, [loadingRecommend, personalizedTopics])
+	}, [loadingRecommend, recommendTopics])
 
-	useEffect(() => {
-		if (isExpanded) {
-			setExpandedVisibleCards([])
-			allRecommendedTopics.forEach((_, index) => {
-				setTimeout(() => {
-					setExpandedVisibleCards((prev) => [...prev, index])
-				}, index * 100)
+	// useEffect(() => {
+	// 	if (isExpanded) {
+	// 		setExpandedVisibleCards([])
+	// 		allRecommendedTopics?.forEach((_, index) => {
+	// 			setTimeout(() => {
+	// 				setExpandedVisibleCards((prev) => [...prev, index])
+	// 			}, index * 100)
+	// 		})
+	// 	}
+	// }, [isExpanded, allRecommendedTopics])
+
+	const handleConfirmRegisterRecommend = async () => {
+		if (!selectedTopic?._id) return
+		setIsRegistering(true)
+
+		try {
+			await createRegistration({ topicId: selectedTopic._id }).unwrap()
+			setActiveTab('registered')
+			setIsConfirmOpen(false)
+		} catch (err: any) {
+			toast({
+				title: 'Không thể đăng ký',
+				description: err?.data?.message || 'Đăng ký thất bại',
+				variant: 'destructive'
 			})
+		} finally {
+			setIsRegistering(false)
 		}
-	}, [isExpanded, allRecommendedTopics])
-	const handleExpand = () => {
-		setIsExpanded(true)
 	}
+
+	const handleRegisterRecommendClick = (topic: RecommendTopic | FallbackTopic) => {
+        setSelectedTopic(topic)
+		setIsConfirmOpen(true)
+	}
+
+	// const handleExpand = () => {
+	// 	setIsExpanded(true)
+	// }
 
 	const handleCollapse = () => {
 		setIsExpanded(false)
-		setExpandedVisibleCards([])
+		// setExpandedVisibleCards([])
 	}
 
 	if (isError) {
@@ -95,8 +141,8 @@ export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: R
 							</h2>
 							<p className='text-xs text-muted-foreground'>
 								{isExpanded
-									? `${allRecommendedTopics.length} đề tài phù hợp với bạn`
-									: hasProfile
+									? `${recommendTopics?.length} đề tài phù hợp với bạn`
+									: hasRecommend
 										? 'Dựa trên hồ sơ của bạn'
 										: 'Đề tài phổ biến'}
 							</p>
@@ -110,80 +156,61 @@ export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: R
 				<div
 					className={`overflow-y-auto rounded-b-xl ${isExpanded ? 'h-[calc(100%-73px)]' : 'h-[calc(100%-73px)]'}`}
 				>
-					{isExpanded ? (
-						<div className='p-6'>
-							<div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
-								{(allRecommendedTopics as RecommendTopic[]).map((topic, index) => (
-									<div
-										key={index}
-										className={`transition-all duration-500 ease-out ${
-											expandedVisibleCards.includes(index)
-												? 'translate-y-0 opacity-100'
-												: 'translate-y-4 opacity-0'
-										}`}
-									>
-										{expandedVisibleCards.includes(index) && (
-											<RecommendationCard topic={topic} index={index} mode='recommend' />
-										)}
-									</div>
-								))}
-							</div>
-
-							{expandedVisibleCards.length === allRecommendedTopics.length && (
-								<p className='mt-6 border-t border-border pt-6 text-center text-xs text-muted-foreground duration-500 animate-in fade-in'>
-									Gợi ý dựa trên sở thích, kỹ năng và hành vi của sinh viên tương tự bạn
-								</p>
-							)}
+					{loadingRecommend || isFetching ? (
+						<div className='flex flex-col items-center justify-center gap-4 py-16'>
+							<Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
 						</div>
 					) : hasRecommend ? (
-						/* ================= RECOMMEND ================= */
 						<div className='space-y-4 p-6'>
-							{loadingRecommend || isFetching ? (
-								/* loading giữ nguyên */
-								<div className='flex flex-col items-center justify-center gap-4 py-16'>
-									<Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-								</div>
-							) : (
-								<>
-									{(personalizedTopics as RecommendTopic[]).map((topic, index) => (
-										<div
-											key={topic._id ?? index}
-											className={`transition-all duration-500 ease-out ${
-												visibleCards.includes(index)
-													? 'translate-x-0 opacity-100'
-													: 'translate-x-8 opacity-0'
-											}`}
-										>
-											{visibleCards.includes(index) && (
-												<RecommendationCard topic={topic} index={index} mode='recommend' />
-											)}
-										</div>
-									))}
+							{personalizedTopics?.map((topic, index) => {
+								const result: RecommendationResult = {
+									topic,
+									type: 'recommend',
+									rank: topic.rank,
+									badges: topic.badges,
+									badgeSummary: topic.badgeSummary
+								}
 
-									{visibleCards.length === personalizedTopics.length && (
-										<Button variant='outline' className='mt-4 w-full gap-2' onClick={handleExpand}>
-											<span>Xem tất cả gợi ý</span>
-											<ArrowRight className='h-4 w-4' />
-										</Button>
-									)}
-								</>
-							)}
+								return (
+									<div
+										key={topic._id}
+										className={`transition-all duration-500 ease-out ${
+											visibleCards.includes(index)
+												? 'translate-x-0 opacity-100'
+												: 'translate-x-8 opacity-0'
+										}`}
+									>
+										{visibleCards.includes(index) && (
+											<RecommendationCard onRegister={handleRegisterRecommendClick} result={result} index={index} />
+										)}
+									</div>
+								)
+							})}
 						</div>
 					) : (
 						/* ================= FALLBACK ================= */
 						<div className='space-y-6 p-6'>
 							<FallbackState />
+							{fallbackTopics?.map((topic, index) => {
+								const result: RecommendationResult = {
+									topic,
+									type: 'fallback',
+									rank: topic.rank,
+									badges: topic.badges,
+									badgeSummary: topic.badgeSummary
+								}
 
-							{(fallbackTopics as FallbackTopic[]).map((topic, index) => (
-								<RecommendationCard
-									key={topic._id ?? index}
-									topic={topic}
-									index={index}
-									mode='fallback' // ✅ có badge + rank
-								/>
-							))}
+								return (
+									<RecommendationCard
+										onRegister={handleRegisterRecommendClick}
+										key={topic._id}
+										result={result}
+										index={index}
+									/>
+								)
+							})}
 
-							{!hasProfile && (
+							{!hasRecommend && (
 								<p className='border-t border-border pt-4 text-center text-xs text-muted-foreground'>
 									Cập nhật hồ sơ để nhận gợi ý được cá nhân hóa
 								</p>
@@ -192,6 +219,15 @@ export function RecommendationPanel({ isOpen, onClose, hasProfile, periodId }: R
 					)}
 				</div>
 			</div>
+
+			<ConfirmRecommendModal
+				isOpen={isConfirmOpen}
+				topicTitle={selectedTopic?.titleVN || ''}
+				topicCreateByInfo={selectedTopic?.createByInfo.fullName || ''}
+				onConfirm={handleConfirmRegisterRecommend}
+				onClose={() => setIsConfirmOpen(false)}
+				isLoading={isRegistering}
+			/>
 		</>
 	)
 }

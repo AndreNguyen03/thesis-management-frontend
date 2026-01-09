@@ -5,6 +5,7 @@ import { Users, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { TopicStatus, type GeneralTopic } from '@/models'
+import { RegistrationStatus } from '../../TopicList/utils/registration'
 
 interface TopicListItemProps {
 	topic: GeneralTopic
@@ -12,17 +13,10 @@ interface TopicListItemProps {
 	onRegister: () => void
 	isRegistering?: boolean
 	disabled?: boolean
-	isRegistered?: boolean
+	onUnregister: (topic: GeneralTopic) => void
 }
 
-export function TopicListItem({
-	topic,
-	onClick,
-	onRegister,
-	isRegistering,
-	disabled,
-	isRegistered
-}: TopicListItemProps) {
+export function TopicListItem({ onUnregister, topic, onClick, onRegister, isRegistering }: TopicListItemProps) {
 	const navigate = useNavigate()
 
 	// ===== MAIN LECTURER: Always use createByInfo as main lecturer =====
@@ -37,7 +31,9 @@ export function TopicListItem({
 
 	const slotColor = topic.currentStatus === TopicStatus.FULL ? 'text-destructive' : 'text-success'
 
-	const isButtonDisabled = topic.currentStatus === TopicStatus.FULL || isRegistering || disabled
+	const isRegistered = topic.userRegistrationStatus === RegistrationStatus.APPROVED
+	const isPending = topic.userRegistrationStatus === RegistrationStatus.PENDING
+	const isSlotFull = topic.studentsNum === topic.maxStudents
 
 	const getButtonContent = () => {
 		if (isRegistering) {
@@ -51,7 +47,16 @@ export function TopicListItem({
 				</>
 			)
 		}
-		if (topic.studentsNum === topic.maxStudents) {
+
+		if (isPending) {
+			return (
+				<>
+					<CheckCircle2 className='mr-1 h-4 w-4' />
+					Hủy đăng kí
+				</>
+			)
+		}
+		if (isSlotFull) {
 			return 'Hết slot'
 		}
 		return 'Đăng ký'
@@ -121,11 +126,7 @@ export function TopicListItem({
 
 			{/* Slots */}
 			<div className={cn('flex items-center gap-1.5 text-xs', slotColor)}>
-				{topic.studentsNum === topic.maxStudents ? (
-					<AlertTriangle className='h-3 w-3' />
-				) : (
-					<Users className='h-3 w-3' />
-				)}
+				{isSlotFull ? <AlertTriangle className='h-3 w-3' /> : <Users className='h-3 w-3' />}
 				<span className='whitespace-nowrap font-medium'>
 					{topic.studentsNum}/{topic.maxStudents}
 				</span>
@@ -135,14 +136,14 @@ export function TopicListItem({
 			<Button
 				size='sm'
 				variant={isRegistered ? 'secondary' : 'default'}
-				disabled={isButtonDisabled}
 				onClick={(e) => {
 					e.stopPropagation()
 					if (!isRegistered) onRegister()
+					if (isPending) onUnregister(topic)
 				}}
 				className={cn(
 					'min-w-[80px]',
-					(topic.studentsNum === topic.maxStudents || disabled) && 'opacity-50',
+					isSlotFull && 'opacity-50',
 					isRegistered && 'border-success/30 bg-success/10 text-success hover:bg-success/20'
 				)}
 			>

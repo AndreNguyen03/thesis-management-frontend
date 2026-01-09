@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { List, FileCheck } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { usePageBreadcrumb } from '@/hooks'
@@ -16,11 +15,10 @@ import {
 import type {
 	GeneralTopic,
 	GetFieldNameReponseDto,
-	ITopicDetail,
 	PaginationTopicsRegistrationQueryParams,
 	ResponseMiniLecturerDto
 } from '@/models'
-import { PeriodPhaseName, type GetCurrentPeriod } from '@/models/period.model'
+import { type GetCurrentPeriod } from '@/models/period.model'
 import { getPeriodTitle } from '@/utils/utils'
 import { useCreateRegistrationMutation, useLeaveTopicMutation } from '@/services/registrationApi'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -30,14 +28,12 @@ import { SkeletonLoader } from '../topics/SkeletonLoader'
 import { TopicListItem } from '../topics/TopicListItem'
 import { EmptyState } from '../topics/EmptyState'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { RegisteredTopicCard } from '../topics/RegisteredTopicCard'
-import { NoRegistrationCard } from '../topics/NoRegistrationCard'
 import { ConfirmModal } from '../topics/ConfirmModal'
 import { CancelConfirmModal } from '../topics/CancelConfirmModal'
 import { PeriodHeaderSkeleton } from './PeriodHeaderSkeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAdvanceSearchRegisteringTopicsQuery } from '@/services/topicVectorApi'
-import { useGetRegisteredTopicQuery, useLazyGetTopicByIdQuery } from '@/services/topicApi'
+// import {  useLazyGetTopicByIdQuery } from '@/services/topicApi'
 import RegistrationHistory from '../../TopicList/registered/children/RegistrationHistory'
 import { RecommendationPanel } from '../recommendation/RecommendationPanel'
 import { RecommendationButton } from '../recommendation/RecommendationButton'
@@ -74,12 +70,10 @@ export default function TopicRegistration() {
 		queries: queryParams
 	})
 	const navigate = useNavigate()
-	const [triggerGetTopicDetail] = useLazyGetTopicByIdQuery()
+	// const [triggerGetTopicDetail] = useLazyGetTopicByIdQuery()
 	// ------------------ OTHER STATES ------------------
-	const [selectedTopic, setSelectedTopic] = useState<ITopicDetail | null>(null)
-	const [isPanelOpen, setIsPanelOpen] = useState(false)
+	const [selectedTopic, setSelectedTopic] = useState<GeneralTopic | null>(null)
 	const [isRecommendOpen, setIsRecommendOpen] = useState(false)
-	const [hasProfile, setHasProfile] = useState(true)
 	const [activeTab, setActiveTab] = useState('list')
 	const [topicToRegister, setTopicToRegister] = useState<GeneralTopic | null>(null)
 	const [selectedFields, setSelectedFields] = useState<GetFieldNameReponseDto[]>([])
@@ -92,13 +86,14 @@ export default function TopicRegistration() {
 	const [createRegistration] = useCreateRegistrationMutation()
 	const [leaveTopic] = useLeaveTopicMutation()
 
-	const { data: registeredPaginated } = useGetRegisteredTopicQuery({
-		queries: {
-			page: 1,
-			limit: 1
-		}
-	})
-	const registeredTopic = registeredPaginated?.data?.[0] ?? null
+	// const { data: registeredPaginated } = useGetRegisteredTopicQuery({
+	// 	queries: {
+	// 		page: 1,
+	// 		limit: 1
+	// 	}
+	// })
+
+	// const registeredTopic = registeredPaginated?.data?.[0] ?? null
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng kí đề tài' }])
 
 	// ------------------ HANDLERS ------------------`
@@ -122,14 +117,6 @@ export default function TopicRegistration() {
 	}
 
 	const handleRegisterClick = (topic: GeneralTopic) => {
-		if (registeredTopic) {
-			toast({
-				title: 'Bạn đã đăng ký đề tài',
-				description: 'Hãy hủy đề tài hiện tại trước.',
-				variant: 'destructive'
-			})
-			return
-		}
 		setTopicToRegister(topic)
 		setIsConfirmOpen(true)
 	}
@@ -142,7 +129,6 @@ export default function TopicRegistration() {
 			await createRegistration({ topicId: topicToRegister._id }).unwrap()
 			setActiveTab('registered')
 			setIsConfirmOpen(false)
-			setIsPanelOpen(false)
 		} catch (err: any) {
 			toast({
 				title: 'Không thể đăng ký',
@@ -154,12 +140,16 @@ export default function TopicRegistration() {
 		}
 	}
 
+    const handleOpenCancelModal = (topic: GeneralTopic) => {
+        setSelectedTopic(topic)
+        setIsCancelModalOpen(true)
+    }
+
 	const handleCancelRegistration = async () => {
-		if (!registeredTopic) return
 		setIsCancelling(true)
 
 		try {
-			await leaveTopic({ topicId: registeredTopic._id }).unwrap()
+			await leaveTopic({ topicId: selectedTopic!._id }).unwrap()
 			setActiveTab('list')
 			setIsCancelModalOpen(false)
 		} catch (err: any) {
@@ -174,18 +164,15 @@ export default function TopicRegistration() {
 	}
 
 	const handleViewTopic = async (_id: string) => {
-		setIsPanelOpen(true)
 		navigate(`/detail-topic/${_id}`)
 		//const { data } = await triggerGetTopicDetail({ id: _id })
 		// if (data) setSelectedTopic(data)
 	}
 
 	// ------------------ UI ------------------
-	const canRegister = period?.currentPhaseDetail?.phase === PeriodPhaseName.OPEN_REGISTRATION && !registeredTopic
-
-    if (!period || isLoadingTopics) {
-        return <TopicRegistrationSkeleton />
-    }
+	if (!period || isLoadingTopics) {
+		return <TopicRegistrationSkeleton />
+	}
 
 	return (
 		<div className='max-h-[calc(100vh)] w-full overflow-y-auto bg-background'>
@@ -213,7 +200,6 @@ export default function TopicRegistration() {
 							</TabsTrigger>
 							<TabsTrigger value='registered'>
 								<FileCheck className='mr-1 h-4 w-4' /> Đã đăng ký
-								{registeredTopic && <Badge className='ml-1 h-4 px-1 text-[10px]'>1</Badge>}
 							</TabsTrigger>
 						</TabsList>
 					</Tabs>
@@ -262,8 +248,7 @@ export default function TopicRegistration() {
 										}
 										onRegister={() => handleRegisterClick(topic)}
 										isRegistering={isRegistering && topicToRegister?._id === topic._id}
-										disabled={!canRegister}
-										isRegistered={registeredTopic?._id === topic._id}
+                                        onUnregister={() => handleOpenCancelModal(topic)}
 									/>
 								))}
 							</div>
@@ -394,7 +379,7 @@ export default function TopicRegistration() {
 			/>
 
 			<CancelConfirmModal
-				registeredTopic={registeredTopic}
+				registeredTopic={selectedTopic}
 				isOpen={isCancelModalOpen}
 				onConfirm={handleCancelRegistration}
 				onClose={() => setIsCancelModalOpen(false)}
@@ -405,8 +390,7 @@ export default function TopicRegistration() {
 			<RecommendationPanel
 				isOpen={isRecommendOpen}
 				onClose={() => setIsRecommendOpen(false)}
-				hasProfile={hasProfile}
-                periodId={id!}
+				periodId={id!}
 			/>
 
 			{/* Floating Button */}
@@ -414,7 +398,3 @@ export default function TopicRegistration() {
 		</div>
 	)
 }
-
-// ---------------------------------------------------------------
-// MOCK FILTER (bạn thay bằng API thật)
-// ---------------------------------------------------------------

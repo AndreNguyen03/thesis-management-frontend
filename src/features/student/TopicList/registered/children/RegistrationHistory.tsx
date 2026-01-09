@@ -56,6 +56,7 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 		}))
 	}
 	return (
+        <>
 		<Card className='w-full space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
 			{!periodId && (
 				<div className='w-fit'>
@@ -167,6 +168,7 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 				/>
 			)}
 		</Card>
+        </>
 	)
 }
 

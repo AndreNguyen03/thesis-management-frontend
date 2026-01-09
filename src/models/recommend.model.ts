@@ -1,5 +1,3 @@
-import type { ResponseMiniLecturerDto } from './users'
-
 export interface Badge {
 	type: string
 	label: string
@@ -9,13 +7,26 @@ export interface Badge {
 	priority: number
 }
 
+export interface ResponseMiniLecturerDto {
+	_id: string
+	fullName: string
+	email?: string
+	phone?: string
+	avatarUrl?: string
+	avatarName?: string
+}
+
 export interface RecommendTopic {
 	_id: string
 	titleVN: string
+	titleEng?: string
+	description?: string
+	type?: string // scientific_research | ...
 	currentStatus: string
 	studentsNum: number
 	maxStudents: number
 	score: number
+	semanticScore?: number
 	major: {
 		_id: string
 		name: string
@@ -29,6 +40,7 @@ export interface RecommendTopic {
 	requirements: {
 		_id: string
 		name: string
+		slug?: string
 	}[]
 	lecturers: ResponseMiniLecturerDto[]
 	createByInfo: ResponseMiniLecturerDto
@@ -37,19 +49,17 @@ export interface RecommendTopic {
 export interface FallbackTopic {
 	_id: string
 	titleVN: string
-	titleEng: string
-	description: string
-	type: string // TopicType
+	titleEng?: string
+	description?: string
+	type: string
 	majorId: string
-	maxStudents: number
-	currentStatus: string // TopicStatus
-	currentPhase: string // PeriodPhaseName
+	currentStatus: string
+	currentPhase?: string
 	studentsNum: number
-	allowManualApproval: boolean
-	// Lecturer interests (populated)
-	areaInterest: string[]
-	researchInterests: string[]
-	// Populated arrays
+	maxStudents: number
+	allowManualApproval?: boolean
+	areaInterest?: string[]
+	researchInterests?: string[]
 	fields: {
 		_id: string
 		name: string
@@ -59,15 +69,29 @@ export interface FallbackTopic {
 		_id: string
 		name: string
 	}[]
-	updatedAt: Date
+	updatedAt?: Date
 	lecturers: ResponseMiniLecturerDto[]
 	createByInfo: ResponseMiniLecturerDto
+	semanticScore?: number
 }
 
 export interface RecommendationResult {
 	topic: RecommendTopic | FallbackTopic
-	type: 'fallback' | 'recommend'
+	semanticScore?: number
+	type: 'recommend' | 'fallback'
 	badges?: Badge[]
 	badgeSummary?: string
 	rank?: number
+}
+
+export interface RecommendationResultData {
+	statusCode: number
+	message: string
+	data: RecommendationResult[]
+	metadata: {
+		processingTime: number
+		profileStatus: string
+		recommendationsCount: number
+		totalTopics: number
+	}
 }
