@@ -207,10 +207,10 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 				const formData = new FormData()
 				formData.append('content', editContent)
 
-				// Add existing files that weren't removed
-				existingFiles.forEach((file) => {
-					formData.append('existingFiles', JSON.stringify(file))
-				})
+				// Add existing files as a single JSON array
+				if (existingFiles.length > 0) {
+					formData.append('existingFiles', JSON.stringify(existingFiles))
+				}
 
 				// Add new files
 				editingFiles.forEach((file) => {
@@ -307,7 +307,7 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 	const removeExistingFile = (index: number) => {
 		setExistingFiles((prev) => prev.filter((_, i) => i !== index))
 	}
-console.log('comments', comments)
+	console.log('comments', comments)
 	return (
 		<div className='space-y-4 p-1'>
 			{/* Add Comment */}
@@ -403,12 +403,37 @@ console.log('comments', comments)
 								{/* Comment Content */}
 								<div className='flex-1 space-y-1'>
 									<div className='flex items-center gap-2'>
-										<span className='text-sm font-medium'>{comment.user?.fullName}</span>
-										<span className='text-xs text-muted-foreground'>
-											{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-										</span>
-										{comment.editedAt && (
-											<span className='text-xs italic text-muted-foreground'>(edited)</span>
+										<div className='flex items-center gap-2'>
+											<span className='text-sm font-medium'>{comment.user?.fullName}</span>
+											<span className='text-xs text-muted-foreground'>
+												{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+											</span>
+											{comment.editedAt && (
+												<span className='text-xs italic text-muted-foreground'>(Đã chỉnh sửa)</span>
+											)}
+										</div>
+										{/* Actions (only for comment owner) */}
+										{comment.user?._id === currentUserId && (
+											<div className='flex gap-2 opacity-0 transition-opacity group-hover:opacity-100'>
+												<Button
+													variant='ghost'
+													size='sm'
+													onClick={() => startEdit(comment)}
+													className='h-7 text-xs'
+												>
+													<Edit2 className='mr-1 h-3 w-3' />
+													Sửa
+												</Button>
+												<Button
+													variant='ghost'
+													size='sm'
+													onClick={() => setDeleteCommentId(comment._id)}
+													className='h-7 text-xs text-destructive hover:text-destructive'
+												>
+													<Trash2 className='mr-1 h-3 w-3' />
+													Xóa
+												</Button>
+											</div>
 										)}
 									</div>
 
@@ -514,14 +539,10 @@ console.log('comments', comments)
 										<>
 											<p className='whitespace-pre-wrap text-sm'>{comment.content}</p>
 
-											{console.log('Full comment object:', JSON.stringify(comment, null, 2))}
-											{console.log('comment.files:', comment.files)}
-											{console.log('Has files?', !!comment.files, 'Length:', comment.files?.length)}
+											{console.log('Render file for comment', comment._id, comment.files)}
 											{/* Attached Files */}
 											{comment.files && comment.files.length > 0 && (
-												
 												<div className='mt-2 space-y-1'>
-
 													{comment.files.map((file, idx) => (
 														<div
 															key={idx}
@@ -545,30 +566,6 @@ console.log('comments', comments)
 															</Button>
 														</div>
 													))}
-												</div>
-											)}
-
-											{/* Actions (only for comment owner) */}
-											{comment.user?._id === currentUserId && (
-												<div className='flex gap-2 opacity-0 transition-opacity group-hover:opacity-100'>
-													<Button
-														variant='ghost'
-														size='sm'
-														onClick={() => startEdit(comment)}
-														className='h-7 text-xs'
-													>
-														<Edit2 className='mr-1 h-3 w-3' />
-														Edit
-													</Button>
-													<Button
-														variant='ghost'
-														size='sm'
-														onClick={() => setDeleteCommentId(comment._id)}
-														className='h-7 text-xs text-destructive hover:text-destructive'
-													>
-														<Trash2 className='mr-1 h-3 w-3' />
-														Delete
-													</Button>
 												</div>
 											)}
 										</>
