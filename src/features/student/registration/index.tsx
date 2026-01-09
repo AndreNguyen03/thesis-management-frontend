@@ -13,7 +13,7 @@ export const RegistrationPeriodsPage = () => {
 	const user = useAppSelector((state) => state.auth.user)
 	// 👉 LẤY DATA TỪ RTK QUERY (CACHE)
 	const { data: periods = [], isLoading, isFetching } = useGetCurrentPeriodsQuery()
-	const [isRecommendOpen, setIsRecommendOpen] = useState(false)
+	// const [isRecommendOpen, setIsRecommendOpen] = useState(false)
 	// ⛔ chưa có data thì không xử lý gì hết
 	if (isLoading) {
 		return <LoadingOverlay />
@@ -116,7 +116,7 @@ export const RegistrationPeriodsPage = () => {
 						</div>
 					)}
 				</div>
-				{/* Recommendation Panel */}
+				{/* Recommendation Panel
 				<RecommendationPanel
 					isOpen={isRecommendOpen}
 					onClose={() => setIsRecommendOpen(false)}
@@ -124,7 +124,7 @@ export const RegistrationPeriodsPage = () => {
 				/>
 
 				{/* Floating Button */}
-				<RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} />
+				{/* <RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} /> */} 
 			</div>
 		</div>
 	)

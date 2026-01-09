@@ -56,7 +56,7 @@ export function ManageApproveRegistration() {
 	}, [allMiniPeriodInfo, periodId])
 
 	// readonly neu la ky hien tai khong phai la dang ki hoặc là khác kì hiện tại
-	const isReadOnly = currentPeriod?.[0].currentPhaseDetail.phase !== PeriodPhaseName.OPEN_REGISTRATION || periodId !== currentPeriod?.[0]._id
+	const isReadOnly = false
 
     // readonly dung de test
 	// const isReadOnly = false
