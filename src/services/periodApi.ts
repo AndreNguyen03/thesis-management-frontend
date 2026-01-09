@@ -158,7 +158,7 @@ export const periodApi = baseApi.injectEndpoints({
 		}),
 		resolvePhase: builder.mutation<
 			Phase1Response | Phase2Response | Phase3Response,
-			{ periodId: string; phase: string; phaseId: string }
+			{ periodId: string; phase: string; phaseId?: string }
 		>({
 			query: ({ periodId, phase, phaseId }) => ({
 				url: `/periods/${periodId}/phases/${phase}/resolve`,

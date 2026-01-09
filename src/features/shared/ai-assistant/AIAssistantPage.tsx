@@ -518,7 +518,7 @@ export const AIAssistantPage = () => {
 	}
 
 	return (
-		<div className='flex h-full w-full'>
+		<div className='flex h-full w-full pt-6'>
 			{/* Sidebar lịch sử */}
 			{showSidebar && (
 				<div className='flex w-80 flex-col border-r bg-muted/30'>

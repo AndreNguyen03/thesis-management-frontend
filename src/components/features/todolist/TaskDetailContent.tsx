@@ -1,0 +1,195 @@
+import { useState } from 'react'
+import type { TaskDetail, TaskPriority } from '@/models/task-detail.model'
+import { Button } from '@/components/ui/Button'
+import { X, User, Tag, Calendar, AlertCircle, Clock } from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { format } from 'date-fns'
+import { TaskDescription } from './TaskDescription'
+import { TaskComments } from './TaskComments'
+import { TaskActivity } from './TaskActivity'
+import { TaskAssignees } from './TaskAssignees'
+import { TaskPrioritySelect } from './TaskPrioritySelect'
+import { TaskLabels } from './TaskLabels'
+import { TaskDueDate } from './TaskDueDate'
+
+interface TaskDetailContentProps {
+	task: TaskDetail
+	onClose: () => void
+}
+
+export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => {
+	const [activeTab, setActiveTab] = useState('comments')
+
+	const getStatusColor = (status: string) => {
+		switch (status) {
+			case 'Todo':
+				return 'bg-slate-500'
+			case 'In Progress':
+				return 'bg-blue-500'
+			case 'Done':
+				return 'bg-green-500'
+			default:
+				return 'bg-gray-500'
+		}
+	}
+
+	const getPriorityIcon = (priority: TaskPriority) => {
+		switch (priority) {
+			case 'Highest':
+			case 'High':
+				return <AlertCircle className='h-4 w-4 text-red-500' />
+			case 'Medium':
+				return <AlertCircle className='h-4 w-4 text-orange-500' />
+			default:
+				return <AlertCircle className='h-4 w-4 text-green-500' />
+		}
+	}
+
+	return (
+		<div className='flex h-[90vh] flex-col'>
+			{/* Header */}
+			<div className='flex items-center justify-between border-b p-6'>
+				<div className='flex flex-1 items-center gap-3'>
+					<Badge className={`${getStatusColor(task.status)} text-white`}>{task.status}</Badge>
+					<h2 className='truncate text-xl font-semibold'>{task.title}</h2>
+				</div>
+				<Button variant='ghost' size='icon' onClick={onClose}>
+					<X className='h-5 w-5' />
+				</Button>
+			</div>
+
+			{/* Main Content - Two Columns */}
+			<div className='flex flex-1 overflow-hidden'>
+				{/* Left Column - Main Content */}
+				<ScrollArea className='flex-1 p-6'>
+					<div className='max-w-3xl space-y-6'>
+						{/* Description Section */}
+						<TaskDescription taskId={task._id} initialDescription={task.description} />
+
+						<Separator />
+
+						{/* Activity & Comments Tabs */}
+						<Tabs value={activeTab} onValueChange={setActiveTab}>
+							<TabsList className='grid w-full grid-cols-2 gap-5'>
+								<TabsTrigger
+									value='comments'
+									className='data-[state=active]:bg-blue-700 data-[state=active]:text-white'
+								>
+									Comments ({task.comments?.length || 0})
+								</TabsTrigger>
+								<TabsTrigger
+									value='activity'
+									className='data-[state=active]:bg-blue-700 data-[state=active]:text-white'
+								>
+									Activity ({task.activities?.length || 0})
+								</TabsTrigger>
+							</TabsList>
+
+							<TabsContent value='comments' className='active[ mt-4'>
+								<TaskComments taskId={task._id} comments={task.comments || []} task={task} />
+							</TabsContent>
+
+							<TabsContent value='activity' className='mt-4'>
+								<TaskActivity activities={task.activities || []} />
+							</TabsContent>
+						</Tabs>
+					</div>
+				</ScrollArea>
+
+				{/* Right Sidebar - Details Panel (giống Jira) */}
+				<div className='w-80 overflow-y-auto border-l bg-slate-50/50 p-6'>
+					<div className='space-y-6'>
+						{/* Assignees */}
+						<div>
+							<div className='mb-2 flex items-center gap-2'>
+								<User className='h-4 w-4 text-muted-foreground' />
+								<span className='text-sm font-medium text-muted-foreground'>Assignees</span>
+							</div>
+							<TaskAssignees taskId={task._id} groupId={task.groupId} assignees={task.assignees || []} />
+						</div>
+
+						<Separator />
+
+						{/* Reporter */}
+						<div>
+							<div className='mb-2 flex items-center gap-2'>
+								<User className='h-4 w-4 text-muted-foreground' />
+								<span className='text-sm font-medium text-muted-foreground'>Reporter</span>
+							</div>
+							<div className='flex items-center gap-2'>
+								{task.reporter?.avatarUrl ? (
+									<img
+										src={task.reporter.avatarUrl}
+										alt={task.reporter.fullName}
+										className='h-8 w-8 rounded-full'
+									/>
+								) : (
+									<div className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10'>
+										<span className='text-xs font-medium'>
+											{task.reporter?.fullName?.charAt(0) || 'U'}
+										</span>
+									</div>
+								)}
+								<div className='text-sm'>
+									<div className='font-medium'>{task.reporter?.fullName || 'Unknown'}</div>
+									<div className='text-xs text-muted-foreground'>{task.reporter?.email}</div>
+								</div>
+							</div>
+						</div>
+
+						<Separator />
+
+						{/* Priority */}
+						<div>
+							<div className='mb-2 flex items-center gap-2'>
+								{getPriorityIcon(task.priority)}
+								<span className='text-sm font-medium text-muted-foreground'>Priority</span>
+							</div>
+							<TaskPrioritySelect taskId={task._id} currentPriority={task.priority} />
+						</div>
+
+						<Separator />
+
+						{/* Labels */}
+						<div>
+							<div className='mb-2 flex items-center gap-2'>
+								<Tag className='h-4 w-4 text-muted-foreground' />
+								<span className='text-sm font-medium text-muted-foreground'>Labels</span>
+							</div>
+							<TaskLabels taskId={task._id} labels={task.labels || []} />
+						</div>
+
+						<Separator />
+
+						{/* Due Date */}
+						<div>
+							<div className='mb-2 flex items-center gap-2'>
+								<Calendar className='h-4 w-4 text-muted-foreground' />
+								<span className='text-sm font-medium text-muted-foreground'>Due Date</span>
+							</div>
+							<TaskDueDate taskId={task._id} dueDate={task.dueDate} />
+						</div>
+
+						<Separator />
+
+						{/* Timestamps */}
+						<div className='space-y-2 text-xs text-muted-foreground'>
+							<div className='flex items-center gap-2'>
+								<Clock className='h-3 w-3' />
+								<span>Created {format(new Date(task.created_at), 'PPp')}</span>
+							</div>
+							<div className='flex items-center gap-2'>
+								<Clock className='h-3 w-3' />
+								<span>Updated {format(new Date(task.updated_at), 'PPp')}</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}

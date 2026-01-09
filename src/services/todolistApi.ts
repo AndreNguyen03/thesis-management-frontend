@@ -1,6 +1,16 @@
 import type { CreateTaskPayload, RequestUpdate, Subtask, Task, TaskColumn } from '@/models/todolist.model'
+
 import { baseApi, type ApiResponse } from './baseApi'
 import { waitForSocket } from '@/utils/socket-client'
+import type {
+	AddCommentPayload,
+	AssignUsersPayload,
+	TaskComment,
+	TaskDetail,
+	UpdateCommentPayload,
+	UpdateDescriptionPayload,
+	UpdateTaskDetailPayload
+} from '@/models/task-detail.model'
 export const taskApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getStask: builder.query<Task[], { groupId: string; milestoneId?: string }>({
@@ -114,6 +124,102 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
 			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
+		}),
+
+		// ==================== JIRA-LIKE FEATURES ====================
+
+		// Lấy chi tiết task
+		getTaskDetail: builder.query<TaskDetail, string>({
+			query: (taskId) => ({
+				url: `/tasks/${taskId}/detail`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<TaskDetail>) => response.data,
+			providesTags: (_result, _error, taskId) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Cập nhật thông tin chi tiết task
+		updateTaskDetails: builder.mutation<TaskDetail, { taskId: string; updates: UpdateTaskDetailPayload }>({
+			query: ({ taskId, updates }) => ({
+				url: `/tasks/${taskId}/detail`,
+				method: 'PATCH',
+				body: updates
+			}),
+			transformResponse: (response: ApiResponse<TaskDetail>) => response.data,
+			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Thêm comment
+		addComment: builder.mutation<TaskComment, { taskId: string; payload: AddCommentPayload }>({
+			query: ({ taskId, payload }) => ({
+				url: `/tasks/${taskId}/comments`,
+				method: 'POST',
+				body: payload
+			}),
+			transformResponse: (response: ApiResponse<TaskComment>) => response.data,
+			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Thêm comment với files
+		addCommentWithFiles: builder.mutation<TaskComment, { taskId: string; formData: FormData }>({
+			query: ({ taskId, formData }) => ({
+				url: `/tasks/${taskId}/comments`,
+				method: 'POST',
+				body: formData
+			}),
+			transformResponse: (response: ApiResponse<TaskComment>) => response.data,
+			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Cập nhật comment
+		updateComment: builder.mutation<void, { taskId: string; commentId: string; payload: UpdateCommentPayload }>({
+			query: ({ taskId, commentId, payload }) => ({
+				url: `/tasks/${taskId}/comments/${commentId}`,
+				method: 'PATCH',
+				body: payload
+			}),
+			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Cập nhật comment với files
+		updateCommentWithFiles: builder.mutation<void, { taskId: string; commentId: string; formData: FormData }>({
+			query: ({ taskId, commentId, formData }) => ({
+				url: `/tasks/${taskId}/comments/${commentId}`,
+				method: 'PATCH',
+				body: formData
+			}),
+			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Xóa comment
+		deleteComment: builder.mutation<void, { taskId: string; commentId: string }>({
+			query: ({ taskId, commentId }) => ({
+				url: `/tasks/${taskId}/comments/${commentId}`,
+				method: 'DELETE'
+			}),
+			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Assign users
+		assignUsers: builder.mutation<TaskDetail, { taskId: string; payload: AssignUsersPayload }>({
+			query: ({ taskId, payload }) => ({
+				url: `/tasks/${taskId}/assignees`,
+				method: 'PATCH',
+				body: payload
+			}),
+			transformResponse: (response: ApiResponse<TaskDetail>) => response.data,
+			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Cập nhật description
+		updateDescription: builder.mutation<TaskDetail, { taskId: string; payload: UpdateDescriptionPayload }>({
+			query: ({ taskId, payload }) => ({
+				url: `/tasks/${taskId}/description`,
+				method: 'PATCH',
+				body: payload
+			}),
+			transformResponse: (response: ApiResponse<TaskDetail>) => response.data,
+			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
 		})
 	})
 })
@@ -129,5 +235,15 @@ export const {
 	useMoveInColumnMutation,
 	useMoveToNewColumnMutation,
 	useUpdateTaskStatusMutation,
-	useUpdateTaskMilestoneMutation
+	useUpdateTaskMilestoneMutation,
+	// Jira-like hooks
+	useGetTaskDetailQuery,
+	useUpdateTaskDetailsMutation,
+	useAddCommentMutation,
+	useAddCommentWithFilesMutation,
+	useUpdateCommentMutation,
+	useUpdateCommentWithFilesMutation,
+	useDeleteCommentMutation,
+	useAssignUsersMutation,
+	useUpdateDescriptionMutation
 } = taskApi

@@ -364,12 +364,42 @@ export const getPhaseStatus = (phase: GetCurrentPeriod['currentPhaseDetail']['ph
 			}
 	}
 }
+export const definePhase = (phase: PhaseType): { previous: string | null; next: string | null } => {
+	switch (phase) {
+		case PeriodPhaseName.SUBMIT_TOPIC:
+			return {
+				previous: null,
+				next: PeriodPhaseName.OPEN_REGISTRATION
+			}
+		case PeriodPhaseName.OPEN_REGISTRATION:
+			return {
+				previous: PeriodPhaseName.SUBMIT_TOPIC,
+				next: PeriodPhaseName.EXECUTION
+			}
+		case PeriodPhaseName.EXECUTION:
+			return {
+				previous: PeriodPhaseName.OPEN_REGISTRATION,
+				next: PeriodPhaseName.COMPLETION
+			}
+		case PeriodPhaseName.COMPLETION:
+			return {
+				previous: PeriodPhaseName.EXECUTION,
+				next: null
+			}
+		case PeriodPhaseName.EMPTY:
+		default:
+			return {
+				previous: PeriodPhaseName.EXECUTION,
+				next: null
+			}
+	}
+}
 
 // Badge màu cho trạng thái
 export const statusMap: Record<string, { label: string; color: string }> = {
 	timeout: { label: 'Hết hạn', color: 'text-center bg-gray-100 text-gray-700' },
 	completed: { label: 'Hoàn thành', color: 'text-center bg-blue-100 text-blue-700' },
-	"un-configured": { label: 'Chưa thiết lập', color: 'text-center bg-gray-100 text-gray-700' },
+	'un-configured': { label: 'Chưa thiết lập', color: 'text-center bg-gray-100 text-gray-700' },
 	active: { label: 'Đang diễn ra', color: 'text-center bg-green-100 text-green-700' },
 	pending: { label: 'Chờ bắt đầu', color: 'text-center bg-yellow-100 text-yellow-700' }
 }
@@ -406,4 +436,13 @@ export interface MiniPeriodInfo {
 export interface PaginatedMiniPeriodInfo {
 	data: MiniPeriodInfo[]
 	meta: MetaDto
+}
+
+export interface MissTopics {
+	userId: string
+	lecturerName: string
+	lecturerEmail: string
+	minTopicsRequired: number
+	approvalTopicsCount: number
+	missingTopicsCount: number
 }

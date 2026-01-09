@@ -218,7 +218,12 @@ const Header = ({ user, onOpenAI }: HeaderProps) => {
 
 				{/* Actions */}
 				<div className='flex items-center space-x-2 sm:space-x-4'>
-					<Button variant='default' size='sm' className='hidden items-center sm:flex' onClick={onOpenAI}>
+					<Button
+						variant='default'
+						size='sm'
+						className='hidden items-center sm:flex'
+						onClick={() => navigate('/ai-chat')}
+					>
 						<MessageCircle className='h-6 w-6' />
 						<span className='ml-2 hidden sm:inline'>AI Assistant</span>
 					</Button>
@@ -261,7 +266,7 @@ const Header = ({ user, onOpenAI }: HeaderProps) => {
 							</div>
 						</DropdownLabel>
 						<DropdownSeparator />
-						{(user?.role !== ROLES.ADMIN && user?.role !== ROLES.FACULTY_BOARD) && (
+						{user?.role !== ROLES.ADMIN && user?.role !== ROLES.FACULTY_BOARD && (
 							<DropdownItem
 								onClick={() => {
 									navigate('/profile')

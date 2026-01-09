@@ -17,6 +17,7 @@ import { Calendar, Loader2 } from 'lucide-react'
 import { formatDate } from '@/utils/utils'
 import type { ResponseMilestone } from '@/models/milestone.model'
 import { EditMilestoneModal } from './modal/EditMilestoneModal'
+import { TaskDetailModal } from '@/components/features/todolist/TaskDetailModal'
 
 interface TaskCardProps {
 	task: Task
@@ -43,6 +44,7 @@ const TaskCard = ({
 	})
 	const [isEditingInfo, setIsEditingInfo] = useState(false)
 	const [isEditMilestoneModalOpen, setIsEditMilestoneModalOpen] = useState(false)
+	const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false) // Jira-like modal
 	const [moveInColumn] = useMoveInColumnMutation()
 	const [moveToNewColumn] = useMoveToNewColumnMutation()
 	//gọi endpoint cập nhật trạng thái task
@@ -219,7 +221,7 @@ const TaskCard = ({
 						</div>
 					) : (
 						<h5
-							onClick={() => handleStartEdit()}
+							onClick={() => setIsTaskDetailModalOpen(true)}
 							className='cursor-pointer font-medium text-foreground hover:text-primary'
 						>
 							{task.title}
@@ -242,6 +244,7 @@ const TaskCard = ({
 					) : (
 						<>
 							{task.description ? (
+								
 								<p
 									className='mt-1 cursor-pointer text-xs text-muted-foreground hover:text-primary'
 									onClick={() => handleStartEdit()}
@@ -352,6 +355,13 @@ const TaskCard = ({
 					taskTitle={task.title}
 				/>
 			)}
+
+			{/* Jira-like Task Detail Modal */}
+			<TaskDetailModal
+				taskId={task._id}
+				isOpen={isTaskDetailModalOpen}
+				onClose={() => setIsTaskDetailModalOpen(false)}
+			/>
 		</div>
 	)
 }
