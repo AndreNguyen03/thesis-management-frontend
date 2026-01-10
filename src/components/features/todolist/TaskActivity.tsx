@@ -1,5 +1,6 @@
 import type { TaskActivity as TaskActivityType } from '@/models/task-detail.model'
 import { formatDistanceToNow } from 'date-fns'
+import { vi as viLocale } from 'date-fns/locale'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Activity } from 'lucide-react'
 
@@ -12,7 +13,7 @@ export const TaskActivity = ({ activities }: TaskActivityProps) => {
 		<ScrollArea className='max-h-[500px]'>
 			<div className='space-y-3'>
 				{activities.length === 0 ? (
-					<p className='text-sm italic text-muted-foreground'>No activity yet</p>
+					<p className='text-sm italic text-muted-foreground'>Chưa có hoạt động ở đây</p>
 				) : (
 					activities
 						.slice()
@@ -41,7 +42,10 @@ export const TaskActivity = ({ activities }: TaskActivityProps) => {
 										<span className='text-muted-foreground'> {activity.action}</span>
 									</div>
 									<div className='mt-0.5 text-xs text-muted-foreground'>
-										{formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+										{formatDistanceToNow(new Date(activity.created_at), {
+											addSuffix: true,
+											locale: viLocale
+										})}
 									</div>
 
 									{/* Optional metadata */}

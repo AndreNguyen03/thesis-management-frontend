@@ -1,5 +1,7 @@
 // Task Detail Models - giống Jira
 
+import type { TaskColumn } from "./todolist.model"
+
 export type TaskPriority = 'Highest' | 'High' | 'Medium' | 'Low' | 'Lowest'
 export const TaskPriority = {
 	HIGHEST: 'Highest',
@@ -57,6 +59,7 @@ export interface TaskDetail {
 	reporter: TaskUser
 	created_at: Date
 	updated_at: Date
+	columns: TaskColumn[]
 }
 
 // DTOs for API requests

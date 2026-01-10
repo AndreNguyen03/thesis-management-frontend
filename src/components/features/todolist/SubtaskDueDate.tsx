@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useUpdateTaskDetailsMutation } from '@/services/todolistApi'
+import { useUpdateSubtaskMutation } from '@/services/todolistApi'
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -9,31 +9,35 @@ import { Calendar } from '@/components/ui/calendar'
 import { vi as viLocale } from 'date-fns/locale'
 import { toast } from 'sonner'
 
-interface TaskDueDateProps {
+interface SubtaskDueDateProps {
 	taskId: string
+	columnId: string
+	subtaskId: string
 	dueDate?: Date
 }
 
-export const TaskDueDate = ({ taskId, dueDate }: TaskDueDateProps) => {
+export const SubtaskDueDate = ({ taskId, columnId, subtaskId, dueDate }: SubtaskDueDateProps) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [date, setDate] = useState<Date | undefined>(dueDate ? new Date(dueDate) : undefined)
-	const [updateTask, { isLoading }] = useUpdateTaskDetailsMutation()
+	const [updateSubtask, { isLoading }] = useUpdateSubtaskMutation()
 
 	const handleSave = async (selectedDate: Date | undefined) => {
 		try {
-			await updateTask({
+			await updateSubtask({
 				taskId,
+				columnId,
+				subtaskId,
 				updates: { dueDate: selectedDate ? selectedDate.toISOString() : null }
 			}).unwrap()
 
 			setDate(selectedDate)
 			setIsOpen(false)
-			toast.success("Cập nhật hạn chót",{
+			toast.success('Cập nhật hạn chót', {
 				richColors: true,
 				description: selectedDate ? 'Cập nhật hạn chót thành công' : 'Đã xóa hạn chót'
 			})
 		} catch (error) {
-			toast.error("Cập nhật hạn chót thất bại",{
+			toast.error('Cập nhật hạn chót thất bại', {
 				richColors: true,
 				description: selectedDate ? 'Cập nhật hạn chót thất bại' : 'Xóa hạn chót thất bại'
 			})

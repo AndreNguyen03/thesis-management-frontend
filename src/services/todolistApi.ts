@@ -1,4 +1,11 @@
-import type { CreateTaskPayload, RequestUpdate, Subtask, Task, TaskColumn } from '@/models/todolist.model'
+import type {
+	CreateTaskPayload,
+	RequestUpdate,
+	Subtask,
+	Task,
+	TaskColumn,
+	UpdatePayload
+} from '@/models/todolist.model'
 
 import { baseApi, type ApiResponse } from './baseApi'
 import { waitForSocket } from '@/utils/socket-client'
@@ -90,6 +97,31 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data
 		}),
+		updateSubtask: builder.mutation<
+			Task,
+			{
+				taskId: string
+				columnId: string
+				subtaskId: string
+				updates: UpdatePayload
+			}
+		>({
+			query: ({ taskId, columnId, subtaskId, updates }) => ({
+				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}`,
+				method: 'PATCH',
+				body: updates
+			}),
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: ['TaskDetail']
+		}),
+		toggleSubtaskComplete: builder.mutation<Task, { taskId: string; columnId: string; subtaskId: string }>({
+			query: ({ taskId, columnId, subtaskId }) => ({
+				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}/toggle`,
+				method: 'PATCH'
+			}),
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: ['TaskDetail']
+		}),
 		updateTaskColumns: builder.mutation<Task, { taskId: string; columns: TaskColumn[] }>({
 			query: ({ taskId, columns }) => ({
 				url: `/tasks/${taskId}/columns`,
@@ -136,6 +168,19 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<TaskDetail>) => response.data,
 			providesTags: (_result, _error, taskId) => [{ type: 'TaskDetail', id: taskId }]
+		}),
+
+		// Lấy chi tiết subtask
+		getSubtaskDetail: builder.query<any, { taskId: string; columnId: string; subtaskId: string }>({
+			query: ({ taskId, columnId, subtaskId }) => ({
+				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}/detail`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<any>) => response.data,
+			providesTags: (_result, _error, { taskId, subtaskId }) => [
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'SubtaskDetail', id: subtaskId }
+			]
 		}),
 
 		// Cập nhật thông tin chi tiết task
@@ -200,6 +245,81 @@ export const taskApi = baseApi.injectEndpoints({
 			invalidatesTags: (_result, _error, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
 		}),
 
+		// Subtask comments
+		addSubtaskComment: builder.mutation<
+			TaskComment,
+			{ taskId: string; columnId: string; subtaskId: string; payload: AddCommentPayload }
+		>({
+			query: ({ taskId, columnId, subtaskId, payload }) => ({
+				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}/comments`,
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (_result, _error, { taskId, subtaskId }) => [
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'SubtaskDetail', id: subtaskId }
+			]
+		}),
+
+		addSubtaskCommentWithFiles: builder.mutation<
+			TaskComment,
+			{ taskId: string; columnId: string; subtaskId: string; formData: FormData }
+		>({
+			query: ({ taskId, columnId, subtaskId, formData }) => ({
+				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}/comments`,
+				method: 'POST',
+				body: formData
+			}),
+			invalidatesTags: (_result, _error, { taskId, subtaskId }) => [
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'SubtaskDetail', id: subtaskId }
+			]
+		}),
+
+		updateSubtaskComment: builder.mutation<
+			void,
+			{ taskId: string; columnId: string; subtaskId: string; commentId: string; payload: UpdateCommentPayload }
+		>({
+			query: ({ taskId, columnId, subtaskId, commentId, payload }) => ({
+				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}/comments/${commentId}`,
+				method: 'PATCH',
+				body: payload
+			}),
+			invalidatesTags: (_result, _error, { taskId, subtaskId }) => [
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'SubtaskDetail', id: subtaskId }
+			]
+		}),
+
+		updateSubtaskCommentWithFiles: builder.mutation<
+			void,
+			{ taskId: string; columnId: string; subtaskId: string; commentId: string; formData: FormData }
+		>({
+			query: ({ taskId, columnId, subtaskId, commentId, formData }) => ({
+				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}/comments/${commentId}`,
+				method: 'PATCH',
+				body: formData
+			}),
+			invalidatesTags: (_result, _error, { taskId, subtaskId }) => [
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'SubtaskDetail', id: subtaskId }
+			]
+		}),
+
+		deleteSubtaskComment: builder.mutation<
+			void,
+			{ taskId: string; columnId: string; subtaskId: string; commentId: string }
+		>({
+			query: ({ taskId, columnId, subtaskId, commentId }) => ({
+				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}/comments/${commentId}`,
+				method: 'DELETE'
+			}),
+			invalidatesTags: (_result, _error, { taskId, subtaskId }) => [
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'SubtaskDetail', id: subtaskId }
+			]
+		}),
+
 		// Assign users
 		assignUsers: builder.mutation<TaskDetail, { taskId: string; payload: AssignUsersPayload }>({
 			query: ({ taskId, payload }) => ({
@@ -231,6 +351,8 @@ export const {
 	useDeleteTaskMutation,
 	useCreateSubtaskMutation,
 	useDeleteSubtaskMutation,
+	useUpdateSubtaskMutation,
+	useToggleSubtaskCompleteMutation,
 	useUpdateTaskColumnsMutation,
 	useMoveInColumnMutation,
 	useMoveToNewColumnMutation,
@@ -238,6 +360,7 @@ export const {
 	useUpdateTaskMilestoneMutation,
 	// Jira-like hooks
 	useGetTaskDetailQuery,
+	useGetSubtaskDetailQuery,
 	useUpdateTaskDetailsMutation,
 	useAddCommentMutation,
 	useAddCommentWithFilesMutation,
@@ -245,5 +368,11 @@ export const {
 	useUpdateCommentWithFilesMutation,
 	useDeleteCommentMutation,
 	useAssignUsersMutation,
-	useUpdateDescriptionMutation
+	useUpdateDescriptionMutation,
+	// Subtask comment hooks
+	useAddSubtaskCommentMutation,
+	useAddSubtaskCommentWithFilesMutation,
+	useUpdateSubtaskCommentMutation,
+	useUpdateSubtaskCommentWithFilesMutation,
+	useDeleteSubtaskCommentMutation
 } = taskApi

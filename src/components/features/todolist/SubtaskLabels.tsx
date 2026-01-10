@@ -2,20 +2,22 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/input'
-import { useUpdateTaskDetailsMutation } from '@/services/todolistApi'
+import { useUpdateSubtaskMutation } from '@/services/todolistApi'
 import { Plus, X } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { toast } from 'sonner'
 
-interface TaskLabelsProps {
+interface SubtaskLabelsProps {
 	taskId: string
+	columnId: string
+	subtaskId: string
 	labels: string[]
 }
 
-export const TaskLabels = ({ taskId, labels }: TaskLabelsProps) => {
+export const SubtaskLabels = ({ taskId, columnId, subtaskId, labels }: SubtaskLabelsProps) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [newLabel, setNewLabel] = useState('')
-	const [updateTask, { isLoading }] = useUpdateTaskDetailsMutation()
+	const [updateSubtask, { isLoading }] = useUpdateSubtaskMutation()
 
 	const handleAddLabel = async () => {
 		if (!newLabel.trim() || labels.includes(newLabel.trim())) {
@@ -24,8 +26,10 @@ export const TaskLabels = ({ taskId, labels }: TaskLabelsProps) => {
 		}
 
 		try {
-			await updateTask({
+			await updateSubtask({
 				taskId,
+				columnId,
+				subtaskId,
 				updates: { labels: [...labels, newLabel.trim()] }
 			}).unwrap()
 
@@ -44,8 +48,10 @@ export const TaskLabels = ({ taskId, labels }: TaskLabelsProps) => {
 
 	const handleRemoveLabel = async (labelToRemove: string) => {
 		try {
-			await updateTask({
+			await updateSubtask({
 				taskId,
+				columnId,
+				subtaskId,
 				updates: { labels: labels.filter((l) => l !== labelToRemove) }
 			}).unwrap()
 
@@ -98,10 +104,11 @@ export const TaskLabels = ({ taskId, labels }: TaskLabelsProps) => {
 								onChange={(e) => setNewLabel(e.target.value)}
 								placeholder='Nhập tên nhãn...'
 								onKeyPress={(e) => e.key === 'Enter' && handleAddLabel()}
+								autoFocus
 							/>
 						</div>
-						<Button onClick={handleAddLabel} disabled={isLoading || !newLabel.trim()} className='w-full'>
-							{isLoading ? 'Đang thêm...' : 'Thêm nhãn'}
+						<Button onClick={handleAddLabel} disabled={isLoading} size='sm' className='w-full'>
+							Thêm
 						</Button>
 					</div>
 				</PopoverContent>

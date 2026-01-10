@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { TaskDetail, TaskPriority } from '@/models/task-detail.model'
 import { Button } from '@/components/ui/Button'
-import { X, User, Tag, Calendar, AlertCircle, Clock } from 'lucide-react'
-
+import { X, User, Tag, Calendar, AlertCircle, Clock, CheckSquare } from 'lucide-react'
+import { vi as viLocale } from 'date-fns/locale'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -15,6 +15,8 @@ import { TaskAssignees } from './TaskAssignees'
 import { TaskPrioritySelect } from './TaskPrioritySelect'
 import { TaskLabels } from './TaskLabels'
 import { TaskDueDate } from './TaskDueDate'
+import { Checkbox } from '@/components/ui/checkbox'
+import { SubtaskDetailModal } from './SubtaskDetailModal'
 
 interface TaskDetailContentProps {
 	task: TaskDetail
@@ -23,6 +25,8 @@ interface TaskDetailContentProps {
 
 export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => {
 	const [activeTab, setActiveTab] = useState('comments')
+	const [selectedSubtaskId, setSelectedSubtaskId] = useState<string | null>(null)
+	const [selectedColumnId, setSelectedColumnId] = useState<string>('')
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
@@ -33,7 +37,7 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 			case 'Done':
 				return 'bg-green-500'
 			default:
-				return 'bg-gray-500'
+				return 'bg-gray-50f0'
 		}
 	}
 
@@ -65,13 +69,87 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 			{/* Main Content - Two Columns */}
 			<div className='flex flex-1 overflow-hidden'>
 				{/* Left Column - Main Content */}
-				<ScrollArea className='flex-1 p-6'>
+				<ScrollArea className='flex-1 bg-white p-6'>
 					<div className='max-w-3xl space-y-6'>
 						{/* Description Section */}
 						<TaskDescription taskId={task._id} initialDescription={task.description} />
 
 						<Separator />
+						{task.columns && task.columns.length > 0 && (
+							<>
+								<div>
+									<div className='mb-3 flex items-center gap-2'>
+										<CheckSquare className='h-5 w-5 text-muted-foreground' />
+										<h3 className='text-lg font-semibold'>Subtasks</h3>
+									</div>
+									<div className='space-y-3'>
+										{task.columns.map((column) => (
+											<div key={column._id} className='rounded-lg border p-3'>
+												<h4 className='mb-2 text-sm font-medium text-muted-foreground'>
+													{column.title}
+												</h4>
+												<div className='space-y-2'>
+													{column.items && column.items.length > 0 ? (
+														column.items.map((subtask) => (
+															<div
+																key={subtask._id}
+																className='flex cursor-pointer items-center gap-3 rounded-md border bg-card p-3 transition-colors hover:bg-accent'
+																onClick={() => {
+																	setSelectedSubtaskId(subtask._id)
+																	setSelectedColumnId(column._id)
+																}}
+															>
+																<Checkbox
+																	checked={subtask.isCompleted}
+																	onClick={(e) => e.stopPropagation()}
+																/>
+																<div className='flex-1'>
+																	<p
+																		className={`text-sm ${subtask.isCompleted ? 'text-muted-foreground line-through' : ''}`}
+																	>
+																		{subtask.title}
+																	</p>
+																	{subtask.dueDate && (
+																		<p className='mt-1 text-xs text-muted-foreground'>
+																			Hạn:{' '}
+																			{format(new Date(subtask.dueDate), 'PPP', {
+																				locale: viLocale
+																			})}
+																		</p>
+																	)}
+																</div>
+																{subtask.assignees && subtask.assignees.length > 0 && (
+																	<div className='flex -space-x-2'>
+																		{subtask.assignees
+																			.slice(0, 3)
+																			.map((assignee: any) => (
+																				<img
+																					key={assignee._id}
+																					src={assignee.avatar}
+																					alt={assignee.fullname}
+																					className='h-6 w-6 rounded-full border-2 border-background'
+																				/>
+																			))}
+																	</div>
+																)}
+															</div>
+														))
+													) : (
+														<p className='text-sm italic text-muted-foreground'>
+															Chưa có subtask nào
+														</p>
+													)}
+												</div>
+											</div>
+										))}
+									</div>
+								</div>
 
+								<Separator />
+							</>
+						)}
+
+						{/* 
 						{/* Activity & Comments Tabs */}
 						<Tabs value={activeTab} onValueChange={setActiveTab}>
 							<TabsList className='grid w-full grid-cols-2 gap-5'>
@@ -79,13 +157,13 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 									value='comments'
 									className='data-[state=active]:bg-blue-700 data-[state=active]:text-white'
 								>
-									Comments ({task.comments?.length || 0})
+									Bình luận ({task.comments?.length || 0})
 								</TabsTrigger>
 								<TabsTrigger
 									value='activity'
 									className='data-[state=active]:bg-blue-700 data-[state=active]:text-white'
 								>
-									Activity ({task.activities?.length || 0})
+									Hoạt động ({task.activities?.length || 0})
 								</TabsTrigger>
 							</TabsList>
 
@@ -101,13 +179,13 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 				</ScrollArea>
 
 				{/* Right Sidebar - Details Panel (giống Jira) */}
-				<div className='w-80 overflow-y-auto border-l bg-slate-50/50 p-6'>
+				<div className='w-80 overflow-y-auto border-l p-6'>
 					<div className='space-y-6'>
 						{/* Assignees */}
 						<div>
 							<div className='mb-2 flex items-center gap-2'>
 								<User className='h-4 w-4 text-muted-foreground' />
-								<span className='text-sm font-medium text-muted-foreground'>Assignees</span>
+								<span className='text-sm font-medium text-muted-foreground'>Phân công</span>
 							</div>
 							<TaskAssignees taskId={task._id} groupId={task.groupId} assignees={task.assignees || []} />
 						</div>
@@ -118,7 +196,7 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 						<div>
 							<div className='mb-2 flex items-center gap-2'>
 								<User className='h-4 w-4 text-muted-foreground' />
-								<span className='text-sm font-medium text-muted-foreground'>Reporter</span>
+								<span className='text-sm font-medium text-muted-foreground'>Người báo cáo</span>
 							</div>
 							<div className='flex items-center gap-2'>
 								{task.reporter?.avatarUrl ? (
@@ -147,7 +225,7 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 						<div>
 							<div className='mb-2 flex items-center gap-2'>
 								{getPriorityIcon(task.priority)}
-								<span className='text-sm font-medium text-muted-foreground'>Priority</span>
+								<span className='text-sm font-medium text-muted-foreground'>Độ ưu tiên</span>
 							</div>
 							<TaskPrioritySelect taskId={task._id} currentPriority={task.priority} />
 						</div>
@@ -158,7 +236,7 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 						<div>
 							<div className='mb-2 flex items-center gap-2'>
 								<Tag className='h-4 w-4 text-muted-foreground' />
-								<span className='text-sm font-medium text-muted-foreground'>Labels</span>
+								<span className='text-sm font-medium text-muted-foreground'>Nhãn</span>
 							</div>
 							<TaskLabels taskId={task._id} labels={task.labels || []} />
 						</div>
@@ -169,7 +247,7 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 						<div>
 							<div className='mb-2 flex items-center gap-2'>
 								<Calendar className='h-4 w-4 text-muted-foreground' />
-								<span className='text-sm font-medium text-muted-foreground'>Due Date</span>
+								<span className='text-sm font-medium text-muted-foreground'>Ngày hạn chót</span>
 							</div>
 							<TaskDueDate taskId={task._id} dueDate={task.dueDate} />
 						</div>
@@ -180,16 +258,34 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 						<div className='space-y-2 text-xs text-muted-foreground'>
 							<div className='flex items-center gap-2'>
 								<Clock className='h-3 w-3' />
-								<span>Created {format(new Date(task.created_at), 'PPp')}</span>
+								<span>
+									Đã tạo vào lúc {format(new Date(task.created_at), 'PPp', { locale: viLocale })}
+								</span>
 							</div>
 							<div className='flex items-center gap-2'>
 								<Clock className='h-3 w-3' />
-								<span>Updated {format(new Date(task.updated_at), 'PPp')}</span>
+								<span>
+									Đã cập nhật vào lúc {format(new Date(task.updated_at), 'PPp', { locale: viLocale })}
+								</span>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+
+			{/* Subtask Detail Modal */}
+			{selectedSubtaskId && (
+				<SubtaskDetailModal
+					subtaskId={selectedSubtaskId}
+					taskId={task._id}
+					columnId={selectedColumnId}
+					onClose={() => {
+						setSelectedSubtaskId(null)
+						setSelectedColumnId('')
+					}}
+					groupId={task.groupId}
+				/>
+			)}
 		</div>
 	)
 }

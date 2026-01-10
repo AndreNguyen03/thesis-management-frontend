@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { TaskUser } from '@/models/task-detail.model'
 import { Button } from '@/components/ui/Button'
-import { useAssignUsersMutation } from '@/services/todolistApi'
+import { useUpdateSubtaskMutation } from '@/services/todolistApi'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, X } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -9,25 +9,29 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { useGetGroupDetailQuery } from '@/services/groupApi'
 import { Checkbox } from '@/components/ui/checkbox'
 
-interface TaskAssigneesProps {
+interface SubtaskAssigneesProps {
 	taskId: string
+	columnId: string
+	subtaskId: string
 	groupId: string
-	assignees: TaskUser[]
+	assignees?: TaskUser[]
 }
 
-export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps) => {
+export const SubtaskAssignees = ({ taskId, columnId, subtaskId, groupId, assignees }: SubtaskAssigneesProps) => {
 	const [isOpen, setIsOpen] = useState(false)
-	const [selectedUserIds, setSelectedUserIds] = useState<string[]>(assignees.map((a) => a._id))
+	const [selectedUserIds, setSelectedUserIds] = useState<string[]>(assignees?.map((a) => a._id) || [])
 
 	const { data: group } = useGetGroupDetailQuery({ groupId })
-	const [assignUsers, { isLoading }] = useAssignUsersMutation()
+	const [updateSubtask, { isLoading }] = useUpdateSubtaskMutation()
 	const { toast } = useToast()
 
 	const handleSave = async () => {
 		try {
-			await assignUsers({
+			await updateSubtask({
 				taskId,
-				payload: { userIds: selectedUserIds }
+				columnId,
+				subtaskId,
+				updates: { assignees: selectedUserIds }
 			}).unwrap()
 
 			toast({
@@ -50,10 +54,12 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 
 	const removeAssignee = async (userId: string) => {
 		try {
-			const newAssignees = assignees.filter((a) => a._id !== userId).map((a) => a._id)
-			await assignUsers({
+			const newAssignees = assignees?.filter((a) => a._id !== userId).map((a) => a._id)
+			await updateSubtask({
 				taskId,
-				payload: { userIds: newAssignees }
+				columnId,
+				subtaskId,
+				updates: { assignees: newAssignees }
 			}).unwrap()
 
 			toast({
@@ -75,7 +81,7 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 		<div className='space-y-2'>
 			{/* Current Assignees */}
 			<div className='space-y-2'>
-				{assignees.length === 0 ? (
+				{!assignees || assignees.length === 0 ? (
 					<p className='text-sm italic text-muted-foreground'>Chưa có phân công</p>
 				) : (
 					assignees.map((assignee) => (
@@ -114,7 +120,7 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 				<PopoverTrigger asChild>
 					<Button variant='outline' size='sm' className='w-full'>
 						<Plus className='mr-2 h-4 w-4' />
-						Thêm phân công 	
+						Thêm phân công
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className='w-80 p-0' align='start'>
@@ -149,8 +155,8 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 						</CommandList>
 					</Command>
 					<div className='border-t p-2'>
-						<Button onClick={handleSave} disabled={isLoading} className='w-full' size='sm'>
-							{isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+						<Button onClick={handleSave} disabled={isLoading} size='sm' className='w-full'>
+							Lưu
 						</Button>
 					</div>
 				</PopoverContent>

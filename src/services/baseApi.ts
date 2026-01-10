@@ -120,7 +120,8 @@ export const baseApi = createApi({
 		'LecturerSubmittedTopics',
 		'TopicRatingStats',
 		'ConversationsChatBot',
-		'TaskDetail' // For Jira-like task detail
+		'TaskDetail', // For Jira-like task detail,
+		"SubtaskDetail"
 	],
 	endpoints: () => ({})
 })

@@ -29,15 +29,7 @@ export const groupApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<GroupDetail>) => response.data
 		}),
 
-		// Lấy group by ID (for task assignees)
-		getGroupById: builder.query<GroupDetail, string>({
-			query: (groupId) => ({
-				url: `/groups/detail/${groupId}`,
-				method: 'GET'
-			}),
-			transformResponse: (response: ApiResponse<GroupDetail>) => response.data
-		}),
-
+	
 		getPaginateDirectGroups: builder.query<PaginatedDirectGroups, void>({
 			query: () => ({
 				url: '/groups/user-directs',
@@ -81,7 +73,6 @@ export const groupApi = baseApi.injectEndpoints({
 export const {
 	useGetPaginatedGroupQuery,
 	useGetGroupDetailQuery,
-	useGetGroupByIdQuery,
 	useGetPaginateDirectGroupsQuery,
 	useCreateOrGetDirectGroupMutation,
 	useGetGroupMessagesQuery,

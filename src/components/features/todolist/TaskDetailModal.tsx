@@ -14,7 +14,7 @@ export const TaskDetailModal = ({ taskId, isOpen, onClose }: TaskDetailModalProp
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className='max-h-[90vh] max-w-[90vw] gap-0 overflow-hidden p-0'>
+			<DialogContent className='max-h-[90vh] max-w-[90vw] gap-0 overflow-hidden bg-white p-0' hideClose>
 				{isLoading && (
 					<div className='flex h-96 items-center justify-center'>
 						<Loader2 className='h-8 w-8 animate-spin text-primary' />

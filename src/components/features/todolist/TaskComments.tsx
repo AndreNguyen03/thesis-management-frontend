@@ -9,6 +9,8 @@ import {
 	useUpdateCommentMutation,
 	useUpdateCommentWithFilesMutation
 } from '@/services/todolistApi'
+import { vi as viLocale } from 'date-fns/locale'
+
 import { useToast } from '@/hooks/use-toast'
 import { formatDistanceToNow } from 'date-fns'
 import {
@@ -307,7 +309,6 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 	const removeExistingFile = (index: number) => {
 		setExistingFiles((prev) => prev.filter((_, i) => i !== index))
 	}
-	console.log('comments', comments)
 	return (
 		<div className='space-y-4 p-1'>
 			{/* Add Comment */}
@@ -406,10 +407,14 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 										<div className='flex items-center gap-2'>
 											<span className='text-sm font-medium'>{comment.user?.fullName}</span>
 											<span className='text-xs text-muted-foreground'>
-												{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+												{formatDistanceToNow(new Date(comment.created_at), {
+													locale: viLocale
+												})}
 											</span>
 											{comment.editedAt && (
-												<span className='text-xs italic text-muted-foreground'>(Đã chỉnh sửa)</span>
+												<span className='text-xs italic text-muted-foreground'>
+													(Đã chỉnh sửa)
+												</span>
 											)}
 										</div>
 										{/* Actions (only for comment owner) */}

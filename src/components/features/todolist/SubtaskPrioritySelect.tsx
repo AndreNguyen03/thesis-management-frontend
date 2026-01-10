@@ -1,23 +1,25 @@
 import { TaskPriority } from '@/models/task-detail.model'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useUpdateTaskDetailsMutation } from '@/services/todolistApi'
-import { useToast } from '@/hooks/use-toast'
+import { useUpdateSubtaskMutation } from '@/services/todolistApi'
 import { AlertCircle } from 'lucide-react'
 import { taskPriorityLabels } from '@/models/todolist.model'
 import { toast } from 'sonner'
 
-interface TaskPrioritySelectProps {
+interface SubtaskPrioritySelectProps {
 	taskId: string
+	columnId: string
+	subtaskId: string
 	currentPriority: TaskPriority
 }
 
-export const TaskPrioritySelect = ({ taskId, currentPriority }: TaskPrioritySelectProps) => {
-	const [updateTask, { isLoading }] = useUpdateTaskDetailsMutation()
-
+export const SubtaskPrioritySelect = ({ taskId, columnId, subtaskId, currentPriority }: SubtaskPrioritySelectProps) => {
+	const [updateSubtask, { isLoading }] = useUpdateSubtaskMutation()
 	const handleChange = async (priority: TaskPriority) => {
 		try {
-			await updateTask({
+			await updateSubtask({
 				taskId,
+				columnId,
+				subtaskId,
 				updates: { priority }
 			}).unwrap()
 
@@ -47,7 +49,7 @@ export const TaskPrioritySelect = ({ taskId, currentPriority }: TaskPrioritySele
 				return 'text-green-600'
 		}
 	}
-	console.log('currentPriority', currentPriority)
+
 	return (
 		<Select value={currentPriority} onValueChange={handleChange} disabled={isLoading}>
 			<SelectTrigger className='w-full'>

@@ -1,26 +1,30 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { useUpdateDescriptionMutation } from '@/services/todolistApi'
+import { useUpdateSubtaskMutation } from '@/services/todolistApi'
 import RichTextEditor from '@/components/common/RichTextEditor'
 import { Edit2, Check, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
-interface TaskDescriptionProps {
+interface SubtaskDescriptionProps {
 	taskId: string
-	initialDescription: string
+	columnId: string
+	subtaskId: string
+	initialDescription?: string
 }
 
-export const TaskDescription = ({ taskId, initialDescription }: TaskDescriptionProps) => {
+export const SubtaskDescription = ({ taskId, columnId, subtaskId, initialDescription }: SubtaskDescriptionProps) => {
 	const [isEditing, setIsEditing] = useState(false)
 	const [description, setDescription] = useState(initialDescription || '')
-	const [updateDescription, { isLoading }] = useUpdateDescriptionMutation()
+	const [updateSubtask, { isLoading }] = useUpdateSubtaskMutation()
 	const { toast } = useToast()
 
 	const handleSave = async () => {
 		try {
-			await updateDescription({
+			await updateSubtask({
 				taskId,
-				payload: { description }
+				columnId,
+				subtaskId,
+				updates: { description }
 			}).unwrap()
 
 			toast({
@@ -62,7 +66,13 @@ export const TaskDescription = ({ taskId, initialDescription }: TaskDescriptionP
 							<Check className='mr-1 h-4 w-4' />
 							Lưu
 						</Button>
-						<Button variant='outline' onClick={handleCancel} disabled={isLoading} size='sm' className='bg-white'>
+						<Button
+							variant='outline'
+							onClick={handleCancel}
+							disabled={isLoading}
+							size='sm'
+							className='bg-white'
+						>
 							<X className='mr-1 h-4 w-4' />
 							Hủy
 						</Button>
@@ -70,7 +80,7 @@ export const TaskDescription = ({ taskId, initialDescription }: TaskDescriptionP
 				</div>
 			) : (
 				<div
-					className='prose prose-sm min-h-[100px] bg-white max-w-none rounded-md border bg-muted/30 p-3'
+					className='prose prose-sm min-h-[100px] max-w-none rounded-md border bg-muted/30 bg-white p-3'
 					dangerouslySetInnerHTML={{
 						__html: description || '<p class="text-muted-foreground italic">No description yet</p>'
 					}}
