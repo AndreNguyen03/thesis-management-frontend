@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
+	isMobile?: boolean
 }
 
 type MenuItem = {
@@ -77,7 +78,7 @@ const menuItems: Record<Role | 'common' | 'chung', MenuItem[]> = {
 	]
 	// footer: [{ title: 'Cài đặt', url: '/settings', icon: Settings }]
 }
-const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
+const AppSidebar = ({ userRole = 'admin', isMobile = false }: AppSidebarProps) => {
 	const { isOpen, toggleSidebar } = useSidebar()
 	const location = useLocation()
 	const currentPath = location.pathname
@@ -191,21 +192,23 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 	)
 
 	return (
-		<div className='flex h-full flex-col py-3'>
+		<div className={cn('flex h-full flex-col py-3', isMobile && 'h-full w-56')}>
+			{' '}
 			{/* Header Sidebar (Toggle) */}
-			<div className={cn('mb-6 flex items-center px-4', isOpen ? 'justify-end' : 'justify-center')}>
-				<Button
-					variant='ghost'
-					size='sm'
-					onClick={toggleSidebar}
-					className='h-8 w-8 rounded-full p-0 text-gray-500 hover:bg-gray-100'
-				>
-					<ChevronLeft
-						className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`}
-					/>
-				</Button>
-			</div>
-
+			{!isMobile && (
+				<div className={cn('mb-6 flex items-center px-4', isOpen ? 'justify-end' : 'justify-center')}>
+					<Button
+						variant='ghost'
+						size='sm'
+						onClick={toggleSidebar}
+						className='h-8 w-8 rounded-full p-0 text-gray-500 hover:bg-gray-100'
+					>
+						<ChevronLeft
+							className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`}
+						/>
+					</Button>
+				</div>
+			)}
 			{/* Menu Sections */}
 			<div className='custom-scrollbar flex-1 space-y-6 overflow-y-auto'>
 				{userRole !== 'admin' && (
@@ -240,7 +243,6 @@ const AppSidebar = ({ userRole = 'admin' }: AppSidebarProps) => {
 					{renderMenuItems(menuItems.chung)}
 				</div>
 			</div>
-
 			{/* Footer
 			<div className='mt-auto border-t border-gray-100 pt-3'>{renderMenuItems(menuItems.footer)}</div> */}
 		</div>

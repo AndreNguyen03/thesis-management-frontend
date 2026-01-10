@@ -63,9 +63,10 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 	const currentPhase = dashboardData.currentPhase
 
 	const getPhaseStatus = (phaseType: string) => {
-		const phaseIndex = phaseOrder.indexOf(phaseType)
+		const phaseIndex = phaseOrder.indexOf(phaseType) // current index 4, phase index: 5
 		if (phaseIndex < currentIndex) return 'completed'
 		if (phaseIndex === currentIndex && currentPhaseStatus === 'timeout') return 'timeout'
+		if (phaseIndex === currentIndex && currentPhaseStatus === 'completed') return 'completed'
 		if (phaseIndex > currentIndex) return 'pending'
 		if (currentPhaseStatus === 'active') return 'active'
 		return 'pending'
@@ -161,6 +162,25 @@ export function StudentPeriodCard({ dashboardData }: StudentPeriodCardProps) {
 						<span className='text-lg font-semibold text-foreground'>{content.title}</span>
 					</div>
 					{content.badge}
+				</div>
+				{/* Thời gian kỳ */}
+				<div className='mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground'>
+					<span>
+						Bắt đầu:{' '}
+						{formatDate(
+							typeof dashboardData.startTime === 'string'
+								? dashboardData.startTime
+								: dashboardData.startTime?.toISOString()
+						)}
+					</span>
+					<span>
+						Kết thúc:{' '}
+						{formatDate(
+							typeof dashboardData.endTime === 'string'
+								? dashboardData.endTime
+								: dashboardData.endTime?.toISOString()
+						)}
+					</span>
 				</div>
 			</CardHeader>
 

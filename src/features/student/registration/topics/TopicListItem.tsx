@@ -33,7 +33,7 @@ export function TopicListItem({ onUnregister, topic, onClick, onRegister, isRegi
 
 	const isRegistered = topic.userRegistrationStatus === RegistrationStatus.APPROVED
 	const isPending = topic.userRegistrationStatus === RegistrationStatus.PENDING
-	const isSlotFull = topic.studentsNum === topic.maxStudents
+	const isSlotFull = topic.approvedStudentsNum === topic.maxStudents
 
 	const getButtonContent = () => {
 		if (isRegistering) {
@@ -101,7 +101,7 @@ export function TopicListItem({ onUnregister, topic, onClick, onRegister, isRegi
 						<span className='max-w-[100px] truncate'>{lecturerName}</span>
 					</div>
 
-					{/* Fields */}
+					{/* Fields */}q
 					{topic.fields.map((field) => (
 						<span key={field._id} className='max-w-[80px] truncate'>
 							{field.name}
@@ -128,7 +128,7 @@ export function TopicListItem({ onUnregister, topic, onClick, onRegister, isRegi
 			<div className={cn('flex items-center gap-1.5 text-xs', slotColor)}>
 				{isSlotFull ? <AlertTriangle className='h-3 w-3' /> : <Users className='h-3 w-3' />}
 				<span className='whitespace-nowrap font-medium'>
-					{topic.studentsNum}/{topic.maxStudents}
+					{topic.approvedStudentsNum}/{topic.maxStudents}
 				</span>
 			</div>
 
@@ -146,6 +146,7 @@ export function TopicListItem({ onUnregister, topic, onClick, onRegister, isRegi
 					isSlotFull && 'opacity-50',
 					isRegistered && 'border-success/30 bg-success/10 text-success hover:bg-success/20'
 				)}
+                disabled={isSlotFull && !isRegistered}
 			>
 				{getButtonContent()}
 			</Button>

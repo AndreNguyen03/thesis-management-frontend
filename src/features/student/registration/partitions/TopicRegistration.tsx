@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { List, FileCheck } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { usePageBreadcrumb } from '@/hooks'
@@ -16,7 +16,8 @@ import type {
 	GeneralTopic,
 	GetFieldNameReponseDto,
 	PaginationTopicsRegistrationQueryParams,
-	ResponseMiniLecturerDto
+	ResponseMiniLecturerDto,
+	StudentUser
 } from '@/models'
 import { type GetCurrentPeriod } from '@/models/period.model'
 import { getPeriodTitle } from '@/utils/utils'
@@ -38,6 +39,8 @@ import RegistrationHistory from '../../TopicList/registered/children/Registratio
 import { RecommendationPanel } from '../recommendation/RecommendationPanel'
 import { RecommendationButton } from '../recommendation/RecommendationButton'
 import { TopicRegistrationSkeleton } from './TopicRegistrationSkeleton'
+import { useAppSelector } from '@/store'
+import { socketService } from '@/services/socket.service'
 
 export default function TopicRegistration() {
 	// ------------------ PAGINATION STATE ------------------
@@ -65,10 +68,15 @@ export default function TopicRegistration() {
 	// ------------------ FILTER STATE ------------------
 	// Mock period
 
-	const { data: paginated, isLoading: isLoadingTopics } = useAdvanceSearchRegisteringTopicsQuery({
+	const {
+		data: paginated,
+		isLoading: isLoadingTopics,
+		refetch
+	} = useAdvanceSearchRegisteringTopicsQuery({
 		periodId: id!,
 		queries: queryParams
 	})
+
 	const navigate = useNavigate()
 	// const [triggerGetTopicDetail] = useLazyGetTopicByIdQuery()
 	// ------------------ OTHER STATES ------------------
@@ -95,6 +103,23 @@ export default function TopicRegistration() {
 
 	// const registeredTopic = registeredPaginated?.data?.[0] ?? null
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Đăng kí đề tài' }])
+
+	const userId = useAppSelector((state) => (state.auth.user as StudentUser)?.userId)
+
+	useEffect(() => {
+		if (!userId) return
+		socketService.connect(userId, '/period')
+
+		const cleanup = socketService.on('/period', 'periodDashboard:update', () => {
+			console.log('Received periodDashboard:update event, refetching student dashboard data...')
+			refetch()
+		})
+
+		return () => {
+			cleanup()
+			socketService.disconnect('/period')
+		}
+	}, [userId, refetch])
 
 	// ------------------ HANDLERS ------------------`
 
@@ -140,10 +165,10 @@ export default function TopicRegistration() {
 		}
 	}
 
-    const handleOpenCancelModal = (topic: GeneralTopic) => {
-        setSelectedTopic(topic)
-        setIsCancelModalOpen(true)
-    }
+	const handleOpenCancelModal = (topic: GeneralTopic) => {
+		setSelectedTopic(topic)
+		setIsCancelModalOpen(true)
+	}
 
 	const handleCancelRegistration = async () => {
 		setIsCancelling(true)
@@ -175,7 +200,7 @@ export default function TopicRegistration() {
 	}
 
 	return (
-		<div className='max-h-[calc(100vh)] w-full overflow-y-auto bg-background'>
+		<div className='max-h-[calc(100vh)] w-full overflow-y-auto bg-background pt-6'>
 			{/* HEADER */}
 			{!period ? (
 				<PeriodHeaderSkeleton />
@@ -248,7 +273,7 @@ export default function TopicRegistration() {
 										}
 										onRegister={() => handleRegisterClick(topic)}
 										isRegistering={isRegistering && topicToRegister?._id === topic._id}
-                                        onUnregister={() => handleOpenCancelModal(topic)}
+										onUnregister={() => handleOpenCancelModal(topic)}
 									/>
 								))}
 							</div>
@@ -387,11 +412,7 @@ export default function TopicRegistration() {
 			/>
 
 			{/* Recommendation Panel */}
-			<RecommendationPanel
-				isOpen={isRecommendOpen}
-				onClose={() => setIsRecommendOpen(false)}
-				periodId={id!}
-			/>
+			<RecommendationPanel isOpen={isRecommendOpen} onClose={() => setIsRecommendOpen(false)} periodId={id!} />
 
 			{/* Floating Button */}
 			<RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} />

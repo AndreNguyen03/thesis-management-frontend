@@ -44,9 +44,11 @@ export function RegistrationCard({ dashboardData }: RegistrationCardProps) {
 
 	/* ---------------- Time ---------------- */
 	const now = new Date()
+	const start = new Date(phase.startTime)
 	const end = new Date(phase.endTime)
 	const remainingDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 	const isExpired = remainingDays <= 0
+	const isStarted = now >= start
 
 	const hasNoRegistration = topics.length === 0
 
@@ -77,17 +79,21 @@ export function RegistrationCard({ dashboardData }: RegistrationCardProps) {
 					<div className='flex items-center justify-between rounded-lg border bg-card p-4'>
 						<div>
 							<p className='text-sm text-muted-foreground'>Trạng thái</p>
-							<p className='mt-1 font-medium'>Chưa đăng ký đề tài</p>
+							<p className='mt-1 font-medium'>
+								{isStarted ? 'Chưa đăng ký đề tài' : 'Chưa bắt đầu đợt đăng ký'}
+							</p>
 						</div>
 
-						<Button
-							size='lg'
-							className='w-full rounded-xl sm:w-auto'
-							onClick={() => navigate('/registration')}
-							disabled={isExpired}
-						>
-							Đăng ký ngay
-						</Button>
+						{isStarted && (
+							<Button
+								size='lg'
+								className='w-full rounded-xl sm:w-auto'
+								onClick={() => navigate('/registration')}
+								disabled={isExpired}
+							>
+								Đăng ký ngay
+							</Button>
+						)}
 					</div>
 
 					<p className='text-center text-xs text-muted-foreground'>

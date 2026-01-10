@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { LogOut, MessageCircle, Search, User2 } from 'lucide-react'
+import { LogOut, Menu, MessageCircle, Search, User2 } from 'lucide-react'
 import { Button, Dropdown, DropdownItem, DropdownLabel, DropdownSeparator, Input, LoadingOverlay, Badge } from '../ui'
 import uitLogo from '../../assets/uit.png'
 import type { ApiError, AppUser } from '../../models'
@@ -18,11 +18,12 @@ import { getAvatarInitials } from '@/utils/utils'
 interface HeaderProps {
 	user: AppUser | null
 	onOpenAI: () => void
+	onMobileSidebarOpen?: () => void
 }
 
 const PAGE_SIZE = 6
 
-const Header = ({ user, onOpenAI }: HeaderProps) => {
+const Header = ({ user, onOpenAI, onMobileSidebarOpen }: HeaderProps) => {
 	const [logout, { isLoading }] = useLogoutMutation()
 	const navigate = useNavigate()
 	const [openUserMenu, setOpenUserMenu] = useState(false)
@@ -108,6 +109,13 @@ const Header = ({ user, onOpenAI }: HeaderProps) => {
 	return (
 		<header className='support-backdrop-blur:bg-white/60 fixed top-0 z-50 w-full min-w-[10rem] border-b border-gray-200 bg-white/80 backdrop-blur-md'>
 			<div className='mx-auto flex h-16 w-full max-w-screen-2xl items-center px-4'>
+				<button
+					className='mr-3 block rounded p-2 hover:bg-gray-100 lg:hidden'
+					onClick={onMobileSidebarOpen}
+					aria-label='Mở menu'
+				>
+					<Menu className='h-6 w-6' />
+				</button>
 				{/* Logo */}
 				<div className='flex items-center space-x-3'>
 					<a className='mx-auto block w-fit text-center'>
@@ -261,7 +269,7 @@ const Header = ({ user, onOpenAI }: HeaderProps) => {
 							</div>
 						</DropdownLabel>
 						<DropdownSeparator />
-						{(user?.role !== ROLES.ADMIN && user?.role !== ROLES.FACULTY_BOARD) && (
+						{user?.role !== ROLES.ADMIN && user?.role !== ROLES.FACULTY_BOARD && (
 							<DropdownItem
 								onClick={() => {
 									navigate('/profile')

@@ -116,7 +116,7 @@ const SubmitTopicsInPeriod = () => {
 		debounceOnChange(val)
 	}
 	return (
-		<div className='flex h-[calc(100dvh-6rem)] w-full flex-col overflow-hidden bg-slate-50/50 font-sans'>
+		<div className='flex h-[calc(100dvh)] pt-6 w-full flex-col overflow-hidden bg-slate-50/50 font-sans'>
 			{/* Header Area */}
 			<div className='z-10 flex flex-none items-center justify-between border-b bg-white px-6 py-4 shadow-sm'>
 				<div className='flex items-center gap-4'>

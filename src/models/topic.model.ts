@@ -91,6 +91,7 @@ export interface GeneralTopic extends AbstractTopic {
 	original_id?: string
 	progress?: number
     userRegistrationStatus?: string
+    approvedStudentsNum?: number
 }
 
 //Định nghĩa đề tài trong thư viện số

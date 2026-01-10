@@ -1,6 +1,6 @@
 import { type NotificationItem, NotificationType } from '@/models/notification.model'
 import { AlertTriangle, Bell, Check, CheckCircle2, Info, Megaphone, XCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Button } from './ui'
 import { ScrollArea } from './ui/scroll-area'
@@ -12,6 +12,9 @@ import {
 	useMarkAllNotificationsReadMutation,
 	useMarkNotificationReadMutation
 } from '@/services/notificationApi'
+import { useAppSelector } from '@/store'
+import { socketService } from '@/services/socket.service'
+import { getUserIdFromAppUser } from '@/utils/utils'
 
 export function NotificationPopover() {
 	const {
@@ -24,6 +27,24 @@ export function NotificationPopover() {
 		sort_by: 'createdAt',
 		sort_order: 'desc'
 	})
+
+	const userId = getUserIdFromAppUser(useAppSelector((state) => (state.auth.user)))
+
+	useEffect(() => {
+		if (!userId) return
+		socketService.connect(userId, '/period')
+
+		const cleanup = socketService.on('/period', 'periodDashboard:update', () => {
+			console.log('Received periodDashboard:update event, refetching student dashboard data...')
+			refetch()
+		})
+
+		return () => {
+			cleanup()
+			socketService.disconnect('/period')
+		}
+	}, [userId, refetch])
+
 	//api đánh dấu là đã đọc
 	const [markAllNotificationsRead] = useMarkAllNotificationsReadMutation()
 	const [markNotificationRead] = useMarkNotificationReadMutation()
