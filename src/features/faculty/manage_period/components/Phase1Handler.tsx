@@ -43,7 +43,7 @@ export function Phase1Handler({
 	onProcess: () => void
 	phase: PeriodPhase
 }) {
-	const allDone = data.missingTopics.length === 0 && data.pendingTopics === 0
+	const allDone = data.missingTopics.length === 0 && data.pendingTopics.length === 0
 	const [loading, setLoading] = useState(false)
 	const [confirmNextPhaseOpen, setConfirmNextPhaseOpen] = useState(false)
 	const [expandedActions, setExpandedActions] = useState<Set<string>>(new Set())
@@ -104,12 +104,12 @@ export function Phase1Handler({
 		})
 	}
 
-	if (data.pendingTopics > 0) {
+	if (data.pendingTopics.length > 0) {
 		actions.push({
 			id: 'pending-topics',
 			label: 'Đề tài chờ phê duyệt',
 			description: 'Các đề tài đã nộp nhưng chưa được xử lý',
-			count: data.pendingTopics,
+			count: data.pendingTopics.length,
 			actionType: 'process'
 		})
 	}

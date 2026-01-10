@@ -11,7 +11,6 @@ import { PeriodPhaseStatus, type PeriodPhase } from '@/models/period-phase.model
 import { PhaseInfo } from '@/utils/utils'
 import { cn } from '@/lib/utils'
 import { PhaseSettingsModal } from './components/modals/PhaseSettingsModal'
-import { MultiPhaseSetupModal } from './components/modals/MultiPhaseSetupModal'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { getNextPhase } from './utils'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
@@ -169,13 +168,7 @@ export default function DetailPeriodPage() {
 				lecturers={lecturersByFaculty?.data ?? []}
 				onSuccess={() => refetch()}
 			/>
-			<MultiPhaseSetupModal
-				open={multiPhaseSetupOpen}
-				onOpenChange={setMultiPhaseSetupOpen}
-				periodId={period._id}
-				lecturers={lecturersByFaculty?.data ?? []}
-				onSuccess={() => refetch()}
-			/>
+			
 			{currentPhaseDetail && (
 				<ManageMilestone
 					open={isManagingMilestonesOpen}

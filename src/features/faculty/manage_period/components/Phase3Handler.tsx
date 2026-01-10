@@ -1,8 +1,7 @@
 import type { Phase3Response } from '@/models/period-phase.models'
 import { Button } from '@/components/ui/Button'
-import { ActionCard } from './ActionCard'
-import { ExecutionPhaseResolveModal } from './ExecutionPhaseResolveModal'
 import { useState } from 'react'
+import { ExecutionPhaseResolveModal } from './modals/Phase3ResolveModal';
 
 export function Phase3Handler({ data, onCompletePhase }: { data: Phase3Response; onCompletePhase: () => void }) {
 	const [modalOpen, setModalOpen] = useState(true)

@@ -29,6 +29,7 @@ export const groupApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<GroupDetail>) => response.data
 		}),
 
+	
 		getPaginateDirectGroups: builder.query<PaginatedDirectGroups, void>({
 			query: () => ({
 				url: '/groups/user-directs',
@@ -71,9 +72,9 @@ export const groupApi = baseApi.injectEndpoints({
 
 export const {
 	useGetPaginatedGroupQuery,
+	useGetGroupDetailQuery,
 	useGetPaginateDirectGroupsQuery,
 	useCreateOrGetDirectGroupMutation,
-	useGetGroupDetailQuery,
 	useGetGroupMessagesQuery,
 	useSearchGroupMessagesQuery
 } = groupApi
