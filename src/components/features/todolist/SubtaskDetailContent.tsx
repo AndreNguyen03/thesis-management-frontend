@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { X, User, Tag, Calendar, AlertCircle, Clock, CheckSquare } from 'lucide-react'
+import { X, User, Tag, Calendar, AlertCircle, Clock, CheckSquare, ArrowLeft } from 'lucide-react'
 import { vi as viLocale } from 'date-fns/locale'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -76,13 +76,12 @@ export const SubtaskDetailContent = ({ subtask, taskId, columnId, onClose, group
 			{/* Header */}
 			<div className='flex items-center justify-between border-b p-6'>
 				<div className='flex flex-1 items-center gap-3'>
-					<Checkbox checked={subtask.isCompleted} onCheckedChange={handleToggleComplete} />
+					<Button variant='ghost' className='hover:text-blue-700' size='icon' onClick={onClose}>
+						<ArrowLeft className='h-7 w-7' />
+					</Button>
 					{/* <Badge className={`${getStatusColor(subtask.)} text-white`}>{subtask.status}</Badge> */}
 					<h2 className='truncate text-xl font-semibold'>{subtask.title}</h2>
 				</div>
-				<Button variant='ghost' size='icon' onClick={onClose}>
-					<X className='h-5 w-5' />
-				</Button>
 			</div>
 
 			{/* Main Content - Two Columns */}
@@ -163,12 +162,12 @@ export const SubtaskDetailContent = ({ subtask, taskId, columnId, onClose, group
 									</div>
 									<div className='flex items-center gap-2'>
 										<img
-											src={subtask.reporter.avatar}
-											alt={subtask.reporter.fullname}
+											src={subtask.reporter.avatarUrl}
+											alt={subtask.reporter.fullName}
 											className='h-8 w-8 rounded-full'
 										/>
 										<div className='text-sm'>
-											<div className='font-medium'>{subtask.reporter.fullname}</div>
+											<div className='font-medium'>{subtask.reporter.fullName}</div>
 											<div className='text-xs text-muted-foreground'>
 												{subtask.reporter.email}
 											</div>

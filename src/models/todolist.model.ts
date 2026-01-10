@@ -8,19 +8,24 @@ export interface FileInfo {
 	url: string
 	size: number
 }
-
+export interface SubTaskUser {
+	_id: string
+	fullName: string
+	email: string
+	avatarUrl?: string
+}
 export interface Subtask {
 	_id: string
 	title: string
 	isCompleted: boolean
 	description?: string
-	assignees?: UserInfo[]
-	priority?: TaskPriority
-	labels?: string[]
+	assignees?: SubTaskUser[]
+	priority: TaskPriority
+	labels: string[]
 	dueDate?: Date
 	comments?: TaskComment[]
 	activities?: TaskActivity[]
-	reporter?: UserInfo
+	reporter?: SubTaskUser
 	created_at?: Date
 	updated_at?: Date
 }

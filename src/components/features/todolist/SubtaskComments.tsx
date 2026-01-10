@@ -566,7 +566,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 						<Button
 							onClick={handleAddComment}
 							disabled={
-								isAdding || isAddingWithFiles || (!newComment.trim() && selectedFiles.length === 0)
+								isAdding || isAddingWithFiles || (!newComment.trim())
 							}
 							size='sm'
 						>
