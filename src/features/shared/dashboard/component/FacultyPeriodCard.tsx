@@ -161,11 +161,10 @@ export function FacultyPeriodCard({ dashboardData }: FacultyPeriodCardProps) {
 	const currentPhaseStatus = dashboardData?.currentPhaseDetail?.status
 
 	const getPhaseStatus = (phaseType: string) => {
-		if (currentIndex === -1) return 'pending'
-
-		const phaseIndex = phaseOrder.indexOf(phaseType)
+		const phaseIndex = phaseOrder.indexOf(phaseType) // current index 4, phase index: 5
 		if (phaseIndex < currentIndex) return 'completed'
 		if (phaseIndex === currentIndex && currentPhaseStatus === 'timeout') return 'timeout'
+		if (phaseIndex === currentIndex && currentPhaseStatus === 'completed') return 'completed'
 		if (phaseIndex > currentIndex) return 'pending'
 		if (currentPhaseStatus === 'active') return 'active'
 		return 'pending'

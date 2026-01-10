@@ -40,38 +40,42 @@ export function FilterBar({
 	// Debounce search - Set rulesPagination based on switch
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			const rulesPagination = isSemanticMode ? 100 : 99
-			if (rulesPagination === 100) {
-				onSetQueryParams({
-					page: 1,
-					limit: 10,
-					search_by: [],
-					query: searchValue,
-					sort_by: 'createdAt',
-					sort_order: 'desc',
-					status: 'all',
-					rulesPagination: rulesPagination,
-					lecturerIds: [],
-					fieldIds: [],
-					queryStatus: []
-				})
-			} else
-				onSetQueryParams({
-					page: 1,
-					limit: 10,
-					search_by: ['titleVN', 'titleEng'],
-					query: searchValue,
-					sort_by: 'createdAt',
-					sort_order: 'desc',
-					status: 'all',
-					rulesPagination: rulesPagination,
-					lecturerIds: [],
-					fieldIds: [],
-					queryStatus: []
-				})
+			// Chỉ gọi API khi có searchValue
+			if (searchValue.trim() !== '') {
+				const rulesPagination = isSemanticMode ? 100 : 99
+				if (rulesPagination === 100) {
+					onSetQueryParams({
+						page: 1,
+						limit: 10,
+						search_by: [],
+						query: searchValue,
+						sort_by: 'createdAt',
+						sort_order: 'desc',
+						status: 'all',
+						rulesPagination: rulesPagination,
+						lecturerIds: [],
+						fieldIds: [],
+						queryStatus: []
+					})
+				} else {
+					onSetQueryParams({
+						page: 1,
+						limit: 10,
+						search_by: ['titleVN', 'titleEng'],
+						query: searchValue,
+						sort_by: 'createdAt',
+						sort_order: 'desc',
+						status: 'all',
+						rulesPagination: rulesPagination,
+						lecturerIds: [],
+						fieldIds: [],
+						queryStatus: []
+					})
+				}
+			}
 		}, 400)
 		return () => clearTimeout(timer)
-	}, [searchValue, isSemanticMode]) // Removed queryParams from deps
+	}, [searchValue, isSemanticMode])
 
 	// Tính số lượng filter active (chỉ lecturerIds, fieldIds, và status !== 'all')
 	const activeFilterCount = [
@@ -106,7 +110,7 @@ export function FilterBar({
 
 	const handleModeToggle = (checked: boolean) => {
 		setIsSemanticMode(checked)
-		onSetQueryParams({ ...queryParams, rulesPagination: checked ? 100 : 99, page: 1 })
+		// Không gọi onSetQueryParams ở đây, chỉ đổi local state
 	}
 
 	const FilterControls = () => (

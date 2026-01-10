@@ -1,15 +1,42 @@
-import { ROLES } from '@/models'
+import { ROLES, type StudentUser } from '@/models'
 import { FileText } from 'lucide-react'
 import { useAppSelector } from '@/store'
 import PeriodCard from './partitions/PeriodCard'
 import { useGetCurrentPeriodsQuery } from '@/services/periodApi'
 import { LoadingOverlay } from '@/components/ui'
+import { socketService } from '@/services/socket.service'
+import { useEffect } from 'react'
+import { getUserIdFromAppUser } from '@/utils/utils'
 
 // sinh viên sẽ truy cập vào đây trong khi kỳ mở pha đăng ký
 export const RegistrationPeriodsPage = () => {
 	const user = useAppSelector((state) => state.auth.user)
+	const userId = getUserIdFromAppUser(user)
 	// 👉 LẤY DATA TỪ RTK QUERY (CACHE)
-	const { data: periods = [], isLoading, isFetching } = useGetCurrentPeriodsQuery()
+	const {
+		data: periods = [],
+		isLoading,
+		isFetching,
+		refetch
+	} = useGetCurrentPeriodsQuery(undefined, {
+		refetchOnMountOrArgChange: true,
+		refetchOnFocus: true
+	})
+
+	useEffect(() => {
+		if (!userId) return
+		socketService.connect(userId, '/period')
+
+		const cleanup = socketService.on('/period', 'periodDashboard:update', () => {
+			console.log('Received periodDashboard:update event, refetching student dashboard data...')
+			refetch()
+		})
+
+		return () => {
+			cleanup()
+			socketService.disconnect('/period')
+		}
+	}, [userId, refetch])
 
 	// ⛔ chưa có data thì không xử lý gì hết
 	if (isLoading) {
@@ -94,18 +121,15 @@ export const RegistrationPeriodsPage = () => {
 
 	return (
 		<div className='min-h-screen w-full bg-gray-100 pt-10 font-sans'>
-			<div className='mx-auto max-w-6xl'>
+			<div className='mx-auto max-w-6xl px-2 sm:px-4 md:px-6 lg:px-0'>
 				<h1 className='mb-2 text-3xl font-bold text-gray-900'>Đợt đăng ký đề tài của khoa</h1>
-
 				<p className='mb-8 text-gray-600'>
 					{user?.role === ROLES.STUDENT
 						? 'Sinh viên: Chọn đợt đăng ký Khóa luận hoặc NCKH theo kế hoạch đào tạo.'
 						: 'Giảng viên: Quản lý các đợt Khóa luận / NCKH của khoa.'}
 				</p>
-
 				<div className='space-y-12'>
 					{renderActivePeriods()}
-
 					{periods.length === 0 && !isFetching && (
 						<div className='rounded-xl border-2 border-dashed bg-white py-20 text-center text-gray-500 shadow-lg'>
 							<FileText className='mx-auto mb-3 h-10 w-10 text-gray-400' />
@@ -113,14 +137,15 @@ export const RegistrationPeriodsPage = () => {
 						</div>
 					)}
 				</div>
-				{/* Recommendation Panel */}
-				{/* <RecommendationPanel
-					isOpen={isRecommendOpen}
-					onClose={() => setIsRecommendOpen(false)}
-				/>
+				{/* Recommendation Panel
+					<RecommendationPanel
+						isOpen={isRecommendOpen}
+						onClose={() => setIsRecommendOpen(false)}
+						periodId={'6942e014a9da33dcf05b24f4'}
+					/>
 
-				{/* Floating Button */}
-				{/* <RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} /> */} 
+					{/* Floating Button */}
+				{/* <RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} /> */}
 			</div>
 		</div>
 	)

@@ -4,13 +4,37 @@ import { PeriodCardSkeleton } from './component/skeleton/PeriodSkeleton'
 import { SidebarSkeleton } from './component/skeleton/RightSidebarSkeleton'
 import { useGetAllUserMilestonesQuery } from '@/services/milestoneApi'
 import { LecturerPeriodCard } from './component/LecturerPeriodCard'
+import { useEffect } from 'react'
+import { socketService } from '@/services/socket.service'
+import { useAppSelector } from '@/store'
+import type { LecturerProfile } from '@/models'
 
 export function LecturerDashboard() {
 	const { data: milestoneEvents, isLoading: isLoadingMilestoneEvent } = useGetAllUserMilestonesQuery()
-	const { data, isLoading: isLoadingLecturerDashboard } = useGetLecturerDashboardQuery()
+	const { data, isLoading: isLoadingLecturerDashboard, refetch } = useGetLecturerDashboardQuery()
+
+	const userId = useAppSelector((state) => (state.auth.user as LecturerProfile)?.userId)
+
+	console.log('lecturer dashboard data', data)
 
 	const currentThesisDashboard = data?.thesis
 	const currentResearchDashboard = data?.scientificResearch
+
+	useEffect(() => {
+        if (!userId) return;
+		socketService.connect(userId, '/period')
+
+        const cleanup = socketService.on('/period', 'periodDashboard:update', () => {
+            console.log('Received periodDashboard:update event, refetching lecturer dashboard data...')
+            refetch()
+        })
+
+        return () => {
+            cleanup()
+            socketService.disconnect('/period')
+        }
+    
+	}, [userId, refetch])
 
 	if (isLoadingMilestoneEvent || isLoadingLecturerDashboard) {
 		return (

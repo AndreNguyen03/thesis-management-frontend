@@ -7,8 +7,8 @@ export interface PeriodPhase {
 	startTime: string
 	endTime: string
 	status: PeriodPhaseStatus
-	minTopicsPerLecturer: number
-	requiredLecturers?: ResponseMiniLecturerDto[]
+	minTopicsPerLecturer?: number
+	requiredLecturerIds?: string[]
 	allowManualApproval?: boolean
 }
 

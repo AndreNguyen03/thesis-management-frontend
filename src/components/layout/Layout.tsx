@@ -40,12 +40,36 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 	const sidebarWidth = isOpen ? 'w-56' : 'w-16'
 	const [openAI, setOpenAI] = useState(true)
 	const { hidden } = useBreadcrumb()
+	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+	const [mobileSidebarVisible, setMobileSidebarVisible] = useState(false)
+
+	// Hiệu ứng slide out: delay đóng overlay sau khi sidebar trượt ra ngoài
+	const handleOpenMobileSidebar = () => {
+		setMobileSidebarVisible(true)
+		setTimeout(() => setMobileSidebarOpen(true), 10) // Đảm bảo CSS transition hoạt động
+	}
+	const handleCloseMobileSidebar = () => {
+		setMobileSidebarOpen(false)
+		setTimeout(() => setMobileSidebarVisible(false), 300) // Trùng với duration-300
+	}
+
 	const location = useLocation()
 	const isAICurrentPage = location.pathname === '/ai-chat'
 	return (
 		<>
 			{/* Header fixed at top */}
-			<Header user={user} onOpenAI={() => setOpenAI(true)} />
+			<Header user={user} onOpenAI={() => setOpenAI(true)} onMobileSidebarOpen={handleOpenMobileSidebar} />
+			{/* Sidebar overlay cho mobile với hiệu ứng slide */}
+			{mobileSidebarVisible && (
+				<div className='fixed inset-0 z-50 bg-black/40 lg:hidden' onClick={handleCloseMobileSidebar}>
+					<div
+						className={`absolute left-0 top-0 h-full w-56 bg-white shadow-lg transition-transform duration-300 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+						onClick={(e) => e.stopPropagation()}
+					>
+						<AppSidebar userRole={user?.role} isMobile />
+					</div>
+				</div>
+			)}
 			{/* Main layout: sidebar fixed left, content scrollable right */}
 			<div
 				className={cn(

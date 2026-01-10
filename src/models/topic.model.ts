@@ -9,6 +9,7 @@ import { PaginationQueryParamsDto } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 import type { ResponseMilestoneWithTemplate } from './milestone.model'
+import type { is } from 'date-fns/locale'
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -93,6 +94,8 @@ export interface GeneralTopic extends AbstractTopic {
 	progress?: number
 	finalGrade?: number
 	defenseMilestoneDate?: Date
+    userRegistrationStatus?: string
+    approvedStudentsNum?: number
 }
 
 //Định nghĩa đề tài trong thư viện số

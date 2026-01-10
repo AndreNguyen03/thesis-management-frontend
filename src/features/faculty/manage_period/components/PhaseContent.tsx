@@ -16,6 +16,9 @@ import { CustomPagination } from '@/components/PaginationBar'
 import Phase1DataTable from './phase-data-table/Phase1DataTable'
 import { Phase23DataTable } from './phase-data-table/Phase24DataTable'
 import { Phase4DataTable } from './phase-data-table/Phase3DataTable'
+import { getUserIdFromAppUser } from '@/utils/utils'
+import { useAppSelector } from '@/store'
+import { socketService } from '@/services/socket.service'
 // import { TopicsTable } from './TopicsTable'
 interface PhaseContentProps {
 	phaseDetail: PeriodPhase
@@ -37,8 +40,10 @@ export function PhaseContent({
 	completePhase,
 	onManageMilestones
 }: PhaseContentProps) {
+	const currentUserId = getUserIdFromAppUser(useAppSelector((state) => state.auth.user))
+
 	// // stats theo phase.phase
-	const { data: statsData } = useLecGetStatsPeriodQuery(
+	const { data: statsData, refetch: refetchPeriod } = useLecGetStatsPeriodQuery(
 		{ periodId, phase: activePhase },
 		{ refetchOnMountOrArgChange: true }
 	)
@@ -71,6 +76,7 @@ export function PhaseContent({
 		setQueryParams((prev) => ({ ...prev, query: '', status: undefined, page: 1 }))
 		setSearchTerm('')
 	}, [activePhase])
+
 	const {
 		data: topicInPhaseData,
 		isLoading,
@@ -83,6 +89,22 @@ export function PhaseContent({
 		},
 		{ skip: !periodId }
 	)
+
+	useEffect(() => {
+		socketService.connect(currentUserId, '/period')
+
+		const cleanupFunc = socketService.on('/period', 'periodDetail:update', () => {
+            console.log(' ReceiInfo change dashboard ')
+            refetch()
+            refetchPeriod()
+        }) 
+
+        return () => {
+            cleanupFunc()
+            socketService.disconnect('/period')
+        }
+
+	}, [currentUserId, refetch, refetchPeriod])
 
 	// Cập nhật queryParams.phase khi phaseDetail.phase thay đổi
 	useEffect(() => {
@@ -183,7 +205,10 @@ export function PhaseContent({
 							paginatedTopicsInPeriod={topicInPhaseData}
 							isLoading={isLoading}
 							error={error as ApiError}
-							refetch={refetch}
+							refetch={() => {
+                                refetch()
+                                refetchPeriod()
+                            }}
 							phaseId={phaseDetail._id}
 							phaseName={currentPhase.toString()}
 							onPageChange={(p) => setQueryParams((prev) => ({ ...prev, page: p }))}
