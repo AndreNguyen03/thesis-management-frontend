@@ -2,8 +2,10 @@ import type {
 	DefenseCouncilMember,
 	FileInfo,
 	LecturerReviewDecision,
+	PaginatedFacultyMilestones,
 	MilestoneEvent,
 	PaginatedTopicInBatchMilestone,
+	PaginationAllDefenseMilestonesQuery,
 	PayloadCreateMilestone,
 	PayloadFacultyCreateMilestone,
 	RequestTopicInMilestoneBatchQuery,
@@ -14,7 +16,7 @@ import type {
 } from '@/models/milestone.model'
 import { baseApi, type ApiResponse } from './baseApi'
 import type { CreateTaskPayload, Task } from '@/models/todolist.model'
-import { buildQueryString } from '@/models/query-params'
+import { buildQueryString, PaginationQueryParamsDto } from '@/models/query-params'
 export const milestoneApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getMilestonesOfGroup: builder.query<ResponseMilestone[], { groupId: string; periodId?: string }>({
@@ -152,7 +154,10 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<ResponseMilestoneWithTemplate[]>) => response.data,
-			providesTags: (result, error, periodId) => [{ type: 'Milestones', id: periodId }, { type: 'PeriodDetail', id: periodId }]
+			providesTags: (result, error, periodId) => [
+				{ type: 'Milestones', id: periodId },
+				{ type: 'PeriodDetail', id: periodId }
+			]
 		}),
 
 		manageTopicsInDefenseMilestone: builder.mutation<
@@ -206,7 +211,6 @@ export const milestoneApi = baseApi.injectEndpoints({
 			query: ({ templateId, file }) => {
 				const formData = new FormData()
 				formData.append('file', file)
-				console.log('Uploading file for templateId:', templateId, file)
 				return {
 					url: `/milestones/${templateId}/upload-files/scoring-result`,
 					method: 'POST',
@@ -230,9 +234,32 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'PATCH'
 			}),
 			transformResponse: (response: ApiResponse<{ message: string }>) => response.data,
-			invalidatesTags: (_result, _error, { milestoneId }) => [
-				{ type: 'Milestones', id: milestoneId }
-			]
+			invalidatesTags: (_result, _error, { milestoneId }) => [{ type: 'Milestones', id: milestoneId }]
+		}),
+		getAllDefenseMilestones: builder.query<PaginatedFacultyMilestones, PaginationAllDefenseMilestonesQuery>({
+			query: (query) => {
+				const queryString = buildQueryString(query)
+				return {
+					url: `/milestones/faculty/all?${queryString}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<PaginatedFacultyMilestones>) => response.data
+		}),
+		// Giảng viên: Lấy đợt bảo vệ được phân công
+		getAssignedDefenseMilestones: builder.query<any[], { search?: string }>({
+			query: ({ search }) => ({
+				url: `/milestones/lecturer/assigned`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<any[]>) => response.data
+		}),
+		getDefenseMilestoneYears: builder.query<string[], void>({
+			query: () => ({
+				url: '/milestones/manage-defense-milestones/years-combobox',
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<string[]>) => response.data
 		}),
 	}),
 	overrideExisting: false
@@ -256,5 +283,8 @@ export const {
 	useManageLecturersInDefenseMilestoneMutation,
 	useUploadScoringResultFileMutation,
 	useDeleteScoringResultFileMutation,
-	useBlockGradeMutation
+	useBlockGradeMutation,
+	useGetAllDefenseMilestonesQuery,
+	useGetAssignedDefenseMilestonesQuery,
+	useGetDefenseMilestoneYearsQuery
 } = milestoneApi

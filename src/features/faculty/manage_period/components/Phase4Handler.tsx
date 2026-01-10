@@ -1,6 +1,5 @@
 import type { Phase4Response } from '@/models/period-phase.models'
 import { Button } from '@/components/ui/Button'
-import { ActionCard } from './ActionCard'
 import { useCompletePeriodMutation } from '@/services/periodApi'
 import { useParams } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -28,7 +27,6 @@ export function Phase4Handler({ data }: { data: Phase4Response }) {
 			<span className='text-blue-700 font-semibold'>Tất cả các pha đã hoàn thành thành công.</span>
 			<Button className='w-fit' onClick={handleCompletePeriod} disabled={isLoadingPeriod}>
 				{isLoadingPeriod ? <Loader2 className='h-2 w-2 animate-spin' /> : 'Hoàn thành Kỳ hiện tại'}
-				{isLoadingPeriod ? 'Đang hoàn thành kỳ...' : 'Hoàn thành Kỳ hiện tại'}
 			</Button>
 		</div>
 	)

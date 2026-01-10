@@ -89,7 +89,7 @@ export function GradingResultCard({ topic }: GradingResultCardProps) {
 					<div className='text-center'>
 						<div className='text-center'>
 							<div className='text-4xl font-bold text-success sm:text-5xl'>
-								{topic.defenseResult.finalScore}
+								{topic.defenseResult.finalScore?.toFixed(2)}
 							</div>
 						</div>
 					</div>

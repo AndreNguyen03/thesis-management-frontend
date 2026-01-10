@@ -70,3 +70,8 @@ export const ResourceTypeLabels: Record<ResourceType, string> = {
 	file: 'File',
 	text: 'Văn bản'
 }
+
+export interface PayloadSuggestion {
+	content: string
+	enabled: boolean
+}

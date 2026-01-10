@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
 	Dialog,
 	DialogContent,
@@ -15,7 +15,6 @@ import { toast } from '@/hooks/use-toast'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { useCreatePeriodMutation } from '@/services/periodApi'
 import type { ApiError } from '@/models'
-
 interface AddPeriodModalProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
@@ -40,6 +39,20 @@ export function AddPeriodModal({ open, onOpenChange }: AddPeriodModalProps) {
 		onOpenChange(false)
 	}
 
+	useEffect(() => {
+		const startYear = startTime ? new Date(startTime).getFullYear() : null
+		const endYear = endTime ? new Date(endTime).getFullYear() : null
+		if (startYear && endYear) {
+			if (startYear !== endYear) setAcademicYear(`${startYear}-${endYear}`)
+			else setAcademicYear(`${startYear}`)
+		} else {
+			if (startYear) {
+				setAcademicYear(`${startYear}`)
+			} else if (endYear) {
+				setAcademicYear(`${endYear}`)
+			}
+		}
+	}, [startTime, endTime])
 	const handleAddPeriod = async () => {
 		if (!academicYear || !semester || !periodType || !startTime || !endTime) return
 
@@ -86,6 +99,7 @@ export function AddPeriodModal({ open, onOpenChange }: AddPeriodModalProps) {
 								<div className='space-y-2'>
 									<Label>Năm học *</Label>
 									<input
+										disabled={true}
 										type='text'
 										placeholder='VD: 2024-2025'
 										className='w-full rounded border px-3 py-2'

@@ -21,7 +21,7 @@ const buttonVariants = cva(
 				re_register: 'bg-orange-600 text-white hover:bg-orange-700',
 				register: 'bg-blue-600 text-white hover:bg-blue-700',
 				back: ' rounded-lg bg-white px-4 py-2 text-blue-700 hover:bg-blue-200 shadow-sm',
-				gray: 'bg-gray-200 text-gray-800 hover:bg-gray-300 border border-gray-300',
+				gray: 'bg-gray-200 text-gray-800 hover:bg-gray-100 border border-gray-300',
 				yellow: 'bg-yellow-300 text-gray-800 hover:bg-yellow-400',
 				red: 'bg-red-500 text-white hover:bg-red-600',
 				blue: 'bg-blue-600 text-white hover:bg-blue-700',

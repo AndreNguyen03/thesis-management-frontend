@@ -4,16 +4,18 @@ import {
 	type ResponseMilestoneWithTemplate
 } from '@/models/milestone.model'
 import { formatDate } from '@/utils/utils'
+import { useNavigate } from 'react-router-dom'
 interface MilestoneHeaderProps {
 	milestone: ResponseMilestoneWithTemplate
 	periodFacultyName: string
 }
 
 const MilestoneHeader = ({ milestone, periodFacultyName }: MilestoneHeaderProps) => {
+	const navigate = useNavigate()
 	return (
 		<div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
 			{/* Milestone Info */}
-			<div className='col-span-1 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-6 shadow'>
+			<div className='col-span-1 flex h-fit flex-col gap-3 rounded-lg border border-gray-200 bg-white p-6 shadow'>
 				<h2 className='text-2xl font-bold text-blue-700'>{milestone.title}</h2>
 				<div className='flex items-center gap-2'>
 					<span className='font-semibold text-gray-600'>Trạng thái:</span>
@@ -54,6 +56,12 @@ const MilestoneHeader = ({ milestone, periodFacultyName }: MilestoneHeaderProps)
 					<div className='flex items-center gap-2'>
 						<span className='text-sm font-medium text-gray-600'>Số lượng thành viên:</span>
 						<span className='text-sm text-gray-900'>{milestone.defenseCouncil?.length || 0}</span>
+						<span
+							className='cursor-pointer text-sm font-semibold text-blue-800 hover:underline'
+							onClick={() => navigate(`/period/${milestone.periodId}/manage-defense-assignment`)}
+						>
+							Đi tới phân công
+						</span>
 					</div>
 				</div>
 				{/* Council Members */}
@@ -64,9 +72,9 @@ const MilestoneHeader = ({ milestone, periodFacultyName }: MilestoneHeaderProps)
 							{milestone.defenseCouncil.map((member, idx) => (
 								<div
 									key={idx}
-									className='flex items-center gap-3 rounded border border-gray-100 bg-gray-50 px-3 py-2'
+									className='flex cursor-pointer items-center gap-3 rounded border border-gray-100 bg-gray-50 px-3 py-2 hover:border-blue-700' onClick={()=>navigate(`/profile/lecturer/${member.memberId}`)}
 								>
-									<span className='text-sm font-medium text-gray-700'>{`GV${idx + 1}`}</span>
+									<span className='text-sm font-medium text-gray-700'>{`(GV${idx + 1})`}</span>
 									<span className='text-sm font-medium text-gray-700'>{member.title}</span>
 									<span className='text-sm font-medium text-gray-700'>{member.fullName}</span>
 									<span className='rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700'>

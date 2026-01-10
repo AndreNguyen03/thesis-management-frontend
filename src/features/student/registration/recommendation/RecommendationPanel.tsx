@@ -117,7 +117,6 @@ export function RecommendationPanel({ isOpen, onClose, periodId }: Recommendatio
 			<div className='p-6 text-sm text-muted-foreground'>Không thể tải gợi ý đề tài. Vui lòng thử lại sau.</div>
 		)
 	}
-
 	return (
 		<>
 			<div

@@ -1,4 +1,5 @@
-import type { PhaseType } from './period.model'
+import type { MissTopics, PhaseType } from './period.model'
+import type { ResponseMiniLecturerDto } from './users'
 
 export interface PeriodPhase {
 	_id: string
@@ -32,19 +33,19 @@ export const phaseStatusLabels = {
 	end: 'Kết thúc'
 }
 export type PeriodPhaseStatus = (typeof PeriodPhaseStatus)[keyof typeof PeriodPhaseStatus]
-
+export interface TopicInfo {
+	_id: string
+	titleVN: string
+	titleEng: string
+	description: string
+	currentStatus: string
+}
 export interface Phase1Response {
 	periodId: string
 	phase: 'submit_topic'
-	missingTopics: {
-		lecturerId: string
-		lecturerName: string
-		lecturerEmail: string
-		minTopicsRequired: number
-		submittedTopicsCount: number
-		missingTopicsCount: number
-	}[]
-	pendingTopics: number
+	missingTopics: MissTopics[]
+	pendingTopics: TopicInfo[]
+	currentApprovedTopics: number
 	canTriggerNextPhase: boolean
 }
 
@@ -118,7 +119,7 @@ export const isPhase3 = (res: ResolvePhaseResponse): res is Phase3Response => re
 export function hasPending(res: ResolvePhaseResponse): boolean {
 	if (isPhase1(res)) {
 		console.log(res)
-		return res.pendingTopics > 0 || res.missingTopics.length > 0
+		return res.pendingTopics.length > 0 || res.missingTopics.length > 0
 	} else if (isPhase2(res)) {
 		return res.resolveTopics.draft.length > 0 || res.resolveTopics.executing.length > 0
 	} else if (isPhase3(res)) {

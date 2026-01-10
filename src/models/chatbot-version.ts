@@ -2,11 +2,11 @@ export interface GetChatbotVerDto {
 	_id: string
 	name: string
 	description: string
-	status: string
+	status: "enabled" | "disabled"
 	query_suggestions: GetQuerySuggestionDto[]
-	query_unenable_suggestions: GetQuerySuggestionDto[]
 	createdAt: Date
 	updatedAt: Date
+	avatarUrl?: string
 }
 
 export interface GetQuerySuggestionDto {

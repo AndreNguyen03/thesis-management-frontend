@@ -1,0 +1,10 @@
+// Export all Jira-like task components
+export { TaskDetailModal } from './TaskDetailModal'
+export { TaskDetailContent } from './TaskDetailContent'
+export { TaskDescription } from './TaskDescription'
+export { TaskComments } from './TaskComments'
+export { TaskActivity } from './TaskActivity'
+export { TaskAssignees } from './TaskAssignees'
+export { TaskPrioritySelect } from './TaskPrioritySelect'
+export { TaskLabels } from './TaskLabels'
+export { TaskDueDate } from './TaskDueDate'

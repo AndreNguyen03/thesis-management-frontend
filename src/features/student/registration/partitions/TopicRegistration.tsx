@@ -12,12 +12,14 @@ import {
 	PaginationNext,
 	PaginationPrevious
 } from '@/components/ui/pagination'
-import type {
-	GeneralTopic,
-	GetFieldNameReponseDto,
-	PaginationTopicsRegistrationQueryParams,
-	ResponseMiniLecturerDto,
-	StudentUser
+import {
+	type StudentRegistrationStatus,
+	type GeneralTopic,
+	type GetFieldNameReponseDto,
+	type ITopicDetail,
+	type PaginationTopicsRegistrationQueryParams,
+	type ResponseMiniLecturerDto,
+	type StudentUser
 } from '@/models'
 import { type GetCurrentPeriod } from '@/models/period.model'
 import { getPeriodTitle } from '@/utils/utils'

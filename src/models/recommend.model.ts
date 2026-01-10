@@ -95,3 +95,16 @@ export interface RecommendationResultData {
 		totalTopics: number
 	}
 }
+
+
+export interface RecommendationResponse {
+	data?: RecommendationResult[]
+	message?: string
+	statusCode?: number
+	metadata?: {
+		processingTime: number
+		profileStatus: string
+		recommendationsCount: number
+		totalTopics: number
+	}
+}

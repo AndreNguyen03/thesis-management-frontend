@@ -254,7 +254,7 @@ const ChatProvider: React.FC<{
 					prev.map((g) => {
 						if (g._id !== payload.groupId) return g
 
-						const sender = g.participants.find((p) => p.id === payload.lastMessage.senderId)
+						const sender = g.participants.find((p) => p._id === payload.lastMessage.senderId)
 
 						return {
 							...g,

@@ -11,7 +11,6 @@ import { PeriodPhaseStatus, type PeriodPhase } from '@/models/period-phase.model
 import { PhaseInfo } from '@/utils/utils'
 import { cn } from '@/lib/utils'
 import { PhaseSettingsModal } from './components/modals/PhaseSettingsModal'
-import { MultiPhaseSetupModal } from './components/modals/MultiPhaseSetupModal'
 import { LoadingState } from '@/components/ui/LoadingState'
 import { getNextPhase } from './utils'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
@@ -126,7 +125,7 @@ export default function DetailPeriodPage() {
 							</span>
 
 							{/* Nút thiết lập nhiều pha nếu đang ở pha execution */}
-							{period.currentPhase === 'execution' && (
+							{/* {period.currentPhase === 'execution' && (
 								<div className='flex flex-col items-center gap-2'>
 									<Button
 										variant='default'
@@ -139,7 +138,7 @@ export default function DetailPeriodPage() {
 									</Button>
 									<span className='text-xs text-muted-foreground'>Hoặc</span>
 								</div>
-							)}
+							)} */}
 
 							<div className='flex gap-2'>
 								<Button
@@ -152,9 +151,9 @@ export default function DetailPeriodPage() {
 									Thiết lập pha {PhaseInfo[period.currentPhase].continue}
 								</Button>
 
-								<Button size='sm' onClick={() => setCurrentChosenPhase(period.currentPhase)}>
+								{/* <Button size='sm' onClick={() => setCurrentChosenPhase(period.currentPhase)}>
 									Quay lại pha {PhaseInfo[period.currentPhase].label}
-								</Button>
+								</Button> */}
 							</div>
 						</div>
 					)}
@@ -169,13 +168,7 @@ export default function DetailPeriodPage() {
 				lecturers={lecturersByFaculty?.data ?? []}
 				onSuccess={() => refetch()}
 			/>
-			<MultiPhaseSetupModal
-				open={multiPhaseSetupOpen}
-				onOpenChange={setMultiPhaseSetupOpen}
-				periodId={period._id}
-				lecturers={lecturersByFaculty?.data ?? []}
-				onSuccess={() => refetch()}
-			/>
+			
 			{currentPhaseDetail && (
 				<ManageMilestone
 					open={isManagingMilestonesOpen}

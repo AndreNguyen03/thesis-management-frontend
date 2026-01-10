@@ -1,8 +1,8 @@
 // Phase1Handler.tsx
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button, Badge } from '@/components/ui'
 import { Bell, CheckCircle2, Clock } from 'lucide-react'
-import type { Phase1Response } from '@/models/period-phase.models'
+import type { PeriodPhase, Phase1Response } from '@/models/period-phase.models'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 import { ChevronDown, ChevronUp } from 'lucide-react'
@@ -35,13 +35,15 @@ const STORAGE_KEY = 'phase1-actions-sent'
 export function Phase1Handler({
 	data,
 	onCompletePhase,
-	onProcess
+	onProcess,
+	phase
 }: {
 	data: Phase1Response
 	onCompletePhase: () => void
 	onProcess: () => void
+	phase: PeriodPhase
 }) {
-	const allDone = data.missingTopics.length === 0 && data.pendingTopics === 0
+	const allDone = data.missingTopics.length === 0 && data.pendingTopics.length === 0
 	const [loading, setLoading] = useState(false)
 	const [confirmNextPhaseOpen, setConfirmNextPhaseOpen] = useState(false)
 	const [expandedActions, setExpandedActions] = useState<Set<string>>(new Set())
@@ -68,7 +70,15 @@ export function Phase1Handler({
 	useEffect(() => {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(sentActions)))
 	}, [sentActions])
-
+	const { isEnough, totalNeededTopics, currentTopicsNumber } = useMemo(() => {
+		const totalNeededTopics = phase.minTopicsPerLecturer * (phase.requiredLecturers?.length || 0)
+		const currentTopicsNumber = data.currentApprovedTopics
+		return {
+			isEnough: totalNeededTopics <= currentTopicsNumber,
+			totalNeededTopics,
+			currentTopicsNumber
+		}
+	}, [phase, data.missingTopics])
 	// Map data.missingTopics sang action object
 	const actions: Action[] = []
 	if (data.missingTopics.length > 0) {
@@ -76,30 +86,30 @@ export function Phase1Handler({
 		actions.push({
 			id: 'remind-lecturers',
 			label: 'Giảng viên chưa nộp đủ đề tài',
-			description: isSent
-				? 'Nhắc nhở đã được gửi (đang chờ phản hồi từ giảng viên)'
+			description: isEnough
+				? `Số đề tài đã đạt yêu cầu tối thiểu (${currentTopicsNumber}/${totalNeededTopics}), có thể chuyển pha tiếp theo dù chơi hết thời gian.`
 				: 'Nhắc nhở các giảng viên chưa nộp đủ số lượng đề tài yêu cầu',
 			count: data.missingTopics.length,
 			isSent,
 			actionType: 'remind',
 			totalMissing: data.missingTopics.reduce((sum, lec) => sum + lec.missingTopicsCount, 0),
 			targetDetails: data.missingTopics.map((lec) => ({
-				id: lec.lecturerId,
+				id: lec.userId,
 				name: lec.lecturerName,
 				email: lec.lecturerEmail,
-				currentCount: lec.submittedTopicsCount,
+				currentCount: lec.approvalTopicsCount,
 				requiredCount: lec.minTopicsRequired,
 				missingCount: lec.missingTopicsCount
 			}))
 		})
 	}
 
-	if (data.pendingTopics > 0) {
+	if (data.pendingTopics.length > 0) {
 		actions.push({
 			id: 'pending-topics',
 			label: 'Đề tài chờ phê duyệt',
 			description: 'Các đề tài đã nộp nhưng chưa được xử lý',
-			count: data.pendingTopics,
+			count: data.pendingTopics.length,
 			actionType: 'process'
 		})
 	}
@@ -157,21 +167,15 @@ export function Phase1Handler({
 			{actions.map((action) => {
 				const isExpanded = expandedActions.has(action.id)
 				const hasDetails = action.targetDetails && action.targetDetails.length > 0
-				const isActionSent = action.isSent
 				const buttonText = action.actionType === 'remind' ? 'Gửi nhắc nhở' : 'Đi Xử lý '
 				return (
-					<div
-						key={action.id}
-						className={`space-y-2 rounded-lg border p-4 ${isActionSent ? 'border-yellow-200 bg-yellow-50' : 'border-gray-200'}`}
-					>
+					<div key={action.id} className={`space-y-2 rounded-lg border p-4 ${'border-gray-200'}`}>
 						<div className='flex items-center justify-between gap-4'>
 							<div
 								className={`rounded-lg border p-2.5 ${
-									isActionSent
-										? 'border-yellow bg-yellow-100 text-yellow-600'
-										: action.actionType === 'process'
-											? 'border-purple-400 bg-purple-50 text-purple-600'
-											: 'border-blue bg-blue-100 text-blue-600'
+									action.actionType === 'process'
+										? 'border-purple-400 bg-purple-50 text-purple-600'
+										: 'border-blue bg-blue-100 text-blue-600'
 								}`}
 							>
 								{action.actionType === 'process' ? (
@@ -186,15 +190,10 @@ export function Phase1Handler({
 									{action.totalMissing && action.totalMissing > 0 && (
 										<Badge variant='destructive'>Thiếu {action.totalMissing} đề tài</Badge>
 									)}
-									{isActionSent && <Badge variant='secondary'>Đang chờ</Badge>}
 								</div>
 								<p className='text-sm text-muted-foreground'>{action.description}</p>
 							</div>
-							{isActionSent ? (
-								<Button variant='secondary' disabled>
-									Đã xử lý
-								</Button>
-							) : (
+							<div className='flex flex-col gap-2'>
 								<Button
 									variant='default'
 									onClick={() => {
@@ -206,10 +205,16 @@ export function Phase1Handler({
 										}
 									}}
 									disabled={loading}
+									className='h-fit w-fit px-2 py-2'
 								>
 									{loading ? 'Đang xử lý...' : buttonText}
 								</Button>
-							)}
+								{isEnough && (
+									<Button className='h-fit w-fit px-2 py-2' onClick={onCompletePhase}>
+										Có thể chuyển pha
+									</Button>
+								)}
+							</div>
 						</div>
 
 						{hasDetails && (

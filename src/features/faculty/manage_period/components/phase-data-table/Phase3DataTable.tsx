@@ -111,9 +111,13 @@ export const Phase4DataTable = ({
 				return (
 					<>
 						<>
-							<th className='px-3 py-2 text-left text-[15px] font-semibold'>Điểm số - coming</th>
-							<th className='line-clamp-2 px-3 py-2 text-left text-[15px] font-semibold'>
-								Ngày báo cáo -coming
+							<th className='px-3 py-2 text-left text-[15px] font-semibold'>
+								{hic.finalGrade?.toFixed(2)}
+							</th>
+							<th className='line-clampp-2 px-3 py-2 text-left text-[15px] font-semibold'>
+								{hic.defenseMilestoneDate
+									? new Date(hic.defenseMilestoneDate).toLocaleString('vi-VN')
+									: 'Chưa cập nhật'}
 							</th>
 						</>
 					</>

@@ -163,16 +163,16 @@ const SubmitTopicsInPeriod = () => {
 						</p>
 					</div>
 					<span
-						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail.status ?? 'pending'].color}`}
+						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail?.status ?? 'pending'].color}`}
 					>
-						{statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail.status ?? 'pending'].label}
+						{statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail?.status ?? 'pending']?.label}
 					</span>
 					<span
-						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail.status ?? 'pending'].color}`}
+						className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[submittedTopics?.meta.periodInfo?.currentPhaseDetail?.status ?? 'pending'].color}`}
 					>
-						{submittedTopics?.meta.periodInfo.currentPhaseDetail.endTime ? (
+						{submittedTopics?.meta.periodInfo?.currentPhaseDetail?.endTime ? (
 							<>
-								{`Kết thúc vào: ${new Date(submittedTopics?.meta.periodInfo?.currentPhaseDetail.endTime).toLocaleString('vi-VN')}`}{' '}
+								{`Kết thúc vào: ${new Date(submittedTopics?.meta.periodInfo?.currentPhaseDetail?.endTime).toLocaleString('vi-VN')}`}{' '}
 							</>
 						) : (
 							'Đang tải...'
@@ -304,10 +304,6 @@ const SubmitTopicsInPeriod = () => {
 								) : (
 									<>
 										<ManageSubmittedTopics dataInernal={submittedTopics} />
-										<CustomPagination
-											meta={submittedTopics.meta}
-											onPageChange={(p) => setSubmittedQueries((prev) => ({ ...prev, page: p }))}
-										/>
 									</>
 								)}
 							</TabsContent>

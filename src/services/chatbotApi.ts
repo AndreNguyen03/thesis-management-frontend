@@ -5,6 +5,7 @@ import type {
 	ChatbotResource,
 	CreateResourceDto,
 	GetPaginatedResourcesDto,
+	PayloadSuggestion,
 	UpdateResourceDto
 } from '@/models/chatbot-resource.model'
 
@@ -19,12 +20,12 @@ export const chatbotApi = baseApi.injectEndpoints({
 
 		updateChatbotVersion: builder.mutation<
 			GetChatbotVerDto,
-			Partial<Pick<GetChatbotVerDto, 'name' | 'description' | 'status'>>
+			{ updatePayload: Partial<Pick<GetChatbotVerDto, 'name' | 'description' | 'status'>>; id: string }
 		>({
-			query: (data) => ({
-				url: `/chatbots/chatbot-version`,
+			query: ({ updatePayload, id }) => ({
+				url: `/chatbots/update-chatbot-version/${id}`,
 				method: 'PATCH',
-				body: data
+				body: updatePayload
 			}),
 			transformResponse: (response: ApiResponse<GetChatbotVerDto>) => response.data,
 			invalidatesTags: ['ChatbotConfig']
@@ -113,32 +114,54 @@ export const chatbotApi = baseApi.injectEndpoints({
 		}),
 
 		// ========== Query Suggestions ==========
-		createQuerySuggestion: builder.mutation<GetChatbotVerDto, { content: string }>({
-			query: (data) => ({
-				url: `/chatbots/chatbot-version/query-suggestions`,
+		createQuerySuggestion: builder.mutation<
+			GetChatbotVerDto,
+			{ suggestions: PayloadSuggestion[]; chatbotVersionId: string }
+		>({
+			query: ({ suggestions, chatbotVersionId }) => ({
+				url: `/chatbots/chatbot-version/${chatbotVersionId}/query-suggestions`,
 				method: 'POST',
-				body: data
+				body: { suggestions }
 			}),
 			transformResponse: (response: ApiResponse<GetChatbotVerDto>) => response.data,
 			invalidatesTags: ['ChatbotConfig']
 		}),
 
-		updateQuerySuggestion: builder.mutation<GetChatbotVerDto, { id: string; content: string; enabled: boolean }>({
-			query: ({ id, ...data }) => ({
-				url: `/chatbots/chatbot-version/query-suggestions/${id}`,
+		updateQuerySuggestion: builder.mutation<
+			GetChatbotVerDto,
+			{ id: string; suggestionId: string; content: string }
+		>({
+			query: ({ id, suggestionId, content }) => ({
+				url: `/chatbots/chatbot-version/${id}/query-suggestions/${suggestionId}`,
 				method: 'PATCH',
-				body: data
+				body: {
+					newContent: content
+				}
 			}),
 			transformResponse: (response: ApiResponse<GetChatbotVerDto>) => response.data,
 			invalidatesTags: ['ChatbotConfig']
 		}),
-
-		deleteQuerySuggestion: builder.mutation<GetChatbotVerDto, string>({
-			query: (id) => ({
-				url: `/chatbots/chatbot-version/query-suggestions/${id}`,
-				method: 'DELETE'
+		deleteQuerySuggestions: builder.mutation<GetChatbotVerDto, { id: string; suggestionIds: string[] }>({
+			query: ({ id, suggestionIds }) => ({
+				url: `/chatbots/chatbot-version/${id}/query-suggestions`,
+				method: 'DELETE',
+				body: { suggestionIds }
 			}),
 			transformResponse: (response: ApiResponse<GetChatbotVerDto>) => response.data,
+			invalidatesTags: ['ChatbotConfig']
+		}),
+		toggleChatbotStatus: builder.mutation<
+			{ message: string },
+			{ id: string; suggestionId: string; status: boolean }
+		>({
+			query: ({ id, status, suggestionId }) => ({
+				url: `/chatbots/chatbot-version/${id}/toggle-suggestion-status`,
+				method: 'PATCH',
+				body: {
+					status,
+					suggestionId
+				}
+			}),
 			invalidatesTags: ['ChatbotConfig']
 		})
 	}),
@@ -157,5 +180,6 @@ export const {
 	useRetryResourceMutation,
 	useCreateQuerySuggestionMutation,
 	useUpdateQuerySuggestionMutation,
-	useDeleteQuerySuggestionMutation
+	useDeleteQuerySuggestionsMutation,
+	useToggleChatbotStatusMutation
 } = chatbotApi

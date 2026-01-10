@@ -6,9 +6,11 @@ import { Check, SquarePen, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { DeleteConfirmModal } from '../modal/DeleteConfirmModal'
+import { TaskDetailModal } from '@/components/features/todolist/TaskDetailModal'
 
 const TaskCardMinestone = ({ task }: { task: TaskDto }) => {
 	const [isOpenConfirmDeleteModal, setIsOpenConfirmDeleteModal] = useState(false)
+	const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false)
 	const group = useAppSelector((state) => state.group)
 	const [isEditting, setIsEditting] = useState(false)
 	const [editInfo, setEditInfo] = useState<RequestUpdate>({
@@ -77,7 +79,12 @@ const TaskCardMinestone = ({ task }: { task: TaskDto }) => {
 						</div>
 					) : (
 						<div>
-							<p className='text-sm font-medium text-slate-800'>{task.title}</p>
+							<p
+								className='cursor-pointer text-sm font-medium text-slate-800 hover:text-primary'
+								onClick={() => setIsTaskDetailModalOpen(true)}
+							>
+								{task.title}
+							</p>
 							<p className='text-xs text-slate-400'>Trạng thái: {task.status}</p>
 							<div className='mt-1 flex items-center gap-2'>
 								<span className='text-xs text-slate-500'>{task.description}</span>
@@ -137,6 +144,13 @@ const TaskCardMinestone = ({ task }: { task: TaskDto }) => {
 				onOpenChange={setIsOpenConfirmDeleteModal}
 				onConfirm={() => handleDeleteTask(selectedTaskId)}
 				isLoading={isLoadingDelete}
+			/>
+
+			{/* Jira-like Task Detail Modal */}
+			<TaskDetailModal
+				taskId={task._id}
+				isOpen={isTaskDetailModalOpen}
+				onClose={() => setIsTaskDetailModalOpen(false)}
 			/>
 		</div>
 	)

@@ -69,21 +69,24 @@ export function ManageApproveRegistration() {
 	}, [userId, refetch])
 
 	useEffect(() => {
-		if (allMiniPeriodInfo?.data?.length > 0 && !periodId) {
+		if ((allMiniPeriodInfo?.data?.length ?? 0) > 0 && !periodId && allMiniPeriodInfo) {
 			const initialPeriod = allMiniPeriodInfo.data[0]
 			setPeriodId(initialPeriod._id)
 		}
 	}, [allMiniPeriodInfo, periodId])
 
+	console.log('currentPeriod , period id :::', currentPeriod, periodId)
+
 	// readonly neu la ky hien tai khong phai la dang ki hoặc là khác kì hiện tại
-	const isReadOnly = false
+	const isReadOnly =
+		currentPeriod?.filter((p) => p._id === periodId && p.currentPhaseDetail.status !== 'active').length === 1
 
 	// readonly dung de test
 	// const isReadOnly = false
 
 	// lecturer action approve, reject
 	const [rejectModalOpen, setRejectModalOpen] = useState(false)
-	const [selectedStudentRequest, setSelectedStudentRequest] = useState<StudentRegistration>('')
+	const [selectedStudentRequest, setSelectedStudentRequest] = useState<StudentRegistration>({} as StudentRegistration)
 	//hàm chấp nhận yêu cầu đăng ký của sinh viên
 	const [replyRegistration, { isError: isErrorRegistration }] = useReplyRegistrationMutation()
 	// State form từ chối
