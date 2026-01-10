@@ -13,15 +13,18 @@ import {
 	type PaginationTopicsQueryParams,
 	type Topic
 } from '@/models'
-import { formatPeriodInfo, formatPeriodInfo2, PhaseInfo } from '@/utils/utils'
+import { formatPeriodInfo, formatPeriodInfo2, getUserIdFromAppUser, PhaseInfo } from '@/utils/utils'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import {
-	ChevronRight
-} from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import TopicsDataTable from './TopicsDataTableInPeriod'
+import { socketService } from '@/services/socket.service'
+import { useAppSelector } from '@/store'
 //cần được bảo vệ bởi role giảng viên
 const ManageTopicsInPeriods = () => {
+	const user = useAppSelector((state) => state.auth.user)
+
+	const userId = getUserIdFromAppUser(user)
 	const { periodId } = useParams<{ periodId: string }>()
 	const navigate = useNavigate()
 	const [queryParams, setQueryParams] = useState<PaginationLecturerGetTopicsInPhaseParams>({
@@ -51,7 +54,8 @@ const ManageTopicsInPeriods = () => {
 	const {
 		data: topicsData,
 		isLoading,
-		error
+		error,
+		refetch
 	} = useLecturerGetTopicsInPhaseQuery(
 		{
 			periodId: periodId!,
@@ -66,6 +70,21 @@ const ManageTopicsInPeriods = () => {
 			setTopics(topicsData.data)
 		}
 	}, [topicsData])
+
+	useEffect(() => {
+		if (!userId) return
+		socketService.connect(userId, '/period')
+
+		const cleanup = socketService.on('/period', 'periodDashboard:update', () => {
+			console.log('Received periodDashboard:update event, refetching student dashboard data...')
+			refetch()
+		})
+
+		return () => {
+			cleanup()
+			socketService.disconnect('/period')
+		}
+	}, [userId, refetch])
 
 	// Định nghĩa các phase để hiển thị progress
 	const allPhases = [
@@ -89,7 +108,10 @@ const ManageTopicsInPeriods = () => {
 					</Button>
 					<div>
 						<h1 className='text-3xl font-bold text-gray-900'>Quản lý Đề tài trong Kỳ</h1>
-						<p className='mt-0.5 text-xs text-slate-500'>{topicsData?.meta.periodInfo && formatPeriodInfo2(topicsData?.meta.periodInfo) || 'Đang tải...'}</p>
+						<p className='mt-0.5 text-xs text-slate-500'>
+							{(topicsData?.meta.periodInfo && formatPeriodInfo2(topicsData?.meta.periodInfo)) ||
+								'Đang tải...'}
+						</p>
 					</div>
 
 					<p className='mt-2 text-sm text-gray-600'>Theo dõi và quản lý các đề tài đã nộp trong kỳ học</p>

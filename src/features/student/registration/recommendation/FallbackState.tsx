@@ -1,8 +1,10 @@
 import { UserCircle, Sparkles, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-
+import { useNavigate } from 'react-router-dom'
 
 export function FallbackState() {
+	const navigate = useNavigate()
+
 	return (
 		<div className='rounded-lg border-2 border-dashed border-border p-5'>
 			<div className='flex items-start gap-3'>
@@ -15,7 +17,7 @@ export function FallbackState() {
 						Cập nhật hồ sơ để nhận đề tài phù hợp với kỹ năng và sở thích
 					</p>
 
-					<Button className='mt-4 gap-2' size='sm'>
+					<Button className='mt-4 gap-2' size='sm' onClick={() => navigate('/profile')}>
 						<Sparkles className='h-3.5 w-3.5' />
 						<span>Cập nhật hồ sơ</span>
 						<ArrowRight className='h-3.5 w-3.5' />

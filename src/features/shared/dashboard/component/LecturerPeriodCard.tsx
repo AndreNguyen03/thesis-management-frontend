@@ -68,6 +68,7 @@ export function LecturerPeriodCard({ dashboardData }: LecturerPeriodCardProps) {
 		const phaseIndex = phaseOrder.indexOf(phaseType) // current index 4, phase index: 5
 		if (phaseIndex < currentIndex) return 'completed'
 		if (phaseIndex === currentIndex && currentPhaseStatus === 'timeout') return 'timeout'
+		if (phaseIndex === currentIndex && currentPhaseStatus === 'completed') return 'completed'
 		if (phaseIndex > currentIndex) return 'pending'
 		if (currentPhaseStatus === 'active') return 'active'
 		return 'pending'
@@ -176,13 +177,18 @@ export function LecturerPeriodCard({ dashboardData }: LecturerPeriodCardProps) {
 	return (
 		<Card className='w-full rounded-xl border-border p-0'>
 			<CardHeader className='pb-2'>
-				<div className='flex items-center justify-between border-border'>
-					<div className='flex items-center gap-3'>
-						{content.icon}
-						<span className='text-lg font-semibold text-foreground'>{content.title}</span>
-					</div>
-					{content.badge}
-				</div>
+				<div className='flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between'>
+    <div className='flex items-center gap-3'>
+      {content.icon}
+      <span className='text-lg font-semibold text-foreground'>{content.title}</span>
+    </div>
+    <Badge variant='secondary'>{periodTypeLabel}</Badge>
+  </div>
+  {/* Thời gian kỳ */}
+  <div className='mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground'>
+    <span>Bắt đầu: {formatDate(typeof dashboardData.startTime === 'string' ? dashboardData.startTime : dashboardData.startTime?.toISOString())}</span>
+    <span>Kết thúc: {formatDate(typeof dashboardData.endTime === 'string' ? dashboardData.endTime : dashboardData.endTime?.toISOString())}</span>
+  </div>
 			</CardHeader>
 			<CardContent className='pt-0'>
 				<p className='text-sm leading-relaxed text-muted-foreground'>{content.description}</p>

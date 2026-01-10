@@ -6,7 +6,7 @@ import { usePageBreadcrumb } from '@/hooks'
 import { useEffect, useState } from 'react'
 import { useGetTopicApprovalRegistrationQuery } from '@/services/topicApi'
 import { useGetAllMiniPeriodInfoQuery, useGetCurrentPeriodsQuery } from '@/services/periodApi'
-import type { ApprovalTopicQueryParams, QueryReplyRegistration, StudentRegistration } from '@/models'
+import type { ApprovalTopicQueryParams, LecturerProfile, QueryReplyRegistration, StudentRegistration } from '@/models'
 import { ManageApproveRegistrationSkeleton } from './utils/Skeleton'
 import { useDebounce } from '@/hooks/useDebounce'
 import { PeriodPhaseName } from '@/models/period.model'
@@ -14,6 +14,8 @@ import { RegistrationStatus } from '@/features/student/TopicList/utils/registrat
 import { toast } from '@/hooks/use-toast'
 import { getErrorMessage } from '@/utils/catch-error'
 import { useReplyRegistrationMutation } from '@/services/registrationApi'
+import { socketService } from '@/services/socket.service'
+import { useAppSelector } from '@/store'
 
 export function ManageApproveRegistration() {
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Xét duyệt đăng kí' }])
@@ -36,7 +38,7 @@ export function ManageApproveRegistration() {
 		query: '' // Thêm field query để sync search
 	})
 
-	const { data: topicApprovalRegistrationData, isLoading: topicLoading } =
+	const { data: topicApprovalRegistrationData, isLoading: topicLoading, refetch } =
 		useGetTopicApprovalRegistrationQuery(queryParams)
 
 	console.log(topicApprovalRegistrationData)
@@ -47,6 +49,24 @@ export function ManageApproveRegistration() {
 	})
 
 	const { data: currentPeriod, isLoading: periodLoading } = useGetCurrentPeriodsQuery()
+
+	const userId = useAppSelector((state) => (state.auth.user as LecturerProfile)?.userId)
+
+
+	useEffect(() => {
+		if (!userId) return
+		socketService.connect(userId, '/period')
+
+		const cleanup = socketService.on('/period', 'periodDashboard:update', () => {
+			console.log('Received periodDashboard:update event, refetching lecturer dashboard data...')
+			refetch()
+		})
+
+		return () => {
+			cleanup()
+			socketService.disconnect('/period')
+		}
+	}, [userId, refetch])
 
 	useEffect(() => {
 		if ((allMiniPeriodInfo?.data?.length ?? 0) > 0 && !periodId && allMiniPeriodInfo) {

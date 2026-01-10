@@ -42,8 +42,9 @@ export function LecturerSubmitTopicCard({ dashboardData }: LecturerSubmitTopicCa
 	const topics = dashboardData.topicData as LecturerTopicSubmit[]
 
 	/* ---------------- Permission ---------------- */
-	const requiredLecturers = phase.requiredLecturers ?? []
-	const isRequiredLecturer = requiredLecturers.some((lecturer) => lecturer._id === user.userId)
+	const requiredLecturers = phase.requiredLecturerIds ?? []
+    console.log('requiredlecuterr :::', requiredLecturers)
+	const isRequiredLecturer = requiredLecturers.some((lecturerId) => lecturerId === user.userId)
 
 	/* ---------------- Time ---------------- */
 	const now = new Date()
@@ -113,7 +114,7 @@ export function LecturerSubmitTopicCard({ dashboardData }: LecturerSubmitTopicCa
 				<Button
 					size='lg'
 					className='sm:w-auto w-full rounded-xl'
-					onClick={() => navigate(topics.length > 0 ? '/lecturer/my-topics' : '/lecturer/submit-topic')}
+					onClick={() => navigate(topics.length > 0 ? `/registration/${dashboardData._id}/submit-topics` : '/registration')}
 					disabled={isExpired}
 				>
 					{topics.length > 0 ? (

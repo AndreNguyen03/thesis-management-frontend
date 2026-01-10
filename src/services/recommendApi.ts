@@ -1,16 +1,16 @@
 import { baseApi, type ApiResponse } from './baseApi'
-import type { RecommendationResponse, RecommendationResult } from '@/models/recommend.model'
+import type { RecommendationResultData } from '@/models/recommend.model'
 
 export const recommendApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
-		recommendTopicInPeriod: builder.query<RecommendationResponse, string>({
+		recommendTopicInPeriod: builder.query<RecommendationResultData, string>({
 			query: (periodId) => {
 				return {
 					url: `/recommend/period/${periodId}`,
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<RecommendationResponse>) => response.data
+			transformResponse: (response: ApiResponse<RecommendationResultData>) => response.data
 		})
 	}),
 	overrideExisting: false
