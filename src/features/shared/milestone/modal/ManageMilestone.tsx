@@ -1,20 +1,20 @@
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/input'
 import type { ApiError } from '@/models'
 import {
+	defenseStatusMap,
 	milestoneStatusMap,
 	MilestoneType,
 	milestoneTypeMap,
 	RequestTopicInMilestoneBatchQuery,
 	topicInMilestonesMap,
-	type PayloadFacultyCreateMilestone
+	type PayloadFacultyCreateMilestone,
+	type ResponseFacultyMilestone
 } from '@/models/milestone.model'
 import type { PeriodPhase } from '@/models/period-phase.models'
-import { DialogTitle } from '@radix-ui/react-dialog'
-import { Loader2, XCircle, Plus, Download, Eye } from 'lucide-react'
-import { useState, type Dispatch, type SetStateAction } from 'react'
+import { Loader2, XCircle, Plus, Download, Eye, Settings } from 'lucide-react'
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react'
 import { toast } from 'sonner'
 import RichTextEditor from '@/components/common/RichTextEditor'
 import DOMPurify from 'dompurify'
@@ -27,7 +27,8 @@ import {
 } from '@/services/milestoneApi'
 import { CustomPagination } from '@/components/PaginationBar'
 import { cn } from '@/lib/utils'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import CreateMilestoneForm from './CreateMilestoneForm'
 
 interface Props {
 	open: boolean
@@ -38,14 +39,6 @@ interface Props {
 }
 
 const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onSuccess }: Props) => {
-	const [newMilestone, setNewMilestone] = useState<PayloadFacultyCreateMilestone>({
-		periodId: periodId,
-		phaseName: currentPhaseDetail.phase,
-		title: '',
-		description: '',
-		dueDate: '',
-		type: MilestoneType.SUBMISSION
-	})
 	const [isMilestoneScreen, setIsMilestoneScreen] = useState(true)
 	const {
 		data: milestoneData,
@@ -57,36 +50,11 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 		refetchOnMountOrArgChange: true
 	})
 	const navigate = useNavigate()
-	const [createMilestone, { isLoading: isCreating }] = useFacultyCreateMilestoneMutation()
-	//gọi endpoint downloadzipwithBatch
+
 	const [downloadZipByBatchId, { isLoading: isDownloading }] = useFacultyDownloadZipByBatchIdMutation()
-	//gọi endpoint downloadzipwithMilestoneId
 	const [downloadZipByMilestoneId, { isLoading: isDownloadingMilestone }] =
 		useFacultyDownloadZipByMilestoneIdMutation()
-	const handleCreateMilestone = async () => {
-		if (!newMilestone.title || !newMilestone.dueDate) {
-			toast.error('Vui lòng điền đầy đủ tiêu đề và hạn nộp', { richColors: true })
-			return
-		}
-		try {
-			await createMilestone({ ...newMilestone }).unwrap()
-			toast.success('Tạo cột mốc thành công', { richColors: true })
 
-			// Reset form
-			setNewMilestone({
-				periodId: periodId,
-				phaseName: currentPhaseDetail.phase,
-				title: '',
-				description: '',
-				dueDate: '',
-				type: MilestoneType.SUBMISSION
-			})
-			onSuccess()
-		} catch (error) {
-			console.error('Error creating milestone:', error)
-			toast.error('Xảy ra lỗi khi tạo cột mốc', { richColors: true })
-		}
-	}
 	const handleDownloadZip = async (id: string, nameTopic?: string) => {
 		try {
 			let blob
@@ -118,6 +86,7 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 			toast.error('Xảy ra lỗi khi tải xuống', { richColors: true })
 		}
 	}
+
 	const formatDateTime = (dateString: string) => {
 		const date = new Date(dateString)
 		return date.toLocaleString('vi-VN', {
@@ -128,7 +97,6 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 			minute: '2-digit'
 		})
 	}
-	const [isCollapsed, setIsCollapsed] = useState(true)
 
 	const [queriesTopics, setQueriesTopics] = useState<RequestTopicInMilestoneBatchQuery>({
 		page: 1,
@@ -138,14 +106,15 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 		sort_by: 'createdAt',
 		sort_order: 'desc'
 	})
-	const [selectedParentId, setSelectedParentId] = useState<string>('')
+	const [selectedParent, setSelectedParent] = useState<ResponseFacultyMilestone>({} as ResponseFacultyMilestone)
+
 	const {
 		data: topicsInBatch,
 		isLoading: isLoadingTopics,
 		error: topicsError
 	} = useFacultyGetTopicsInBatchQuery(
 		{
-			parentId: selectedParentId,
+			parentId: selectedParent._id,
 			queries: queriesTopics
 		},
 		{
@@ -155,8 +124,9 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='flex max-h-[70vh] max-w-5xl flex-col border-red-500 bg-white'>
+			<DialogContent className='flex max-h-[90vh] max-w-7xl flex-col bg-white'>
 				{!isMilestoneScreen ? (
+					// --- MÀN HÌNH CHI TIẾT ĐỀ TÀI TRONG CỘT MỐC ---
 					<>
 						<DialogHeader>
 							<DialogTitle className='flex items-center gap-2 text-lg font-semibold'>
@@ -171,7 +141,7 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 								Trạng thái các đề tài theo cột mốc
 								<div>
 									{(() => {
-										const minestoneInfo = milestoneData?.find((m) => m._id === selectedParentId)
+										const minestoneInfo = milestoneData?.find((m) => m._id === selectedParent._id)
 										return minestoneInfo ? (
 											<span className='ml-2 text-sm text-gray-500'>
 												{minestoneInfo.title} ({minestoneInfo.count} nhóm)
@@ -181,7 +151,6 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 								</div>
 							</DialogTitle>
 						</DialogHeader>
-						{/* Bảng danh sách */}
 						<div className='space-y-6 overflow-y-auto pr-1'>
 							<table className='border-1 min-w-full bg-white'>
 								<thead>
@@ -190,9 +159,7 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Tiêu đề</th>
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Giảng viên</th>
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Ngành</th>
-										<th className='px-3 py-2 text-left text-[15px] font-semibold'>
-											Số lượng sinh viên
-										</th>
+										<th className='px-3 py-2 text-left text-[15px] font-semibold'>SV</th>
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái</th>
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Hành động</th>
 									</tr>
@@ -200,7 +167,7 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 								<tbody>
 									{isLoadingTopics ? (
 										<tr>
-											<td colSpan={5} className='py-12 text-center'>
+											<td colSpan={7} className='py-12 text-center'>
 												<div className='flex flex-col items-center justify-center gap-2'>
 													<Loader2 className='h-8 w-8 animate-spin text-blue-500' />
 													<span className='text-gray-500'>Đang tải dữ liệu...</span>
@@ -225,13 +192,11 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 													<td className='px-3 py-2'>
 														<div className='flex flex-col text-sm'>
 															{t.lecturers.length > 0 ? (
-																<>
-																	{t.lecturers.map((lecturer) => (
-																		<span
-																			key={lecturer._id}
-																		>{`${lecturer.title}. ${lecturer.fullName}`}</span>
-																	))}
-																</>
+																t.lecturers.map((lecturer) => (
+																	<span key={lecturer._id}>
+																		{`${lecturer.title}. ${lecturer.fullName}`}
+																	</span>
+																))
 															) : (
 																<>Không có dữ liệu</>
 															)}
@@ -248,73 +213,51 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 														</span>
 													</td>
 													<td className='px-3 py-2'>
-														<span className={cn(topicInMilestonesMap[t.status].color)}>
-															{topicInMilestonesMap[t.status].label}
-														</span>
+														{selectedParent.type === MilestoneType.SUBMISSION ? (
+															<span className={cn(topicInMilestonesMap[t.status].color)}>
+																{topicInMilestonesMap[t.status].label}
+															</span>
+														) : (
+															<span className='rounded-sm bg-green-700 p-1 text-sm text-white'>
+																Đã thông báo
+															</span>
+														)}
 													</td>
 													<td className='px-3 py-2'>
-														<div className='flex flex-col items-center justify-center gap-2'>
+														<div className='flex items-center gap-2'>
 															{t.status === 'submitted' && (
 																<span
 																	className='flex cursor-pointer items-center justify-center text-sm text-gray-700 hover:underline'
 																	onClick={() => handleDownloadZip(t._id, t.titleEng)}
 																>
 																	<Download className='inline-block h-4 w-4' />
-																	Tải báo cáo
 																</span>
 															)}
-															<td className='px-3 text-center'>
-																<button
-																	className='rounded-full p-2 transition-colors hover:bg-gray-100'
-																	onClick={() =>
-																		navigate(`/detail-topic/${t.topicId}`)
-																	}
-																>
-																	<Eye className='h-5 w-5 text-blue-500' />
-																</button>
-															</td>
+															<button
+																className='rounded-full p-2 transition-colors hover:bg-gray-100'
+																onClick={() => navigate(`/detail-topic/${t.topicId}`)}
+															>
+																<Eye className='h-5 w-5 text-blue-500' />
+															</button>
 														</div>
 													</td>
 												</tr>
 											))}
 										</>
 									)}
-									{topicsError && (
-										<tr>
-											<td colSpan={5} className='py-12 text-center'>
-												<div className='flex flex-col items-center justify-center gap-2'>
-													<XCircle className='h-8 w-8 text-red-500' />
-													<span className='text-gray-500'>
-														{(milestoneError as ApiError)?.data?.message ||
-															'Đã có lỗi xảy ra khi tải dữ liệu'}
-													</span>
-												</div>
-											</td>
-										</tr>
-									)}
-									{!isLoadingTopics && !topicsError && topicsInBatch?.data.length === 0 && (
-										<tr>
-											<td colSpan={5} className='py-12 text-center'>
-												<EmptyState title='Chưa có cột mốc nào' />
-											</td>
-										</tr>
-									)}{' '}
+									{/* Handle Errors and Empty States for Topics here if needed */}
 								</tbody>
 							</table>
 						</div>
 						{topicsInBatch?.meta && topicsInBatch?.meta.totalPages > 1 && (
 							<CustomPagination
 								meta={topicsInBatch?.meta}
-								onPageChange={(p) =>
-									setQueriesTopics((prev) => {
-										console.log(prev.page)
-										return { ...prev, page: p }
-									})
-								}
+								onPageChange={(p) => setQueriesTopics((prev) => ({ ...prev, page: p }))}
 							/>
 						)}
 					</>
 				) : (
+					// --- MÀN HÌNH QUẢN LÝ CỘT MỐC (MAIN) ---
 					<>
 						<DialogHeader>
 							<DialogTitle className='flex items-center gap-2 text-lg font-semibold'>
@@ -322,90 +265,10 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 							</DialogTitle>
 						</DialogHeader>
 
-						<div className='h-96 space-y-6 overflow-y-auto pr-1'>
-							{/* Form tạo mới */}
-							<div className='rounded-lg border border-blue-200 bg-blue-50 p-4'>
-								<h3
-									className='mb-3 flex w-fit cursor-pointer items-center gap-2 font-semibold text-blue-900 hover:bg-slate-200'
-									onClick={() => setIsCollapsed((prev) => !prev)}
-								>
-									<Plus className='h-5 w-5' />
-									Tạo cột mốc mới
-								</h3>
-								{!isCollapsed && (
-									<div className='grid gap-3'>
-										<div>
-											<label className='mb-1 block text-sm font-medium'>Tiêu đề *</label>
-											<Input
-												value={newMilestone.title}
-												onChange={(e) =>
-													setNewMilestone({ ...newMilestone, title: e.target.value })
-												}
-												placeholder='Nhập tiêu đề cột mốc'
-											/>
-										</div>
-										<div>
-											<label className='mb-1 block text-sm font-medium'>Nội dung</label>
-											<RichTextEditor
-												value={newMilestone.description}
-												onChange={(data) =>
-													setNewMilestone({ ...newMilestone, description: data })
-												}
-												placeholder='Nhập nội dung mô tả'
-											/>
-										</div>
-										<div>
-											<label className='mb-1 block text-sm font-medium'>Loại cột mốc *</label>
-											<select
-												className='w-full rounded border px-3 py-2'
-												value={newMilestone.type}
-												onChange={(e) =>
-													setNewMilestone({
-														...newMilestone,
-														type: e.target.value as MilestoneType
-													})
-												}
-											>
-												<option value={MilestoneType.SUBMISSION}>Nộp bài (Submission)</option>
-												<option value={MilestoneType.DEFENSE}>Bảo vệ (Defense)</option>
-											</select>
-										</div>
-										<div className='grid grid-cols-2 gap-3'>
-											<div>
-												<label className='mb-1 block text-sm font-medium'>Ngày hạn nộp *</label>
-												<input
-													type='datetime-local'
-													min={new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
-													className='w-full rounded border px-3 py-2'
-													value={newMilestone.dueDate}
-													onChange={(e) =>
-														setNewMilestone({ ...newMilestone, dueDate: e.target.value })
-													}
-												/>
-											</div>
-										</div>
-										<Button
-											onClick={handleCreateMilestone}
-											disabled={isCreating}
-											className='w-full'
-										>
-											{isCreating ? (
-												<>
-													<Loader2 className='mr-2 h-4 w-4 animate-spin' />
-													Đang tạo...
-												</>
-											) : (
-												<>
-													<Plus className='mr-2 h-4 w-4' />
-													Tạo cột mốc
-												</>
-											)}
-										</Button>
-									</div>
-								)}
-							</div>
+						<div className='h-[600px] space-y-6 overflow-y-auto pr-1'>
+							<CreateMilestoneForm periodId={periodId} />
 
-							{/* Bảng danh sách */}
+							{/* Bảng danh sách Cột mốc */}
 							<table className='border-1 min-w-full bg-white'>
 								<thead>
 									<tr className='bg-gray-100 text-gray-700'>
@@ -415,19 +278,15 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Hạn nộp</th>
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Loại</th>
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Trạng thái</th>
-										<th className='px-3 py-2 text-left text-[15px] font-semibold'>
-											Số nhóm được giao
-										</th>
-										<th className='px-3 py-2 text-left text-[15px] font-semibold'>
-											Chưa nộp báo cáo
-										</th>
+										<th className='px-3 py-2 text-center text-[15px] font-semibold'>Số nhóm</th>
+										<th className='px-3 py-2 text-center text-[15px] font-semibold'>Chưa nộp</th>
 										<th className='px-3 py-2 text-left text-[15px] font-semibold'>Hành động</th>
 									</tr>
 								</thead>
 								<tbody>
 									{isLoadingData ? (
 										<tr>
-											<td colSpan={7} className='py-12 text-center'>
+											<td colSpan={9} className='py-12 text-center'>
 												<div className='flex flex-col items-center justify-center gap-2'>
 													<Loader2 className='h-8 w-8 animate-spin text-blue-500' />
 													<span className='text-gray-500'>Đang tải dữ liệu...</span>
@@ -442,101 +301,105 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 													className='cursor-pointer border-b last:border-b-0 hover:bg-gray-50'
 													onClick={() => {
 														setIsMilestoneScreen(false)
-														setSelectedParentId(m._id)
+														setSelectedParent(m)
 													}}
 												>
-													<td className='max-w-[200px] px-3 py-2'>
+													<td className='px-3 py-2'>
 														<span className='font-semibold text-gray-900'>{index + 1}</span>
 													</td>
 													<td className='max-w-[200px] px-3 py-2'>
 														<span className='font-semibold text-gray-900'>{m.title}</span>
 													</td>
 													<td className='max-w-[300px] px-3 py-2'>
+														{/* Dùng DOMPurify để hiển thị HTML từ editor an toàn */}
 														<div
-															className='prose relative max-h-24 max-w-none overflow-hidden rounded-lg bg-gray-50 p-4 text-gray-700'
-															style={{
-																display: '-webkit-box',
-																WebkitLineClamp: 3,
-																WebkitBoxOrient: 'vertical',
-																overflow: 'hidden'
-															}}
+															className='line-clamp-2 text-sm text-gray-500'
 															dangerouslySetInnerHTML={{
-																__html: DOMPurify.sanitize(
-																	m.description || '<p>Chưa có mô tả</p>'
-																)
+																__html: DOMPurify.sanitize(m.description)
 															}}
 														/>
 													</td>
-													<td className='px-3 py-2'>
-														<span className='text-gray-700'>
+													<td className='whitespace-nowrap px-3 py-2'>
+														<span className='text-sm font-medium text-gray-700'>
 															{formatDateTime(m.dueDate)}
 														</span>
 													</td>
-													<td className='px-3 py-2'>
-														<span className='text-gray-700'>
-															{milestoneTypeMap[m.type].label}
+													<td className='whitespace-nowrap px-3 py-2'>
+														<span className='rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800'>
+															{milestoneTypeMap[m.type as string].label || m.type}
 														</span>
 													</td>
-													<td className='px-3 py-2'>
-														<span className='font-semibold text-gray-700'>
-															{milestoneStatusMap[m.status].label}
+													<td className='whitespace-nowrap px-3 py-2'>
+														<span className={cn(milestoneStatusMap[m.status]?.color)}>
+															{milestoneStatusMap[m.status]?.label}
 														</span>
 													</td>
-													<td className='px-3 py-2'>
+													<td className='px-3 py-2 text-center'>
 														<span className='font-semibold text-gray-700'>{m.count}</span>
 													</td>
-													<td className='px-3 py-2'>
-														<span className='font-semibold text-red-500'>
-															{m.uncompleteNum}
-														</span>
+													<td className='px-3 py-2 text-center'>
+														<span className='font-semibold text-red-500'></span>
 													</td>
 													<td className='px-3 py-2'>
-														{m.type === MilestoneType.SUBMISSION ? (
-															<>
-																{m.isDownload ? (
-																	<span
-																		className='cursor-pointer text-gray-700 hover:underline'
-																		onClick={(e) => {
-																			e.stopPropagation()
-																			!isDownloading && handleDownloadZip(m._id)
-																		}}
-																	>
-																		{isDownloading ? (
-																			<Loader2 className='h-2 w-2' />
-																		) : (
-																			<Download className='inline-block h-4 w-4' />
-																		)}
-																		Tải báo cáo
-																	</span>
-																) : (
-																	<span> Chưa có báo cáo</span>
-																)}
-															</>
-														) : (
+														<div className='flex items-center gap-1'>
 															<Button
-																className='w-fit'
-																onClick={() => {
-																	navigate(
-																		`/period/${periodId}/manage-defense-assignment`,
-																		{
-																			state: { milestoneId: m._id }
-																		}
-																	)
+																variant='ghost'
+																size='icon'
+																className='h-8 w-8 text-gray-500 hover:text-blue-600'
+																onClick={(e) => {
+																	e.stopPropagation()
+																	handleDownloadZip(m._id)
+																}}
+																disabled={
+																	isDownloadingMilestone ||
+																	m.count === m.uncompleteNum
+																}
+															>
+																{isDownloadingMilestone ? (
+																	<Loader2 className='h-4 w-4 animate-spin' />
+																) : (
+																	<Download className='h-4 w-4' />
+																)}
+															</Button>
+															<Button
+																variant='ghost'
+																size='icon'
+																className='h-8 w-8 text-gray-500 hover:text-blue-600'
+																onClick={(e) => {
+																	e.stopPropagation()
+																	setIsMilestoneScreen(false)
+																	setSelectedParent(m)
 																}}
 															>
-																{' '}
-																Tới phân công
+																<Eye className='h-4 w-4' />
 															</Button>
-														)}
+															{m.type === MilestoneType.DEFENSE && (
+																<button
+																	className='rounded-full p-2 transition-colors hover:bg-gray-100'
+																	onClick={(e) => {
+																		e.stopPropagation()
+																		navigate(
+																			`/period/${periodId}/manage-defense-assignment`,
+																			{
+																				state: {
+																					milestoneId: m._id
+																				}
+																			}
+																		)
+																	}}
+																>
+																	<Settings className='h-5 w-5 text-gray-700' />
+																</button>
+															)}
+														</div>
 													</td>
 												</tr>
 											))}
 										</>
 									)}
-
 									{isErrorData && (
 										<tr>
-											<td colSpan={7} className='py-12 text-center'>
+											<td colSpan={9} className='py-12 text-center'>
 												<div className='flex flex-col items-center justify-center gap-2'>
 													<XCircle className='h-8 w-8 text-red-500' />
 													<span className='text-gray-500'>
@@ -549,8 +412,8 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 									)}
 									{!isLoadingData && !isErrorData && milestoneData?.length === 0 && (
 										<tr>
-											<td colSpan={7} className='py-12 text-center'>
-												<EmptyState title='Chưa có cột mốc nào' />
+											<td colSpan={9} className='py-12 text-center'>
+												<EmptyState title='Chưa có cột mốc nào được tạo' />
 											</td>
 										</tr>
 									)}

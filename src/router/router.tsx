@@ -39,6 +39,8 @@ import ManageTopicDraft2 from '@/features/lecturer/manage_topic/draft/ManageDraf
 import ManageTopicDraft from '@/features/lecturer/manage_topic/draft/ManageDraftTopic'
 import { ChatbotPage } from '@/features/chatbot/pages/ChatbotPage'
 import { AIAssistantPage } from '@/features/shared/ai-assistant'
+import MilestonePage from '@/features/shared/milestone/MilestonePage'
+import DefenseMilestonesInPeriodRegistration from '@/features/faculty/defense-milestones/DefenseMilestonesInPeriodRegistration'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -139,9 +141,12 @@ export const router = createBrowserRouter([
 			//   { path: 'create-thesis', element: <CreateThesis /> },
 			{ path: 'manage-period', element: <ManagePeriodPage /> },
 			{ path: 'period/:id/manage-defense-assignment', element: <DefenseAssignmentPage /> },
+			{ path: 'period/:id/manage-defense-assignment', element: <DefenseAssignmentPage /> },
+			{ path: 'period/:id/manage-milestones', element: <MilestonePage /> },
 			{ path: 'defense-milestones/:id/scoring', element: <DefenseScoringPage /> },
 			{ path: 'lecturer/defense-milestones', element: <LecturerDefenseMilestonesPage /> },
 			{ path: 'faculty/defense-milestones', element: <FacultyDefenseMilestonesPage /> },
+			{ path: 'period/:id/defense-milestones-in-period', element: <DefenseMilestonesInPeriodRegistration /> },
 
 			{ path: 'period/:id', element: <DetailPeriodPage /> },
 			{ path: 'manage-faculty-students', element: <ManageFacultyStudentPage /> },

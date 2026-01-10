@@ -15,6 +15,7 @@ import { LoadingState } from '@/components/ui/LoadingState'
 import { getNextPhase } from './utils'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
 import ManageMilestone from '@/features/shared/milestone/modal/ManageMilestone'
+//import ManageMilestone from '@/features/shared/milestone/modal/ManageMilestone'
 
 export default function DetailPeriodPage() {
 	const { id } = useParams()
@@ -168,7 +169,7 @@ export default function DetailPeriodPage() {
 				lecturers={lecturersByFaculty?.data ?? []}
 				onSuccess={() => refetch()}
 			/>
-			
+				
 			{currentPhaseDetail && (
 				<ManageMilestone
 					open={isManagingMilestonesOpen}

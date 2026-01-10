@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { TopicsPanel } from './TopicPanel'
 import { MilestonesPanel } from './MilestonePanel'
 import {
@@ -27,6 +27,7 @@ export function DefenseAssignmentPage() {
 	// Lấy milestoneId từ location.state nếu có
 	const initialMilestoneId = location.state?.milestoneId ?? null
 	const [selectedMilestone, setSelectedMilestone] = useState<string | null>(initialMilestoneId)
+	const [highlightedMilestone, setHighlightedMilestone] = useState<string | null>(initialMilestoneId)
 	const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set())
 	const [selectedLecturers, setSelectedLecturers] = useState<DefenseCouncilMember[]>([])
 	const [confirmDialog, setConfirmDialog] = useState<{
@@ -75,6 +76,25 @@ export function DefenseAssignmentPage() {
 	const selectedMilestoneData = useMemo(() => {
 		return milestonesData?.find((m) => m._id === selectedMilestone)
 	}, [milestonesData, selectedMilestone])
+
+	// Xóa highlight sau 3 giây
+	useEffect(() => {
+		if (highlightedMilestone) {
+			const timer = setTimeout(() => {
+				setHighlightedMilestone(null)
+			}, 3000)
+			return () => clearTimeout(timer)
+		}
+	}, [highlightedMilestone])
+
+	// Reset highlight khi navigate state thay đổi
+	useEffect(() => {
+		if (location.state?.milestoneId) {
+			setHighlightedMilestone(location.state.milestoneId)
+			setSelectedMilestone(location.state.milestoneId)
+		}
+	}, [location.state?.milestoneId])
+
 	//Gọi endpoint quản lý đề tài trong milestone bảo vệ
 	const [manageTopics, { isLoading: isManagingTopics }] = useManageTopicsInDefenseMilestoneMutation()
 	//Gọi endpoint quản lý giảng viên trong hội đồng bảo vệ
@@ -137,7 +157,9 @@ export function DefenseAssignmentPage() {
 		const memberNum = selectedLecturers.length + selectedMilestoneData?.defenseCouncil.length!
 		const isLe = memberNum % 2
 		if (isLe === 0) {
-			toast.error('Số lượng thành viên trong hội đồng bảo vệ phải là số lẻ. Hãy chọn thêm 1 thành viên', { richColors: true })
+			toast.error('Số lượng thành viên trong hội đồng bảo vệ phải là số lẻ. Hãy chọn thêm 1 thành viên', {
+				richColors: true
+			})
 			return
 		}
 		const arrayLecturerEliminate = [
@@ -328,6 +350,7 @@ export function DefenseAssignmentPage() {
 				<MilestonesPanel
 					milestones={milestonesData && milestonesData.length > 0 ? milestonesData : []}
 					selectedMilestone={selectedMilestone}
+					highlightedMilestone={highlightedMilestone}
 					selectedLecturers={selectedLecturers}
 					onSelectMilestone={setSelectedMilestone}
 					selectedTopics={selectedTopics}

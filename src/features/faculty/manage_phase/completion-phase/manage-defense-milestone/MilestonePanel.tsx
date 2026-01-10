@@ -13,6 +13,7 @@ import { useState } from 'react'
 interface MilestonesPanelProps {
 	milestones: ResponseMilestoneWithTemplate[]
 	selectedMilestone: string | null
+	highlightedMilestone?: string | null
 	onSelectMilestone: (milestoneId: string) => void
 	selectedTopics: Set<string>
 	selectedLecturers: DefenseCouncilMember[]
@@ -26,6 +27,7 @@ interface MilestonesPanelProps {
 export function MilestonesPanel({
 	milestones,
 	selectedMilestone,
+	highlightedMilestone,
 	selectedLecturers,
 	onSelectMilestone,
 	selectedTopics,
@@ -66,7 +68,11 @@ export function MilestonesPanel({
 									selectedMilestone === milestone._id
 										? 'border-2 border-blue-700'
 										: 'hover:border-primary/50'
-								} ${!milestone.isActive ? 'opacity-60' : ''}`}
+								} ${!milestone.isActive ? 'opacity-60' : ''} ${
+									highlightedMilestone === milestone._id
+										? 'animate-pulse border-2 border-yellow-400 bg-yellow-50 shadow-lg shadow-yellow-200'
+										: ''
+								}`}
 								onClick={() => milestone.isActive && onSelectMilestone(milestone._id)}
 							>
 								<CardHeader className='pb-3'>
@@ -93,7 +99,8 @@ export function MilestonesPanel({
 											</span>
 											{!milestone.isScorable && (
 												<Button
-													onClick={(e) => {e.stopPropagation()
+													onClick={(e) => {
+														e.stopPropagation()
 														navigate(`/defense-milestones/${milestone._id}/scoring`)
 													}}
 													className='bg-cyan-100 px-4 font-semibold text-cyan-700 hover:bg-cyan-200'

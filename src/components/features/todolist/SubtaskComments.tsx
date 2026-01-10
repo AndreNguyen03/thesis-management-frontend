@@ -335,21 +335,47 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 									)}
 
 									<div className='flex-1 space-y-1'>
-										<div className='flex items-center gap-2'>
-											<span className='text-sm font-medium'>
-												{comment.user?.fullName || 'Unknown User'}
-											</span>
-											<span className='text-xs text-muted-foreground'>
-												{formatDistanceToNow(new Date(comment.created_at), {
-													addSuffix: true,
-													locale: viLocale
-												})}
-											</span>
-											{comment.editedAt && (
-												<span className='text-xs italic text-muted-foreground'>(edited)</span>
+										<div className='group flex'>
+											<div className='flex items-center gap-2'>
+												<span className='text-sm font-medium'>
+													{comment.user?.fullName || 'Unknown User'}
+												</span>
+												<span className='text-xs text-muted-foreground'>
+													{formatDistanceToNow(new Date(comment.created_at), {
+														addSuffix: true,
+														locale: viLocale
+													})}
+												</span>
+												{comment.editedAt && (
+													<span className='text-xs italic text-muted-foreground'>
+														(đã chỉnh sửa)
+													</span>
+												)}
+											</div>
+											{/* Actions (only for comment owner) */}
+											{comment.user?._id === currentUserId && (
+												<div className='flex gap-2 mx-1 opacity-0 transition-opacity group-hover:opacity-100'>
+													<Button
+														variant='ghost'
+														size='sm'
+														onClick={() => startEdit(comment)}
+														className='h-7 text-xs hover:bg-gray-50'
+													>
+														<Edit2 className='mr-1 h-3 w-3' />
+														Sửa
+													</Button>
+													<Button
+														variant='ghost'
+														size='sm'
+														onClick={() => setDeleteCommentId(comment._id)}
+														className='h-7 text-xs text-destructive hover:bg-gray-50'
+													>
+														<Trash2 className='mr-1 h-3 w-3' />
+														Xóa
+													</Button>
+												</div>
 											)}
 										</div>
-
 										{editingCommentId === comment._id ? (
 											<div className='space-y-2'>
 												<Textarea
@@ -361,7 +387,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 												{/* Existing Files */}
 												{existingFiles.length > 0 && (
 													<div className='space-y-1'>
-														<p className='text-xs text-muted-foreground'>Current files:</p>
+														<p className='text-xs text-muted-foreground'>Tệp tin hiện có</p>
 														{existingFiles.map((file, index) => (
 															<div
 																key={index}
@@ -426,7 +452,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 														onClick={() => editFileInputRef.current?.click()}
 													>
 														<Paperclip className='mr-1 h-3 w-3' />
-														Attach
+														Đính kèm
 													</Button>
 													<Button
 														onClick={() => handleUpdateComment(comment._id)}
@@ -434,7 +460,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 														size='sm'
 													>
 														<Check className='mr-1 h-3 w-3' />
-														Save
+														Lưu
 													</Button>
 													<Button
 														variant='outline'
@@ -443,7 +469,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 														size='sm'
 													>
 														<X className='mr-1 h-3 w-3' />
-														Cancel
+														Hủy
 													</Button>
 												</div>
 											</div>
@@ -478,30 +504,6 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 																</Button>
 															</div>
 														))}
-													</div>
-												)}
-
-												{/* Actions */}
-												{comment.user._id === currentUserId && (
-													<div className='flex gap-2'>
-														<Button
-															variant='ghost'
-															size='sm'
-															onClick={() => startEdit(comment)}
-															className='h-7 px-2'
-														>
-															<Edit2 className='mr-1 h-3 w-3' />
-															Edit
-														</Button>
-														<Button
-															variant='ghost'
-															size='sm'
-															onClick={() => setDeleteCommentId(comment._id)}
-															className='h-7 px-2 text-destructive hover:text-destructive'
-														>
-															<Trash2 className='mr-1 h-3 w-3' />
-															Delete
-														</Button>
 													</div>
 												)}
 											</div>
@@ -565,9 +567,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 						</Button>
 						<Button
 							onClick={handleAddComment}
-							disabled={
-								isAdding || isAddingWithFiles || (!newComment.trim())
-							}
+							disabled={isAdding || isAddingWithFiles || !newComment.trim()}
 							size='sm'
 						>
 							Bình luận

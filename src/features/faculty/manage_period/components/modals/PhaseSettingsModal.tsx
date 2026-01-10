@@ -47,7 +47,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 	const [minTopics, setMinTopics] = useState(phase?.minTopicsPerLecturer ?? 1)
 	const [isForceConfirm, setIsForceConfirm] = useState(false)
 	const [selectedLecturerIds, setSelectedLecturerIds] = useState<string[]>(
-		phase?.requiredLecturers?.map((lec) => lec._id) ?? []
+		phase?.requiredLecturerIds ?? []
 	)
 	// State cho resolve modal
 	const [showResolveModal, setShowResolveModal] = useState(false)
@@ -101,7 +101,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 		setStartTime(toInputDateTime(phase?.startTime))
 		setEndTime(toInputDateTime(phase?.endTime))
 		setMinTopics(phase?.minTopicsPerLecturer ?? 1)
-		setSelectedLecturerIds(phase?.requiredLecturers?.map((lec) => lec._id) ?? [])
+		setSelectedLecturerIds(phase?.requiredLecturerIds ?? [])
 	}, [isPhase1, phase])
 
 	const handleSave = async () => {

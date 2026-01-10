@@ -11,10 +11,15 @@ interface SubtaskDetailModalProps {
 	groupId: string
 }
 
-export const SubtaskDetailModal = ({ subtaskId, taskId, columnId, onClose, groupId }: SubtaskDetailModalProps) => {
+export const SubtaskDetailModal = ({
+	subtaskId,
+	taskId,
+	columnId,
+	onClose,
+	groupId,
+}: SubtaskDetailModalProps) => {
 	// Fetch subtask detail from API
 	const { data: subtask, isLoading, error } = useGetSubtaskDetailQuery({ taskId, columnId, subtaskId })
-
 	return (
 		<Dialog open={true} onOpenChange={onClose}>
 			<DialogContent className='max-h-[90vh] max-w-[90vw] gap-0 overflow-hidden bg-white p-0' hideClose>
@@ -31,7 +36,13 @@ export const SubtaskDetailModal = ({ subtaskId, taskId, columnId, onClose, group
 				)}
 
 				{subtask && (
-					<SubtaskDetailContent subtask={subtask} taskId={taskId} columnId={columnId} onClose={onClose} groupId={groupId} />
+					<SubtaskDetailContent
+						subtask={subtask}
+						taskId={taskId}
+						columnId={columnId}
+						onClose={onClose}
+						groupId={groupId}
+					/>
 				)}
 			</DialogContent>
 		</Dialog>
