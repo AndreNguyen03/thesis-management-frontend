@@ -11,15 +11,31 @@ type GeneratedSuggestion = GeneratedSuggestionType
 interface AIGeneratorProps {
 	onGenerate: (titles: GeneratedSuggestion[]) => void
 	isLoading?: boolean
-	topicType?: string
 }
 
-export const AIGenerator = ({ onGenerate, isLoading, topicType }: AIGeneratorProps) => {
+export const AIGenerator = ({ onGenerate, isLoading: externalIsLoading }: AIGeneratorProps) => {
 	const [prompt, setPrompt] = useState('')
-	const [generateTopic] = useGenerateTopicMutation()
+	const [creating, setCreating] = useState(false)
+	const [generateTopic, { isLoading: mutationLoading }] = useGenerateTopicMutation()
+	const loading = creating || externalIsLoading || mutationLoading
+
+	console.log(
+		'AIGenerator rendered with loading:',
+		loading,
+		'prompt:',
+		prompt,
+		'creating:',
+		creating,
+		'externalIsLoading:',
+		externalIsLoading,
+		'mutationLoading:',
+		mutationLoading
+	)
 
 	const handleGenerate = async () => {
 		if (!prompt.trim()) return
+
+		setCreating(true)
 
 		try {
 			const res = await generateTopic({ prompt, limit: 5 }).unwrap()
@@ -56,6 +72,8 @@ export const AIGenerator = ({ onGenerate, isLoading, topicType }: AIGeneratorPro
 					keywords: { fields: keywords, requirements: keywords.slice(0, 2) }
 				}
 			])
+		} finally {
+			setCreating(false)
 		}
 	}
 
@@ -79,12 +97,8 @@ export const AIGenerator = ({ onGenerate, isLoading, topicType }: AIGeneratorPro
 				className='min-h-[80px]'
 			/>
 
-			<Button
-				onClick={handleGenerate}
-				disabled={isLoading || !prompt.trim()}
-				className='w-full gap-2'
-			>
-				{isLoading ? (
+			<Button onClick={handleGenerate} disabled={loading || !prompt.trim()} className='w-full gap-2'>
+				{loading ? (
 					<>
 						<Loader2 className='h-4 w-4 animate-spin' />
 						Đang tạo...

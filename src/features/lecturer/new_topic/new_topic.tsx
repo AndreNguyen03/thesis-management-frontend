@@ -310,7 +310,6 @@ function CreateTopic2({
 	const [applyGeneratedTopic] = useApplyGeneratedTopicMutation()
 
 	// Form state
-	const [titleEN, setTitleEN] = useState('')
 	const [details, setDetails] = useState('')
 	const [tags, setTags] = useState<string[]>([])
 
@@ -327,7 +326,7 @@ function CreateTopic2({
 		}, 2000)
 
 		return () => clearTimeout(timer)
-	}, [titleVN, titleEN, details, tags])
+	}, [titleVN, titleEng, details, tags])
 
 	const handleGenerateTitles = useCallback(
 		async (titles: TitleSuggestion[]) => {
@@ -387,7 +386,7 @@ function CreateTopic2({
 		try {
 			// set titles and description
 			setTitleVN(suggestion.vn)
-			setTitleEN(suggestion.en)
+			setTitleEng(suggestion.en)
 			if (suggestion.description) setDescription(suggestion.description)
 
 			// collect existing ids
@@ -856,7 +855,6 @@ function CreateTopic2({
 					<AITitleGenerator
 						onGenerate={handleGenerateTitles}
 						isLoading={isGenerating}
-						topicType={topicType}
 					/>
 
 					<div className='mt-6 border-t pt-5'>
@@ -865,12 +863,6 @@ function CreateTopic2({
 							<SuggestionPanel
 								suggestions={suggestions}
 								onApply={handleApplySuggestion}
-								onEdit={(s) => {
-								setTitleVN(s.vn)
-								setTitleEN(s.en)
-								if (s.description) setDescription(s.description)
-							}}
-								onSaveTemplate={(s) => alert('Chức năng lưu mẫu chưa được triển khai')}
 								onClear={() => setSuggestions([])}
 							/>
 						</div>

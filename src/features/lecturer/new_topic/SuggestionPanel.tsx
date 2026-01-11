@@ -18,14 +18,15 @@ interface Suggestion {
 
 interface SuggestionPanelProps {
 	suggestions: Suggestion[]
-	onApply: (suggestion: Suggestion & { createMissing?: boolean }) => void
-	onEdit: (suggestion: Suggestion) => void
-	onSaveTemplate: (suggestion: Suggestion) => void
+	onApply: (suggestion: Suggestion & { createMissing?: boolean }) => void | Promise<void>
+
 	onClear: () => void
 }
 
-export function SuggestionPanel({ suggestions, onApply, onEdit, onSaveTemplate, onClear }: SuggestionPanelProps) {
+export function SuggestionPanel({ suggestions, onApply,  onClear }: SuggestionPanelProps) {
 	const [createMissing, setCreateMissing] = useState(false)
+	const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({})
+	const [appliedMap, setAppliedMap] = useState<Record<number, boolean>>({})
 	if (suggestions.length === 0) {
 		return (
 			<div className='flex flex-col items-center justify-center py-8 text-center'>
@@ -81,7 +82,14 @@ export function SuggestionPanel({ suggestions, onApply, onEdit, onSaveTemplate, 
 						<div className='space-y-2'>
 							<div>
 								<p className='mb-1 text-xs font-medium text-muted-foreground'>Tiếng Việt</p>
-								<p className='text-sm leading-relaxed text-foreground'>{suggestion.vn}</p>
+								<div className='flex items-center gap-2'>
+									<p className='text-sm leading-relaxed text-foreground'>{suggestion.vn}</p>
+									{appliedMap[index] && (
+										<Badge variant='secondary' className='text-xs'>
+											Đã áp dụng
+										</Badge>
+									)}
+								</div>
 							</div>
 							<div>
 								<p className='mb-1 text-xs font-medium text-muted-foreground'>English</p>
@@ -138,30 +146,36 @@ export function SuggestionPanel({ suggestions, onApply, onEdit, onSaveTemplate, 
 							)}
 						</div>
 
-						<div className='mt-3 flex items-center gap-1.5 border-t pt-3'>
+							<div className='mt-3 flex items-center gap-1.5 border-t pt-3'>
 							<Button
 								size='sm'
-								onClick={() => onApply({ ...suggestion, createMissing })}
+								onClick={async () => {
+									setLoadingMap((m) => ({ ...m, [index]: true }))
+									try {
+										await Promise.resolve(onApply({ ...suggestion, createMissing }))
+										setAppliedMap((m) => ({ ...m, [index]: true }))
+									} catch (err) {
+										console.error('Apply suggestion failed', err)
+									} finally {
+										setLoadingMap((m) => ({ ...m, [index]: false }))
+									}
+								}}
+								disabled={!!loadingMap[index] || !!appliedMap[index]}
 								className='h-7 flex-1 gap-1.5 text-xs'
 							>
-								<Check className='h-3 w-3' />
-								Áp dụng
-							</Button>
-							<Button
-								size='sm'
-								variant='outline'
-								onClick={() => onEdit(suggestion)}
-								className='h-7 gap-1.5 text-xs'
-							>
-								<Edit3 className='h-3 w-3' />
-							</Button>
-							<Button
-								size='sm'
-								variant='outline'
-								onClick={() => onSaveTemplate(suggestion)}
-								className='h-7 gap-1.5 text-xs'
-							>
-								<Bookmark className='h-3 w-3' />
+								{appliedMap[index] ? (
+									<>
+										<Check className='h-3 w-3' />
+										Đã áp dụng
+									</>
+								) : loadingMap[index] ? (
+									'Đang áp dụng...'
+								) : (
+									<>
+										<Check className='h-3 w-3' />
+										Áp dụng
+									</>
+								)}
 							</Button>
 						</div>
 					</div>
