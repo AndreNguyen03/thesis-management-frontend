@@ -23,7 +23,7 @@ import {
 	useResolvePhaseMutation
 } from '@/services/periodApi'
 import { toInputDateTime } from '../../utils'
-import type { ResponseMiniLecturerDto } from '@/models'
+import type { MiniActorInforDto, ResponseMiniLecturerDto } from '@/models'
 import { getDurationString } from '@/lib/utils'
 import { toast } from 'sonner'
 import { SubmissionPhaseResolveModal } from './Phase1ResolveModal'
@@ -38,23 +38,33 @@ interface Props {
 	periodId: string
 	onSuccess: () => void
 	lecturers: ResponseMiniLecturerDto[]
+	isEdittingMode: boolean
 }
 
-export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, periodId, onSuccess, lecturers }: Props) {
+export function PhaseSettingsModal({
+	open,
+	onOpenChange,
+	phase,
+	isEdittingMode,
+	currentPhase,
+	periodId,
+	onSuccess,
+	lecturers
+}: Props) {
 	const [startTime, setStartTime] = useState(toInputDateTime(phase?.startTime) ?? '')
 	const [endTime, setEndTime] = useState(toInputDateTime(phase?.endTime) ?? '')
 	const [isChangeAvailable, setIsChangeAvailable] = useState(false)
 	const [minTopics, setMinTopics] = useState(phase?.minTopicsPerLecturer ?? 1)
 	const [isForceConfirm, setIsForceConfirm] = useState(false)
-	const [selectedLecturerIds, setSelectedLecturerIds] = useState<string[]>(
-		phase?.requiredLecturers?.map((lec) => lec._id) ?? []
+	const [selectedLecturers, setSelectedLecturers] = useState<ResponseMiniLecturerDto[]>(
+		phase?.requiredLecturers ?? []
 	)
 	// State cho resolve modal
 	const [showResolveModal, setShowResolveModal] = useState(false)
 	const [resolveData, setResolveData] = useState<
 		Phase1Response | Phase2Response | Phase3Response | Phase4Response | null
 	>(null)
-	console.log('resolve data', resolveData)
+
 	//lấy thông tin kỳ hiện
 	const { data: periodDetail, isLoading: isLoadingPeriodDetail } = useGetPeriodDetailQuery(periodId)
 
@@ -90,7 +100,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 	const phasePayloadExtras: Record<string, any> = {
 		submit_topic: {
 			minTopicsPerLecturer: minTopics,
-			requiredLecturerIds: selectedLecturerIds
+			requiredLecturerIds: selectedLecturers.map((l) => l._id)
 		},
 		execution: {},
 		open_registration: {},
@@ -101,16 +111,20 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 		setStartTime(toInputDateTime(phase?.startTime))
 		setEndTime(toInputDateTime(phase?.endTime))
 		setMinTopics(phase?.minTopicsPerLecturer ?? 1)
-		setSelectedLecturerIds(phase?.requiredLecturers?.map((lec) => lec._id) ?? [])
+		setSelectedLecturers(phase?.requiredLecturers ?? [])
 	}, [isPhase1, phase])
 
 	const handleSave = async () => {
 		let payload: any = { startTime, endTime }
-		if (phasePayloadExtras[effectivePhaseKey]) payload = { ...payload, ...phasePayloadExtras[effectivePhaseKey] }
+		if (phasePayloadExtras[effectivePhaseKey])
+			payload = {
+				...payload,
+				...phasePayloadExtras[effectivePhaseKey]
+			}
 		const hook = phaseHookMap[effectivePhaseKey]
 		if (!hook) return console.error('Invalid currentPhase:', currentPhase)
 		try {
-			await hook({ periodId, body: payload, force: isForceConfirm }).unwrap()
+			await hook({ periodId, body: payload, force: isForceConfirm || isEdittingMode }).unwrap()
 			onSuccess?.()
 			onOpenChange(false)
 			toast.success(`Lưu thiết lập pha "${PhaseInfo[effectivePhaseKey]?.label}" thành công`)
@@ -187,7 +201,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 									min={
 										new Date(periodDetail!.startTime) > new Date(Date.now())
 											? new Date(periodDetail!.startTime).toISOString().slice(0, 16)
-											: new Date(Date.now() + 86400000).toISOString().slice(0, 16)
+											: new Date(Date.now()).toISOString().slice(0, 16)
 									}
 									step='60'
 									onChange={(e) => setStartTime(e.target.value)}
@@ -258,8 +272,8 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 							<div>
 								<LecturerMultiSelect
 									allLecturers={lecturers ?? []}
-									selected={selectedLecturerIds}
-									onChange={setSelectedLecturerIds}
+									selected={selectedLecturers}
+									onChange={setSelectedLecturers}
 								/>
 							</div>
 						</section>
@@ -273,7 +287,7 @@ export function PhaseSettingsModal({ open, onOpenChange, phase, currentPhase, pe
 								onClick={handleSave}
 								disabled={(!isChangeAvailable || resolveData !== null) && !isForceConfirm}
 							>
-								{phaseLoadingMap[effectivePhaseKey] ? 'Đang lưu...' : 'Lưu thay đổi'}
+								{phaseLoadingMap[effectivePhaseKey] ? 'Đang lưu...' : isEdittingMode ? 'Lưu chỉnh sửa' : 'Lưu thiết lập'}
 							</Button>
 
 							{/* Nút kiểm tra lỗi */}

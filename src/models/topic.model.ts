@@ -488,6 +488,6 @@ export interface PaginationRegisteredTopicsQueryParams extends PaginationQueryPa
 	periodId?: string
 }
 
-export interface DraftTopicQueryParams extends PaginationQueryParamsDto {
+export interface PaginationDraftTopicsQueryParams extends PaginationQueryParamsDto {
 	periodId?: string
 }

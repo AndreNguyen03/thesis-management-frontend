@@ -1,8 +1,8 @@
-import type { Group } from '@/models/groups.model'
+import type { GroupSidebar } from '@/models/groups.model'
 import { createSlice } from '@reduxjs/toolkit'
 
 interface GroupState {
-	activeGroup: Group | null
+	activeGroup: GroupSidebar | null
 }
 const initialState: GroupState = {
 	activeGroup: null
@@ -11,7 +11,7 @@ const groupSlice = createSlice({
 	name: 'group',
 	initialState,
 	reducers: {
-		setActiveGroup: (state, action: { payload: Group | null }) => {
+		setActiveGroup: (state, action: { payload: GroupSidebar | null }) => {
 			state.activeGroup = action.payload
 		}
 	}

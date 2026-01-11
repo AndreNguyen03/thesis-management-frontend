@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner'
 import DOMPurify from 'dompurify'
 import AskToGoToDefense from './modal/AskToGoToDefense'
+import { useParams } from 'react-router-dom'
 
 export const LecturerMilestoneDrawer = ({
 	milestone,
@@ -30,6 +31,7 @@ export const LecturerMilestoneDrawer = ({
 	onUpdate: (id: string, updates: PayloadUpdateMilestone) => void
 }) => {
 	const [activeTab, setActiveTab] = useState<'settings' | 'grading' | 'tasks'>('settings')
+	const { groupId } = useParams<{ groupId: string }>()
 	//gọi endpoint review milestone
 	const [reviewMilestoneByLecturer, { isLoading: isLoadingReview }] = useReviewMilestoneByLecturerMutation()
 	const [updateInfo, setUpdateInfo] = useState<PayloadUpdateMilestone>({
@@ -68,7 +70,8 @@ export const LecturerMilestoneDrawer = ({
 			const { isAbleToGotoDefense } = await reviewMilestoneByLecturer({
 				milestoneId: milestone._id,
 				comment: newComment.lecturerFeedback,
-				decision: newComment.lecturerDesion
+				decision: newComment.lecturerDesion,
+				groupId: groupId!
 			}).unwrap()
 			if (isAbleToGotoDefense) {
 				setShowAskToGoModal(true)
@@ -213,7 +216,7 @@ export const LecturerMilestoneDrawer = ({
 							</div>
 						) : (
 							<>
-								<div className='rounded-xl border border-blue-100 bg-blue-50 p-4'>
+								<div className='flex flex-col gap-2 rounded-xl border border-blue-100 bg-blue-50 p-4'>
 									<h4 className='mb-2 text-xs font-bold uppercase text-blue-600'>Bài nộp mới nhất</h4>
 									<div className='flex items-center gap-3 rounded-lg border border-blue-100 bg-white p-3'>
 										<FileText className='h-8 w-8 text-blue-500' />
@@ -239,17 +242,29 @@ export const LecturerMilestoneDrawer = ({
 									</div>
 									{hasComment && milestone.submission && (
 										<>
-											<div className='ml-5 flex flex-col rounded bg-blue-100 p-2 text-sm text-slate-700'>
+											<div className='ml-5 flex flex-col gap-1 rounded bg-blue-100 p-2 text-sm text-slate-700'>
 												<div className='flex gap-2'>
 													<span className='text font-medium'>
 														{milestone.submission.lecturerInfo.title +
 															' ' +
 															milestone.submission.lecturerInfo.fullName}
 													</span>
-													<span className='rounded bg-slate-400 px-2 font-medium text-white'>
+													<span
+														className={cn(
+															'rounded bg-slate-400 px-2 font-medium text-white',
+															milestone.submission.lecturerDecision === 'approved'
+																? 'bg-green-500'
+																: 'bg-red-500'
+														)}
+													>
 														{milestone.submission.lecturerDecision === 'approved'
 															? 'Chấp nhận'
 															: 'Yêu cầu làm lại'}
+													</span>
+													<span className='font-sm rounded text-gray-700'>
+														{new Date(milestone.submission?.feedbackAt!).toLocaleString(
+															'vi-VN'
+														)}
 													</span>
 												</div>
 												<span className='text ml-5'>
@@ -286,18 +301,20 @@ export const LecturerMilestoneDrawer = ({
 													/>
 													<div className='flex items-center gap-2'>
 														<select
-															value={newComment.lecturerDesion}
+															value={newComment.lecturerDesion ?? ''}
 															onChange={(e) =>
 																setNewComment({
 																	...newComment,
-																	lecturerDesion: e.target
-																		.value as LecturerReviewDecision
+																	lecturerDesion:
+																		e.target.value === ''
+																			? undefined
+																			: (e.target.value as LecturerReviewDecision)
 																})
 															}
 															className='mt-2 w-fit rounded border px-2 py-1'
 														>
-															<option value='' className='bg-gray-200' disabled={true}>
-																Chọn
+															<option value='' className='bg-gray-200' disabled>
+																---Chọn---
 															</option>
 															<option value='approved'>Duyệt</option>
 															<option value='rejected'>Yêu cầu nộp lại</option>
@@ -306,7 +323,7 @@ export const LecturerMilestoneDrawer = ({
 													</div>
 													<button
 														disabled={isLoadingReview || !newComment.lecturerDesion}
-														className='mt-2 rounded-sm bg-blue-500 px-2 py-1 font-semibold text-white'
+														className='mt-2 rounded-sm bg-blue-500 px-2 py-1 font-semibold text-white disabled:bg-gray-400'
 														onClick={() => handleReviewMilestone()}
 													>
 														{isLoadingReview ? (

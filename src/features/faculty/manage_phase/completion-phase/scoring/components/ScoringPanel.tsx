@@ -91,6 +91,7 @@ export function ScoringPanel({
 
 	const handleSubmitScores = () => {
 		const councilSnapshots: CouncilMemberSnapshot[] = memberScores.map((m) => ({
+			memberId: m.memberId,
 			fullName: m.fullName,
 			role: m.role,
 			score: m.score ?? 0,

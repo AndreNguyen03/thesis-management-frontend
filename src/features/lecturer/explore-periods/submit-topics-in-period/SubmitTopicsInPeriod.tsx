@@ -24,7 +24,7 @@ import {
 } from '@/services/topicApi'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { CreateTopic } from '../../new_topic'
-import type { DraftTopicQueryParams, SubmittedTopicParamsDto } from '@/models'
+import type { PaginationDraftTopicsQueryParams, SubmittedTopicParamsDto } from '@/models'
 import ManageSubmittedTopics from '../../manage_topic/submitted_topic/ManageSubmittedTopics'
 import DraftTopicsDatatable from './DraftTopicsDatatable'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -49,7 +49,7 @@ const SubmitTopicsInPeriod = () => {
 	const panelRef = useRef<any>(null)
 
 	// Data Fetching & State (Simplified for brevity)
-	const [draftQueries, setDraftQueries] = useState<DraftTopicQueryParams>({
+	const [draftQueries, setDraftQueries] = useState<PaginationDraftTopicsQueryParams>({
 		page: 1,
 		limit: 8,
 		search_by: ['titleVN', 'titleEng'],

@@ -77,7 +77,7 @@ export interface TopicSnaps {
 	studentName: string[]
 	lecturers: ResponseMiniLecturerDto[]
 }
-export type CouncilMemberRole = 'chairperson' | 'secretary' | 'member'
+export type CouncilMemberRole = 'chairperson' | 'secretary' | 'member' | 'reviewer'
 
 export const CouncilMemberRoleOptions: Record<
 	CouncilMemberRole,
@@ -85,7 +85,8 @@ export const CouncilMemberRoleOptions: Record<
 > = {
 	chairperson: { label: 'Chủ tịch', variant: 'default' },
 	secretary: { label: 'Thư ký', variant: 'secondary' },
-	member: { label: 'Ủy viên', variant: 'outline' }
+	member: { label: 'Ủy viên', variant: 'outline' },
+	reviewer: { label: 'Phản biện', variant: 'outline' }
 }
 export interface DefenseCouncilMember {
 	memberId: string
@@ -154,7 +155,6 @@ export interface PayloadCreateMilestone {
 }
 export interface PayloadFacultyCreateMilestone {
 	periodId: string
-	phaseName: PeriodPhaseName
 	title: string
 	description: string
 	dueDate: string
@@ -186,6 +186,10 @@ export const milestoneTypeMap: Record<string, { label: string; color: string }> 
 	defense: { label: 'Bảo vệ', color: 'bg-purple-100 text-purple-700' }
 }
 
+export const creatorType: Record<string, { label: string; color: string }> = {
+	lecturer: { label: 'Giảng viên', color: 'bg-blue-100 text-blue-700' },
+	faculty_board: { label: 'Bắt buộc', color: 'bg-red-600 text-white ' }
+}
 export const milestoneStatusMap: Record<string, { label: string; color: string }> = {
 	timeout: { label: 'Quá hạn', color: 'bg-red-100 text-red-700' },
 	active: { label: 'Còn hạn', color: 'bg-green-100 text-green-700' }
@@ -197,10 +201,9 @@ export const defenseStatusMap: Record<string, { label: string; color: string }> 
 }
 
 export const topicInMilestonesMap: Record<string, { label: string; color: string }> = {
-	unsubmit: { label: 'Chưa nộp', color: 'bg-yellow-100 text-yellow-700' },
-	submitted: { label: 'Đã nộp', color: 'bg-blue-100 text-blue-700' }
+	unsubmit: { label: 'Chưa nộp', color: 'bg-yellow-100 text-yellow-700    text-md ' },
+	submitted: { label: 'Đã nộp', color: 'bg-blue-100 text-blue-700  text-md ' }
 }
-
 export class RequestTopicInMilestoneBatchQuery extends PaginationQueryParamsDto {}
 
 export interface GetTopicsInBatchMilestoneDto {
@@ -221,9 +224,10 @@ export interface PaginatedTopicInBatchMilestone extends GetPaginatedObject {
 // all defense milestones for faculty board
 export interface PaginationAllDefenseMilestonesQuery extends PaginationQueryParamsDto {
 	year?: string
+	periodId?: string
 }
 export interface ResponseDefenseMilestone {
-	_id:string 
+	_id: string
 	title: string
 	location: string
 	dueDate: string
@@ -236,4 +240,15 @@ export interface ResponseDefenseMilestone {
 }
 export interface PaginatedFacultyMilestones extends GetPaginatedObject {
 	data: ResponseDefenseMilestone[]
+}
+
+export interface DefenseMilestoneDetail {
+	title: string
+	description: string
+	dueDate: Date
+	type: string
+	periodId: string
+	isPublished: boolean // Đã công bố điểm
+	isBlock: boolean // Đã khóa (không cho chỉnh sửa)
+	createdBy: string
 }

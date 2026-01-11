@@ -7,15 +7,16 @@ import { AlertCircle, ListTodo, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import TaskCardMinestone from '../component/TaskCardMinestone'
+import { useParams } from 'react-router-dom'
 interface TaskInMilestonesProps {
 	milestoneId: string
 	tasks?: TaskDto[]
 }
 export const TaskInMilestones = ({ milestoneId, tasks }: TaskInMilestonesProps) => {
-	const group = useAppSelector((state) => state.group)
+	const { groupId } = useParams<{ groupId: string }>()
 	const [newTask, setNewTask] = useState<CreateTaskPayload>({
 		title: '',
-		groupId: group.activeGroup?._id!,
+		groupId: groupId!,
 		description: '',
 		milestoneId: milestoneId
 	})
@@ -25,7 +26,7 @@ export const TaskInMilestones = ({ milestoneId, tasks }: TaskInMilestonesProps) 
 
 	const handleAddTask = async () => {
 		try {
-			await createTask(newTask)
+			await createTask({ payload: newTask, groupId: groupId! }).unwrap()
 			toast.success('Tạo task thành công!', { richColors: true })
 		} catch (error) {
 			console.error('Error creating task:', error)
@@ -33,7 +34,7 @@ export const TaskInMilestones = ({ milestoneId, tasks }: TaskInMilestonesProps) 
 		}
 		setNewTask({
 			title: '',
-			groupId: group.activeGroup?._id!,
+			groupId: groupId!,
 			description: '',
 			milestoneId: milestoneId
 		})

@@ -7,12 +7,13 @@ import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/store'
 import { useGetMilestonesOfGroupQuery } from '@/services/milestoneApi'
 import type { ResponseMilestone } from '@/models/milestone.model'
+import { useParams } from 'react-router-dom'
 
 type TabType = 'milestone' | 'progress' | 'documents'
 
 export const WorkPanel = () => {
 	const [activeTab, setActiveTab] = useState<TabType>('milestone')
-	const group = useAppSelector((state) => state.group)
+	const {groupId} = useParams<{ groupId: string }>()
 	const tabs = [
 		{ id: 'milestone' as TabType, label: 'Cột mốc', icon: ListChecks },
 		{ id: 'progress' as TabType, label: 'Tiến độ', icon: BarChart3 },
@@ -20,8 +21,8 @@ export const WorkPanel = () => {
 	]
 	//gọi API lấy danh sách các milestone
 	const { data: milestonesData } = useGetMilestonesOfGroupQuery(
-		{ groupId: group.activeGroup?._id! },
-		{ skip: !group.activeGroup?._id }
+		{ groupId: groupId! },
+		{ skip: !groupId }
 	)
 
 	// Thay 'example-group-id' bằng ID nhóm thực tế

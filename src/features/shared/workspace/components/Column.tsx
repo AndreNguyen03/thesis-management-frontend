@@ -9,6 +9,8 @@ import type { Subtask, Task, TaskColumn } from '@/models/todolist.model'
 import { useDroppable } from '@dnd-kit/core' // CORE: Make column a drop zone
 import SubTaskContainer from './SubTask'
 import { DeleteModal } from './modal/DeleteModal'
+import { SubtaskDetailModal } from '@/components/features/todolist/SubtaskDetailModal'
+import { useParams } from 'react-router-dom'
 export const Column = ({
 	taskId,
 	column,
@@ -25,11 +27,13 @@ export const Column = ({
 	const [deleteSubtask, { isLoading: isLoadingDeleteSubtask }] = useDeleteSubtaskMutation()
 	const [deletingSubtask, setDeletingSubtask] = useState<Subtask | null>(null)
 	const [isOpenDeleteSubtaskModal, setIsOpenDeleteSubtaskModal] = useState(false)
+	const [selectedSubTaskId, setSelectedSubTaskId] = useState<string | null>(null)
 
 	const handleCancelNewItem = () => {
 		setContent('')
 		setIsAddingItem(false)
 	}
+	const { groupId } = useParams<{ groupId: string }>()
 	const handleAddNewSubTask = async () => {
 		try {
 			const result = await createSubtask({
@@ -102,14 +106,20 @@ export const Column = ({
 				<div className='flex-1 space-y-2'>
 					{column.items.map((item) => (
 						<SubTaskContainer
+							taskId={taskId}
+							columnId={column._id}
 							key={item._id}
 							item={item}
 							onHandleDelete={() => {
 								setDeletingSubtask(item)
 								setIsOpenDeleteSubtaskModal(true)
 							}}
+							onOpenModal={() => {
+								setSelectedSubTaskId(item._id)
+							}}
 						/>
 					))}
+
 					{!isOver && (
 						<>
 							{!isAddingItem ? (
@@ -155,6 +165,15 @@ export const Column = ({
 						onOpenChange={setIsOpenDeleteSubtaskModal}
 						open={isOpenDeleteSubtaskModal}
 						onConfirm={() => handleDeleteSubTask()}
+					/>
+				)}
+				{selectedSubTaskId && (
+					<SubtaskDetailModal
+						groupId={groupId!}
+						subtaskId={selectedSubTaskId}
+						taskId={taskId}
+						columnId={column._id}
+						onClose={() => setSelectedSubTaskId(null)}
 					/>
 				)}
 			</div>

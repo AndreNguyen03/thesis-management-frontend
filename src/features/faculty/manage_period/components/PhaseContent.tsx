@@ -26,7 +26,7 @@ interface PhaseContentProps {
 	activePhase: PhaseType
 	periodId: string
 	lecturers?: string[]
-	onPhaseSettingOpen: Dispatch<SetStateAction<boolean>>
+	onPhaseSettingOpen: (bol: boolean) => void
 	onManageMilestones: Dispatch<SetStateAction<boolean>>
 	completePhase: () => void
 }

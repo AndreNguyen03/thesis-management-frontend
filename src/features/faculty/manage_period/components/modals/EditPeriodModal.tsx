@@ -114,7 +114,7 @@ export function EditPeriodModal({ data, open, onSubmit, isLoading, onOpenChange 
 										type='datetime-local'
 										className='w-full rounded border px-3 py-2'
 										value={startTime}
-										min={new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
+										min={new Date(Date.now()).toISOString().slice(0, 16)}
 										onChange={(e) => setStartTime(e.target.value)}
 									/>
 								</div>

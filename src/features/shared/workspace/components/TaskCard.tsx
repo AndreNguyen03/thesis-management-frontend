@@ -328,9 +328,7 @@ const TaskCard = ({
 			</p>
 			{/* Items Kanban */}
 			<div className='mt-3 grid grid-cols-3 gap-2'>
-				{/* CORE: Single DndContext wrapping ALL columns - enables cross-column drag */}
 				<DndContext onDragEnd={handleDragEnd}>
-					{/* CORE: SortableContext with ALL item IDs from ALL columns - this allows any item to be dragged anywhere */}
 					<SortableContext
 						items={task.columns.flatMap((col) => col.items.map((item) => item._id))}
 						strategy={verticalListSortingStrategy}

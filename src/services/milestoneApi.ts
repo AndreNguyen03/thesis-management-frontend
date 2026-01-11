@@ -12,7 +12,8 @@ import type {
 	ResponseFacultyMilestone,
 	ResponseMilestone,
 	ResponseMilestoneWithTemplate,
-	TopicSnaps
+	TopicSnaps,
+	DefenseMilestoneDetail
 } from '@/models/milestone.model'
 import { baseApi, type ApiResponse } from './baseApi'
 import type { CreateTaskPayload, Task } from '@/models/todolist.model'
@@ -81,13 +82,15 @@ export const milestoneApi = baseApi.injectEndpoints({
 				{ type: 'Milestones', id: groupId }
 			]
 		}),
-		createTaskInMilestone: builder.mutation<Task, CreateTaskPayload>({
-			query: (body) => ({
+		createTaskInMilestone: builder.mutation<Task, { payload: CreateTaskPayload; groupId: string }>({
+			query: ({ payload }) => ({
 				url: `/milestones/create-task`,
 				method: 'POST',
-				body
+				body: {
+					...payload
+				}
 			}),
-			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestones', id: arg.groupId }]
+			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestones', id: arg.payload.groupId }]
 		}),
 		getMilestonesCreatedByFacultyBoard: builder.query<ResponseFacultyMilestone[], string>({
 			query: (periodId) => ({
@@ -137,7 +140,7 @@ export const milestoneApi = baseApi.injectEndpoints({
 		}),
 		reviewMilestoneByLecturer: builder.mutation<
 			{ message: string; isAbleToGotoDefense: boolean },
-			{ milestoneId: string; comment: string; decision: LecturerReviewDecision }
+			{ milestoneId: string; comment: string; decision: LecturerReviewDecision; groupId: string }
 		>({
 			query: ({ milestoneId, comment, decision }) => ({
 				url: `/milestones/${milestoneId}/lecturer-review`,
@@ -149,7 +152,10 @@ export const milestoneApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<{ message: string; isAbleToGotoDefense: boolean }>) =>
 				response.data,
-			invalidatesTags: (_result, _error, { milestoneId }) => [{ type: 'Milestones', id: milestoneId }]
+			invalidatesTags: (_result, _error, { milestoneId, groupId }) => [
+				{ type: 'Milestones', id: milestoneId },
+				{ type: 'Milestones', id: groupId }
+			]
 		}),
 		getDefenseAssignmentInPeriod: builder.query<ResponseMilestoneWithTemplate[], string>({
 			query: (periodId) => ({
@@ -263,6 +269,13 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<string[]>) => response.data
+		}),
+		getDefenseMilestoneDetailById: builder.query<DefenseMilestoneDetail, { milestoneTemplateId: string }>({
+			query: ({ milestoneTemplateId }) => ({
+				url: `/milestones/${milestoneTemplateId}/detail`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<DefenseMilestoneDetail>) => response.data
 		})
 	}),
 	overrideExisting: false
@@ -289,5 +302,6 @@ export const {
 	useBlockGradeMutation,
 	useGetAllDefenseMilestonesQuery,
 	useGetAssignedDefenseMilestonesQuery,
-	useGetDefenseMilestoneYearsQuery
+	useGetDefenseMilestoneYearsQuery,
+	useGetDefenseMilestoneDetailByIdQuery
 } = milestoneApi
