@@ -81,16 +81,12 @@ export const milestoneApi = baseApi.injectEndpoints({
 				{ type: 'Milestones', id: milestoneId },
 				{ type: 'Milestones', id: groupId }
 			]
-			invalidatesTags: (_result, _error, { milestoneId, groupId }) => [
-				{ type: 'Milestones', id: milestoneId },
-				{ type: 'Milestones', id: groupId }
-			]
 		}),
 		createTaskInMilestone: builder.mutation<Task, { payload: CreateTaskPayload; groupId: string }>({
 			query: ({ payload }) => ({
 				url: `/milestones/create-task`,
 				method: 'POST',
-				body:{
+				body: {
 					...payload
 				}
 			}),
