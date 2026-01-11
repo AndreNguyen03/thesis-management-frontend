@@ -298,7 +298,7 @@ const ChatProvider: React.FC<{
 			unsubGroupLastMessage()
 			unsubDirectLastMessage()
 		}
-	}, [userId])
+	}, [userId, groupSidebars])
 
 	/* ========== ACTIONS (EMIT) ========== */
 
@@ -355,8 +355,8 @@ const ChatProvider: React.FC<{
 			try {
 				const result = await triggerFetchGroupMessages({ groupId, limit, before }).unwrap()
 
-                console.log('message fetch :::',result)
-                
+				console.log('message fetch :::', result)
+
 				const newMessages: ChatMessage[] = result.map((m: MessageDto) => ({
 					_id: m._id,
 					groupId: m.groupId,

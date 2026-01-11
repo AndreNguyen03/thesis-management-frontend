@@ -103,8 +103,17 @@ export function FilterBar({
 	}
 
 	const handleStatusChange = (value: string) => {
-		const newStatus = value === 'all' ? 'all' : value
-		const newQueryStatus = value === 'all' ? [] : [value]
+		let newStatus = value
+		let newQueryStatus: string[] = []
+		if (value === 'all') {
+			newStatus = 'all'
+			newQueryStatus = []
+		} else if (value.includes(',')) {
+			newStatus = value
+			newQueryStatus = value.split(',')
+		} else {
+			newQueryStatus = [value]
+		}
 		onSetQueryParams({ ...queryParams, status: newStatus, queryStatus: newQueryStatus, page: 1 })
 	}
 
@@ -154,7 +163,9 @@ export function FilterBar({
 					</SelectTrigger>
 					<SelectContent className='border-border bg-popover'>
 						<SelectItem value='all'>Tất cả</SelectItem>
-						<SelectItem value={TopicStatus.AVAILABLE}>Còn slot</SelectItem>
+						<SelectItem value={`${TopicStatus.PENDING_REGISTRATION},${TopicStatus.REGISTERED}`}>
+							Còn slot
+						</SelectItem>
 						<SelectItem value={TopicStatus.FULL}>Hết slot</SelectItem>
 					</SelectContent>
 				</Select>

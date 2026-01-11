@@ -101,7 +101,7 @@ export function TopicListItem({ onUnregister, topic, onClick, onRegister, isRegi
 						<span className='max-w-[100px] truncate'>{lecturerName}</span>
 					</div>
 
-					{/* Fields */}q
+					{/* Fields */}
 					{topic.fields.map((field) => (
 						<span key={field._id} className='max-w-[80px] truncate'>
 							{field.name}

@@ -31,6 +31,8 @@ export function LecturerRegistrationCard({ dashboardData }: LecturerRegistration
 
 	const hasPending = pendingTopics.length > 0
 
+	if (dashboardData.topicData && (dashboardData.topicData as LecturerTopicRegisration[]).length === 0) return null
+
 	return (
 		<Card className='rounded-xl border-primary/20 bg-primary/5 p-0'>
 			{/* Header */}

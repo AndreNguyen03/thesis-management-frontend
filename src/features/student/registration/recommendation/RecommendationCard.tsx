@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import type { FallbackTopic, RecommendationResult, RecommendTopic } from '@/models/recommend.model'
+import { useNavigate } from 'react-router-dom'
 
 interface RecommendationCardProps {
-    onRegister: (val: (RecommendTopic | FallbackTopic)) => void
+	onRegister: (val: RecommendTopic | FallbackTopic) => void
 	result: RecommendationResult
 	index: number
 }
@@ -11,7 +12,11 @@ interface RecommendationCardProps {
 export function RecommendationCard({ result, index, onRegister }: RecommendationCardProps) {
 	const { topic, type, badges = [], rank, semanticScore } = result
 
-	const slotsLeft = topic.maxStudents - topic.studentsNum
+	const navigate = useNavigate()
+
+	console.log('Rendering RecommendationCard:', topic)
+
+	const slotsLeft = topic.maxStudents - topic.approvedStudentsNum
 	const isFull = slotsLeft <= 0
 
 	const scorePercent = type === 'recommend' && semanticScore ? Math.round(semanticScore * 100) : null
@@ -21,13 +26,14 @@ export function RecommendationCard({ result, index, onRegister }: Recommendation
 	return (
 		<div
 			className={cn(
-				'group relative rounded-lg border bg-card p-4 transition-all duration-300 hover:shadow-md',
+				'group relative rounded-lg border bg-card p-4 transition-all duration-300 hover:cursor-pointer hover:shadow-md',
 				type === 'recommend'
 					? isTopMatch
 						? 'border-foreground/20 shadow-sm'
 						: 'border-border hover:border-foreground/10'
 					: 'border-border'
 			)}
+			onClick={() => navigate(`/detail-topic/${topic._id}`)}
 			style={{ animationDelay: `${index * 100}ms` }}
 		>
 			{/* Rank */}

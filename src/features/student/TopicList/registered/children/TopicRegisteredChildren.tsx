@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
 	Card,
 	CardContent,
@@ -12,7 +12,7 @@ import {
 	SelectValue
 } from '@/components/ui'
 import { usePageBreadcrumb } from '@/hooks/usePageBreadcrumb'
-import { Search } from 'lucide-react'
+import { Loader2, Search } from 'lucide-react'
 import { EmptyStateContainer } from '../EmptyStateContainer'
 import { useGetRegisteredTopicQuery } from '@/services/topicApi'
 import { TopicRegisteredCard } from '../card/TopicRegisteredCard'
@@ -33,7 +33,7 @@ export const TopicRegisteredChildren = () => {
 		filter_by: 'fieldIds'
 	})
 	//Lấy đề tài đã đăng ký
-	const { data: registerTopics } = useGetRegisteredTopicQuery({ queries })
+	const { data: registerTopics, isLoading, isFetching } = useGetRegisteredTopicQuery({ queries })
 	//Lấy tất cả các lĩnh vực
 	// const { data: fields } = useGetFieldsQuery()
 	// // const [cancelRegistration, { isLoading: isCancelling, isSuccess }] = useCancelRegistrationMutation()
@@ -55,9 +55,8 @@ export const TopicRegisteredChildren = () => {
 	}
 
 	const emptyList = registerTopics?.data.length === 0 && queries.query === ''
-
 	return (
-		<div className='flex w-full flex-col justify-center space-y-4 '>
+		<div className='flex w-full flex-col justify-center space-y-4'>
 			{emptyList ? (
 				<EmptyStateContainer type='registered' />
 			) : (
@@ -100,21 +99,30 @@ export const TopicRegisteredChildren = () => {
 					</Card>
 					<div className='flex w-full gap-6'>
 						<div className='grid w-full grid-cols-1 gap-6 lg:grid-cols-2'>
-							{registerTopics && registerTopics?.data.length > 0 ? (
-								<>
-									{registerTopics?.data.map((topic) => (
-										<TopicRegisteredCard key={topic._id} topic={topic} />
-									))}
-								</>
+							{isLoading || isFetching ? (
+								// Loader khi đang fetch dữ liệu
+								<div className='col-span-2 flex h-64 w-full items-center justify-center'>
+									<div className='flex flex-col items-center'>
+										<Loader2 className='h-16 w-16 animate-spin text-primary' />
+										<p className='mt-3 text-sm text-muted-foreground'>
+											Đang tải đề tài đã đăng ký...
+										</p>
+									</div>
+								</div>
+							) : registerTopics?.data.length === 0 ? (
+								// Empty state khi không có dữ liệu (kể cả search)
+								<div className='col-span-2 flex h-64 w-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50'>
+									<p className='text-center text-gray-500'>
+										{queries.query
+											? `Không tìm thấy đề tài nào có liên quan tới "${queries.query}"`
+											: 'Bạn chưa đăng ký đề tài nào'}
+									</p>
+								</div>
 							) : (
-								<>
-									{' '}
-									{queries.query === '' ? (
-										<span>{`Tìm thấy ${registerTopics?.data.length} đề tài liên quan`}</span>
-									) : (
-										<span>{`Không tìm thấy đề tài nào có liên quan tới "${queries.query}"`}</span>
-									)}
-								</>
+								// Hiển thị danh sách đề tài
+								registerTopics?.data.map((topic) => (
+									<TopicRegisteredCard key={topic._id} topic={topic} />
+								))
 							)}
 						</div>
 					</div>

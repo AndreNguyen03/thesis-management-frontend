@@ -98,6 +98,9 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange, 
 			}
 		}
 	}, [fieldPagingData, queriesField.page])
+
+	const displayFields = queriesField.query && fieldPagingData?.data ? fieldPagingData.data : selectableOptions
+
 	// CHẾ ĐỘ XEM (VIEW MODE)
 	if (!isEditing) {
 		return (
@@ -123,7 +126,7 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange, 
 		<div className={cn('space-y-2', className)}>
 			{/* 1. Hiển thị các tags đã chọn (có nút xóa) */}
 			{selectedFields.length > 0 && (
-				<div className='flex flex-wrap gap-1.5 max-w-[200px]'>
+				<div className='flex max-w-[200px] flex-wrap gap-1.5'>
 					{selectedFields.map((field) => (
 						<Badge
 							key={field._id}
@@ -150,7 +153,7 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange, 
 						role='combobox'
 						aria-expanded={open}
 						className={cn(
-							'w-[140px] justify-between text-left font-normal text-xs h-8',
+							'h-8 w-[140px] justify-between text-left text-xs font-normal',
 							selectedFields.length > 0 && 'text-muted-foreground'
 						)}
 					>
@@ -163,8 +166,12 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange, 
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className='w-[350px] p-0'>
-					<Command>
-						<CommandInput placeholder='Tìm kiếm lĩnh vực...' onValueChange={debounceFieldOnChange} className='h-9' />
+					<Command shouldFilter={false}>
+						<CommandInput
+							placeholder='Tìm kiếm lĩnh vực...'
+							onValueChange={debounceFieldOnChange}
+							className='h-9'
+						/>
 						<CommandList
 							className='h-fit max-h-60 overflow-y-auto'
 							style={{ overscrollBehavior: 'contain' }}
@@ -180,7 +187,7 @@ const FieldsContainer = ({ selectedFields, isEditing = true, onSelectionChange, 
 									)}
 
 									<CommandGroup heading='Danh sách lĩnh vực'>
-										{selectableOptions.map((field) => {
+										{displayFields.map((field) => {
 											const isSelected = selectedFields.some((f) => f._id === field._id)
 											return (
 												<CommandItem

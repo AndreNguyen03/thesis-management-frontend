@@ -42,6 +42,7 @@ const DraftTopicsDatatable = ({
 
 	return (
 		<div className='overflow-x-auto rounded-lg border'>
+            
 			<table className='min-w-full bg-white'>
 				<thead>
 					<tr className='bg-gray-50 text-gray-700'>

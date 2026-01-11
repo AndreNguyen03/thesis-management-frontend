@@ -12,6 +12,8 @@ import { Toaster } from './components/ui/toaster'
 import { ChatProvider } from './contexts/ChatSocketContext'
 // import { NotificationSocketProvider } from './contexts/NotificationSocketContext'
 import { useGetCurrentPeriodsQuery } from './services/periodApi'
+import { NotificationSocketProvider } from './contexts/NotificationSocketContext'
+import type { FacultyBoardProfile, LecturerProfile, StudentUser } from './models'
 
 const App = () => {
 	const dispatch = useAppDispatch()
@@ -33,24 +35,23 @@ const App = () => {
 		}
 	}, [userData, user, dispatch])
 
-	// 🔹 Loading global
-	if (isUserLoading || isPeriodLoading) {
-		return <LoadingOverlay />
-	}
-
 	if (!userData) return null
 
 	const userId = 'userId' in userData ? userData.userId : userData._id
 
 	return (
 		<ChatProvider userId={userId}>
-			{/* <NotificationSocketProvider userId={userId}> */}
-			<Layout>
-				<Outlet />
-				<Toaster />
-				<ToasterSonner />
-			</Layout>
-			{/* </NotificationSocketProvider> */}
+			<NotificationSocketProvider userId={userId}>
+				{isUserLoading || isPeriodLoading ? (
+					<LoadingOverlay />
+				) : (
+					<Layout>
+						<Outlet />
+						<Toaster />
+						<ToasterSonner />
+					</Layout>
+				)}
+			</NotificationSocketProvider>
 		</ChatProvider>
 	)
 }
