@@ -4,18 +4,20 @@ import { useDebounce } from '@/hooks/useDebounce'
 import {
 	registrationStatusMap,
 	StudentRegistrationStatus,
-	tranferToRejectionReasonType,
 	type IStudentRegistration,
 	type RegistrationHistoryQueryParams,
-    type StudentUser
+	type StudentUser
 } from '@/models'
-import { useGetRegistrationsHistoryQuery } from '@/services/registrationApi'
+import { useGetRegistrationsHistoryQuery, useLeaveTopicMutation } from '@/services/registrationApi'
 import { socketService } from '@/services/socket.service'
 import { useAppSelector } from '@/store'
 import { formatPeriodInfoMiniPeriod } from '@/utils/utils'
 import { Eye, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import CancelRegistrationConfirmModal from '../../detail/modal/CancelRegistrationConfirmModal'
+import { toast } from '@/hooks/use-toast'
+import { getErrorMessage } from '@/utils/catch-error'
 
 const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 	const [queries, setQueries] = useState<RegistrationHistoryQueryParams>({
@@ -29,7 +31,12 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 		filter: undefined,
 		filter_by: 'fieldIds'
 	})
-	const { data: registrationHistoryData, refetch } = useGetRegistrationsHistoryQuery({ queries })
+	const { data: registrationHistoryData, refetch } = useGetRegistrationsHistoryQuery({ queries }, {
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true
+    })
+
+	const [leaveTopic] = useLeaveTopicMutation()
 
 	const userId = useAppSelector((state) => (state.auth.user as StudentUser)?.userId)
 
@@ -48,6 +55,9 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 		}
 	}, [userId, refetch])
 
+	const [openCancelRegistrationModal, setOpenCancelRegistrationModal] = useState(false)
+	const [selectedRegistration, setSelectedRegistration] = useState<IStudentRegistration | null>(null)
+
 	// search input handler
 	const [searchTerm, setSearchTerm] = useState('')
 	const setQuery = (query: string) => {
@@ -60,14 +70,7 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 	}
 	const navigate = useNavigate()
 	const handleGoDetail = (registration: IStudentRegistration) => {
-		navigate(`/detail-topic/${registration.topicId}`, {
-			state: {
-				notiType: 'REJECTED',
-				message: `Đăng ký đề tài của bạn đã bị từ chối với lý do chính: "${tranferToRejectionReasonType[registration.rejectionReasonType as keyof typeof tranferToRejectionReasonType] || 'Lý do khác'}".`,
-				rejectedBy: registration.processedBy.fullName,
-				reasonSub: registration.lecturerResponse
-			}
-		})
+		navigate(`/detail-topic/${registration.topicId}`)
 	}
 	const handleSelectPeriod = (value: string) => {
 		setQueries((prev) => ({
@@ -76,6 +79,39 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 			page: 1
 		}))
 	}
+
+	const toggleRegistration = async (topicId: string) => {
+		try {
+			await leaveTopic({ topicId: topicId }).unwrap()
+			toast({
+				title: 'Thành công',
+				description: 'Hủy đăng ký đề tài thành công'
+			})
+			refetch()
+		} catch (error) {
+			console.error('Error during cancel registration toggle:', error)
+
+			toast({
+				title: 'Lỗi',
+				description: getErrorMessage(error),
+				variant: 'destructive'
+			})
+		} finally {
+			refetch()
+		}
+	}
+
+	const handleOpenCancelModal = (registration: IStudentRegistration) => {
+		setSelectedRegistration(registration)
+		setOpenCancelRegistrationModal(true)
+	}
+	const handleConfirmCancel = async () => {
+		if (!selectedRegistration) return
+		await toggleRegistration(selectedRegistration.topicId)
+		setOpenCancelRegistrationModal(false)
+		setSelectedRegistration(null)
+	}
+
 	return (
 		<>
 			<Card className='w-full space-y-2 rounded-xl border border-gray-200 bg-white p-6 shadow-md'>
@@ -167,7 +203,10 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 											<Eye className='h-5 w-5 text-blue-500' />
 										</button>
 										{hic.registrationStatus === StudentRegistrationStatus.PENDING && (
-											<button className='rounded-full p-2 transition-colors hover:bg-gray-100'>
+											<button
+												className='rounded-full p-2 transition-colors hover:bg-gray-100'
+												onClick={() => handleOpenCancelModal(hic)}
+											>
 												<Trash2 className='h-5 w-5 text-red-400' />
 											</button>
 										)}
@@ -191,6 +230,14 @@ const RegistrationHistory = ({ periodId }: { periodId?: string }) => {
 					/>
 				)}
 			</Card>
+			<CancelRegistrationConfirmModal
+				open={openCancelRegistrationModal}
+				onCancel={() => {
+					setOpenCancelRegistrationModal(false)
+					setSelectedRegistration(null)
+				}}
+				onConfirm={handleConfirmCancel}
+			/>
 		</>
 	)
 }

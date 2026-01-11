@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Badge, Button, Input } from '@/components/ui'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 

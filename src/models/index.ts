@@ -5,5 +5,6 @@ export * from './topic.model'
 export * from './registration.model'
 export * from './field.model'
 export * from './requirement.model'
+export * from './chatbot-ai.model'
 
 

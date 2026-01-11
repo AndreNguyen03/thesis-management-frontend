@@ -1,5 +1,6 @@
 import type { GetChatbotVerDto } from '@/models/chatbot-version'
 import { baseApi, type ApiResponse } from './baseApi'
+import type { GenerateTopicResponse, ApplyGeneratedResponse } from '@/models/chatbot-ai.model'
 import type { GetPaginatedKnowledgeDto } from '@/models/knowledge-source.model'
 import type {
 	ChatbotResource,
@@ -150,6 +151,18 @@ export const chatbotApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<GetChatbotVerDto>) => response.data,
 			invalidatesTags: ['ChatbotConfig']
 		}),
+
+		// ========== Topic generation (AI) ==========
+		generateTopic: builder.mutation<GenerateTopicResponse, { prompt: string; limit?: number }>({
+			query: (body) => ({ url: `/chatbots/generate-topic`, method: 'POST', body }),
+			transformResponse: (response: ApiResponse<GenerateTopicResponse>) => response.data
+		}),
+
+		applyGeneratedTopic: builder.mutation<ApplyGeneratedResponse, { missingFields: string[]; missingRequirements: string[] }>({
+			query: (body) => ({ url: `/chatbots/apply-field-requirement`, method: 'POST', body }),
+			transformResponse: (response: ApiResponse<ApplyGeneratedResponse>) => response.data,
+			invalidatesTags: ['ListFields']
+		}),
 		toggleChatbotStatus: builder.mutation<
 			{ message: string },
 			{ id: string; suggestionId: string; status: boolean }
@@ -181,5 +194,7 @@ export const {
 	useCreateQuerySuggestionMutation,
 	useUpdateQuerySuggestionMutation,
 	useDeleteQuerySuggestionsMutation,
-	useToggleChatbotStatusMutation
+	useToggleChatbotStatusMutation,
+	useGenerateTopicMutation,
+	useApplyGeneratedTopicMutation
 } = chatbotApi
