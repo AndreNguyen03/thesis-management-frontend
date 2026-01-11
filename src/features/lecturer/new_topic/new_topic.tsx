@@ -220,11 +220,8 @@ function CreateTopic2({
 			topicData: newTopic,
 			files: selectedFiles
 		})
-		if (periodId) {
-			refetchSubmittedTopics?.()
-		} else {
-			refetchDraftTopics?.()
-		}
+		refetchSubmittedTopics?.()
+		refetchDraftTopics?.()
 	}
 
 	const handleCancel = () => {
@@ -393,9 +390,7 @@ function CreateTopic2({
 			const fieldIds: string[] = suggestion.candidateFields?.map((f) => f.id) ?? []
 			const requirementIds: string[] = suggestion.candidateRequirements?.map((r) => r.id) ?? []
 
-
-
-            let resp: ApplyGeneratedResponse = { createdFields: [], createdRequirements: [] }
+			let resp: ApplyGeneratedResponse = { createdFields: [], createdRequirements: [] }
 
 			// create missing via backend batch endpoint
 			if ((suggestion.missingFields?.length ?? 0) + (suggestion.missingRequirements?.length ?? 0) > 0) {
@@ -479,8 +474,12 @@ function CreateTopic2({
 				<div className='flex flex-col rounded-2xl border border-border bg-card p-4 pt-4 shadow-lg'>
 					<div className='mb-6 flex items-start justify-between gap-4'>
 						<div>
-							<h1 className='mb-1 text-2xl font-extrabold tracking-tight text-foreground'>Tạo đề tài mới</h1>
-							<p className='text-sm text-muted-foreground'>Điền thông tin cơ bản và chi tiết, sau đó lưu đề tài.</p>
+							<h1 className='mb-1 text-2xl font-extrabold tracking-tight text-foreground'>
+								Tạo đề tài mới
+							</h1>
+							<p className='text-sm text-muted-foreground'>
+								Điền thông tin cơ bản và chi tiết, sau đó lưu đề tài.
+							</p>
 						</div>
 						<div className='text-sm text-muted-foreground'>
 							<span className='inline-block rounded-md bg-muted/20 px-3 py-1'>Loại: {topicType}</span>
@@ -849,13 +848,10 @@ function CreateTopic2({
 					</div>
 				</div>
 			</div>
-				<div className='md:col-span-2'>
+			<div className='md:col-span-2'>
 				{/* AI Generator Card */}
 				<div className='card-elevated sticky top-6 rounded-xl border bg-card p-4'>
-					<AITitleGenerator
-						onGenerate={handleGenerateTitles}
-						isLoading={isGenerating}
-					/>
+					<AITitleGenerator onGenerate={handleGenerateTitles} isLoading={isGenerating} />
 
 					<div className='mt-6 border-t pt-5'>
 						<h4 className='mb-3 text-sm font-semibold text-foreground'>Gợi ý từ AI</h4>

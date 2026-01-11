@@ -94,6 +94,7 @@ export interface StudentUser {
 	bio: string
 	phone?: string
 	facultyName?: string
+	facultyId?: string
 	introduction?: string
 	avatarUrl?: string
 	isActive: boolean

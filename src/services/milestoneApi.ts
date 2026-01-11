@@ -76,7 +76,10 @@ export const milestoneApi = baseApi.injectEndpoints({
 				}
 			},
 			transformResponse: (response: ApiResponse<FileInfo>) => response.data,
-			invalidatesTags: (_result, _error, { milestoneId }) => [{ type: 'Milestones', id: milestoneId }]
+			invalidatesTags: (_result, _error, { milestoneId, groupId }) => [
+				{ type: 'Milestones', id: milestoneId },
+				{ type: 'Milestones', id: groupId }
+			]
 		}),
 		createTaskInMilestone: builder.mutation<Task, CreateTaskPayload>({
 			query: (body) => ({
@@ -260,7 +263,7 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<string[]>) => response.data
-		}),
+		})
 	}),
 	overrideExisting: false
 })

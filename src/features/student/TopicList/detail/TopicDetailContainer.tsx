@@ -99,7 +99,7 @@ export const TopicDetailContainer = () => {
 	// modal
 	const [openConfirmModal, setOpenConfirmModal] = useState(false)
 	// Modal xét duyệt đề tài đăng kýmaxStudents={currentTopic.maxStudents}
-					
+
 	const [modalRegisterModalOpen, setModalRegisterModalOpen] = useState(false)
 	//Modal hủy đăng ký
 	const [openCancelRegistrationModal, setOpenCancelRegistrationModal] = useState(false)
@@ -118,8 +118,8 @@ export const TopicDetailContainer = () => {
 		return (
 			<Dialog open>
 				<DialogContent className='flex min-h-[200px] flex-col items-center justify-center'>
-					<div className='flex w-full flex-col items-center gap-4'>
-						<div className='h-16 w-16 animate-pulse rounded-full bg-gray-200'>
+					<div className='flex h-full w-full flex-col items-center gap-4'>
+						<div className='flex h-16 w-16 animate-pulse flex-col items-center justify-center rounded-full bg-gray-200'>
 							<Loader2 className='h-8 w-8 animate-spin text-gray-400' />
 							Đang tải
 						</div>

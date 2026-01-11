@@ -25,6 +25,7 @@ export interface RecommendTopic {
 	currentStatus: string
 	studentsNum: number
 	maxStudents: number
+	approvedStudentsNum: number
 	score: number
 	semanticScore?: number
 	major: {
@@ -57,6 +58,7 @@ export interface FallbackTopic {
 	currentPhase?: string
 	studentsNum: number
 	maxStudents: number
+	approvedStudentsNum: number
 	allowManualApproval?: boolean
 	areaInterest?: string[]
 	researchInterests?: string[]
@@ -95,7 +97,6 @@ export interface RecommendationResultData {
 		totalTopics: number
 	}
 }
-
 
 export interface RecommendationResponse {
 	data?: RecommendationResult[]

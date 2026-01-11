@@ -1,4 +1,4 @@
-import { Check, Edit3, Bookmark, X } from 'lucide-react'
+import { Check, Bookmark, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
