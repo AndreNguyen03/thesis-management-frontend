@@ -13,10 +13,8 @@ import {
 	PaginationPrevious
 } from '@/components/ui/pagination'
 import {
-	type StudentRegistrationStatus,
 	type GeneralTopic,
 	type GetFieldNameReponseDto,
-	type ITopicDetail,
 	type PaginationTopicsRegistrationQueryParams,
 	type ResponseMiniLecturerDto,
 	type StudentUser
@@ -123,6 +121,25 @@ export default function TopicRegistration() {
 		}
 	}, [userId, refetch])
 
+	// Move clearFilters to TopicRegistration scope
+	const clearFilters = useCallback(() => {
+		setSelectedFields([])
+		setSelectedLecturers([])
+		setQueryParams({
+			page: 1,
+			limit: 10,
+			search_by: ['titleVN', 'titleEng'],
+			query: '',
+			sort_by: 'createdAt',
+			sort_order: 'desc',
+			status: 'all',
+			rulesPagination: 99,
+			lecturerIds: [],
+			fieldIds: [],
+			queryStatus: []
+		})
+	}, [])
+
 	// ------------------ HANDLERS ------------------`
 
 	const handleSelectionChangeFields = useCallback((newFields: GetFieldNameReponseDto[]) => {
@@ -154,7 +171,6 @@ export default function TopicRegistration() {
 
 		try {
 			await createRegistration({ topicId: topicToRegister._id }).unwrap()
-			setActiveTab('registered')
 			setIsConfirmOpen(false)
 		} catch (err: any) {
 			toast({
@@ -163,6 +179,7 @@ export default function TopicRegistration() {
 				variant: 'destructive'
 			})
 		} finally {
+			setActiveTab('registered')
 			setIsRegistering(false)
 		}
 	}
@@ -177,7 +194,6 @@ export default function TopicRegistration() {
 
 		try {
 			await leaveTopic({ topicId: selectedTopic!._id }).unwrap()
-			setActiveTab('list')
 			setIsCancelModalOpen(false)
 		} catch (err: any) {
 			toast({
@@ -187,6 +203,8 @@ export default function TopicRegistration() {
 			})
 		} finally {
 			setIsCancelling(false)
+			refetch()
+			setActiveTab('list')
 		}
 	}
 
@@ -252,16 +270,7 @@ export default function TopicRegistration() {
 						{isLoadingTopics ? (
 							<SkeletonLoader count={6} />
 						) : paginated?.data.length === 0 ? (
-							<EmptyState
-								onClearFilters={() =>
-									setQueryParams({
-										query: '',
-										lecturerIds: [],
-										fieldIds: [],
-										queryStatus: []
-									})
-								}
-							/>
+							<EmptyState onClearFilters={clearFilters} />
 						) : (
 							<div className='overflow-hidden rounded-lg border bg-card shadow-sm'>
 								{paginated?.data.map((topic) => (
@@ -414,7 +423,12 @@ export default function TopicRegistration() {
 			/>
 
 			{/* Recommendation Panel */}
-			<RecommendationPanel isOpen={isRecommendOpen} onClose={() => setIsRecommendOpen(false)} periodId={id!} />
+			<RecommendationPanel
+				isOpen={isRecommendOpen}
+				onClose={() => setIsRecommendOpen(false)}
+				periodId={id!}
+				setActiveTab={setActiveTab}
+			/>
 
 			{/* Floating Button */}
 			<RecommendationButton onClick={() => setIsRecommendOpen(true)} isOpen={isRecommendOpen} />

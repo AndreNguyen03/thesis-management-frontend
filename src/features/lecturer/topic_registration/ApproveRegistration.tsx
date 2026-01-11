@@ -1,15 +1,13 @@
 import { FilterBar } from './components/FilterBar'
 import { TopicList } from './components/TopicList'
-import type { RejectPayload } from './types'
 import { RejectStudentDialog } from './components/RejectStudentDialog'
 import { usePageBreadcrumb } from '@/hooks'
 import { useEffect, useState } from 'react'
 import { useGetTopicApprovalRegistrationQuery } from '@/services/topicApi'
-import { useGetAllMiniPeriodInfoQuery, useGetCurrentPeriodsQuery } from '@/services/periodApi'
+import { useGetAllMiniPeriodInfoQuery, useGetLecturerDashboardQuery } from '@/services/periodApi'
 import type { ApprovalTopicQueryParams, LecturerProfile, QueryReplyRegistration, StudentRegistration } from '@/models'
 import { ManageApproveRegistrationSkeleton } from './utils/Skeleton'
 import { useDebounce } from '@/hooks/useDebounce'
-import { PeriodPhaseName } from '@/models/period.model'
 import { RegistrationStatus } from '@/features/student/TopicList/utils/registration'
 import { toast } from '@/hooks/use-toast'
 import { getErrorMessage } from '@/utils/catch-error'
@@ -22,7 +20,7 @@ export function ManageApproveRegistration() {
 
 	const [periodId, setPeriodId] = useState<string>('')
 	const [expandedTopicId, setExpandedTopicId] = useState<string | null>(null)
-	const [rejectingStudent, setRejectingStudent] = useState<RejectPayload | null>(null)
+	// const [rejectingStudent, setRejectingStudent] = useState<RejectPayload | null>(null)
 	const [currentTab, setCurrentTab] = useState<'thesis' | 'scientific_research'>('thesis')
 	const [searchTerm, setSearchTerm] = useState('')
 
@@ -38,8 +36,11 @@ export function ManageApproveRegistration() {
 		query: '' // Thêm field query để sync search
 	})
 
-	const { data: topicApprovalRegistrationData, isLoading: topicLoading, refetch } =
-		useGetTopicApprovalRegistrationQuery(queryParams)
+	const {
+		data: topicApprovalRegistrationData,
+		isLoading: topicLoading,
+		refetch
+	} = useGetTopicApprovalRegistrationQuery(queryParams)
 
 	console.log(topicApprovalRegistrationData)
 
@@ -48,10 +49,11 @@ export function ManageApproveRegistration() {
 		status: 'all'
 	})
 
-	const { data: currentPeriod, isLoading: periodLoading } = useGetCurrentPeriodsQuery()
+	// const { data: currentPeriod, isLoading: periodLoading } = useGetCurrentPeriodsQuery()
+
+	const { data: currentPeriod, isLoading: periodLoading } = useGetLecturerDashboardQuery()
 
 	const userId = useAppSelector((state) => (state.auth.user as LecturerProfile)?.userId)
-
 
 	useEffect(() => {
 		if (!userId) return
@@ -69,17 +71,66 @@ export function ManageApproveRegistration() {
 	}, [userId, refetch])
 
 	useEffect(() => {
-		if ((allMiniPeriodInfo?.data?.length ?? 0) > 0 && !periodId && allMiniPeriodInfo) {
-			const initialPeriod = allMiniPeriodInfo.data[0]
-			setPeriodId(initialPeriod._id)
+		if ((allMiniPeriodInfo?.data?.length ?? 0) > 0 && !periodId) {
+			// Prefer the lecturer dashboard's current period for the active tab when available
+			const dash = currentPeriod ?? {}
+			const dashTyped = dash as Record<string, { _id?: string } | undefined>
+			const dashEntry = currentTab === 'thesis' ? dashTyped.thesis : dashTyped.scientificResearch
+			const initialPeriodId = dashEntry?._id ?? allMiniPeriodInfo?.data?.[0]?._id ?? ''
+			setPeriodId(initialPeriodId)
+			// sync query params so topic list fetches for the selected period immediately
+			setQueryParams((prev) => ({ ...prev, periodId: initialPeriodId, page: 1 }))
 		}
-	}, [allMiniPeriodInfo, periodId])
+	}, [allMiniPeriodInfo, periodId, currentPeriod, currentTab])
 
 	console.log('currentPeriod , period id :::', currentPeriod, periodId)
 
-	// readonly neu la ky hien tai khong phai la dang ki hoặc là khác kì hiện tại
-	const isReadOnly =
-		currentPeriod?.filter((p) => p._id === periodId && p.currentPhaseDetail.status !== 'active').length === 1
+	// readonly: true when the selected period is NOT the current period for the current tab's type,
+	// or when it is the current period but its current phase is not 'open_registration'
+	const isReadOnly = (() => {
+		if (!periodId) {
+			console.log('[ApproveRegistration] periodId is empty -> isReadOnly = false')
+			return false
+		}
+
+		// `currentPeriod` here is the lecturer dashboard payload containing per-type current periods
+		const dash = currentPeriod ?? {}
+
+		type PeriodEntry = {
+			_id?: string
+			currentPhase?: string
+			currentPhaseDetail?: { phase?: string; status?: string }
+		}
+
+		const dashTyped = dash as Record<string, PeriodEntry | undefined>
+		const dashEntry = currentTab === 'thesis' ? dashTyped.thesis : dashTyped.scientificResearch
+
+		const selectedIsCurrent = !!dashEntry && dashEntry._id === periodId
+		const currentPhase = dashEntry?.currentPhase ?? dashEntry?.currentPhaseDetail?.phase
+		const status = dashEntry?.currentPhaseDetail?.status
+
+		// Editable only when selected is the current period for this type AND current phase is 'open_registration'
+		const result = !selectedIsCurrent || currentPhase !== 'open_registration'
+
+		console.log(
+			'[ApproveRegistration] periodId=',
+			periodId,
+			'currentTab=',
+			currentTab,
+			'dashEntryId=',
+			dashEntry?._id,
+			'selectedIsCurrent=',
+			selectedIsCurrent,
+			'currentPhase=',
+			currentPhase,
+			'phaseStatus=',
+			status,
+			'=> isReadOnly=',
+			result
+		)
+
+		return result
+	})()
 
 	// readonly dung de test
 	// const isReadOnly = false

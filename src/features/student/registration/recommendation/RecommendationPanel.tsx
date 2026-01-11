@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from 'react'
 import { X, Sparkles, Loader2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -13,15 +14,15 @@ interface RecommendationPanelProps {
 	isOpen: boolean
 	onClose: () => void
 	periodId: string
+	setActiveTab: (tab: 'list' | 'registered') => void
 }
 
-export function RecommendationPanel({ isOpen, onClose, periodId }: RecommendationPanelProps) {
+export function RecommendationPanel({ isOpen, onClose, periodId, setActiveTab }: RecommendationPanelProps) {
 	const [visibleCards, setVisibleCards] = useState<number[]>([])
 	const [isExpanded, setIsExpanded] = useState(false)
 	// const [expandedVisibleCards, setExpandedVisibleCards] = useState<number[]>([])
 	const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 	const [isRegistering, setIsRegistering] = useState(false)
-	const [activeTab, setActiveTab] = useState('list')
 	const [selectedTopic, setSelectedTopic] = useState<RecommendTopic | FallbackTopic | null>(null)
 
 	const [createRegistration] = useCreateRegistrationMutation()
@@ -85,8 +86,13 @@ export function RecommendationPanel({ isOpen, onClose, periodId }: Recommendatio
 
 		try {
 			await createRegistration({ topicId: selectedTopic._id }).unwrap()
-			setActiveTab('registered')
+			// close confirm modal right away
 			setIsConfirmOpen(false)
+			// slide out panel and switch to registered after a short delay to allow modal animation
+			setTimeout(() => {
+				onClose()
+				setActiveTab('registered')
+			}, 200)
 		} catch (err: any) {
 			toast({
 				title: 'Không thể đăng ký',
@@ -99,7 +105,7 @@ export function RecommendationPanel({ isOpen, onClose, periodId }: Recommendatio
 	}
 
 	const handleRegisterRecommendClick = (topic: RecommendTopic | FallbackTopic) => {
-        setSelectedTopic(topic)
+		setSelectedTopic(topic)
 		setIsConfirmOpen(true)
 	}
 
@@ -146,6 +152,14 @@ export function RecommendationPanel({ isOpen, onClose, periodId }: Recommendatio
 										: 'Đề tài phổ biến'}
 							</p>
 						</div>
+						{isRegistering && (
+							<div className='absolute inset-0 z-50 flex items-center justify-center bg-black/40'>
+								<div className='flex items-center gap-2 rounded-md bg-card/90 px-4 py-2'>
+									<Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+									<span className='text-sm text-muted-foreground'>Đang đăng ký...</span>
+								</div>
+							</div>
+						)}
 					</div>
 					<Button variant='ghost' size='icon' onClick={onClose}>
 						<X className='h-4 w-4' />
@@ -180,7 +194,11 @@ export function RecommendationPanel({ isOpen, onClose, periodId }: Recommendatio
 										}`}
 									>
 										{visibleCards.includes(index) && (
-											<RecommendationCard onRegister={handleRegisterRecommendClick} result={result} index={index} />
+											<RecommendationCard
+												onRegister={handleRegisterRecommendClick}
+												result={result}
+												index={index}
+											/>
 										)}
 									</div>
 								)

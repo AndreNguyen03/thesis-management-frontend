@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Badge, Button, Input } from '@/components/ui'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
@@ -116,8 +118,8 @@ export const TopicDetailContainer = () => {
 		return (
 			<Dialog open>
 				<DialogContent className='flex min-h-[200px] flex-col items-center justify-center'>
-					<div className='flex w-full flex-col items-center gap-4'>
-						<div className='h-16 w-16 animate-pulse rounded-full bg-gray-200'>
+					<div className='flex h-full w-full flex-col items-center gap-4'>
+						<div className='flex h-16 w-16 animate-pulse flex-col items-center justify-center rounded-full bg-gray-200'>
 							<Loader2 className='h-8 w-8 animate-spin text-gray-400' />
 							Đang tải
 						</div>

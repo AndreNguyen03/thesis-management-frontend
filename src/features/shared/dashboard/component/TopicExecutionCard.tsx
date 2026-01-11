@@ -12,6 +12,8 @@ export function TopicExecutionCard({ dashboardData }: TopicExecutionCardProps) {
 	const navigate = useNavigate()
 
 	/* ---------------- Registered State ---------------- */
+	if (dashboardData.topicData.length === 0) return null
+
 	return (
 		<Card className='rounded-xl border-primary/20 bg-primary/5 p-0'>
 			<CardHeader className='pb-3'>
@@ -22,7 +24,7 @@ export function TopicExecutionCard({ dashboardData }: TopicExecutionCardProps) {
 			</CardHeader>
 			<CardContent className='space-y-4'>
 				{/* List */}
-				<div className='space-y-3 overflow-x-auto sm:overflow-x-visible min-w-full'>
+				<div className='min-w-full space-y-3 overflow-x-auto sm:overflow-x-visible'>
 					{(dashboardData.topicData as LecturerTopicExecution[]).map((topic) => {
 						return (
 							<Card key={topic._id} className='border-border p-0'>

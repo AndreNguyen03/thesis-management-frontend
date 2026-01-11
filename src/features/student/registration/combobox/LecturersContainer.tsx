@@ -44,7 +44,7 @@ const LecturersContainer = ({
 	const [queriesField, setQueriesField] = useState<PaginationQueryParamsDto>({
 		page: 1,
 		limit: 8,
-		search_by: ['user.fullName'],
+		search_by: ['fullName'],
 		query: '',
 		sort_by: 'fullName',
 		sort_order: 'asc'
