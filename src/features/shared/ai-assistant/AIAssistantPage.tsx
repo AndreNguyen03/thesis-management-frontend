@@ -28,7 +28,7 @@ import {
 	Menu,
 	Loader2
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { cn, renderMarkdown } from '@/lib/utils'
 import {
 	AlertDialog,
@@ -71,6 +71,8 @@ interface ChatResponse {
 }
 
 export const AIAssistantPage = () => {
+	const { conversationId } = useParams<{ conversationId: string }>()
+
 	const { toast } = useToast()
 	//const { data: chatbot, isLoading: isLoadingChatbot } = useGetChatbotVersionQuery()
 	//endpoint để tạo mới cuộc trò chuyện
@@ -126,6 +128,14 @@ export const AIAssistantPage = () => {
 	}
 
 	useEffect(() => {
+		if (conversationId && chatHistories.length > 0) {
+			const foundChat = chatHistories.find((c) => c._id === conversationId)
+			if (foundChat && foundChat._id !== currentChatId) {
+				selectChat(conversationId)
+			}
+		}
+	}, [conversationId, chatHistories])
+	useEffect(() => {
 		scrollToBottom()
 	}, [messages])
 
@@ -138,6 +148,8 @@ export const AIAssistantPage = () => {
 		if (chat) {
 			setCurrentChatId(chatId)
 			setMessages(chat.messages)
+			// Update URL
+			navigate(`/ai-chat/${chatId}`, { replace: true })
 		}
 	}
 
@@ -501,6 +513,8 @@ export const AIAssistantPage = () => {
 				topics: []
 			}
 		])
+
+		navigate('/ai-chat', { replace: true })
 	}
 
 	// Parse agent response để loại bỏ cấu trúc ReAct (Question, Thought, Final Answer)

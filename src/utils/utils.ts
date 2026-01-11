@@ -60,7 +60,13 @@ export function decodeJwt<T = any>(token: string): T | null {
 }
 export const PhaseInfo: Record<
 	PhaseType,
-	{ order: number; continue: string | undefined; continueMessage: string | undefined; continuePhaseId: string | undefined; label: string }
+	{
+		order: number
+		continue: string | undefined
+		continueMessage: string | undefined
+		continuePhaseId: string | undefined
+		label: string
+	}
 > = {
 	empty: {
 		order: 0,

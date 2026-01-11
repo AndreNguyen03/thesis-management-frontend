@@ -97,7 +97,7 @@ export const TopicDetailContainer = () => {
 	// modal
 	const [openConfirmModal, setOpenConfirmModal] = useState(false)
 	// Modal xét duyệt đề tài đăng kýmaxStudents={currentTopic.maxStudents}
-					
+
 	const [modalRegisterModalOpen, setModalRegisterModalOpen] = useState(false)
 	//Modal hủy đăng ký
 	const [openCancelRegistrationModal, setOpenCancelRegistrationModal] = useState(false)
@@ -470,7 +470,7 @@ export const TopicDetailContainer = () => {
 						</div>
 					</div>
 					{/* Nội dung */}
-					<div className='grid space-x-5 px-4 md:grid-cols-6'>
+					<div className='grid grid-cols-1 space-x-5 px-4 md:grid-cols-6'>
 						{/* Nọi dung bên trái */}
 						<div
 							style={{ maxHeight: 'calc(100vh - 110px)' }}
@@ -845,7 +845,7 @@ export const TopicDetailContainer = () => {
 									)}
 								</div>
 								{/* Xét duyệt thủ công */}
-								{user?.role === 'lecturer' ? (
+								{user?.role === 'lecturer' || user?.role === 'faculty_board' ? (
 									<div className='flex flex-col gap-4'>
 										<Label className='text-muted-foreground'>Xét duyệt đăng ký</Label>
 
@@ -888,7 +888,10 @@ export const TopicDetailContainer = () => {
 									{currentTopic.students.approvedStudents.length > 0 &&
 									isAbleInOpenRegistrationPhase ? (
 										currentTopic.students.approvedStudents.map((student) => (
-											<div key={student._id} className='flex items-start gap-3'>
+											<div
+												key={student._id}
+												className='flex cursor-pointer items-start gap-3 py-1 hover:bg-gray-100'
+											>
 												<div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
 													{student.student.avatarUrl ? (
 														<img
@@ -927,20 +930,23 @@ export const TopicDetailContainer = () => {
 											</p>
 										</div>
 									)}
-									{user && user.role === 'lecturer' && isAbleInDraftOrSubmitPhase && (
-										<div className='mt-2 flex items-center gap-2'>
-											<div
-												className='flex items-center rounded-sm px-2 py-2 hover:cursor-pointer hover:bg-blue-100'
-												onClick={() => setOpenAddStudentModal(true)}
-											>
-												<Plus className='h-4 w-4 text-primary' />
-												<span className='ml-2 text-sm text-primary'>Thêm sinh viên</span>
+									{user &&
+										((user.role === 'lecturer' && isAbleInDraftOrSubmitPhase) ||
+											user.role === 'faculty_board') && (
+											<div className='mt-2 flex items-center gap-2'>
+												<div
+													className='flex items-center rounded-sm px-2 py-2 hover:cursor-pointer hover:bg-blue-100'
+													onClick={() => setOpenAddStudentModal(true)}
+												>
+													<Plus className='h-4 w-4 text-primary' />
+													<span className='ml-2 text-sm text-primary'>Thêm sinh viên</span>
+												</div>
 											</div>
-										</div>
-									)}
+										)}
 									{user &&
 										(() => {
 											switch (user.role) {
+												case 'faculty_board':
 												case 'lecturer':
 													return (
 														currentTopic.students.pendingStudents.length > 0 && (
@@ -1047,7 +1053,10 @@ export const TopicDetailContainer = () => {
 								</div>
 								<div className='flex flex-col gap-4'>
 									{currentTopic.lecturers.map((lecturer) => (
-										<div key={lecturer._id} className='flex items-start gap-3'>
+										<div
+											key={lecturer._id}
+											className='flex items-start gap-3 py-1 hover:bg-gray-100'
+										>
 											<div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
 												{lecturer.avatarUrl ? (
 													<img
@@ -1074,9 +1083,9 @@ export const TopicDetailContainer = () => {
 											</div>
 										</div>
 									))}
-									{isAbleInDraftOrSubmitPhase &&
-										user &&
-										user.role === 'lecturer' &&
+									{user &&
+										((isAbleInDraftOrSubmitPhase && user.role === 'lecturer') ||
+											user.role === 'faculty_board') &&
 										currentTopic.lecturers.length < 2 && (
 											<div className='flex items-center gap-2'>
 												<div

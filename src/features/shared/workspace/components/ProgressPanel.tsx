@@ -16,6 +16,7 @@ import { useAppSelector } from '@/store'
 import { MilestoneStatusOptions, type ResponseMilestone } from '@/models/milestone.model'
 import { formatDate } from '@/utils/utils'
 import { MilestoneSelector } from './MilestoneSelector'
+import { useParams } from 'react-router-dom'
 
 interface ProgressPanelProps {
 	milestones: ResponseMilestone[]
@@ -23,12 +24,8 @@ interface ProgressPanelProps {
 }
 
 export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps) => {
-	const group = useAppSelector((state) => state.group)
-	// Lấy dữ liệu từ API
-	const { data: tasksData, isLoading } = useGetStaskQuery(
-		{ groupId: group.activeGroup?._id ?? '' },
-		{ skip: !group.activeGroup?._id }
-	)
+	const { groupId } = useParams() // Lấy dữ liệu từ API
+	const { data: tasksData, isLoading } = useGetStaskQuery({ groupId: groupId ?? '' }, { skip: !groupId })
 
 	// Khởi tạo với initialTasks, sau đó merge với data từ API
 	const [tasks, setTasks] = useState<Task[]>([])
@@ -45,7 +42,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 		}
 	}, [tasksData])
 	const [newTask, setNewTask] = useState<CreateTaskPayload>({
-		groupId: group.activeGroup?._id || '',
+		groupId: groupId ?? '',
 		title: '',
 		description: '',
 		milestoneId: undefined
@@ -156,7 +153,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 		try {
 			const res = await updateTaskMilestone({
 				taskId,
-				groupId: group.activeGroup?._id,
+				groupId: groupId ?? '',
 				milestoneId
 			}).unwrap()
 
@@ -172,7 +169,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 		try {
 			const res = await deleteTask({
 				taskId,
-				groupId: group.activeGroup?._id
+				groupId: groupId ?? ''
 			}).unwrap()
 			setTasks((prev) => prev.filter((task) => task._id !== res))
 			setIsOpenDeleteModal(false)
@@ -210,7 +207,7 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 	)
 
 	return (
-		<div className='h-[calc(100vh-7rem)] space-y-6 bg-work p-6 pb-12'>
+		<div className='h-[calc(100vh-7rem)] space-y-6 bg-work p-6'>
 			{/* Stats Grid */}
 			<div className='grid grid-cols-2 gap-4'>
 				<StatCard
@@ -325,25 +322,31 @@ export const ProgressPanel = ({ milestones, totalProgress }: ProgressPanelProps)
 			</div>
 
 			{/* Tasks List */}
-			<div className='space-y-4'>
+			<div className='space-y-4 pb-20'>
 				<h4 className='font-semibold text-foreground'>Danh sách Công việc</h4>
-				{tasks.map((task) => (
-					<div key={task._id}>
-						<TaskCard
-							key={task._id + task.title}
-							task={task}
-							onUpdateTask={handleUpdateTask}
-							isUpdating={isUpdatingTaskInfo}
-							onUpdateMilestone={handleUpdateMilestone}
-							onDeleteTask={() => {
-								setIsOpenDeleteModal(true)
-								setDeletedTask(task)
-							}}
-							setTasks={setTasks}
-							milestones={milestones}
-						/>
+				{tasks && tasks.length ? (
+					tasks.map((task) => (
+						<div key={task._id}>
+							<TaskCard
+								key={task._id + task.title}
+								task={task}
+								onUpdateTask={handleUpdateTask}
+								isUpdating={isUpdatingTaskInfo}
+								onUpdateMilestone={handleUpdateMilestone}
+								onDeleteTask={() => {
+									setIsOpenDeleteModal(true)
+									setDeletedTask(task)
+								}}
+								setTasks={setTasks}
+								milestones={milestones}
+							/>
+						</div>
+					))
+				) : (
+					<div className='flex items-center justify-center rounded-sm border border-gray-200 bg-white p-5 text-sm'>
+						Chưa có công việc nào
 					</div>
-				))}
+				)}
 			</div>
 			<DeleteModal
 				isLoading={isDeleteLoading}

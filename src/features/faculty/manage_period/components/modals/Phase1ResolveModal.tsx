@@ -32,6 +32,12 @@ export function SubmissionPhaseResolveModal({
 	const steps: StepType[] = ['pendingTopics', 'lecturerMissing']
 	const currentStepIndex = steps.indexOf(currentStep)
 	const stepConfig = {
+		notTimeout: {
+			title: 'Pha chưa kết thúc',
+			description: 'Pha hiện tại chưa đến thời gian kết thúc, không thể hoàn thành pha',
+			icon: AlertCircle,
+			isTimeout: false
+		},
 		pendingTopics: {
 			title: 'Các đề tài chưa xét duyệt',
 			icon: AlertCircle,
@@ -291,10 +297,13 @@ export function SubmissionPhaseResolveModal({
 							Đóng
 						</Button>
 						{
-							<Button onClick={handleComplete} disabled={!data.canTriggerNextPhase} className='bg-green-600 hover:bg-green-700'>
+							<Button
+								onClick={handleComplete}
+								disabled={!data.canTriggerNextPhase}
+								className='bg-green-600 hover:bg-green-700'
+							>
 								Hoàn thành pha
 							</Button>
-							
 						}
 					</div>
 				</DialogFooter>

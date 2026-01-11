@@ -8,7 +8,6 @@ import {
 	useBatchPublishDefenseResultsMutation,
 	useArchiveTopicsMutation
 } from '@/services/topicApi'
-import MilestoneHeader from './components/MilestoneHeader'
 import { TopicsTable } from './components/TopicsTable'
 import {
 	Download,
@@ -38,6 +37,7 @@ import { PaginationQueryParamsDto } from '@/models/query-params'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useAppSelector } from '@/store'
 import { cn, downloadFileWithURL } from '@/lib/utils'
+import MilestoneHeader from './components/MilestoneHeader'
 type ActionType = 'save-draft' | 'publish' | 'block-grade' | 'submit-graded-list' | 'archive-topics'
 const baseUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 export default function DefenseScoringPage() {

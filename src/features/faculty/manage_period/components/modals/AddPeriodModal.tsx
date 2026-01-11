@@ -148,7 +148,7 @@ export function AddPeriodModal({ open, onOpenChange }: AddPeriodModalProps) {
 								<div className='space-y-2'>
 									<Label>Ngày giờ bắt đầu *</Label>
 									<input
-										min={new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
+										min={new Date(Date.now()).toISOString().slice(0, 16)}
 										type='datetime-local'
 										className='w-full rounded border px-3 py-2'
 										value={startTime}

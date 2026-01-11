@@ -21,12 +21,12 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Textarea } from '@/components/ui/textarea'
 import type { QueryReplyRegistration, RelatedStudentInTopic } from '@/models'
-import { AlertTriangle, Check, Clock, MoreVertical, Trash2, X } from 'lucide-react'
+import { AlertTriangle, Check, Clock, Loader2, MoreVertical, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { RegistrationStatus } from '../../utils/registration'
 import { useReplyRegistrationMutation } from '@/services/registrationApi'
-import { toast } from '@/hooks/use-toast'
 import { getErrorMessage } from '@/utils/catch-error'
+import { toast } from 'sonner'
 interface RegistrationProps {
 	maxStudents: number
 	students: RelatedStudentInTopic
@@ -38,7 +38,8 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 	const [rejectModalOpen, setRejectModalOpen] = useState(false)
 	const [selectedRequest, setSelectedRequest] = useState<any>(null)
 	//hàm chấp nhận yêu cầu đăng ký của sinh viên
-	const [replyRegistration, { isError: isErrorRegistration }] = useReplyRegistrationMutation()
+	const [replyRegistration, { isError: isErrorRegistration, isLoading: isReplyLoading }] =
+		useReplyRegistrationMutation()
 	// State form từ chối
 	const [rejectReason, setRejectReason] = useState<string>('')
 	const [rejectReasonType, setRejectReasonType] = useState('')
@@ -48,15 +49,14 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 			status: RegistrationStatus.APPROVED,
 			lecturerResponse: 'Chúc mừng bạn đã được duyệt vào đề tài!'
 		}
-		// Call API Approve
-		await replyRegistration({ registrationId: registrationId, body: replyPayload })
-		if (isErrorRegistration) {
-			toast({
-				variant: 'destructive',
-				title: 'Lỗi',
-				description: getErrorMessage(isErrorRegistration)
-			})
+		try {
+			// Call API Approve
+			await replyRegistration({ registrationId: registrationId, body: replyPayload })
+			toast.success('Đăng ký thành công', { duration: 5000, richColors: true })
+		} catch (error) {
+			toast.error('Lỗi khi đăng ký', { duration: 5000, richColors: true, description: getErrorMessage(error) })
 		}
+
 		onRefetch()
 	}
 	const confirmReject = async () => {
@@ -65,7 +65,16 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 			lecturerResponse: rejectReason ? rejectReason : 'Rất tiếc, yêu cầu của bạn đã bị từ chối.',
 			rejectionReasonType: rejectReasonType
 		}
-		await replyRegistration({ registrationId: selectedRequest._id, body: replyPayload })
+		try {
+			await replyRegistration({ registrationId: selectedRequest._id, body: replyPayload })
+			toast.success('Từ chối yêu cầu thành công', { duration: 5000, richColors: true })
+		} catch (error) {
+			toast.error('Lỗi khi từ chối yêu cầu', {
+				duration: 5000,
+				richColors: true,
+				description: getErrorMessage(error)
+			})
+		}
 		setRejectModalOpen(false)
 		onRefetch()
 	}
@@ -80,7 +89,7 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 	return (
 		<Dialog open={openModal} onOpenChange={setOpenModal}>
 			<DialogContent className='max-w-3xl'>
-				<div className='space-y-6'>
+				<div className='mt-5 space-y-6'>
 					{/* --- PHẦN 1: THÀNH VIÊN CHÍNH THỨC --- */}
 					<div className='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm'>
 						<div className='flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3'>
@@ -247,6 +256,9 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 													onClick={() => handleApprove(req._id)}
 													disabled={!isRegisterable}
 												>
+													{isReplyLoading && (
+														<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+													)}
 													<Check className='mr-1.5 h-3 w-3' /> Duyệt
 												</Button>
 												<Button
@@ -255,6 +267,9 @@ const RegistrationDetail = ({ maxStudents, students, openModal, setOpenModal, on
 													className='h-8 w-full border-red-200 text-xs text-red-600 hover:bg-red-50 hover:text-red-700'
 													onClick={() => handleOpenReject(req)}
 												>
+													{isReplyLoading && (
+														<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+													)}
 													<X className='mr-1.5 h-3 w-3' /> Từ chối
 												</Button>
 											</div>

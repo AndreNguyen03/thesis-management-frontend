@@ -1,5 +1,5 @@
 import type { MissTopics, PhaseType } from './period.model'
-import type { ResponseMiniLecturerDto } from './users'
+import type { MiniActorInforDto, ResponseMiniLecturerDto } from './users'
 
 export interface PeriodPhase {
 	_id: string
@@ -8,7 +8,7 @@ export interface PeriodPhase {
 	endTime: string
 	status: PeriodPhaseStatus
 	minTopicsPerLecturer?: number
-	requiredLecturerIds?: string[]
+	requiredLecturers?: ResponseMiniLecturerDto[]
 	allowManualApproval?: boolean
 }
 
@@ -47,6 +47,7 @@ export interface Phase1Response {
 	pendingTopics: TopicInfo[]
 	currentApprovedTopics: number
 	canTriggerNextPhase: boolean
+	isTimeout: boolean
 }
 
 export interface Phase2Response {
@@ -57,6 +58,7 @@ export interface Phase2Response {
 		executing: { topicId: string; title: string }[]
 	}
 	canTriggerNextPhase: boolean
+	isTimeout: boolean
 }
 export interface PausedOrDelayedTopic {
 	topicId: string
@@ -97,6 +99,7 @@ export interface Phase3Response {
 	pausedOrDelayedTopics: PausedOrDelayedTopic[]
 	pendingLecturerReview: PendingLecturerReviewTopic[]
 	canTriggerNextPhase: boolean
+	isTimeout: boolean
 }
 
 export interface Phase4Response {
@@ -106,6 +109,7 @@ export interface Phase4Response {
 	// pausedOrDelayedTopics: PausedOrDelayedTopicInfo[]
 	// pendingLecturerReview: PendingLecturerReview[]
 	canTriggerNextPhase: boolean
+	isTimeout: boolean
 }
 
 export type ResolvePhaseResponse = Phase1Response | Phase2Response | Phase3Response | Phase4Response

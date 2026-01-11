@@ -77,7 +77,7 @@ export interface TopicSnaps {
 	studentName: string[]
 	lecturers: ResponseMiniLecturerDto[]
 }
-export type CouncilMemberRole = 'chairperson' | 'secretary' | 'member'
+export type CouncilMemberRole = 'chairperson' | 'secretary' | 'member' | 'reviewer'
 
 export const CouncilMemberRoleOptions: Record<
 	CouncilMemberRole,
@@ -85,7 +85,8 @@ export const CouncilMemberRoleOptions: Record<
 > = {
 	chairperson: { label: 'Chủ tịch', variant: 'default' },
 	secretary: { label: 'Thư ký', variant: 'secondary' },
-	member: { label: 'Ủy viên', variant: 'outline' }
+	member: { label: 'Ủy viên', variant: 'outline' },
+	reviewer: { label: 'Phản biện', variant: 'outline' }
 }
 export interface DefenseCouncilMember {
 	memberId: string
@@ -239,4 +240,15 @@ export interface ResponseDefenseMilestone {
 }
 export interface PaginatedFacultyMilestones extends GetPaginatedObject {
 	data: ResponseDefenseMilestone[]
+}
+
+export interface DefenseMilestoneDetail {
+	title: string
+	description: string
+	dueDate: Date
+	type: string
+	periodId: string
+	isPublished: boolean // Đã công bố điểm
+	isBlock: boolean // Đã khóa (không cho chỉnh sửa)
+	createdBy: string
 }

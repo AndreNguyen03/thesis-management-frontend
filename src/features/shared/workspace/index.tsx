@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {  useEffect } from 'react'
+import { useEffect } from 'react'
 import { GroupSidebar } from './components/GroupSidebar'
 import { ChatPanel } from './components/ChatPanel'
 import { WorkPanel } from './components/WorkPanel'
@@ -10,9 +10,11 @@ import type { ApiError } from '@/models'
 import { useBreadcrumb, useChat } from '@/hooks'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { setActiveGroup } from '@/store/slices/group-workspace'
+import { useNavigate, useParams } from 'react-router-dom'
 
 export const GroupWorkspacePage = () => {
-	const group = useAppSelector((state) => state.group)
+	const { groupId } = useParams<{ groupId: string }>()
+	const navigate = useNavigate()
 	const { groupSidebars, setGroupSidebars } = useChat()
 	const dispatch = useAppDispatch()
 	const { setHidden } = useBreadcrumb()
@@ -29,15 +31,16 @@ export const GroupWorkspacePage = () => {
 		}
 	}, [paginatedGroups, setGroupSidebars])
 
-	const activeGroup = groupSidebars.find((g) => g._id === group.activeGroup?._id)
+	const activeGroup = groupSidebars.find((g) => g._id === groupId)
 
 	const { data: groupDetail, isLoading: isLoadingGroupDetail } = useGetGroupDetailQuery(
-		{ groupId: group.activeGroup?._id ?? '' },
-		{ skip: !group.activeGroup?._id }
+		{ groupId:groupId ?? '' },
+		{ skip: !groupId }
 	)
 
 	const handleSelectGroup = (id: string) => {
 		dispatch(setActiveGroup(groupSidebars.find((g) => g._id === id) || null))
+		navigate(`/group-workspace/${id}`, { replace: true })
 	}
 
 	if (isLoading)
@@ -62,12 +65,11 @@ export const GroupWorkspacePage = () => {
 		)
 	}
 
-
 	return (
 		<div className='flex h-full w-full overflow-hidden'>
 			<GroupSidebar
 				groups={groupSidebars}
-				selectedGroupId={group.activeGroup?._id}
+				selectedGroupId={groupId}
 				onSelectGroup={handleSelectGroup}
 			/>
 
@@ -75,13 +77,13 @@ export const GroupWorkspacePage = () => {
 				<ResizablePanelGroup direction='horizontal' className='max-h-[100dvh]'>
 					{/* Chat Panel */}
 					<ResizablePanel defaultSize={50} minSize={40} maxSize={40}>
-						{group.activeGroup ? (
+						{groupId ? (
 							isLoadingGroupDetail ? (
 								<LoadingState message='Đang tải chat...' />
 							) : (
 								<ChatPanel
 									groupName={activeGroup?.titleVN || ''}
-									groupId={group.activeGroup._id}
+									groupId={groupId ?? ''}
 									participants={groupDetail?.participants ?? []}
 								/>
 							)
@@ -96,7 +98,7 @@ export const GroupWorkspacePage = () => {
 
 					{/* Work Panel */}
 					<ResizablePanel defaultSize={50} minSize={50}>
-						{group.activeGroup ? (
+						{groupId ? (
 							isLoadingGroupDetail ? (
 								<LoadingState message='Đang tải dữ liệu công việc...' />
 							) : (
@@ -109,7 +111,7 @@ export const GroupWorkspacePage = () => {
 										Hãy chọn nhóm để xem công việc
 									</h2>
 									<p className='text-sm text-gray-500'>
-										{group.activeGroup ? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm' : ''}
+										{groupId ? 'Dữ liệu milestone và task sẽ được tải khi chọn nhóm' : ''}
 									</p>
 								</div>
 							</div>

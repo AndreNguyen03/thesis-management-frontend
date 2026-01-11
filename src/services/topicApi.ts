@@ -17,7 +17,8 @@ import type {
 	ApprovalTopicQueryParams,
 	DetailTopicsInDefenseMilestone,
 	UpdateDefenseResultDto,
-	PaginationRegisteredTopicsQueryParams
+	PaginationRegisteredTopicsQueryParams,
+	PaginationDraftTopicsQueryParams
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
@@ -84,7 +85,7 @@ export const topicApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<CanceledRegisteredTopic[]>) => response.data,
 			providesTags: ['MyRegisteredTopics']
 		}),
-		getDraftTopics: builder.query<PaginatedDraftTopics, { queries: PaginationQueryParamsDto }>({
+		getDraftTopics: builder.query<PaginatedDraftTopics, { queries: PaginationDraftTopicsQueryParams }>({
 			query: ({ queries }) => {
 				const queryString = buildQueryString(queries)
 				return `/topics/lecturer/get-draft-topics?${queryString}`

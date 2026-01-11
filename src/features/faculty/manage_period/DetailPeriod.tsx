@@ -15,6 +15,7 @@ import { LoadingState } from '@/components/ui/LoadingState'
 import { getNextPhase } from './utils'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
 import ManageMilestone from '@/features/shared/milestone/modal/ManageMilestone'
+import { se } from 'date-fns/locale'
 //import ManageMilestone from '@/features/shared/milestone/modal/ManageMilestone'
 
 export default function DetailPeriodPage() {
@@ -29,7 +30,7 @@ export default function DetailPeriodPage() {
 		skip: !id
 	})
 	const { data: lecturersByFaculty } = useGetAllLecturersComboboxQuery({ limit: 1000, page: 1, sort_order: 'desc' })
-
+	const [isEdittingMode, setIsEditingMode] = useState(false)
 	const [isSidebarHidden, setSidebarHidden] = useState(false)
 	const [currentChosenPhase, setCurrentChosenPhase] = useState<PhaseType>('empty')
 	const [phaseSettingOpen, setPhaseSettingsOpen] = useState<boolean>(false)
@@ -76,6 +77,8 @@ export default function DetailPeriodPage() {
 	const currentPhaseDetail = period.phases.find(
 		(p: PeriodPhase) => p.phase === currentChosenPhase && p.startTime && p.endTime
 	)
+
+
 	return (
 		<div className='flex h-full w-full overflow-auto'>
 			{/* Sidebar */}
@@ -108,7 +111,10 @@ export default function DetailPeriodPage() {
 									}
 									setCurrentChosenPhase(nextPhase)
 								}}
-								onPhaseSettingOpen={setPhaseSettingsOpen}
+								onPhaseSettingOpen={(bol: boolean) => {
+									setPhaseSettingsOpen(bol)
+									setIsEditingMode(true)
+								}}
 								onManageMilestones={setManagingMilestonesOpen}
 							/>
 						</>
@@ -147,6 +153,7 @@ export default function DetailPeriodPage() {
 									size='sm'
 									onClick={() => {
 										setPhaseSettingsOpen(true)
+										setIsEditingMode(false)
 									}}
 								>
 									Thiết lập pha {PhaseInfo[period.currentPhase].continue}
@@ -168,8 +175,9 @@ export default function DetailPeriodPage() {
 				periodId={period._id}
 				lecturers={lecturersByFaculty?.data ?? []}
 				onSuccess={() => refetch()}
+				isEdittingMode={isEdittingMode}
 			/>
-				
+
 			{currentPhaseDetail && (
 				<ManageMilestone
 					open={isManagingMilestonesOpen}

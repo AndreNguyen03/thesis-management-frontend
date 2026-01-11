@@ -46,8 +46,7 @@ export const periodApi = baseApi.injectEndpoints({
 			// RTK Query trả về ApiResponse<T>, cần unwrap data.data
 			transformResponse: (response: ApiResponse<Period>) => response.data,
 
-			providesTags: (result, error, id) =>
-				result ? [{ type: 'PeriodDetail', id }] : [{ type: 'PeriodDetail', id: 'LIST' }]
+			providesTags: (result, error, id) => [{ type: 'PeriodDetail', id }]
 		}),
 
 		createPeriod: builder.mutation<{ message: string }, CreatePeriodPayload>({
@@ -75,7 +74,7 @@ export const periodApi = baseApi.injectEndpoints({
 			{ periodId: string; body: CreatePhaseSubmitTopicDto; force?: boolean }
 		>({
 			query: ({ periodId, body, force }) => ({
-				url: `periods/${periodId}/config-submit-topic-phase${force ? '?force=true' : ''}`,
+				url: `periods/${periodId}/config-submit-topic-phase${force ? '?force=true' : '?force=false'}`,
 				method: 'PATCH',
 				body
 			}),
@@ -240,5 +239,5 @@ export const {
 	useGetAllMiniPeriodInfoQuery,
 	useGetLecturerDashboardQuery,
 	useGetStudentDashboardQuery,
-    useGetFacultyDashboardQuery
+	useGetFacultyDashboardQuery
 } = periodApi

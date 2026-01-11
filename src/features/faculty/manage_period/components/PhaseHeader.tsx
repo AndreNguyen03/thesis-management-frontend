@@ -154,7 +154,7 @@ export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHea
 												setIsCollapsed(true)
 											}}
 										>
-											Thiết lập thời gian pha
+											Chỉnh sửa thông tin pha
 										</button>
 									</li>
 									<li>
@@ -174,7 +174,7 @@ export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHea
 											onMouseDown={() => {
 												onManageMilestone?.()
 												setIsCollapsed(true)
-												navigate(`/period/${periodId}/manage-defense-assignment`)
+												navigate(`/period/${periodId}/defense-milestones-in-period`)
 											}}
 											type='button'
 											className='w-full px-4 py-2 text-left font-medium hover:bg-muted'

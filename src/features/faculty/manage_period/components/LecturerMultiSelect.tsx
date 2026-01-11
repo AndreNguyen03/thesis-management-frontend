@@ -5,17 +5,17 @@ import { Command, CommandGroup, CommandItem, CommandList, CommandInput, CommandE
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
-import type { ResponseMiniLecturerDto } from '@/models'
+import type { MiniActorInforDto, ResponseMiniLecturerDto } from '@/models'
 
 interface LecturerMultiSelectProps {
 	allLecturers: ResponseMiniLecturerDto[] | undefined
-	selected: string[]
-	onChange: (value: string[]) => void
+	selected: ResponseMiniLecturerDto[]
+	onChange: (value: ResponseMiniLecturerDto[]) => void
 }
 
 export function LecturerMultiSelect({ allLecturers = [], selected, onChange }: LecturerMultiSelectProps) {
 	const [open, setOpen] = useState(false)
-	const [localSelected, setLocalSelected] = useState<string[]>(selected)
+	const [localSelected, setLocalSelected] = useState<ResponseMiniLecturerDto[]>(selected)
 
 	// Khi mở popup → đồng bộ local để người dùng chọn lại từ đầu
 	const openPopover = () => {
@@ -24,11 +24,18 @@ export function LecturerMultiSelect({ allLecturers = [], selected, onChange }: L
 	}
 
 	const toggle = (id: string) => {
-		setLocalSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+		setLocalSelected((prev) => {
+			const exists = prev.some((item) => item._id === id)
+			if (exists) {
+				return prev.filter((item) => item._id !== id)
+			}
+			const lecturer = allLecturers.find((l) => l._id === id)
+			return lecturer ? [...prev, lecturer] : prev
+		})
 	}
 
 	const selectAll = () => {
-		setLocalSelected(allLecturers.map((l) => l._id))
+		setLocalSelected(allLecturers)
 	}
 
 	const clearAll = () => {
@@ -39,27 +46,24 @@ export function LecturerMultiSelect({ allLecturers = [], selected, onChange }: L
 		onChange(localSelected)
 		setOpen(false)
 	}
-
+console.log("kkkk",selected)
 	return (
 		<div className='w-full'>
 			<label className='text-sm font-medium'>Giảng viên yêu cầu nộp</label>
 
 			{/* Selected badges */}
 			<div className='mt-2 flex flex-wrap gap-2'>
-				{selected.map((id) => {
-					const lec = allLecturers.find((l) => l._id === id)
-					return (
-						<Badge key={id} variant='secondary' className='flex items-center gap-1'>
-							{lec?.title + ' '}
-							{lec?.fullName}
-							<X
-								size={14}
-								className='cursor-pointer'
-								onClick={() => onChange(selected.filter((x) => x !== id))}
-							/>
-						</Badge>
-					)
-				})}
+				{selected.map((item) => (
+					<Badge key={item._id} variant='secondary' className='flex items-center gap-1'>
+						{item.title + ' '}
+						{item.fullName}
+						<X
+							size={14}
+							className='cursor-pointer'
+							onClick={() => onChange(selected.filter((x) => x._id !== item._id))}
+						/>
+					</Badge>
+				))}
 			</div>
 
 			<Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -96,7 +100,7 @@ export function LecturerMultiSelect({ allLecturers = [], selected, onChange }: L
 											onSelect={() => toggle(lec._id)}
 											className='flex cursor-pointer items-center gap-2 py-2'
 										>
-											<Checkbox checked={localSelected.includes(lec._id)} />
+											<Checkbox checked={localSelected.some((item) => item._id === lec._id)} />
 											{lec.title + ' '}{lec.fullName}
 										</CommandItem>
 									))}

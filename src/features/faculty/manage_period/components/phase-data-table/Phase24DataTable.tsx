@@ -80,7 +80,7 @@ export const Phase23DataTable = ({
 					<>
 						<td className='t px-3 py-2'>
 							<span className='text-center font-medium'>
-								{hic.studentsNum}/{hic.maxStudents}
+								{hic.approvedStudentsNum}/{hic.maxStudents}
 							</span>
 						</td>{' '}
 					</>

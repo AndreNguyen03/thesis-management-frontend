@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import { TopicsPanel } from './TopicPanel'
-import { MilestonesPanel } from './MilestonePanel'
+import { TopicsPanel } from '../manage_phase/completion-phase/manage-defense-milestone/TopicPanel'
+import { MilestonesPanel } from '../manage_phase/completion-phase/manage-defense-milestone/MilestonePanel'
 import {
 	useGetDefenseAssignmentInPeriodQuery,
 	useManageLecturersInDefenseMilestoneMutation,
@@ -10,21 +10,22 @@ import {
 } from '@/services/milestoneApi'
 import { useParams } from 'react-router-dom'
 import { useGetTopicsAwaitingEvaluationInPeriodQuery } from '@/services/topicApi'
-import { ConfirmDialog } from './ConfirmDialog'
+import { ConfirmDialog } from '../manage_phase/completion-phase/manage-defense-milestone/ConfirmDialog'
 import { toast } from 'sonner'
 import type { CouncilMemberRole, DefenseCouncilMember, TopicSnaps } from '@/models/milestone.model'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
-import { LecturersPanel } from './LecturersPanel'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
 import { useLocation, useNavigate } from 'react-router-dom'
+import AwaitingTopicTable from './datatable/AwaitingTopicTable'
+import { useGetCouncilByIdQuery } from '@/services/defenseCouncilApi'
 type ActionType = 'add' | 'delete'
 
 //lỗi thời
-export function DefenseAssignmentPage() {
-	const { id: periodId } = useParams()
+export function CouncilAssignmentPage() {
+	const { periodId, councilId } = useParams()
 	const location = useLocation()
 	const navigate = useNavigate()
-
+	useGetCouncilByIdQuery(councilId!)
 	// Lấy milestoneId từ location.state nếu có
 	const initialMilestoneId = location.state?.milestoneId ?? null
 	const [selectedMilestone, setSelectedMilestone] = useState<string | null>(initialMilestoneId)
@@ -47,7 +48,7 @@ export function DefenseAssignmentPage() {
 		limit: 15,
 		page: 1,
 		query: '',
-		search_by: ['titleVN', 'titleEng', 'lecturers.fullName']
+		search_by: ['titleVN', 'titleEng']
 	})
 
 	const [lecturerQueries, setLecturerQueries] = useState<PaginationQueryParamsDto>({
@@ -56,27 +57,20 @@ export function DefenseAssignmentPage() {
 		query: '',
 		search_by: ['fullName']
 	})
-	//endpoint lấy tất cả các milestone
-	const {
-		data: milestonesData,
-		refetch: refetchMilestones,
-		isLoading: isLoadingMilestones
-	} = useGetDefenseAssignmentInPeriodQuery(periodId!)
+
 	//endpoint lấy tất cả các đề tài đang chờ đánh giá
 	const {
-		data: lecturersData,
-		refetch: refetchLecturers,
-		isLoading: isLoadingLecturers
-	} = useGetAllLecturersComboboxQuery(lecturerQueries)
-	const {
 		data: topicData,
-		isLoading: isLoadingTopics,
-		error,
-		refetch: refetchTopics
+		refetch: refetchTopics,
+		isLoading: isLoadingTopics
 	} = useGetTopicsAwaitingEvaluationInPeriodQuery({ periodId: periodId!, queryParams: topicQueries })
-	const selectedMilestoneData = useMemo(() => {
-		return milestonesData?.find((m) => m._id === selectedMilestone)
-	}, [milestonesData, selectedMilestone])
+
+	//endpoint lấy tất cả giảng viên
+	// const {
+	// 	data: lecturersData,
+	// 	refetch: refetchLecturers,
+	// 	isLoading: isLoadingLecturers
+	// } = useGetAllLecturersComboboxQuery(lecturerQueries)
 
 	// Xóa highlight sau 3 giây
 	useEffect(() => {
@@ -100,7 +94,6 @@ export function DefenseAssignmentPage() {
 	const [manageTopics, { isLoading: isManagingTopics }] = useManageTopicsInDefenseMilestoneMutation()
 	//Gọi endpoint quản lý giảng viên trong hội đồng bảo vệ
 	const [manageLecturers, { isLoading: isManagingLecturers }] = useManageLecturersInDefenseMilestoneMutation()
-
 	const [lecturerConfirmDialog, setLecturerConfirmDialog] = useState<{
 		open: boolean
 		type: ActionType | null
@@ -146,45 +139,43 @@ export function DefenseAssignmentPage() {
 		})
 	}
 	const handleAssignCouncil = async () => {
-		if (!selectedMilestone) {
-			toast.error('Vui lòng chọn đợt bảo vệ')
-			return
-		}
-
-		if (selectedLecturers.length === 0) {
-			toast.error('Vui lòng chọn ít nhất một giảng viên')
-			return
-		}
-		const memberNum = selectedLecturers.length + selectedMilestoneData?.defenseCouncil.length!
-		const isLe = memberNum % 2
-		if (isLe === 0) {
-			toast.error('Số lượng thành viên trong hội đồng bảo vệ phải là số lẻ. Hãy chọn thêm 1 thành viên', {
-				richColors: true
-			})
-			return
-		}
-		const arrayLecturerEliminate = [
-			...(milestonesData?.find((m) => m._id === selectedMilestone)?.defenseCouncil ?? []),
-			...selectedLecturers
-		]
-		const haveChairPerson = arrayLecturerEliminate.some((lecturer) => lecturer.role === 'chairperson')
-		if (!haveChairPerson) {
-			toast.error('Vui lòng thêm 1 chủ tịch hội đồng bảo vệ', { richColors: true })
-			return
-		}
-		const haveSecretary = arrayLecturerEliminate.some((lecturer) => lecturer.role === 'secretary')
-		if (!haveSecretary) {
-			toast.error('Vui lòng thêm ít nhất một thư ký hội đồng bảo vệ', { richColors: true })
-			return
-		}
-
-		// Mở dialog xác nhận
-		setLecturerConfirmDialog({
-			open: true,
-			type: 'add',
-			lecturers: selectedLecturers,
-			milestoneId: selectedMilestone
-		})
+		// if (!selectedMilestone) {
+		// 	toast.error('Vui lòng chọn đợt bảo vệ')
+		// 	return
+		// }
+		// if (selectedLecturers.length === 0) {
+		// 	toast.error('Vui lòng chọn ít nhất một giảng viên')
+		// 	return
+		// }
+		// const memberNum = selectedLecturers.length + selectedMilestoneData?.defenseCouncil.length!
+		// const isLe = memberNum % 2
+		// if (isLe === 0) {
+		// 	toast.error('Số lượng thành viên trong hội đồng bảo vệ phải là số lẻ. Hãy chọn thêm 1 thành viên', {
+		// 		richColors: true
+		// 	})
+		// 	return
+		// }
+		// const arrayLecturerEliminate = [
+		// 	...(milestonesData?.find((m) => m._id === selectedMilestone)?.defenseCouncil ?? []),
+		// 	...selectedLecturers
+		// ]
+		// const haveChairPerson = arrayLecturerEliminate.some((lecturer) => lecturer.role === 'chairperson')
+		// if (!haveChairPerson) {
+		// 	toast.error('Vui lòng thêm 1 chủ tịch hội đồng bảo vệ', { richColors: true })
+		// 	return
+		// }
+		// const haveSecretary = arrayLecturerEliminate.some((lecturer) => lecturer.role === 'secretary')
+		// if (!haveSecretary) {
+		// 	toast.error('Vui lòng thêm ít nhất một thư ký hội đồng bảo vệ', { richColors: true })
+		// 	return
+		// }
+		// // Mở dialog xác nhận
+		// setLecturerConfirmDialog({
+		// 	open: true,
+		// 	type: 'add',
+		// 	lecturers: selectedLecturers,
+		// 	milestoneId: selectedMilestone
+		// })
 	}
 
 	const handleRemoveLecturerFromCouncil = (milestoneId: string, lecturer: DefenseCouncilMember) => {
@@ -206,69 +197,60 @@ export function DefenseAssignmentPage() {
 	}
 
 	const handleConfirmAction = async () => {
-		if (!confirmDialog.milestoneId || confirmDialog.topicIds.length === 0) return
-
-		try {
-			// Lấy thông tin topics để tạo snapshots
-			let topicSnapshots: TopicSnaps[] = []
-
-			if (confirmDialog.type === 'add') {
-				// Lấy từ topicData cho action add
-				const filteredTopics =
-					topicData?.data?.filter((topic) => confirmDialog.topicIds.includes(topic._id)) || []
-
-				topicSnapshots = filteredTopics.map((topic) => ({
-					_id: topic._id,
-					titleVN: topic.titleVN,
-					titleEng: topic.titleEng,
-					studentName: topic.students?.map((s) => s.fullName),
-					lecturers: topic.lecturers || []
-				}))
-			} else {
-				// Lấy từ milestone data cho action delete
-				const milestone = milestonesData?.find((m) => m._id === confirmDialog.milestoneId)
-				const filteredSnaps =
-					milestone?.topicSnaps?.filter((snap) => confirmDialog.topicIds.includes(snap._id)) || []
-
-				topicSnapshots = filteredSnaps.map((snap) => ({
-					_id: snap._id,
-					titleVN: snap.titleVN,
-					titleEng: snap.titleEng,
-					studentName: snap.studentName,
-					lecturers: snap.lecturers
-				}))
-			}
-
-			// Flatten array nếu bị lồng nhau (debugging)
-			const flattenedSnapshots =
-				Array.isArray(topicSnapshots[0]) && topicSnapshots.length === 1 ? topicSnapshots[0] : topicSnapshots
-			const payload = {
-				milestoneTemplateId: confirmDialog.milestoneId,
-				action: confirmDialog.type!,
-				topicSnapshots: flattenedSnapshots as TopicSnaps[]
-			}
-
-			await manageTopics(payload).unwrap()
-
-			// Refetch data
-			await Promise.all([refetchMilestones(), refetchTopics(), refetchLecturers()])
-
-			// Show success message
-			toast.success(
-				confirmDialog.type === 'add'
-					? 'Thêm đề tài vào hội đồng bảo vệ thành công'
-					: 'Xóa đề tài khỏi hội đồng bảo vệ thành công',
-				{
-					richColors: true
-				}
-			)
-
-			// Reset state
-			setSelectedTopics(new Set())
-			setConfirmDialog({ open: false, type: null, topicIds: [], milestoneId: null })
-		} catch (error: any) {
-			toast.error(error?.data?.message || 'Có lỗi xảy ra')
-		}
+		// if (!confirmDialog.milestoneId || confirmDialog.topicIds.length === 0) return
+		// try {
+		// 	// Lấy thông tin topics để tạo snapshots
+		// 	let topicSnapshots: TopicSnaps[] = []
+		// 	if (confirmDialog.type === 'add') {
+		// 		// Lấy từ topicData cho action add
+		// 		const filteredTopics =
+		// 			topicData?.data?.filter((topic) => confirmDialog.topicIds.includes(topic._id)) || []
+		// 		topicSnapshots = filteredTopics.map((topic) => ({
+		// 			_id: topic._id,
+		// 			titleVN: topic.titleVN,
+		// 			titleEng: topic.titleEng,
+		// 			studentName: topic.students?.map((s) => s.fullName),
+		// 			lecturers: topic.lecturers || []
+		// 		}))
+		// 	} else {
+		// 		// Lấy từ milestone data cho action delete
+		// 		const milestone = milestonesData?.find((m) => m._id === confirmDialog.milestoneId)
+		// 		const filteredSnaps =
+		// 			milestone?.topicSnaps?.filter((snap) => confirmDialog.topicIds.includes(snap._id)) || []
+		// 		topicSnapshots = filteredSnaps.map((snap) => ({
+		// 			_id: snap._id,
+		// 			titleVN: snap.titleVN,
+		// 			titleEng: snap.titleEng,
+		// 			studentName: snap.studentName,
+		// 			lecturers: snap.lecturers
+		// 		}))
+		// 	}
+		// 	// Flatten array nếu bị lồng nhau (debugging)
+		// 	const flattenedSnapshots =
+		// 		Array.isArray(topicSnapshots[0]) && topicSnapshots.length === 1 ? topicSnapshots[0] : topicSnapshots
+		// 	const payload = {
+		// 		milestoneTemplateId: confirmDialog.milestoneId,
+		// 		action: confirmDialog.type!,
+		// 		topicSnapshots: flattenedSnapshots as TopicSnaps[]
+		// 	}
+		// 	await manageTopics(payload).unwrap()
+		// 	// Refetch data
+		// 	await Promise.all([refetchMilestones(), refetchTopics(), refetchLecturers()])
+		// 	// Show success message
+		// 	toast.success(
+		// 		confirmDialog.type === 'add'
+		// 			? 'Thêm đề tài vào hội đồng bảo vệ thành công'
+		// 			: 'Xóa đề tài khỏi hội đồng bảo vệ thành công',
+		// 		{
+		// 			richColors: true
+		// 		}
+		// 	)
+		// 	// Reset state
+		// 	setSelectedTopics(new Set())
+		// 	setConfirmDialog({ open: false, type: null, topicIds: [], milestoneId: null })
+		// } catch (error: any) {
+		// 	toast.error(error?.data?.message || 'Có lỗi xảy ra')
+		// }
 	}
 	const handleChangeRole = (lecturerId: string, role: CouncilMemberRole) => {
 		const updatedLecturers = selectedLecturers.map((lecturer) =>
@@ -278,41 +260,52 @@ export function DefenseAssignmentPage() {
 	}
 
 	const handleConfirmLecturerAction = async () => {
-		if (!lecturerConfirmDialog.milestoneId || lecturerConfirmDialog.lecturers.length === 0) return
-
-		try {
-			const payload = {
-				milestoneTemplateId: lecturerConfirmDialog.milestoneId,
-				action: lecturerConfirmDialog.type!,
-				defenseCouncil: lecturerConfirmDialog.lecturers
-			}
-
-			await manageLecturers(payload).unwrap()
-
-			// Refetch data
-			await Promise.all([refetchMilestones(), refetchLecturers()])
-
-			// Show success message
-			toast.success(
-				lecturerConfirmDialog.type === 'add'
-					? 'Thêm giảng viên vào hội đồng bảo vệ thành công'
-					: 'Xóa giảng viên khỏi hội đồng bảo vệ thành công',
-				{
-					richColors: true
-				}
-			)
-
-			// Reset state
-			setSelectedLecturers([])
-			setLecturerConfirmDialog({ open: false, type: null, lecturers: [], milestoneId: null })
-		} catch (error: any) {
-			toast.error(error?.data?.message || 'Có lỗi xảy ra')
-		}
+		// if (!lecturerConfirmDialog.milestoneId || lecturerConfirmDialog.lecturers.length === 0) return
+		// try {
+		// 	const payload = {
+		// 		milestoneTemplateId: lecturerConfirmDialog.milestoneId,
+		// 		action: lecturerConfirmDialog.type!,
+		// 		defenseCouncil: lecturerConfirmDialog.lecturers
+		// 	}
+		// 	await manageLecturers(payload).unwrap()
+		// 	// Refetch data
+		// 	await Promise.all([refetchMilestones(), refetchLecturers()])
+		// 	// Show success message
+		// 	toast.success(
+		// 		lecturerConfirmDialog.type === 'add'
+		// 			? 'Thêm giảng viên vào hội đồng bảo vệ thành công'
+		// 			: 'Xóa giảng viên khỏi hội đồng bảo vệ thành công',
+		// 		{
+		// 			richColors: true
+		// 		}
+		// 	)
+		// 	// Reset state
+		// 	setSelectedLecturers([])
+		// 	setLecturerConfirmDialog({ open: false, type: null, lecturers: [], milestoneId: null })
+		// } catch (error: any) {
+		// 	toast.error(error?.data?.message || 'Có lỗi xảy ra')
+		// }
 	}
 
 	return (
 		<>
-			<div className='flex h-full w-full gap-6 bg-background p-6'>
+			<div className='flex h-full w-full flex-col gap-6 bg-background p-6'>
+				{/* Header */}
+				<div className='space-y-2'>
+					<h1 className='text-3xl font-bold tracking-tight'>Nội dung phân công hội đồng</h1>
+					<p className='text-muted-foreground'>
+						Chi tiết phân công giảng viên và đề tài{' '}
+						{/* <span className='font-semibold text-blue-700'>{defenseMilestoneDetail?.title}</span> */}
+					</p>
+					{/* <p>
+						{periodDetail ? (
+							<span className='font-semibold text-blue-700'>{formatPeriodInfo2(periodDetail)}</span>
+						) : (
+							'Đang tải...'
+						)}
+					</p> */}
+					<AwaitingTopicTable />
+				</div>
 				{/* Left Panel - Topics */}
 				<TopicsPanel
 					topics={topicData?.data ?? []}
@@ -323,43 +316,6 @@ export function DefenseAssignmentPage() {
 					searchQueryParams={setTopicQueries}
 					onClearSelection={() => setSelectedTopics(new Set())}
 					isLoadingTopics={isLoadingTopics}
-				/>
-				{/* Center panel - Lecturers */}
-				<LecturersPanel
-					lecturers={
-						lecturersData?.data.filter(
-							(l) => !selectedMilestoneData?.defenseCouncil.some((sl) => sl.memberId === l._id)
-						) ?? []
-					}
-					selectedLecturers={selectedLecturers}
-					onSelectLecturer={handleSelectLecturer}
-					selectedMilestone={selectedMilestone}
-					selectedTopics={selectedTopics}
-					searchQueryParams={setLecturerQueries}
-					onChangeRole={handleChangeRole}
-					isHaveChairPerson={
-						selectedLecturers.some((lecturer) => lecturer.role === 'chairperson') ||
-						(milestonesData
-							?.find((m) => m._id === selectedMilestone)
-							?.defenseCouncil.some((lecturer) => lecturer.role === 'chairperson') ??
-							false)
-					}
-					onClearSelection={() => setSelectedLecturers([])}
-					isLoadingLecturers={isLoadingLecturers}
-				/>
-				{/* Right Panel - Milestones */}
-				<MilestonesPanel
-					milestones={milestonesData && milestonesData.length > 0 ? milestonesData : []}
-					selectedMilestone={selectedMilestone}
-					highlightedMilestone={highlightedMilestone}
-					selectedLecturers={selectedLecturers}
-					onSelectMilestone={setSelectedMilestone}
-					selectedTopics={selectedTopics}
-					onAssignTopics={handleAssignTopics}
-					onRemoveTopic={handleRemoveTopicFromMilestone}
-					onAssignCouncil={handleAssignCouncil}
-					onRemoveLecturer={handleRemoveLecturerFromCouncil}
-					isLoadingMilestones={isLoadingMilestones}
 				/>
 			</div>
 
