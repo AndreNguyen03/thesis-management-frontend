@@ -45,6 +45,8 @@ import type {
 	AddMessgePayload,
 	ConversationMessage,
 	GetConversationsDto,
+	LecturerResult,
+	LecturerSnapshot,
 	TopicResult,
 	TopicSnapshot
 } from '@/models/chatbot-conversation.model'
@@ -56,6 +58,7 @@ import {
 	useUpdateConversationMutation
 } from '@/services/chatbotConversationApi'
 import { useAppSelector } from '@/store'
+import { LecturerCard } from './component/LecturerCard'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:3000/api'
 const DESCRIPTION_PREVIEW_LENGTH = 150
@@ -304,6 +307,8 @@ export const AIAssistantPage = () => {
 		)
 	}
 
+
+
 	const handleSend = async () => {
 		if (!inputValue.trim()) return
 
@@ -315,11 +320,12 @@ export const AIAssistantPage = () => {
 		let newMessageStore: ConversationMessage | undefined = undefined
 		if (currentChatId === 'default') {
 			//tạo mới cuộc hội thoại
-			const { data: newChatId } = await createConversation({ initialMessage: inputValue.trim() })
-			newChatIdStore = newChatId
-			setCurrentChatId(newChatId!)
-			const { data: newMessage } = await addMessage({ id: newChatId!, data: payload })
-			newMessageStore = newMessage
+			const { data: newConversation } = await createConversation({ initialMessage: inputValue.trim() })
+			newChatIdStore = newConversation!.conversationId
+			setCurrentChatId(newConversation!.conversationId)
+			// Update URL
+			navigate(`/ai-chat/${newConversation!.conversationId}`, { replace: true })
+			newMessageStore = newConversation?.messsage
 		} else {
 			//thêm message mới vào cuộc hội thoại
 
@@ -399,7 +405,12 @@ export const AIAssistantPage = () => {
 							const topicsMatch = fullContent.match(
 								/__TOPICS_DATA_START__\n([\s\S]*?)\n__TOPICS_DATA_END__/
 							)
+							const lecturersMatch = fullContent.match(
+								/__LECTURERS_DATA_START__\n([\s\S]*?)\n__LECTURERS_DATA_END__/
+							)
+
 							let topics: TopicResult[] | undefined
+							let lecturers: LecturerResult[] | undefined
 
 							if (topicsMatch) {
 								try {
@@ -415,19 +426,41 @@ export const AIAssistantPage = () => {
 									console.error('Failed to parse topics:', e)
 								}
 							}
+
+							if (lecturersMatch) {
+								try {
+									const lecturersData = JSON.parse(lecturersMatch[1])
+									lecturers = lecturersData.lecturers || []
+									console.log('👨‍🏫 Parsed lecturers:', lecturers?.length)
+
+									// Remove markers từ content
+									fullContent = fullContent
+										.replace(/__LECTURERS_DATA_START__[\s\S]*?__LECTURERS_DATA_END__/g, '')
+										.trim()
+								} catch (e) {
+									console.error('Failed to parse lecturers:', e)
+								}
+							}
+
 							console.log('topics', topics)
-							// Update message với content đã clean và topics
-							// Loại bỏ field 'index' từ mỗi topic
+							console.log('lecturers', lecturers)
+
+							// Update message với content đã clean, topics và lecturers
 							const cleanedTopics = topics?.map(({ index, ...rest }) => rest)
+							const cleanedLecturers = lecturers?.map(({ index, similarityScore, ...rest }) => ({
+								...rest,
+								similarityScore
+							}))
 
 							const newPayload: AddMessgePayload = {
 								role: 'assistant',
 								content: fullContent,
-								topics: cleanedTopics
+								topics: cleanedTopics,
+								lecturers: cleanedLecturers
 							}
 
 							console.log('newPayload.topics', newPayload.topics)
-							console.log('Is Array?', Array.isArray(newPayload.topics))
+							console.log('newPayload.lecturers', newPayload.lecturers)
 
 							setMessages((prev) =>
 								prev.map((m) =>
@@ -436,7 +469,8 @@ export const AIAssistantPage = () => {
 												...m,
 												content: fullContent,
 												isStreaming: false,
-												topics: topics
+												topics: topics,
+												lecturers: lecturers
 											}
 										: m
 								)
@@ -460,6 +494,11 @@ export const AIAssistantPage = () => {
 			}
 		} catch (error: any) {
 			console.error('❌ Stream error:', error)
+			const newMessagePayload: AddMessgePayload = {
+				role: 'assistant',
+				content: `Xin lỗi, đã có lỗi xảy ra: ${error.message}`
+			}
+			await addMessage({ id: chatId, data: newMessagePayload })
 			setMessages((prev) =>
 				prev.map((m) =>
 					m.id === streamingMessageId
@@ -513,7 +552,7 @@ export const AIAssistantPage = () => {
 				topics: []
 			}
 		])
-
+		setIsLoading(false)
 		navigate('/ai-chat', { replace: true })
 	}
 
@@ -601,7 +640,7 @@ export const AIAssistantPage = () => {
 												/>
 											) : (
 												<p
-													className='truncate text-sm font-medium text-gray-900 hover:bg-gray-200'
+													className='truncate text-sm font-medium text-wrap text-gray-900 hover:bg-gray-200'
 													onDoubleClick={() => setIsEdittingId(chat._id)}
 													title='Nhấn đúp để đổi tên'
 												>
@@ -775,6 +814,18 @@ export const AIAssistantPage = () => {
 												</div>
 												{message.topics.map((topic) => (
 													<TopicCard key={topic._id} topic={topic} />
+												))}
+											</div>
+										)}
+
+										{/* Lecturer cards */}
+										{message.lecturers && message.lecturers.length > 0 && (
+											<div className='mt-3'>
+												<div className='mb-2 text-sm font-medium text-gray-700'>
+													👨‍🏫 Tìm thấy {message.lecturers.length} giảng viên:
+												</div>
+												{message.lecturers.map((lecturer) => (
+													<LecturerCard key={lecturer._id} lecturer={lecturer} />
 												))}
 											</div>
 										)}

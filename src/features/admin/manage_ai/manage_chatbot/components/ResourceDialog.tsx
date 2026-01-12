@@ -191,13 +191,24 @@ const ResourceDialog = ({ resource, open, onClose }: ResourceDialogProps) => {
 						)}
 
 						{watchType === 'file' && (
-							<div className='rounded-lg border border-dashed p-8 text-center'>
-								<p className='text-sm text-muted-foreground'>
-									Tính năng upload file đang được phát triển...
-								</p>
-							</div>
+							<FormField
+								control={form.control}
+								name='content'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Mô tả (Tùy chọn)</FormLabel>
+										<FormControl>
+											<Textarea placeholder='Mô tả ngắn về file...' {...field} />
+										</FormControl>
+										<FormDescription>
+											Thêm mô tả về nội dung file để dễ quản lý. (Tính năng upload file sẽ sớm ra
+											mắt)
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 						)}
-
 						<DialogFooter>
 							<Button
 								type='button'

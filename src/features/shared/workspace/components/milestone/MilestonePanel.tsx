@@ -38,7 +38,7 @@ import { useGetGroupDetailQuery } from '@/services/groupApi'
 import AskToGoToDefense from './modal/AskToGoToDefense'
 import { useSetAwaitingEvaluationMutation } from '@/services/topicApi'
 import { cn } from '@/lib/utils'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 interface MilestonePanelProps {
 	milestones: ResponseMilestone[]
@@ -48,7 +48,7 @@ interface MilestonePanelProps {
 
 export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: MilestonePanelProps) => {
 	const user = useAppSelector((state) => state.auth)
-	const group = useAppSelector((state) => state.group)
+	const { groupId } = useParams<{ groupId: string }>()
 	const [isOpenAskGotoDefense, setIsOpenAskGotoDefense] = useState(false)
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [isShowCreateModal, setIsShowCreateModal] = useState(false)
@@ -56,8 +56,8 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 	//gọi endpoint cập nhật thông tin milestone
 	const [updateMilestone] = useUpdateMilestoneMutation()
 	const { data: groupDetail, isLoading: isLoadingGroupDetail } = useGetGroupDetailQuery(
-		{ groupId: group.activeGroup?._id ?? '' },
-		{ skip: !group.activeGroup?._id }
+		{ groupId: groupId! },
+		{ skip: !groupId }
 	)
 	const navigate = useNavigate()
 	//gọi endpoint chuyển trạng thía của dề tài sang chuẩn bị đánh giá
@@ -66,7 +66,7 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 		try {
 			await updateMilestone({
 				milestoneId: id,
-				groupId: group.activeGroup?._id!,
+				groupId: groupId!,
 				body: updates
 			})
 			setMilestones((prev) => prev.map((m) => (m._id === id ? { ...m, ...updates } : m)))
@@ -106,7 +106,7 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 		try {
 			const createdMilestone = await createMilestone({
 				...newMilestone,
-				groupId: group.activeGroup?._id!
+				groupId: groupId!
 			}).unwrap()
 			setMilestones((prev) => [...prev, createdMilestone])
 			toast.success('Tạo milestone thành công', { richColors: true })
@@ -186,7 +186,7 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 						)}
 						<button
 							onClick={() => navigate('/detail-topic/' + groupDetail?.topicId)}
-							className='flex items-center gap-2 rounded-lg bg-gray-300 border border-gray-500 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200'
+							className='flex items-center gap-2 rounded-lg border border-gray-500 bg-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200'
 						>
 							<Goal className='h-4 w-4' /> Xem chi tiết đề tài
 						</button>

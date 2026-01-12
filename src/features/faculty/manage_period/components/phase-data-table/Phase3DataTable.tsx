@@ -1,5 +1,6 @@
 import { CustomPagination } from '@/components/PaginationBar'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { cn } from '@/lib/utils'
 import { TopicStatus, type ApiError, type GeneralTopic, type PaginatedGeneralTopics } from '@/models'
 import { PeriodPhaseName, type PaginatedTopicsInPeriod, type PhaseType } from '@/models/period.model'
 
@@ -159,7 +160,16 @@ export const Phase4DataTable = ({
 								{renderBody(hic)}
 								<td className='px-3 py-2'>
 									<span
-										className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[hic.lastStatusInPhaseHistory.status].color}`}
+										className={cn(
+											`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusMap[hic.lastStatusInPhaseHistory.status].color}`,
+											hic.lastStatusInPhaseHistory.status === TopicStatus.AWAITING_EVALUATION
+												? 'cursor-pointer text-center hover:underline'
+												: ''
+										)}
+										onClick={() => {
+											hic.lastStatusInPhaseHistory.status === TopicStatus.AWAITING_EVALUATION &&
+												navigate(`/period/${periodId}/defense-milestones-in-period`)
+										}}
 									>
 										{statusMap[hic.lastStatusInPhaseHistory.status].label}
 									</span>
@@ -171,14 +181,6 @@ export const Phase4DataTable = ({
 									>
 										<Eye className='h-5 w-5 text-blue-500' />
 									</button>
-									{hic.lastStatusInPhaseHistory.status === TopicStatus.AWAITING_EVALUATION && (
-										<button
-											onClick={() => navigate(`/period/${periodId}/manage-defense-assignment`)}
-											className='bg-gray-100 hover:bg-gray-200'
-										>
-											Phân công bảo vệ
-										</button>
-									)}
 								</td>
 							</tr>
 						)

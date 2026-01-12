@@ -127,7 +127,9 @@ export function PhaseSettingsModal({
 			await hook({ periodId, body: payload, force: isForceConfirm || isEdittingMode }).unwrap()
 			onSuccess?.()
 			onOpenChange(false)
-			toast.success(`Lưu thiết lập pha "${PhaseInfo[effectivePhaseKey]?.label}" thành công`)
+			toast.success(`Lưu thiết lập pha "${PhaseInfo[effectivePhaseKey]?.label}" thành công`, {
+				richColors: true
+			})
 		} catch (err) {
 			console.error(err)
 			toast.error('Lưu thiết lập pha thất bại. Vui lòng thử lại.', {
@@ -287,7 +289,11 @@ export function PhaseSettingsModal({
 								onClick={handleSave}
 								disabled={(!isChangeAvailable || resolveData !== null) && !isForceConfirm}
 							>
-								{phaseLoadingMap[effectivePhaseKey] ? 'Đang lưu...' : isEdittingMode ? 'Lưu chỉnh sửa' : 'Lưu thiết lập'}
+								{phaseLoadingMap[effectivePhaseKey]
+									? 'Đang lưu...'
+									: isEdittingMode
+										? 'Lưu chỉnh sửa'
+										: 'Lưu thiết lập'}
 							</Button>
 
 							{/* Nút kiểm tra lỗi */}

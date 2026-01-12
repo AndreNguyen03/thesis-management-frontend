@@ -22,7 +22,7 @@ export interface ResDefenseCouncil {
 	createdBy: GetMiniUserDto
 }
 
-export type ScoreType  = "chairperson" | "secretary" | "member" | "reviewer" | "supervisor"
+export type ScoreType = 'chairperson' | 'secretary' | 'member' | 'reviewer' | 'supervisor'
 
 export interface Score {
 	scorerId: string
@@ -91,4 +91,22 @@ export interface AddTopicToCouncilPayload {
 	titleEng: string
 	studentNames: string[]
 	members: CouncilMemberInfo[]
+	defenseOrder: number
+}
+
+// Batch add multiple topics to council
+export interface AddMultipleTopicsToCouncilPayload {
+	topics: AddTopicToCouncilPayload[]
+}
+
+//update topic payload
+export interface UpdateTopicMembersPayload {
+	members: CouncilMemberDto[]
+}
+
+export const councilMemberRoleMap: Record<CouncilMemberRole, string> = {
+	chairperson: 'Chủ tịch',
+	secretary: 'Thư ký',
+	member: 'Ủy viên',
+	reviewer: 'Phản biện'
 }

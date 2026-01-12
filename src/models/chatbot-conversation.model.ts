@@ -1,3 +1,4 @@
+import type { GetFaculty } from './faculty.model'
 import type { GetFieldNameReponseDto } from './field.model'
 import type { GetMajorMiniDto } from './major.model'
 import type { GetRequirementNameReponseDto } from './requirement.model'
@@ -9,6 +10,7 @@ export interface ConversationMessage {
 	role: 'user' | 'assistant'
 	content: string
 	topics?: TopicSnapshot[] // Lưu topics từ search_topics tool
+	lecturers?: LecturerSnapshot[] // Lưu lecturers từ search_lecturers tool
 	timestamp: Date
 	isStreaming?: boolean
 }
@@ -35,8 +37,33 @@ export interface TopicSnapshot {
 	type: string
 	similarityScore: number
 }
+export interface PublicationDto {
+	title: string
+	journal: string
+	conference: string
+	link?: string
+	year: string
+	type: string
+	citations: number
+}
+export interface LecturerSnapshot {
+	_id: string
+	fullName: string
+	email: string
+	bio?: string
+	title: string
+	faculty?: GetFaculty
+	areaInterest?: string[]
+	researchInterests?: string[]
+	publications?: PublicationDto[]
+	similarityScore?: number
+}
+export interface LecturerResult extends LecturerSnapshot {
+	index: string
+}
 export interface AddMessgePayload {
 	role: string
 	content: string
 	topics?: TopicSnapshot[]
+	lecturers?: LecturerSnapshot[]
 }
