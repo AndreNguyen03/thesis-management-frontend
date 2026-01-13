@@ -113,10 +113,10 @@ export const periodApi = baseApi.injectEndpoints({
 		// --- Tạo pha hoàn thành ---
 		createCompletionPhase: builder.mutation<
 			CreatePhaseResponse,
-			{ periodId: string; body: CreateCompletionPhaseDto }
+			{ periodId: string; body: CreateCompletionPhaseDto, force?: boolean }
 		>({
-			query: ({ periodId, body }) => ({
-				url: `periods/${periodId}/config-completion-phase`,
+			query: ({ periodId, body, force }) => ({
+				url: `periods/${periodId}/config-completion-phase${force ? '?force=true' : ''}`,
 				method: 'PATCH',
 				body
 			}),

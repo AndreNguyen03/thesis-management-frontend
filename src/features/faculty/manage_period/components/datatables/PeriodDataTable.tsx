@@ -165,7 +165,7 @@ const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
 									<span title={periodTypeMap[pe.type]}>{periodTypeMap[pe.type]}</span>
 								</td>
-								<td className='overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2'>
+								<td className='max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap text-wrap px-3 py-2'>
 									<span
 										title={`${new Date(pe.startTime).toLocaleString()} - ${new Date(pe.endTime).toLocaleString()}`}
 									>
@@ -197,9 +197,17 @@ const PeriodDataTable = ({ onOpenChange }: { onOpenChange: () => void }) => {
 												pe.currentPhaseDetail ? pe.currentPhaseDetail.status : 'un-configured'
 											].color
 										)}
-										title={statusMap[pe.currentPhaseDetail ? pe.currentPhaseDetail.status : 'un-configured'].label}
+										title={
+											statusMap[
+												pe.currentPhaseDetail ? pe.currentPhaseDetail.status : 'un-configured'
+											].label
+										}
 									>
-										{statusMap[pe.currentPhaseDetail ? pe.currentPhaseDetail.status : 'un-configured'].label}
+										{
+											statusMap[
+												pe.currentPhaseDetail ? pe.currentPhaseDetail.status : 'un-configured'
+											].label
+										}
 									</span>
 								</td>
 								<td className='whitespace-nowrap px-3 py-2 text-center'>

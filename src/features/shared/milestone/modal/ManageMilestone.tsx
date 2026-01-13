@@ -261,7 +261,7 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 					<>
 						<DialogHeader>
 							<DialogTitle className='flex items-center gap-2 text-lg font-semibold'>
-								Quản lý các cột mốc quan trọng
+								Quản lý các cột mốc của khoa
 							</DialogTitle>
 						</DialogHeader>
 
@@ -379,7 +379,7 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 																	onClick={(e) => {
 																		e.stopPropagation()
 																		navigate(
-																			`/period/${periodId}/manage-defense-assignment`,
+																			`/period/${periodId}/defense-milestones-in-perioddefense-milestones-in-period`,
 																			{
 																				state: {
 																					milestoneId: m._id

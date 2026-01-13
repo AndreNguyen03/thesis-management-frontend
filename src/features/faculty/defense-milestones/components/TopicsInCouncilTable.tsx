@@ -123,7 +123,7 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 								</TableCell>
 
 								{/* Topic Title */}
-								<TableCell>
+								<TableCell style={{ minWidth: '80px', maxWidth: '110px', width: '100px' }}>
 									<div>
 										<p className='font-medium'>{topic.titleVN}</p>
 										{topic.titleEng && (

@@ -9,7 +9,7 @@ import { PaginationQueryParamsDto } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 import type { ResponseMilestoneWithTemplate } from './milestone.model'
-import type { is } from 'date-fns/locale'
+export class RequestKnowledgeSourceDto extends PaginationQueryParamsDto {}
 export interface GetDetailGrade {
 	_id: string
 	score: number
@@ -94,8 +94,8 @@ export interface GeneralTopic extends AbstractTopic {
 	progress?: number
 	finalGrade?: number
 	defenseMilestoneDate?: Date
-    userRegistrationStatus?: string
-    approvedStudentsNum?: number
+	userRegistrationStatus?: string
+	approvedStudentsNum?: number
 }
 
 //Định nghĩa đề tài trong thư viện số
@@ -393,7 +393,7 @@ export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
 	periodId?: string
 }
 export interface StudentRegistration {
-    _id:string
+	_id: string
 	studentId: string
 	studentName: string
 	status: 'pending' | 'approved' | 'rejected'
@@ -409,7 +409,7 @@ export interface TopicApproval {
 	titleVN: string
 	type: string
 	deleted_at: string | null
-    maxStudents: number
+	maxStudents: number
 	allowManualApproval: boolean
 	pendingStudents: StudentRegistration[]
 	approvedStudents: StudentRegistration[]
@@ -423,7 +423,7 @@ export interface PaginatedTopicApproval {
 
 export interface ApprovalTopicQueryParams extends PaginationQueryParamsDto {
 	periodId?: string
-	type?: string 
+	type?: string
 	allowManualApproval?: boolean | 'all'
 	onlyPending?: boolean | 'all'
 }

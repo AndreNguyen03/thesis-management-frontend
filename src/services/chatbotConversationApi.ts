@@ -9,7 +9,10 @@ export const chatbotConversationApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<GetConversationsDto[]>) => response.data,
 			providesTags: (result, error, arg) => [{ type: 'ConversationsChatBot' }]
 		}),
-		createConversation: builder.mutation<string, { title?: string; initialMessage?: string }>({
+		createConversation: builder.mutation<
+			{ conversationId: string; messsage: ConversationMessage },
+			{ title?: string; initialMessage?: string }
+		>({
 			query: (body) => ({
 				url: '/chatbot/conversations',
 				method: 'POST',
@@ -17,7 +20,8 @@ export const chatbotConversationApi = baseApi.injectEndpoints({
 					...body
 				}
 			}),
-			transformResponse: (response: ApiResponse<string>) => response.data,
+			transformResponse: (response: ApiResponse<{ conversationId: string; messsage: ConversationMessage }>) =>
+				response.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'ConversationsChatBot' }]
 		}),
 		getConversationById: builder.query<GetConversationsDto, string>({
@@ -43,10 +47,11 @@ export const chatbotConversationApi = baseApi.injectEndpoints({
 				url: `/chatbot/conversations/${id}/messages`,
 				method: 'POST',
 				body: {
-                    role: data.role,
-                    content: data.content,
-                    topics: data.topics
-                }
+					role: data.role,
+					content: data.content,
+					topics: data.topics,
+					lecturers: data.lecturers
+				}
 			}),
 			transformResponse: (response: ApiResponse<ConversationMessage>) => response.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'ConversationsChatBot' }]

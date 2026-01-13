@@ -18,7 +18,7 @@ import { cn, downloadFileWithURL } from '@/lib/utils'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import {
 	useDownloadTopicFilesZipMutation,
-	useGetDocumentsOfTopicQuery,
+	useGetDocumentsOfGroupQuery,
 	useLecturerDeleteFilesMutation,
 	useLecturerUploadFilesMutation
 } from '@/services/topicApi'
@@ -28,6 +28,8 @@ import { DeleteDocumentModal } from './modal/DeleteDocument'
 import Editting from './Editting'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useAppSelector } from '@/store'
+import { ROLES } from '@/models'
+import { useParams } from 'react-router-dom'
 
 export const getFileIcon = (type: GetUploadedFileDto['type']) => {
 	switch (type) {
@@ -56,12 +58,10 @@ const getFileTypeLabel = (type: GetUploadedFileDto['type']) => {
 }
 
 export const DocumentsPanel = () => {
-	const group = useAppSelector((state) => state.group)
+	const { groupId } = useParams<{ groupId: string }>()
+	const user = useAppSelector((state) => state.auth)
 	const [selectedDraftFiles, setSelectedDraftFiles] = useState<File[]>([])
-	const { data: documentsData, refetch } = useGetDocumentsOfTopicQuery(
-		{ topicId: group.activeGroup?.topicId || '' },
-		{ skip: !group.activeGroup?.topicId }
-	)
+	const { data: documentsData, refetch } = useGetDocumentsOfGroupQuery({ groupId: groupId || '' }, { skip: !groupId })
 	const [documents, setDocuments] = useState<GetUploadedFileDto[]>([])
 	const [isDeleteModal, setIsOpenDeleteModal] = useState(false)
 	const [deletingDocumentIds, setDeletingDocumentIds] = useState<string[]>([])
@@ -120,7 +120,7 @@ export const DocumentsPanel = () => {
 	const handleUpload = async () => {
 		try {
 			const res = await lecturerUploadFiles({
-				topicId: group.activeGroup?.topicId || '',
+				groupId: groupId!,
 				files: selectedDraftFiles
 			}).unwrap()
 			setDocuments(res)
@@ -142,13 +142,11 @@ export const DocumentsPanel = () => {
 
 	const handleDeleteConfirm = async () => {
 		try {
-			await lecturerDeleteFiles({ topicId: group.activeGroup?.topicId || '', fileIds: deletingDocumentIds }).then(
-				() => {
-					setDocuments((prev) => prev.filter((doc) => !deletingDocumentIds.includes(doc._id)))
-					setDeletingDocumentIds([])
-					setIsOpenDeleteModal(false)
-				}
-			)
+			await lecturerDeleteFiles({ groupId: groupId!, fileIds: deletingDocumentIds }).then(() => {
+				setDocuments((prev) => prev.filter((doc) => !deletingDocumentIds.includes(doc._id)))
+				setDeletingDocumentIds([])
+				setIsOpenDeleteModal(false)
+			})
 			toast.success('Xóa thành công!', { richColors: true })
 		} catch (error) {
 			console.error('Failed to delete files:', error)
@@ -190,7 +188,7 @@ export const DocumentsPanel = () => {
 	}
 	const handleDownloadAllFiles = async () => {
 		try {
-			const blob = await downloadZip({ topicId: group.activeGroup?.topicId || '' }).unwrap()
+			const blob = await downloadZip({ groupId: groupId! }).unwrap()
 
 			// Tạo URL và trigger download
 			const url = window.URL.createObjectURL(blob)
@@ -211,79 +209,81 @@ export const DocumentsPanel = () => {
 	return (
 		<div className='h-[calc(100vh-10rem)] space-y-6 overflow-y-auto bg-work p-6'>
 			{/* Upload Area */}
-			<div>
-				<div
-					onDragOver={handleDragOver}
-					onDragLeave={handleDragLeave}
-					onDrop={handleDrop}
-					className={cn(
-						'rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200',
-						isDragging
-							? 'border-primary bg-primary/5'
-							: 'border-border hover:border-primary/50 hover:bg-accent/50'
-					)}
-				>
-					<input
-						ref={fileInputRef}
-						type='file'
-						multiple
-						onChange={handleFileInput}
-						className='hidden'
-						accept='.pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.txt,.xlsx,.pptx'
-					/>
-					<div className='flex flex-col items-center gap-3'>
-						<div
-							className={cn(
-								'rounded-full p-4 transition-colors',
-								isDragging ? 'bg-primary/10' : 'bg-secondary'
-							)}
-						>
-							<Upload
+			{user.user?.role !== ROLES.STUDENT && (
+				<div>
+					<div
+						onDragOver={handleDragOver}
+						onDragLeave={handleDragLeave}
+						onDrop={handleDrop}
+						className={cn(
+							'rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200',
+							isDragging
+								? 'border-primary bg-primary/5'
+								: 'border-border hover:border-primary/50 hover:bg-accent/50'
+						)}
+					>
+						<input
+							ref={fileInputRef}
+							type='file'
+							multiple
+							onChange={handleFileInput}
+							className='hidden'
+							accept='.pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.txt,.xlsx,.pptx'
+						/>
+						<div className='flex flex-col items-center gap-3'>
+							<div
 								className={cn(
-									'h-8 w-8 transition-colors',
-									isDragging ? 'text-primary' : 'text-muted-foreground'
+									'rounded-full p-4 transition-colors',
+									isDragging ? 'bg-primary/10' : 'bg-secondary'
 								)}
-							/>
-						</div>
-						<div>
-							<p className='font-medium text-foreground'>
-								Kéo thả file vào đây hoặc{' '}
-								<button
-									onClick={() => fileInputRef.current?.click()}
-									className='text-primary hover:underline'
-								>
-									chọn file
-								</button>
-							</p>
-							<p className='mt-1 text-sm text-muted-foreground'>
-								Hỗ trợ: PDF, DOC, DOCX, PNG, JPG, XLSX, PPTX (tối đa 50MB)
-							</p>
+							>
+								<Upload
+									className={cn(
+										'h-8 w-8 transition-colors',
+										isDragging ? 'text-primary' : 'text-muted-foreground'
+									)}
+								/>
+							</div>
+							<div>
+								<p className='font-medium text-foreground'>
+									Kéo thả file vào đây hoặc{' '}
+									<button
+										onClick={() => fileInputRef.current?.click()}
+										className='text-primary hover:underline'
+									>
+										chọn file
+									</button>
+								</p>
+								<p className='mt-1 text-sm text-muted-foreground'>
+									Hỗ trợ: PDF, DOC, DOCX, PNG, JPG, XLSX, PPTX (tối đa 50MB)
+								</p>
+							</div>
 						</div>
 					</div>
+					{
+						<Button
+							onClick={handleUpload}
+							className='mt-2 h-fit bg-blue-600 px-2 py-1'
+							disabled={selectedDraftFiles.length === 0 || isUploading}
+						>
+							<UploadIcon className='h-4 w-4' />
+							Tải lên tất cả
+						</Button>
+					}
+					<div className='mt-2 max-h-[450px] space-y-2'>
+						{selectedDraftFiles.map((file, index) => (
+							<Editting
+								key={index}
+								file={file}
+								index={index}
+								onRemoveDraftFile={() => handleDraftFile(index)}
+								isUploading={isUploading}
+								onEditting={(input: string) => handleEditingDraftFile(index, input)}
+							/>
+						))}
+					</div>
 				</div>
-				{
-					<Button
-						onClick={handleUpload}
-						className='mt-2 h-fit bg-blue-600 px-2 py-1'
-						disabled={selectedDraftFiles.length === 0 || isUploading}
-					>
-						<UploadIcon className='h-4 w-4' />
-						Tải lên tất cả
-					</Button>
-				}
-				<div className='mt-2 max-h-[450px] space-y-2'>
-					{selectedDraftFiles.map((file, index) => (
-						<Editting
-							key={index}
-							file={file}
-							index={index}
-							onRemoveDraftFile={() => handleDraftFile(index)}
-							isUploading={isUploading}
-							onEditting={(input: string) => handleEditingDraftFile(index, input)}
-						/>
-					))}
-				</div>
-			</div>
+			)}
 
 			{/* Filters */}
 			<div className='flex flex-wrap items-center gap-2'>

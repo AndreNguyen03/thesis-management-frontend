@@ -233,7 +233,7 @@ const MilestonePage = () => {
 				<>
 					<div>
 						<div className='flex items-center gap-2 text-lg font-semibold'>
-							Quản lý các cột mốc quan trọng
+							Quản lý các cột mốc của khoa
 						</div>
 					</div>
 					<div className='h-[600px] space-y-6 overflow-y-auto pr-1'>

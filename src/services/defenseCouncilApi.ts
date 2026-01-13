@@ -1,8 +1,11 @@
 import type {
+	AddTopicToCouncilPayload,
+	AddMultipleTopicsToCouncilPayload,
 	CreateDefenseCouncilPayload,
 	QueryDefenseCouncilsParams,
 	ResDefenseCouncil,
-	ResponseDefenseCouncil
+	ResponseDefenseCouncil,
+	UpdateTopicMembersPayload
 } from '@/models/defenseCouncil.model'
 import { baseApi, type ApiResponse } from './baseApi'
 
@@ -15,14 +18,20 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 				url: `/defense-councils?${buildQueryString(params)}`,
 				method: 'GET'
 			}),
-			transformResponse: (response: ApiResponse<ResponseDefenseCouncil>) => response.data
+			transformResponse: (response: ApiResponse<ResponseDefenseCouncil>) => response.data,
+			providesTags: (result, error, args) => [
+				{ type: 'defenseCouncilsInMilestone', id: args.milestoneTemplateId }
+			]
 		}),
 		createCouncil: builder.mutation<ApiResponse<any>, CreateDefenseCouncilPayload>({
 			query: (body) => ({
 				url: '/defense-councils',
 				method: 'POST',
 				body
-			})
+			}),
+			invalidatesTags: (result, error, args) => [
+				{ type: 'defenseCouncilsInMilestone', id: args.milestoneTemplateId }
+			]
 		}),
 		getCouncilById: builder.query<ResDefenseCouncil, string>({
 			query: (councilId) => ({
@@ -32,9 +41,22 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<ResDefenseCouncil>) => response.data,
 			providesTags: (_result, _error, councilId) => [{ type: 'Theses', id: councilId }]
 		}),
-		addTopicToCouncil: builder.mutation<ApiResponse<any>, { councilId: string; payload: any }>({
+		addTopicToCouncil: builder.mutation<ApiResponse<any>, { councilId: string; payload: AddTopicToCouncilPayload }>(
+			{
+				query: ({ councilId, payload }) => ({
+					url: `/defense-councils/${councilId}/topics`,
+					method: 'POST',
+					body: payload
+				}),
+				invalidatesTags: (_result, _error, { councilId }) => [{ type: 'Theses', id: councilId }]
+			}
+		),
+		addMultipleTopicsToCouncil: builder.mutation<
+			ApiResponse<any>,
+			{ councilId: string; payload: AddMultipleTopicsToCouncilPayload }
+		>({
 			query: ({ councilId, payload }) => ({
-				url: `/defense-councils/${councilId}/topics`,
+				url: `/defense-councils/${councilId}/topics/batch`,
 				method: 'POST',
 				body: payload
 			}),
@@ -47,7 +69,10 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'Theses', id: councilId }]
 		}),
-		updateTopicMembers: builder.mutation<ApiResponse<any>, { councilId: string; topicId: string; payload: any }>({
+		updateTopicMembers: builder.mutation<
+			ApiResponse<any>,
+			{ councilId: string; topicId: string; payload: UpdateTopicMembersPayload }
+		>({
 			query: ({ councilId, topicId, payload }) => ({
 				url: `/defense-councils/${councilId}/topics/${topicId}/members`,
 				method: 'PATCH',
@@ -75,6 +100,7 @@ export const {
 	useCreateCouncilMutation,
 	useGetCouncilByIdQuery,
 	useAddTopicToCouncilMutation,
+	useAddMultipleTopicsToCouncilMutation,
 	useRemoveTopicFromCouncilMutation,
 	useUpdateTopicMembersMutation,
 	useUpdateTopicOrderMutation

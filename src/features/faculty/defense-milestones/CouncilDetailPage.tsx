@@ -7,20 +7,27 @@ import {
 } from '@/services/defenseCouncilApi'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Calendar, MapPin, Users, Loader2, AlertCircle, Goal } from 'lucide-react'
+import { Calendar, MapPin, Users, Loader2, AlertCircle, Goal, ArrowLeft, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import TopicsInCouncilTable from './components/TopicsInCouncilTable'
 import AddTopicDialog from './components/AddTopicDialog'
-import { useGetPeriodDetailQuery } from '@/services/periodApi'
 import CouncilHeader from './components/CouncilHeade'
 import { useGetDefenseMilestoneDetailByIdQuery } from '@/services/milestoneApi'
 import AwaitingTopicTable from './datatable/AwaitingTopicTable'
+import type { PaginationQueryParamsDto } from '@/models/query-params'
+import { useGetTopicsAwaitingEvaluationInPeriodQuery } from '@/services/topicApi'
+import { useDebounce } from '@/hooks/useDebounce'
+import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui'
+import type { GetTopicsInBatchMilestoneDto } from '@/models/milestone.model'
+import type { AddTopicToCouncilPayload } from '@/models/defenseCouncil.model'
 
 export default function CouncilDetailPage() {
 	const { councilId, periodId, templateId } = useParams<{ councilId: string; periodId: string; templateId: string }>()
+	const [selectedTopics, setSelectedTopics] = useState<GetTopicsInBatchMilestoneDto[]>([])
 	const navigate = useNavigate()
 	const [isAddTopicOpen, setIsAddTopicOpen] = useState(false)
+	const [isShowAwaitingTopicsList, setIsShowAwaitingTopicsList] = useState(false)
 	//endpoint lấy chi tiết hội đồng bảo vệ
 	const { data: council, isLoading, error } = useGetCouncilByIdQuery(councilId!)
 	//enpoitn lấy thông tin đợt bảo vệ
@@ -28,7 +35,31 @@ export default function CouncilDetailPage() {
 		{ milestoneTemplateId: templateId || '' },
 		{ skip: !templateId }
 	)
-	const { data: period } = useGetPeriodDetailQuery(periodId!)
+	const [isChosingMode, setIsChosingMode] = useState(false)
+	const [topicQueries, setTopicQueries] = useState<PaginationQueryParamsDto>({
+		limit: 15,
+		page: 1,
+		query: '',
+		search_by: ['titleVN', 'titleEng', 'students.fullName']
+	})
+
+	const { data: paginationTopicData, isLoading: isLoadingTopics } = useGetTopicsAwaitingEvaluationInPeriodQuery({
+		periodId: periodId!,
+		queryParams: topicQueries
+	})
+
+	const [searchTerm, setSearchTerm] = useState('')
+
+	const setQuery = (query: string) => {
+		setTopicQueries((prev) => ({ ...prev, query }))
+	}
+
+	const debounceOnChange = useDebounce({ onChange: setQuery, duration: 400 })
+
+	const onEdit = (val: string) => {
+		setSearchTerm(val)
+		debounceOnChange(val)
+	}
 	const [updateTopicOrder] = useUpdateTopicOrderMutation()
 	const [removeTopic] = useRemoveTopicFromCouncilMutation()
 
@@ -80,7 +111,7 @@ export default function CouncilDetailPage() {
 	return (
 		<div className='container mx-auto space-y-6 p-6'>
 			{/* Header */}
-			<CouncilHeader council={council} period={period!} />
+			<CouncilHeader council={council} />
 
 			{/* Council Info Card */}
 			<Card className='p-1'>
@@ -134,27 +165,108 @@ export default function CouncilDetailPage() {
 
 			{/* Topics Table */}
 			<Card className='p-1'>
-				<CardHeader className='flex flex-row items-center justify-between'>
-					<CardTitle>Danh sách đề tài ({council.topics?.length || 0})</CardTitle>
-					<Button onClick={() => setIsAddTopicOpen(true)}>Thêm đề tài</Button>
-				</CardHeader>
-				<CardContent>
-					{council.topics && council.topics.length > 0 ? (
-						<TopicsInCouncilTable
-							topics={council.topics}
-							onReorder={handleReorderTopics}
-							onRemove={handleRemoveTopic}
-							councilId={councilId!}
-						/>
-					) : (
-						<div className='py-12 text-center text-muted-foreground'>
-							<p>Chưa có đề tài nào được phân công</p>
-							<Button className='mt-4' onClick={() => setIsAddTopicOpen(true)}>
-								Thêm đề tài đầu tiên
+				<div className='relative'>
+					<div
+						className={cn(
+							'left-0 top-0 z-20 h-full w-full transition-transform duration-500 ease-in-out',
+							!isShowAwaitingTopicsList ? 'translate-x-0' : 'absolute -translate-x-full opacity-0'
+						)}
+					>
+						<CardHeader className='flex flex-row items-center justify-between'>
+							<CardTitle>Danh sách đề tài ({council.topics?.length || 0})</CardTitle>
+							<Button
+								onClick={() => setIsShowAwaitingTopicsList(true)}
+								variant='outline'
+								className={cn('mt-0')}
+							>
+								<ArrowLeft />
+								Thêm từ ({paginationTopicData?.meta?.totalItems || 0}) đề tài đang chờ
 							</Button>
-						</div>
-					)}
-				</CardContent>
+						</CardHeader>
+						<CardContent>
+							{council.topics && council.topics.length > 0 ? (
+								<TopicsInCouncilTable
+									topics={council.topics}
+									onReorder={handleReorderTopics}
+									onRemove={handleRemoveTopic}
+									councilId={councilId!}
+								/>
+							) : (
+								<div className='py-12 text-center text-muted-foreground'>
+									<p>Chưa có đề tài nào được phân công</p>
+									<Button className='mt-4' onClick={() => setIsAddTopicOpen(true)}>
+										Thêm đề tài đầu tiên
+									</Button>
+								</div>
+							)}
+						</CardContent>
+					</div>
+					<div
+						className={cn(
+							'right-0 top-0 z-20 mt-5 h-full w-full transition-transform duration-500 ease-in-out',
+							isShowAwaitingTopicsList ? 'translate-x-0' : 'absolute translate-x-full opacity-0'
+						)}
+					>
+						<CardContent>
+							<div className='flex flex-col justify-between gap-4 py-2 sm:flex-row sm:items-center'>
+								<Button onClick={() => setIsShowAwaitingTopicsList(false)} variant='outline'>
+									DS đề tài ({council.topics?.length || 0}) trong hội đồng
+									<ArrowRight />
+								</Button>
+								<h2 className='text-xl font-semibold'>
+									Đề tài chờ đánh giá ({paginationTopicData?.data.length || 0})
+								</h2>
+								<Input
+									placeholder='Tìm kiếm đề tài, sinh viên...'
+									value={searchTerm}
+									onChange={(e) => onEdit(e.target.value)}
+									className='w-[400px] border-gray-300 bg-white'
+								/>
+								{!isChosingMode && (
+									<Button className='h-fit' onClick={() => setIsChosingMode(true)}>
+										Chọn đề tài
+									</Button>
+								)}
+								{isChosingMode && (
+									<div className='flex gap-2'>
+										<Button
+											className='h-fit bg-orange-400'
+											onClick={() => {
+												setIsChosingMode(false)
+												setSelectedTopics([])
+											}}
+										>
+											Bỏ chọn
+										</Button>
+										<Button className='h-fit' onClick={() => setIsAddTopicOpen(true)}>
+											Phân công ({selectedTopics.length})
+										</Button>
+									</div>
+								)}
+							</div>
+
+							<AwaitingTopicTable
+								isChosingMode={isChosingMode}
+								isLoadingTopics={isLoadingTopics}
+								error={error}
+								paginationTopicData={paginationTopicData}
+								setQuery={setTopicQueries}
+								selectedTopics={selectedTopics}
+								setSelectedTopics={(id: string) => {
+									const selectedTopic = paginationTopicData?.data.find((topic) => topic._id === id)
+									if (!selectedTopic) return
+									setSelectedTopics((prev) => {
+										if (prev.some((topic) => topic._id === id)) {
+											return prev.filter((topic) => topic._id !== id)
+										} else {
+											return [...prev, selectedTopic]
+										}
+									})
+								}}
+							/>
+						</CardContent>
+					</div>
+				</div>
 			</Card>
 
 			{/* Add Topic Dialog */}
@@ -162,11 +274,9 @@ export default function CouncilDetailPage() {
 				open={isAddTopicOpen}
 				onOpenChange={setIsAddTopicOpen}
 				councilId={councilId!}
-				milestoneTemplateId={council.milestoneTemplateId}
 				periodId={periodId!}
+				chosenTopics={selectedTopics}
 			/>
-			<AwaitingTopicTable />
 		</div>
 	)
 }
-    
