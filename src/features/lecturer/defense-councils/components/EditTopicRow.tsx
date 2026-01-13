@@ -73,7 +73,6 @@ const EditTopicRow = ({ topic, councilMembers, index }: TopicRowProps) => {
 										<span className='text-xs'>
 											{member.title} {member.fullName}
 										</span>
-										<X className='h-3 w-3 cursor-pointer hover:text-red-500' />
 									</Badge>
 								)}
 							</div>
