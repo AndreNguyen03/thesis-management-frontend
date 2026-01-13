@@ -15,8 +15,17 @@ import { CustomPagination } from '@/components/PaginationBar'
 import { toast } from 'sonner'
 import { WithdrawConfirmation } from './modal/WIthdrawConfirmation'
 import type { PaginatedSubmittedTopics, SubmittedTopic, SubmittedTopicParamsDto } from '@/models'
+import { getAllSubmittedColumns } from './AllSubmittedColumn'
 
-const ManageSubmittedTopics = ({ dataInernal }: { dataInernal?: PaginatedSubmittedTopics }) => {
+const ManageSubmittedTopics = ({
+	dataInernal,
+	isAllSubmittedTopics,
+	onResubmit
+}: {
+	dataInernal?: PaginatedSubmittedTopics
+	isAllSubmittedTopics?: boolean
+	onResubmit: (topic: SubmittedTopic) => void
+}) => {
 	const navigate = useNavigate()
 	const [queries, setQueries] = useState<SubmittedTopicParamsDto>({
 		page: 1,
@@ -99,16 +108,28 @@ const ManageSubmittedTopics = ({ dataInernal }: { dataInernal?: PaginatedSubmitt
 	// const isAbleInSubmitPhase =
 	// 	currentPeriod?.currentPhaseDetail.phase === PeriodPhaseName.SUBMIT_TOPIC &&
 	// 	currentPeriod.currentPhaseDetail.status === PeriodPhaseStatus.ACTIVE
-	const columns = getColumns({
-		onCopyToDraft: handleCopyTodraft,
-		pendingCopyId,
-		onSeeDetail: (topicId) => navigate(`/detail-topic/${topicId}`),
-		showSelection: showSelection,
-		onManualApprovalChange: handleManualApprovalChange,
-		pendingId,
-		pendingWithdrawId,
-		onWithdraw: handleWithdraw
-	})
+	const columns = isAllSubmittedTopics
+		? getAllSubmittedColumns({
+				onCopyToDraft: handleCopyTodraft,
+				pendingCopyId,
+				onSeeDetail: (topicId: string) => navigate(`/detail-topic/${topicId}`),
+				showSelection: showSelection,
+				onManualApprovalChange: handleManualApprovalChange,
+				pendingId,
+				pendingWithdrawId,
+				onWithdraw: handleWithdraw
+			})
+		: getColumns({
+				onCopyToDraft: handleCopyTodraft,
+				pendingCopyId,
+				onSeeDetail: (topicId) => navigate(`/detail-topic/${topicId}`),
+				showSelection: showSelection,
+				onManualApprovalChange: handleManualApprovalChange,
+				pendingId,
+				pendingWithdrawId,
+				onWithdraw: handleWithdraw,
+                onResubmit: onResubmit
+			})
 	const data =
 		submittedTopics?.data.map((topic, index) => ({
 			...topic,

@@ -1,7 +1,6 @@
 import { TaskPriority } from '@/models/task-detail.model'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useUpdateTaskDetailsMutation } from '@/services/todolistApi'
-import { useToast } from '@/hooks/use-toast'
 import { AlertCircle } from 'lucide-react'
 import { taskPriorityLabels } from '@/models/todolist.model'
 import { toast } from 'sonner'
@@ -28,7 +27,7 @@ export const TaskPrioritySelect = ({ taskId, currentPriority }: TaskPrioritySele
 		} catch (error) {
 			toast.error('Cập nhật độ ưu tiên thất bại', {
 				richColors: true,
-				description: 'Cập nhật độ ưu tiên thất bại'
+				description: 'Cập nhật độ ưu tiên thất bại'+ error
 			})
 		}
 	}

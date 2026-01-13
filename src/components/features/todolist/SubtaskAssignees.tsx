@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { useGetGroupDetailQuery } from '@/services/groupApi'
 import { Checkbox } from '@/components/ui/checkbox'
+import type { Participant } from '@/models/groups.model'
 
 interface SubtaskAssigneesProps {
 	taskId: string
@@ -31,7 +32,8 @@ export const SubtaskAssignees = ({ taskId, columnId, subtaskId, groupId, assigne
 				taskId,
 				columnId,
 				subtaskId,
-				updates: { assignees: selectedUserIds }
+				updates: { assignees: selectedUserIds },
+				groupId: groupId
 			}).unwrap()
 
 			toast({
@@ -42,7 +44,7 @@ export const SubtaskAssignees = ({ taskId, columnId, subtaskId, groupId, assigne
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to update assignees',
+				description: 'Failed to update assignees' + error,
 				variant: 'destructive'
 			})
 		}
@@ -59,7 +61,8 @@ export const SubtaskAssignees = ({ taskId, columnId, subtaskId, groupId, assigne
 				taskId,
 				columnId,
 				subtaskId,
-				updates: { assignees: newAssignees }
+				updates: { assignees: newAssignees },
+                groupId: groupId
 			}).unwrap()
 
 			toast({
@@ -69,7 +72,7 @@ export const SubtaskAssignees = ({ taskId, columnId, subtaskId, groupId, assigne
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to remove assignee',
+				description: 'Failed to remove assignee' + error,
 				variant: 'destructive'
 			})
 		}
@@ -129,7 +132,7 @@ export const SubtaskAssignees = ({ taskId, columnId, subtaskId, groupId, assigne
 						<CommandList>
 							<CommandEmpty>Không tìm thấy thành viên</CommandEmpty>
 							<CommandGroup>
-								{groupMembers.map((member: any) => (
+								{groupMembers.map((member: Participant) => (
 									<CommandItem key={member._id} onSelect={() => toggleUser(member._id)}>
 										<Checkbox checked={selectedUserIds.includes(member._id)} className='mr-2' />
 										<div className='flex flex-1 items-center gap-2'>
@@ -146,7 +149,6 @@ export const SubtaskAssignees = ({ taskId, columnId, subtaskId, groupId, assigne
 											)}
 											<div className='text-sm'>
 												<div className='font-medium'>{member.fullName}</div>
-												<div className='text-xs text-muted-foreground'>{member.email}</div>
 											</div>
 										</div>
 									</CommandItem>

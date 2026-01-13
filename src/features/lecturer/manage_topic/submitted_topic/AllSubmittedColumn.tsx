@@ -8,10 +8,9 @@ import {
 	type GetFieldNameReponseDto,
 	type SubmittedTopic
 } from '@/models'
-import { PeriodPhaseStatus } from '@/models/period-phase.models'
 import { stripHtml } from '@/utils/lower-case-html'
 import type { ColumnDef, Row } from '@tanstack/react-table'
-import { Copy, Eye, Loader2, Send, UndoDot } from 'lucide-react'
+import { Copy, Eye, Loader2, UndoDot } from 'lucide-react'
 
 type ColumnsProps = {
 	onSeeDetail: (topicId: string) => void
@@ -22,14 +21,13 @@ type ColumnsProps = {
 	pendingWithdrawId?: string | null
 	onWithdraw: (topic: SubmittedTopic) => void
 	onCopyToDraft: (topic: SubmittedTopic) => void
-	onResubmit: (topic: SubmittedTopic) => void
 	isCopySuccess?: boolean
 }
 interface NewSubmittedTopic extends SubmittedTopic {
 	index: number
 }
 
-export const getColumns = ({
+export const getAllSubmittedColumns = ({
 	onSeeDetail,
 	showSelection,
 	onManualApprovalChange,
@@ -38,7 +36,6 @@ export const getColumns = ({
 	pendingWithdrawId,
 	onWithdraw,
 	onCopyToDraft,
-    onResubmit,
 	isCopySuccess
 }: ColumnsProps): ColumnDef<NewSubmittedTopic>[] => [
 	{
@@ -107,15 +104,13 @@ export const getColumns = ({
 		)
 	},
 	{
-		accessorKey: 'periodInfo',
+		accessorKey: 'createByInfo',
 		size: 150,
-		header: () => <div className='text-center'> HK</div>,
+		header: () => <div className='text-center'>Người nộp</div>,
 		cell: ({ row }) => {
 			return (
 				<div className='flex justify-center text-[14px] capitalize'>
-					<span className='font-semibold'>
-						{row.original.periodInfo?.year || ''} - Học kỳ {row.original.periodInfo?.semester || ''}
-					</span>
+					<span className='font-semibold'>{row.original.createByInfo.fullName}</span>
 				</div>
 			)
 		}
@@ -209,23 +204,8 @@ export const getColumns = ({
 									)}
 								</Button>
 							)}
-                            {/* Nộp lại*/}
-							{row.original.currentStatus === TopicStatus.NEED_ADJUST && (
-								<Button
-									title='Nộp lại'
-									variant='outline'
-									size='sm'
-									onClick={() => {
-										onResubmit(row.original)
-									}}
-								>
-									{pendingWithdrawId === row.original._id ? (
-										<Loader2 className='h-4 w-4 animate-spin' />
-									) : (
-										<Send className='h-5 w-5 text-green-500' />
-									)}
-								</Button>
-							)}
+							{/* Yêu cầu chỉnh sửa và nộp lại */}
+							
 							{/* Đã bị từ chối và muốn sao chép thành 1 bản nháp mới */}
 							{row.original.currentStatus === TopicStatus.REJECTED && (
 								<Button

@@ -78,6 +78,7 @@ export const TopicDetailContainer = () => {
 
 	// Call the query hook unconditionally but skip fetching when no id is present
 	const { data: topic, isLoading, refetch } = useGetTopicByIdQuery({ id: id! }, { skip: !id })
+    console.log('detail topic :::',topic)
 	// lấy danh sách các major cùng thuộc một khoa với đề tài
 	const { data: majorsOptions } = useGetMajorsBySameFacultyIdQuery(
 		{ facultyId: topic?.major.facultyId || '', queries: { page: 1, limit: 0 } },
@@ -214,14 +215,6 @@ export const TopicDetailContainer = () => {
 	}
 
 	const handleSave = async () => {
-		const periodId = localStorage.getItem('currentPeriodId')
-		if (!periodId) {
-			toast({
-				title: 'Lỗi',
-				description: 'Không tìm thấy kỳ hiện tại'
-			})
-			return
-		}
 		//Tạo mới instance thay đổi
 		const newPayLoadTopic: UpdateTopicPayload = {
 			titleVN: editedTopic.titleVN !== topic.titleVN ? editedTopic.titleVN : undefined,
@@ -235,7 +228,7 @@ export const TopicDetailContainer = () => {
 		}
 
 		try {
-			await updateTopic({ topicId: topic._id, periodId: periodId, body: newPayLoadTopic }).unwrap()
+			await updateTopic({ topicId: topic._id, body: newPayLoadTopic }).unwrap()
 			setIsEditing(false)
 			toast({
 				title: 'Thành công',
@@ -488,9 +481,22 @@ export const TopicDetailContainer = () => {
 									{user && user.role === 'student' && (
 										<Badge variant='destructive' className='h-fit text-sm'>
 											<p>
-												{currentTopic.registrationStatus === 'pending'
-													? 'Đã đăng ký'
-													: 'Chưa đăng ký'}
+                                                {(() => {
+                                                    switch (currentTopic.registrationStatus) {
+                                                        case 'pending':
+                                                            return 'Đang chờ duyệt'
+                                                        case 'approved':
+                                                            return 'Đã được duyệt đăng ký'
+                                                        case 'rejected':
+                                                            return 'Bị từ chối'
+                                                        case 'withdrawn':
+                                                            return 'Đã rút đăng ký'
+                                                        case 'cancelled':
+                                                            return 'Đã hủy đăng ký'
+                                                        default:
+                                                            return 'Chưa đăng ký'
+                                                    }
+                                                })()}
 											</p>
 										</Badge>
 									)}

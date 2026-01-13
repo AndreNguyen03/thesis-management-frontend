@@ -15,12 +15,14 @@ import {
 	UserCheck,
 	Users
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import type { Role } from '@/models'
 import { useChat } from '@/hooks'
 import { cn } from '@/lib/utils'
+import { useAppSelector } from '@/store'
+import { getUserIdFromAppUser } from '@/utils/utils'
 
 interface AppSidebarProps {
 	userRole?: Role | undefined
@@ -87,7 +89,18 @@ const AppSidebar = ({ userRole = 'admin', isMobile = false }: AppSidebarProps) =
 	const location = useLocation()
 	const currentPath = location.pathname
 	const [openMenus, setOpenMenus] = useState<string[]>([])
-	const { hasUnreadDirect } = useChat()
+	const { hasUnreadDirect, messagesByGroup, groupSidebars } = useChat()
+	const user = useAppSelector((state) => state.auth.user)
+	const userId = getUserIdFromAppUser(user)
+
+	// Kiểm tra tin nhắn chưa đọc cho tất cả group workspace
+	const hasUnreadGroup = useMemo(() => {
+		if (!messagesByGroup || !groupSidebars.length) return false
+		return groupSidebars.some((group) => {
+			const msgs = messagesByGroup[group._id] ?? []
+			return msgs.some((m) => m.senderId !== userId && (!m.lastSeenAtByUser || !m.lastSeenAtByUser[userId]))
+		})
+	}, [messagesByGroup, groupSidebars, userId])
 
 	function isActive(path: string) {
 		if (path === '/' && currentPath === '/') return true
@@ -180,6 +193,9 @@ const AppSidebar = ({ userRole = 'admin', isMobile = false }: AppSidebarProps) =
 								)}
 							/>
 							{item.url === '/chat' && hasUnreadDirect && (
+								<span className='absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white' />
+							)}
+							{item.url === '/group-workspace' && hasUnreadGroup && (
 								<span className='absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white' />
 							)}
 						</div>

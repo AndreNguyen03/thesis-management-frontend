@@ -3,12 +3,15 @@ import type { GroupSidebar as GroupSidebarType } from '@/models/groups.model'
 import { useChat } from '@/hooks'
 import { useAppSelector } from '@/store'
 import { getUserIdFromAppUser } from '@/utils/utils'
+import { Search } from 'lucide-react'
 
 interface GroupSidebarProps {
 	groups: GroupSidebarType[]
 	selectedGroupId?: string
 	onSelectGroup: (id: string) => void
 	isLoading?: boolean
+    onSearchChange?: (query: string) => void
+    searchQuery?: string
 }
 
 const formatTime = (createdAt?: string) => {
@@ -22,19 +25,8 @@ const formatTime = (createdAt?: string) => {
 	})
 }
 
-const getSenderName = (group: GroupSidebarType) => {
-	const { lastMessage, participants } = group
-	if (!lastMessage) return 'Unknown'
 
-	// 1️⃣ Nếu backend đã gửi fullName (future-proof)
-	if (lastMessage.fullName) return lastMessage.fullName
-
-	// 2️⃣ Map senderId -> participant
-	const sender = participants.find((p) => p._id === lastMessage.senderId)
-	return sender?.fullName ?? 'Unknown'
-}
-
-export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup, isLoading = false }: GroupSidebarProps) => {
+export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup, isLoading = false, searchQuery, onSearchChange }: GroupSidebarProps) => {
 	const { messagesByGroup, markGroupSeen } = useChat() || {}
 	const user = useAppSelector((state) => state.auth.user)
 	const userId = getUserIdFromAppUser(user)
@@ -55,17 +47,24 @@ export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup, isLoading
 	}
 
 	return (
-		<div className='flex h-full w-full flex-col border-r bg-sidebar md:w-64'>
+		<div className='flex h-full w-full flex-col border-r bg-sidebar md:w-72'>
+			<div className='p-3'>
+				<div className='relative'>
+					<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50' />
+					<input
+						value={searchQuery}
+						onChange={(e) => onSearchChange?.(e.target.value)}
+						placeholder='Tìm kiếm...'
+						className='w-full rounded-md bg-secondary px-9 py-2 text-sm'
+					/>
+				</div>
+			</div>
 			<nav className='flex-1 space-y-2 overflow-y-auto p-2'>
 				{groups.map((group) => {
 					const msgs = messagesByGroup?.[group._id] ?? []
 					const isSelected = selectedGroupId === group._id
 
 					const lastMessage = group.lastMessage
-
-					const senderName = getSenderName(group)
-
-					const content = lastMessage?.content || 'Chưa có tin nhắn'
 					const time = formatTime(lastMessage?.createdAt)
 					const unreadCount = msgs.filter(
 						(m) => m.senderId !== userId && (!m.lastSeenAtByUser || !m.lastSeenAtByUser[userId])
@@ -82,16 +81,8 @@ export const GroupSidebar = ({ groups, selectedGroupId, onSelectGroup, isLoading
 							)}
 						>
 							<div className='flex flex-col truncate'>
-								<p className='truncate text-sm font-semibold'>{group.titleVN}</p>
-								<div className='flex items-center gap-1 truncate text-xs text-gray-600'>
-									{senderName !== 'Unknown' && (
-										<>
-											<p className='truncate font-medium'>{senderName.split(' ').pop()}</p>
-											<span>-</span>
-										</>
-									)}
-									<p className='max-w-[120px] truncate'>{content}</p>
-								</div>
+								<p className='truncate text-sm font-semibold text-wrap mb-2'>{group.titleVN}</p>
+								
 							</div>
 
 							<div className='flex flex-col items-end'>

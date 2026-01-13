@@ -31,7 +31,7 @@ export const TaskDescription = ({ taskId, initialDescription }: TaskDescriptionP
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to update description',
+				description: 'Failed to update description' + error,
 				variant: 'destructive'
 			})
 		}

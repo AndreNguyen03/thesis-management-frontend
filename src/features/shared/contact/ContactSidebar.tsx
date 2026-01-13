@@ -19,7 +19,7 @@ export const ContactSidebar = ({
 	searchQuery: string
 	onSearchChange: (q: string) => void
 }) => {
-	const { messagesByGroup, markGroupSeen } = useChat() || {}
+	const { messagesByGroup, markGroupSeen, markAllMessagesAsSeenLocal } = useChat() || {}
 
 	const user = useAppSelector((state) => state.auth.user)
 
@@ -38,6 +38,8 @@ export const ContactSidebar = ({
 
 	const handleSelectGroup = (groupId: string) => {
 		onSelectGroup(groupId)
+		// Mark seen ngay khi click để xóa indicator
+		markAllMessagesAsSeenLocal?.(groupId)
 		markGroupSeen?.(groupId)
 	}
 

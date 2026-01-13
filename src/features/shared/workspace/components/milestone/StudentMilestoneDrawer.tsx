@@ -1,13 +1,12 @@
-import type { FileInfo, MilestoneStatus, PayloadUpdateMilestone, ResponseMilestone } from '@/models/milestone.model'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { FileInfo,  PayloadUpdateMilestone, ResponseMilestone } from '@/models/milestone.model'
 // Lấy base url download file từ biến môi trường
 const baseDownloadUrl = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
-import { useMemo, useState, useRef } from 'react'
-import { calculateProgress, ProgressBar, StatusBadge } from './ProcessBar'
+import {  useState, useRef } from 'react'
+import {  ProgressBar, StatusBadge } from './ProcessBar'
 import { AlertCircle, CheckCircle2, CheckSquare, FileText, Send, UploadCloud, X, Upload } from 'lucide-react'
 import { SubmissionHistoryList } from './submisstion-history'
 import { useSubmitReportMutation } from '@/services/milestoneApi'
-import { StatusOptions } from '@/models/todolist.model'
-import { useToast } from '@/hooks/use-toast'
 import Editting from '../Editting'
 import { cn } from '@/lib/utils'
 import { toast as sonnerToast } from 'sonner'
@@ -22,7 +21,6 @@ export const StudentMilestoneDrawer = ({
 	onClose: () => void
 	onUpdate: (id: string, updates: PayloadUpdateMilestone) => void
 }) => {
-	const { toast } = useToast()
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 	const [isSubmitting, setIsSubmitting] = useState(false)
@@ -195,7 +193,7 @@ export const StudentMilestoneDrawer = ({
 			if (fileInputRef.current) {
 				fileInputRef.current.value = ''
 			}
-		} catch (error: any) {
+		} catch (error:any) {
 			sonnerToast.error(error?.data?.message || 'Không thể cập nhật báo cáo. Vui lòng thử lại.', {
 				richColors: true
 			})
@@ -278,10 +276,10 @@ export const StudentMilestoneDrawer = ({
 			{/* Nút nộp */}
 			<button
 				onClick={handleSubmit}
-				disabled={isSubmitting || selectedFiles.length === 0}
+				disabled={isSubmitting || isSubmitLoading || selectedFiles.length === 0}
 				className='flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-3 font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400'
 			>
-				{isSubmitting ? (
+				{(isSubmitting || isSubmitLoading) ? (
 					<>
 						<div className='h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
 						Đang tải lên...
@@ -315,7 +313,7 @@ export const StudentMilestoneDrawer = ({
 					<div className='mt-3'>
 						<div className='mb-2 flex items-center justify-between text-sm'>
 							<span className='font-medium text-slate-600'>Tiến độ hoàn thành</span>
-							<span className='font-bold text-indigo-600'>{milestone.progress}%</span>
+							<span className='font-bold text-indigo-600'>{milestone.progress.toFixed(2)}%</span>
 						</div>
 						<ProgressBar progress={milestone.progress} />
 					</div>
@@ -390,10 +388,10 @@ export const StudentMilestoneDrawer = ({
 											<div className='flex gap-2'>
 												<button
 													onClick={handleUpdateSubmission}
-													disabled={isSubmitting}
+													disabled={isSubmitting || isSubmitLoading}
 													className='flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:bg-slate-400'
 												>
-													{isSubmitting ? (
+													{(isSubmitting || isSubmitLoading) ? (
 														<>
 															<div className='h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
 															Đang cập nhật...

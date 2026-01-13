@@ -23,7 +23,7 @@ interface HeaderProps {
 
 const PAGE_SIZE = 6
 
-const Header = ({ user, onOpenAI, onMobileSidebarOpen }: HeaderProps) => {
+const Header = ({ user, onMobileSidebarOpen }: HeaderProps) => {
 	const [logout, { isLoading }] = useLogoutMutation()
 	const navigate = useNavigate()
 	const [openUserMenu, setOpenUserMenu] = useState(false)

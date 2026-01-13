@@ -14,7 +14,6 @@ import {
 import { toast } from 'sonner'
 import { useAppSelector } from '@/store'
 import { Calendar, Loader2 } from 'lucide-react'
-import { formatDate } from '@/utils/utils'
 import type { ResponseMilestone } from '@/models/milestone.model'
 import { EditMilestoneModal } from './modal/EditMilestoneModal'
 import { TaskDetailModal } from '@/components/features/todolist/TaskDetailModal'
@@ -27,6 +26,7 @@ interface TaskCardProps {
 	onDeleteTask?: (taskId: string) => void
 	onUpdateMilestone?: (taskId: string, milestoneId: string | undefined) => void
 	milestones?: ResponseMilestone[]
+	refetchMilestones: () => void
 }
 
 const TaskCard = ({
@@ -36,7 +36,8 @@ const TaskCard = ({
 	onDeleteTask,
 	onUpdateMilestone,
 	isUpdating,
-	milestones
+	milestones,
+	refetchMilestones
 }: TaskCardProps) => {
 	const [editingValue, setEditingValue] = useState<RequestUpdate>({
 		title: task.title,
@@ -53,7 +54,7 @@ const TaskCard = ({
 	// CORE: Handle drag end - works for BOTH within column AND between columns
 	const handleDragEnd = async (event: DragEndEvent) => {
 		const { active, over } = event
-		if (!over || !setTasks) return
+		if (!over) return
 
 		const activeId = active.id as string
 		const overId = over.id as string
@@ -74,27 +75,43 @@ const TaskCard = ({
 			const newIndex = sourceColumn.items.findIndex((item) => item._id === overId)
 
 			if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
-			setTasks((prev) =>
-				prev.map((t) => {
-					if (t._id !== task._id) return t
-					return {
-						...t,
-						columns: t.columns.map((col) => {
-							if (col._id !== sourceColumn._id) return col
-							return {
-								...col,
-								items: arrayMove(col.items, oldIndex, newIndex)
-							}
-						})
-					}
-				})
-			)
+
+			// Optimistic update if setTasks is available
+			if (setTasks) {
+				setTasks((prev) =>
+					prev.map((t) => {
+						if (t._id !== task._id) return t
+						return {
+							...t,
+							columns: t.columns.map((col) => {
+								if (col._id !== sourceColumn._id) return col
+								return {
+									...col,
+									items: arrayMove(col.items, oldIndex, newIndex)
+								}
+							})
+						}
+					})
+				)
+			}
 
 			// Sync with backend
 			try {
-				await moveInColumn({ taskId: task._id, columnId: sourceColumn._id, oldPos: oldIndex, newPos: newIndex })
+				await moveInColumn({
+					taskId: task._id,
+					columnId: sourceColumn._id,
+					oldPos: oldIndex,
+					newPos: newIndex,
+					groupId: group.activeGroup?._id
+				})
+				refetchMilestones()
+				if (!setTasks) {
+					toast.success('Đã di chuyển nhiệm vụ', { richColors: true })
+				}
 			} catch (error) {
-				toast.error('Cập nhật vị trí thất bại', { richColors: true })
+				toast.error('Cập nhật vị trí thất bại: ' + (error instanceof Error ? error.message : String(error)), {
+					richColors: true
+				})
 			}
 		} else {
 			const activeItem = sourceColumn.items.find((item) => item._id === activeId)
@@ -111,39 +128,50 @@ const TaskCard = ({
 				newIndex = destColumn.items.length // Thêm vào cuối
 			}
 
-			// Optimistic Update
-			setTasks((prev) =>
-				prev.map((t) => {
-					if (t._id !== task._id) return t
-					return {
-						...t,
-						columns: t.columns.map((col) => {
-							// Xóa ở cột cũ
-							if (col._id === sourceColumn._id) {
-								return { ...col, items: col.items.filter((i) => i._id !== activeId) }
-							}
-							// Thêm vào cột mới
-							if (col._id === destColumn._id) {
-								const newItems = [...col.items]
-								// Logic splice: chèn vào vị trí newIndex
-								newItems.splice(newIndex, 0, activeItem)
-								return { ...col, items: newItems }
-							}
-							return col
-						})
-					}
-				})
-			)
+			// Optimistic update if setTasks is available
+			if (setTasks) {
+				setTasks((prev) =>
+					prev.map((t) => {
+						if (t._id !== task._id) return t
+						return {
+							...t,
+							columns: t.columns.map((col) => {
+								// Xóa ở cột cũ
+								if (col._id === sourceColumn._id) {
+									return { ...col, items: col.items.filter((i) => i._id !== activeId) }
+								}
+								// Thêm vào cột mới
+								if (col._id === destColumn._id) {
+									const newItems = [...col.items]
+									// Logic splice: chèn vào vị trí newIndex
+									newItems.splice(newIndex, 0, activeItem)
+									return { ...col, items: newItems }
+								}
+								return col
+							})
+						}
+					})
+				)
+			}
+
 			try {
 				await moveToNewColumn({
 					taskId: task._id,
 					newColumnId: destColumn._id,
 					oldColumnId: sourceColumn._id,
 					newPos: newIndex,
-					subTaskId: activeId
+					subTaskId: activeId,
+					groupId: group.activeGroup?._id
 				})
+				refetchMilestones()
+				if (!setTasks) {
+					toast.success('Đã di chuyển nhiệm vụ sang cột mới', { richColors: true })
+				}
 			} catch (error) {
-				toast.error('Di chuyển nhiệm vụ thất bại', { richColors: true })
+				toast.error(
+					'Di chuyển nhiệm vụ thất bại: ' + (error instanceof Error ? error.message : String(error)),
+					{ richColors: true }
+				)
 			}
 		}
 	}
@@ -160,6 +188,7 @@ const TaskCard = ({
 		// Call parent update function if provided
 		if (onUpdateTask && task._id) {
 			onUpdateTask(task._id, editingValue)
+                refetchMilestones()
 		}
 		setIsEditingInfo(false)
 	}
@@ -185,9 +214,12 @@ const TaskCard = ({
 		return Math.round((completedItems / totalItems) * 100)
 	}
 	const progress = calculateTaskProgress(task)
+
 	let taskStatus: 'Done' | 'In Progress' | 'Todo' = 'Todo'
+
 	if (progress === 100) taskStatus = StatusOptions.DONE
 	else if (progress > 0) taskStatus = StatusOptions.IN_PROGRESS
+
 	useEffect(() => {
 		if (progress === 100) taskStatus = StatusOptions.DONE
 		else if (progress > 0) taskStatus = StatusOptions.IN_PROGRESS
@@ -195,6 +227,7 @@ const TaskCard = ({
 		if (task.status !== taskStatus)
 			updateTaskStatus({ taskId: task._id, groupId: group.activeGroup?._id || '', status: taskStatus })
 	}, [progress])
+
 	const totalItems = task.columns.reduce((sum, col) => sum + col.items.length, 0)
 	const doneItems = task.columns.find((col) => col.title === 'Done')?.items.length || 0
 
@@ -202,7 +235,7 @@ const TaskCard = ({
 	// const isEditingDesc = editingField === 'description'
 
 	return (
-		<div key={task._id + task.title} className='rounded-xl border border-border bg-card p-4'>
+		<div key={task._id + task.title} className='max-w-[80vw] rounded-xl border border-border bg-card p-4'>
 			<div className='group/task mb-3 flex items-start justify-between'>
 				<div className='flex-1'>
 					{isEditingInfo ? (
@@ -220,12 +253,12 @@ const TaskCard = ({
 							/>
 						</div>
 					) : (
-						<h5
+						<p
 							onClick={() => setIsTaskDetailModalOpen(true)}
-							className='cursor-pointer font-medium text-foreground hover:text-primary'
+							className='cursor-pointer text-lg font-medium text-foreground hover:text-primary'
 						>
 							{task.title}
-						</h5>
+						</p>
 					)}
 
 					{isEditingInfo ? (
@@ -244,7 +277,6 @@ const TaskCard = ({
 					) : (
 						<>
 							{task.description ? (
-								
 								<p
 									className='mt-1 cursor-pointer text-xs text-muted-foreground hover:text-primary'
 									onClick={() => handleStartEdit()}
@@ -334,7 +366,7 @@ const TaskCard = ({
 						strategy={verticalListSortingStrategy}
 					>
 						{task.columns.map((column) => {
-							return <Column key={column._id} taskId={task._id} column={column} setTasks={setTasks} />
+							return <Column key={column._id} taskId={task._id} column={column} setTasks={setTasks} refetchMilestones={refetchMilestones} />
 						})}
 					</SortableContext>
 				</DndContext>

@@ -1,23 +1,21 @@
-import { SubtaskDetailModal } from '@/components/features/todolist/SubtaskDetailModal'
 import type { Subtask } from '@/models/todolist.model'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Eye, X } from 'lucide-react'
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 
 const SubTaskContainer = ({
 	item,
 	columnId,
 	taskId,
 	onHandleDelete,
-	onOpenModal
+	onOpenModal,
 }: {
 	item: Subtask
 	onHandleDelete: () => void
 	columnId: string
 	taskId: string
 	onOpenModal: () => void
+    refetchMilestones: () => void
 }) => {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item._id })
 

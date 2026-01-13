@@ -37,7 +37,7 @@ export const SubtaskDueDate = ({ taskId, columnId, subtaskId, dueDate }: Subtask
 				description: selectedDate ? 'Cập nhật hạn chót thành công' : 'Đã xóa hạn chót'
 			})
 		} catch (error) {
-			toast.error('Cập nhật hạn chót thất bại', {
+			toast.error('Cập nhật hạn chót thất bại' + error, {
 				richColors: true,
 				description: selectedDate ? 'Cập nhật hạn chót thất bại' : 'Xóa hạn chót thất bại'
 			})

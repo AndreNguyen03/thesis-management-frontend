@@ -40,7 +40,7 @@ export const SubtaskLabels = ({ taskId, columnId, subtaskId, labels }: SubtaskLa
 				description: 'Gắn nhãn thành công'
 			})
 		} catch (error) {
-			toast.error('Thêm nhãn thất bại', {
+			toast.error('Thêm nhãn thất bại' + error, {
 				richColors: true
 			})
 		}
@@ -59,7 +59,7 @@ export const SubtaskLabels = ({ taskId, columnId, subtaskId, labels }: SubtaskLa
 				richColors: true
 			})
 		} catch (error) {
-			toast.error('Gỡ nhãn thất bại', {
+			toast.error('Gỡ nhãn thất bại'+ error, {
 				richColors: true
 			})
 		}

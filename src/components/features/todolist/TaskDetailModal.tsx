@@ -1,5 +1,5 @@
 import { Dialog, DialogContent } from '@/components/ui/Dialog'
-import { useGetTaskDetailQuery, useUpdateTaskDetailsMutation } from '@/services/todolistApi'
+import { useGetTaskDetailQuery } from '@/services/todolistApi'
 import { Loader2 } from 'lucide-react'
 import { TaskDetailContent } from './TaskDetailContent'
 
@@ -14,7 +14,7 @@ export const TaskDetailModal = ({ taskId, isOpen, onClose }: TaskDetailModalProp
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className='max-h-[90vh] max-w-[90vw] gap-0 overflow-hidden bg-white p-0' hideClose>
+			<DialogContent className='max-h-[90vh] max-w-[70vw] gap-0 overflow-hidden bg-white p-0' hideClose>
 				{isLoading && (
 					<div className='flex h-96 items-center justify-center'>
 						<Loader2 className='h-8 w-8 animate-spin text-primary' />

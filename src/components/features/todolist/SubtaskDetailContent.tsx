@@ -1,17 +1,12 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { X, User, Tag, Calendar, AlertCircle, Clock, CheckSquare, ArrowLeft } from 'lucide-react'
+import { X, User, Tag, Calendar, AlertCircle, Clock } from 'lucide-react'
 import { vi as viLocale } from 'date-fns/locale'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { format } from 'date-fns'
-import { Checkbox } from '@/components/ui/checkbox'
 import type { TaskPriority } from '@/models/task-detail.model'
-import { useToggleSubtaskCompleteMutation } from '@/services/todolistApi'
-import { toast } from 'sonner'
-
 import { TaskActivity } from './TaskActivity'
 import { SubtaskAssignees } from './SubtaskAssignees'
 import { SubtaskPrioritySelect } from './SubtaskPrioritySelect'
@@ -31,33 +26,33 @@ interface SubtaskDetailContentProps {
 
 export const SubtaskDetailContent = ({ subtask, taskId, columnId, onClose, groupId }: SubtaskDetailContentProps) => {
 	const [activeTab, setActiveTab] = useState('comments')
-	const [toggleComplete] = useToggleSubtaskCompleteMutation()
+	// const [toggleComplete] = useToggleSubtaskCompleteMutation()
 
-	const handleToggleComplete = async () => {
-		try {
-			await toggleComplete({
-				taskId,
-				columnId,
-				subtaskId: subtask._id
-			}).unwrap()
-			toast.success('Cập nhật trạng thái subtask thành công')
-		} catch (error) {
-			toast.error('Không thể cập nhật trạng thái subtask')
-		}
-	}
+	// const handleToggleComplete = async () => {
+	// 	try {
+	// 		await toggleComplete({
+	// 			taskId,
+	// 			columnId,
+	// 			subtaskId: subtask._id
+	// 		}).unwrap()
+	// 		toast.success('Cập nhật trạng thái subtask thành công')
+	// 	} catch (error) {
+	// 		toast.error('Không thể cập nhật trạng thái subtask'+ error)
+	// 	}
+	// }
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case 'Todo':
-				return 'bg-slate-500'
-			case 'In Progress':
-				return 'bg-blue-500'
-			case 'Done':
-				return 'bg-green-500'
-			default:
-				return 'bg-gray-500'
-		}
-	}
+	// const getStatusColor = (status: string) => {
+	// 	switch (status) {
+	// 		case 'Todo':
+	// 			return 'bg-slate-500'
+	// 		case 'In Progress':
+	// 			return 'bg-blue-500'
+	// 		case 'Done':
+	// 			return 'bg-green-500'
+	// 		default:
+	// 			return 'bg-gray-500'
+	// 	}
+	// }
 
 	const getPriorityIcon = (priority: TaskPriority) => {
 		switch (priority) {
@@ -72,15 +67,15 @@ export const SubtaskDetailContent = ({ subtask, taskId, columnId, onClose, group
 	}
 
 	return (
-		<div className='flex h-[90vh] flex-col'>
+		<div className='flex h-[90vh] w-full flex-col'>
 			{/* Header */}
 			<div className='flex items-center justify-between border-b p-6'>
-				<div className='flex flex-1 items-center gap-3'>
-					<Button variant='ghost' className='hover:text-blue-700' size='icon' onClick={onClose}>
-						<ArrowLeft className='h-7 w-7' />
-					</Button>
+				<div className='flex flex-1 items-center justify-between gap-3'>
 					{/* <Badge className={`${getStatusColor(subtask.)} text-white`}>{subtask.status}</Badge> */}
 					<h2 className='truncate text-xl font-semibold'>{subtask.title}</h2>
+					<Button variant='ghost' className='hover:text-red-400' size='default' onClick={onClose}>
+						<X className='h-12 w-12' />
+					</Button>
 				</div>
 			</div>
 

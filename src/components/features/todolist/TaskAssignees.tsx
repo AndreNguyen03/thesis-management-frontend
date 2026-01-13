@@ -8,6 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { useGetGroupDetailQuery } from '@/services/groupApi'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Avatar } from '@/features/shared/workspace/components/Avatar'
+import type { Participant } from '@/models/groups.model'
 
 interface TaskAssigneesProps {
 	taskId: string
@@ -38,7 +40,7 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to update assignees',
+				description: 'Failed to update assignees' + error,
 				variant: 'destructive'
 			})
 		}
@@ -63,7 +65,7 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to remove assignee',
+				description: 'Failed to remove assignee' + error,
 				variant: 'destructive'
 			})
 		}
@@ -81,17 +83,7 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 					assignees.map((assignee) => (
 						<div key={assignee._id} className='group flex items-center justify-between'>
 							<div className='flex items-center gap-2'>
-								{assignee.avatarUrl ? (
-									<img
-										src={assignee.avatarUrl}
-										alt={assignee.fullName}
-										className='h-8 w-8 rounded-full'
-									/>
-								) : (
-									<div className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10'>
-										<span className='text-xs font-medium'>{assignee.fullName.charAt(0)}</span>
-									</div>
-								)}
+								<Avatar fullName={assignee.fullName} avatarUrl={assignee.avatarUrl} />
 								<div className='text-sm'>
 									<div className='font-medium'>{assignee.fullName}</div>
 								</div>
@@ -114,7 +106,7 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 				<PopoverTrigger asChild>
 					<Button variant='outline' size='sm' className='w-full'>
 						<Plus className='mr-2 h-4 w-4' />
-						Thêm phân công 	
+						Thêm phân công
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className='w-80 p-0' align='start'>
@@ -123,24 +115,13 @@ export const TaskAssignees = ({ taskId, groupId, assignees }: TaskAssigneesProps
 						<CommandList>
 							<CommandEmpty>Không tìm thấy thành viên</CommandEmpty>
 							<CommandGroup>
-								{groupMembers.map((member: any) => (
+								{groupMembers.map((member: Participant) => (
 									<CommandItem key={member._id} onSelect={() => toggleUser(member._id)}>
 										<Checkbox checked={selectedUserIds.includes(member._id)} className='mr-2' />
 										<div className='flex flex-1 items-center gap-2'>
-											{member.avatarUrl ? (
-												<img
-													src={member.avatarUrl}
-													alt={member.fullName}
-													className='h-6 w-6 rounded-full'
-												/>
-											) : (
-												<div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10'>
-													<span className='text-xs'>{member.fullName.charAt(0)}</span>
-												</div>
-											)}
+											<Avatar fullName={member.fullName} avatarUrl={member.avatarUrl} />
 											<div className='text-sm'>
 												<div className='font-medium'>{member.fullName}</div>
-												<div className='text-xs text-muted-foreground'>{member.email}</div>
 											</div>
 										</div>
 									</CommandItem>

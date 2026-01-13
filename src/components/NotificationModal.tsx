@@ -109,7 +109,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-[700px]'>
+			<DialogContent className='max-h-[90vh]  overflow-y-auto sm:max-w-[700px]'>
 				<DialogHeader>
 					<DialogTitle>Gửi Thông Báo Thủ Công</DialogTitle>
 					<DialogDescription>Soạn nội dung để gửi ngay lập tức đến người nhận được chọn.</DialogDescription>

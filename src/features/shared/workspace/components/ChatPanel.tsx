@@ -45,6 +45,7 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 
 	const scrollRef = useRef<HTMLDivElement | null>(null)
 	const bottomRef = useRef<HTMLDivElement | null>(null)
+	const lastMessageIdRef = useRef<string | null>(null)
 
 	const [isAtBottom, setIsAtBottom] = useState(true)
 	const [hasNewMessage, setHasNewMessage] = useState(false)
@@ -55,6 +56,7 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 	const [isInitialLoading, setIsInitialLoading] = useState(false)
 
 	const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const prevAtBottomRef = useRef<boolean>(true)
 	const markSeenTimeout = useRef<NodeJS.Timeout | null>(null)
 	const loadingHistoryRef = useRef(false)
 	const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -166,16 +168,22 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 		}
 	}
 
-	const handleScroll = async () => {
+	const handleScroll = () => {
 		const el = scrollRef.current
 		if (!el) return
 
 		const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40
-		setIsAtBottom(atBottom)
-		if (atBottom) {
-			setHasNewMessage(false)
-			markAllMessagesAsSeenLocal(groupId)
-			markGroupSeen(groupId)
+
+		// CHỈ setState khi giá trị thay đổi
+		if (prevAtBottomRef.current !== atBottom) {
+			prevAtBottomRef.current = atBottom
+			setIsAtBottom(atBottom)
+
+			if (atBottom && hasNewMessage) {
+				setHasNewMessage(false)
+				markAllMessagesAsSeenLocal(groupId)
+				markGroupSeen(groupId)
+			}
 		}
 	}
 
@@ -228,12 +236,29 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 		}
 
 		loadHistory()
-	}, [groupId])
+	}, [groupId, fetchGroupMessages])
 
 	useEffect(() => {
-		if (isAtBottom) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-		else setHasNewMessage(true)
-	}, [messages.length])
+		const lastMessage = messages[messages.length - 1]
+		if (!lastMessage) return
+
+		if (!lastMessageIdRef.current) {
+			lastMessageIdRef.current = lastMessage._id
+			return
+		}
+
+		if (lastMessageIdRef.current === lastMessage._id) return
+
+		lastMessageIdRef.current = lastMessage._id
+
+		if (isAtBottom) {
+			setHasNewMessage(false)
+			markAllMessagesAsSeenLocal(groupId)
+			markGroupSeen(groupId)
+		} else {
+			setHasNewMessage(true)
+		}
+	}, [messages, isAtBottom, groupId])
 
 	useEffect(() => {
 		if (isAtBottom && messages.length > 0) {
@@ -257,7 +282,7 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 			{/* Header */}
 			<div className='panel-header flex items-center justify-between px-4 py-3'>
 				<div className='flex flex-col gap-1'>
-					<h2 className='line-clamp-2 max-w-[260px] text-sm font-semibold text-foreground' title={groupName}>
+					<h2 className='line-clamp-2 text-lg font-semibold text-foreground' title={groupName}>
 						{groupName}
 					</h2>
 					<div className='flex items-center gap-1'>
@@ -362,7 +387,6 @@ export const ChatPanel = ({ groupId, groupName, participants }: ChatPanelProps) 
 
 								const isMine = msg.senderId === userId
 								const sender = participantMap.get(msg.senderId)
-								console.log('participants map :::', participantMap)
 								let seenBy: Participant[] = []
 								if (isLastMessageOfMineBlock(messages, index, userId) && msg.lastSeenAtByUser) {
 									seenBy = Object.entries(msg.lastSeenAtByUser)
@@ -566,7 +590,7 @@ const GroupChatEmptyState = ({ groupName, participants }: { groupName: string; p
 
 			<h3 className='text-sm font-semibold text-foreground'>{groupName}</h3>
 
-			<p className='mt-1 max-w-xs text-xs'>
+			<p className='mt-1 max-w-xs text-sm'>
 				Nhóm này chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện với mọi người.
 			</p>
 		</div>

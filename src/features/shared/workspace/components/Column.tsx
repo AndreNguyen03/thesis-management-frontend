@@ -14,12 +14,16 @@ import { useParams } from 'react-router-dom'
 export const Column = ({
 	taskId,
 	column,
-	setTasks
+	setTasks,
+	refetchMilestones
 }: {
 	taskId: string
 	column: TaskColumn
 	setTasks?: React.Dispatch<React.SetStateAction<Task[]>>
+	refetchMilestones: () => void
 }) => {
+	const { groupId } = useParams<{ groupId: string }>()
+
 	const { className } = getSubtaskStatusProps(column.title as 'Todo' | 'In Progress' | 'Done')
 	const [isAddingItem, setIsAddingItem] = useState(false)
 	const [content, setContent] = useState('')
@@ -33,14 +37,15 @@ export const Column = ({
 		setContent('')
 		setIsAddingItem(false)
 	}
-	const { groupId } = useParams<{ groupId: string }>()
 	const handleAddNewSubTask = async () => {
 		try {
 			const result = await createSubtask({
 				taskId: taskId,
 				title: content,
-				columnId: column._id
+				columnId: column._id,
+				groupId: groupId
 			}).unwrap()
+
 			setContent('')
 			setIsAddingItem(false)
 			setTasks?.((prev) => {
@@ -60,18 +65,21 @@ export const Column = ({
 					return t
 				})
 			})
+			refetchMilestones()
 		} catch (error) {
 			console.error('Failed to add subtask:', error)
 			toast.error('Thêm thất bại. Vui lòng thử lại.', { richColors: true })
 		}
 	}
+
 	const handleDeleteSubTask = async () => {
 		try {
 			await deleteSubtask({
 				taskId: taskId,
 				columnId: column._id,
-				subtaskId: deletingSubtask!._id
-			})
+				subtaskId: deletingSubtask!._id,
+				groupId: groupId
+			}).unwrap()
 			setTasks?.((prev) =>
 				prev.map((t) => {
 					if (t._id === taskId) {
@@ -91,16 +99,18 @@ export const Column = ({
 			)
 			setIsAddingItem(false)
 			setDeletingSubtask(null)
+			refetchMilestones()
+			toast.success('Xóa nhiệm vụ thành công', { richColors: true })
 		} catch (error) {
-			console.error('Failed to add subtask:', error)
-			toast.error('Thêm thất bại. Vui lòng thử lại.', { richColors: true })
+			console.error('Failed to delete subtask:', error)
+			toast.error('Xóa thất bại. Vui lòng thử lại.', { richColors: true })
 		}
 	}
 	const { setNodeRef, isOver } = useDroppable({ id: column._id })
 	return (
 		<div ref={setNodeRef}>
 			<div key={column.title} className='flex h-full min-h-[200px] flex-col rounded-lg bg-secondary p-2'>
-				<p className={`mb-2 text-xs font-medium ${className.replace('status-', 'text-')}`}>
+				<p className={`mb-2 text-base font-medium ${className.replace('status-', 'text-')}`}>
 					{column.title} ({column.items.length})
 				</p>
 				<div className='flex-1 space-y-2'>
@@ -113,10 +123,12 @@ export const Column = ({
 							onHandleDelete={() => {
 								setDeletingSubtask(item)
 								setIsOpenDeleteSubtaskModal(true)
+
 							}}
 							onOpenModal={() => {
 								setSelectedSubTaskId(item._id)
 							}}
+                            refetchMilestones={refetchMilestones}
 						/>
 					))}
 
