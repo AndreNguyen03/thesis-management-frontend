@@ -18,14 +18,13 @@ export default function CreateDefenseCouncilForm({
 	const [periodNum, setPeriodNum] = useState<number>(1)
 	const [location, setLocation] = useState('')
 	const [scheduledDate, setScheduledDate] = useState<string>('')
-	const [isLoading, setIsLoading] = useState(false)
 	//endpoint tạo hội đồng mới
 	const [createCouncil, { isLoading: isCreating }] = useCreateCouncilMutation()
 	const [error, setError] = useState<string | null>(null)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		setIsLoading(true)
+
 		setError(null)
 		try {
 			await createCouncil({
@@ -37,8 +36,6 @@ export default function CreateDefenseCouncilForm({
 			onSuccess()
 		} catch (err: any) {
 			setError(err?.data?.message || 'Có lỗi xảy ra')
-		} finally {
-			setIsLoading(false)
 		}
 	}
 
@@ -97,11 +94,11 @@ export default function CreateDefenseCouncilForm({
 					</div>
 					{error && <div className='text-sm text-red-600'>{error}</div>}
 					<DialogFooter className='flex justify-end gap-2'>
-						<Button type='button' variant='outline' onClick={onCancel} disabled={isLoading}>
+						<Button type='button' variant='outline' onClick={onCancel} disabled={isCreating}>
 							Hủy
 						</Button>
-						<Button type='submit' disabled={isLoading}>
-							{isLoading ? 'Đang tạo...' : 'Tạo hội đồng'}
+						<Button type='submit' disabled={isCreating}>
+							{isCreating ? 'Đang tạo...' : 'Tạo hội đồng'}
 						</Button>
 					</DialogFooter>
 				</form>

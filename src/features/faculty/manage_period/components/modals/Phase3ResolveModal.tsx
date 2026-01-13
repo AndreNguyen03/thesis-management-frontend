@@ -13,17 +13,27 @@ interface ExecutionPhaseResolveModalProps {
 	onComplete: () => void
 }
 
-type StepType = 'overdue' | 'pausedDelayed' | 'pendingReview'
+type StepType = 'timeout' | 'overdue' | 'pausedDelayed' | 'pendingReview'
 
 export function ExecutionPhaseResolveModal({ open, onClose, data, onComplete }: ExecutionPhaseResolveModalProps) {
-	const [currentStep, setCurrentStep] = useState<StepType>('overdue')
+	const [currentStep, setCurrentStep] = useState<StepType>('timeout')
 	const [selectedTopics, setSelectedTopics] = useState<string[]>([])
 	const [isMultiSelect, setIsMultiSelect] = useState<boolean>(false)
-	const steps: StepType[] = ['overdue', 'pausedDelayed', 'pendingReview']
+	const steps: StepType[] = ['timeout', 'overdue', 'pausedDelayed', 'pendingReview']
 	const currentStepIndex = steps.indexOf(currentStep)
 	//gọi endpoint đánh dấu đề tài tạm dừng
 	const [markPausedTopic, { isLoading: isMarkingPaused }] = useMarkPausedTopicMutation()
 	const stepConfig = {
+		timeout: {
+			title: 'Thời gian của pha thực hiện',
+			icon: AlertCircle,
+			color: 'text-purple-600',
+			bgColor: 'bg-purple-50',
+			borderColor: 'border-purple-200',
+			isTimeout: data.isTimeout,
+			data: undefined,
+			description: data.isTimeout ? 'Đã hết thời gian' : 'Còn thời gian quy định'
+		},
 		overdue: {
 			title: 'Đề tài quá hạn',
 			icon: AlertCircle,
@@ -31,6 +41,7 @@ export function ExecutionPhaseResolveModal({ open, onClose, data, onComplete }: 
 			bgColor: 'bg-red-50',
 			borderColor: 'border-red-200',
 			data: data.overdueTopics || [],
+			isTimeout: undefined,
 			description: 'Các đề tài đã quá hạn thời gian thực hiện'
 		},
 		pausedDelayed: {
@@ -40,6 +51,7 @@ export function ExecutionPhaseResolveModal({ open, onClose, data, onComplete }: 
 			bgColor: 'bg-orange-50',
 			borderColor: 'border-orange-200',
 			data: data.pausedOrDelayedTopics || [],
+			isTimeout: undefined,
 			description: 'Các đề tài đã bị tạm dừng hoặc trì hoãn'
 		},
 		pendingReview: {
@@ -48,6 +60,7 @@ export function ExecutionPhaseResolveModal({ open, onClose, data, onComplete }: 
 			color: 'text-yellow-600',
 			bgColor: 'bg-yellow-50',
 			borderColor: 'border-yellow-200',
+			isTimeout: undefined,
 			data: data.pendingLecturerReview || [],
 			description: 'Các đề tài đang chờ giảng viên đánh giá'
 		}
@@ -115,113 +128,135 @@ export function ExecutionPhaseResolveModal({ open, onClose, data, onComplete }: 
 
 				{/* Content */}
 				<div className='max-h-[400px] space-y-3 overflow-y-auto'>
-					{currentConfig.data.length === 0 ? (
+					{/* Nếu là bước timeout, chỉ hiển thị thông báo */}
+					{typeof currentConfig.isTimeout === 'boolean' ? (
 						<Card
 							className={`border p-8 text-center ${currentConfig.borderColor} ${currentConfig.bgColor}`}
 						>
-							<Icon className={`mx-auto mb-2 h-12 w-12 ${currentConfig.color} opacity-50`} />
-							<p className='text-gray-600'>Không có đề tài nào trong danh sách này</p>
+							<Clock className={`mx-auto mb-2 h-12 w-12 ${currentConfig.color} opacity-50`} />
+							<p className='text-gray-600'>
+								{currentConfig.isTimeout
+									? 'Pha thực hiện đã hết thời gian quy định.'
+									: 'Pha thực hiện vẫn còn thời gian quy định.'}
+							</p>
 						</Card>
 					) : (
 						<>
-							<div className='mb-2 flex items-center justify-between'>
-								<Badge variant='secondary' className='text-sm'>
-									Tổng số: {currentConfig.data.length} đề tài
-								</Badge>
-								{currentStep === 'overdue' && (
-									<>
-										{!isMultiSelect ? (
-											<Button
-												variant='yellow'
-												onClick={() => {
-													setIsMultiSelect(true)
-													setSelectedTopics(currentConfig.data.map((topic: any) => topic._id))
-												}}
-											>
-												Chọn tất cả
-											</Button>
-										) : (
-											<div className='flex gap-2'>
-												<Button
-													variant='red'
-													onClick={() => {
-														setIsMultiSelect(false)
-														handleMarkPausedTopics()
-													}}
-													disabled={selectedTopics.length === 0 || isMarkingPaused}
-												>
-													{isMarkingPaused ? <Loader2 className='animate-spin' /> : null}
-													Dừng làm ({selectedTopics.length})
-												</Button>
-												<Button
-													variant='yellow'
-													onClick={() => {
-														setIsMultiSelect(false)
-														setSelectedTopics([])
-													}}
-												>
-													Bỏ chọn
-												</Button>
-											</div>
-										)}
-									</>
-								)}
-							</div>
-							{currentConfig.data.map((topic: any, index: number) => (
+							{/* Nếu có data và data.length === 0, hiển thị thông báo không có đề tài */}
+							{Array.isArray(currentConfig.data) && currentConfig.data.length === 0 ? (
 								<Card
-									key={topic._id}
-									className={`border p-4 transition-all hover:shadow-md ${currentConfig.borderColor}`}
+									className={`border p-8 text-center ${currentConfig.borderColor} ${currentConfig.bgColor}`}
 								>
-									<div className='flex items-start gap-3'>
-										<div
-											className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${currentConfig.bgColor}`}
-										>
-											<span className={`text-sm font-semibold ${currentConfig.color}`}>
-												{index + 1}
-											</span>
-										</div>
-										<div className='flex-1 space-y-1'>
-											<h4 className='font-medium text-gray-900'>{topic.titleVN}</h4>
-											<p className='text-sm text-gray-500'>{topic.titleEng}</p>
-											{topic.lecturers && topic.lecturers.length > 0 && (
-												<div className='flex flex-wrap gap-1'>
-													{topic.lecturers.map((lec: any) => (
-														<Badge key={lec._id} variant='outline' className='text-xs'>
-															{lec.fullName}
-														</Badge>
-													))}
-												</div>
-											)}
-											{topic.submittedAt && (
-												<p className='text-xs text-gray-400'>
-													Nộp lúc: {new Date(topic.submittedAt).toLocaleDateString('vi-VN')}
-												</p>
-											)}
-											{topic.daysPending !== null && topic.daysPending !== undefined && (
-												<Badge variant='destructive' className='text-xs'>
-													Chờ {topic.daysPending} ngày
-												</Badge>
-											)}
-										</div>
-										{isMultiSelect && currentStep === 'overdue' && (
-											<input
-												type='checkbox'
-												className='mt-2 h-5 w-5 accent-yellow-500'
-												checked={selectedTopics.includes(topic._id)}
-												onChange={(e) => {
-													if (e.target.checked) {
-														setSelectedTopics((prev) => [...prev, topic._id])
-													} else {
-														setSelectedTopics((prev) =>
-															prev.filter((id) => id !== topic._id)
-														)
-													}
-												}}
-											/>
-										)}
-									</div>
+									<Icon className={`mx-auto mb-2 h-12 w-12 ${currentConfig.color} opacity-50`} />
+									<p className='text-gray-600'>Không có đề tài nào trong danh sách này</p>
 								</Card>
-							))}
+							) : (
+								<>
+									{Array.isArray(currentConfig.data) && (
+										<>
+											<div className='mb-2 flex items-center justify-between'>
+												<Badge variant='secondary' className='text-sm'>
+													Tổng số: {currentConfig.data.length} đề tài
+												</Badge>
+												{currentStep === 'overdue' && (
+													<>
+														{!isMultiSelect ? (
+															<Button
+																variant='yellow'
+																onClick={() => {
+																	setIsMultiSelect(true)
+																	setSelectedTopics(currentConfig.data.map((topic: any) => topic._id))
+																}}
+															>
+																Chọn tất cả
+															</Button>
+														) : (
+															<div className='flex gap-2'>
+																<Button
+																	variant='red'
+																	onClick={() => {
+																		setIsMultiSelect(false)
+																		handleMarkPausedTopics()
+																	}}
+																	disabled={selectedTopics.length === 0 || isMarkingPaused}
+																>
+																	{isMarkingPaused ? <Loader2 className='animate-spin' /> : null}
+																	Dừng làm ({selectedTopics.length})
+																</Button>
+																<Button
+																	variant='yellow'
+																	onClick={() => {
+																		setIsMultiSelect(false)
+																		setSelectedTopics([])
+																	}}
+																>
+																	Bỏ chọn
+																</Button>
+															</div>
+														)}
+													</>
+												)}
+											</div>
+											{currentConfig.data.map((topic: any, index: number) => (
+												<Card
+													key={topic._id}
+													className={`border p-4 transition-all hover:shadow-md ${currentConfig.borderColor}`}
+												>
+													<div className='flex items-start gap-3'>
+														<div
+															className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${currentConfig.bgColor}`}
+														>
+															<span className={`text-sm font-semibold ${currentConfig.color}`}>
+																{index + 1}
+															</span>
+														</div>
+														<div className='flex-1 space-y-1'>
+															<h4 className='font-medium text-gray-900'>{topic.titleVN}</h4>
+															<p className='text-sm text-gray-500'>{topic.titleEng}</p>
+															{topic.lecturers && topic.lecturers.length > 0 && (
+																<div className='flex flex-wrap gap-1'>
+																	{topic.lecturers.map((lec: any) => (
+																		<Badge key={lec._id} variant='outline' className='text-xs'>
+																			{lec.fullName}
+																		</Badge>
+																	))}
+																</div>
+															)}
+															{topic.submittedAt && (
+																<p className='text-xs text-gray-400'>
+																	Nộp lúc:{' '}
+																	{new Date(topic.submittedAt).toLocaleDateString('vi-VN')}
+																</p>
+															)}
+															{topic.daysPending !== null && topic.daysPending !== undefined && (
+																<Badge variant='destructive' className='text-xs'>
+																	Chờ {topic.daysPending} ngày
+																</Badge>
+															)}
+														</div>
+														{isMultiSelect && currentStep === 'overdue' && (
+															<input
+																type='checkbox'
+																className='mt-2 h-5 w-5 accent-yellow-500'
+																checked={selectedTopics.includes(topic._id)}
+																onChange={(e) => {
+																	if (e.target.checked) {
+																		setSelectedTopics((prev) => [...prev, topic._id])
+																	} else {
+																		setSelectedTopics((prev) =>
+																			prev.filter((id) => id !== topic._id)
+																		)
+																	}
+																}}
+															/>
+														)}
+													</div>
+												</Card>
+											))}
+										</>
+									)}
+								</>
+							)}
 						</>
 					)}
 				</div>
@@ -253,7 +288,7 @@ export function ExecutionPhaseResolveModal({ open, onClose, data, onComplete }: 
 						)}
 						{currentStep === 'pausedDelayed' && (
 							<Badge variant='info' className='text-sm'>
-								Chỉ xem:  đề tài tạm dừng/trì hoãn
+								Chỉ xem: đề tài tạm dừng/trì hoãn
 							</Badge>
 						)}
 					</div>

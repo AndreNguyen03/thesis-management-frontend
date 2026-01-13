@@ -20,13 +20,26 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { useGetResourcesQuery, useDeleteResourceMutation, useRetryResourceMutation } from '@/services/chatbotApi'
+import { useDeleteResourceMutation } from '@/services/chatbotApi'
 import { useChatbotSocket } from '@/contexts/ChatbotSocketContext'
-import type { ChatbotResource, CrawlProgress, ResourceStatus } from '@/models/chatbot-resource.model'
-import { ResourceStatusLabels, ResourceTypeLabels } from '@/models/chatbot-resource.model'
+import type { CrawlProgress } from '@/models/chatbot-resource.model'
 import ResourceDialog from './ResourceDialog'
+import { mapKnowledgeType } from '@/models/knowledge-source.model'
+import { CustomPagination } from '@/components/PaginationBar'
+import type { RequestKnowledgeSourceDto } from '@/models'
+import { useGetKnowledgeSourcesQuery } from '@/services/knowledgeSourceApi'
+import { cn, downloadFileWithURL } from '@/lib/utils'
+import { useNavigate } from 'react-router-dom'
 
-const statusColors: Record<ResourceStatus, string> = {
+// Map processing status to UI status
+const statusMap: Record<string, string> = {
+	pending: 'pending',
+	processing: 'crawling',
+	completed: 'completed',
+	failed: 'failed'
+}
+
+const statusColors: Record<string, string> = {
 	pending: 'bg-gray-500',
 	crawling: 'bg-blue-500',
 	embedding: 'bg-purple-500',
@@ -34,17 +47,27 @@ const statusColors: Record<ResourceStatus, string> = {
 	failed: 'bg-red-500'
 }
 
+const statusLabels: Record<string, string> = {
+	pending: 'Chờ xử lý',
+	crawling: 'Đang crawl',
+	embedding: 'Đang embedding',
+	completed: 'Hoàn thành',
+	failed: 'Thất bại'
+}
+const MINIO_DOWNLOAD_URL_BASE = import.meta.env.VITE_MINIO_DOWNLOAD_URL_BASE
 const ResourceList = () => {
-	const [page, setPage] = useState(1)
-	const [selectedResource, setSelectedResource] = useState<ChatbotResource | null>(null)
+	const [selectedResource, setSelectedResource] = useState<any | null>(null)
 	const [deleteId, setDeleteId] = useState<string | null>(null)
 	const [progressMap, setProgressMap] = useState<Map<string, CrawlProgress>>(new Map())
 	const [dialogOpen, setDialogOpen] = useState(false)
-
-	const { data: resourcesData, isLoading, refetch } = useGetResourcesQuery({ page, limit: 10 })
+	const [queryParams, setQueryParams] = useState<RequestKnowledgeSourceDto>({
+		limit: 15,
+		page: 1,
+		query: ''
+	})
+	const { data: resourcesData, isLoading, refetch } = useGetKnowledgeSourcesQuery({ queries: queryParams })
 	const [deleteResource, { isLoading: isDeleting }] = useDeleteResourceMutation()
-	const [retryResource, { isLoading: isRetrying }] = useRetryResourceMutation()
-
+	const navigate = useNavigate()
 	const {
 		isConnected,
 		joinAdminRoom,
@@ -127,21 +150,13 @@ const ResourceList = () => {
 			await deleteResource(deleteId).unwrap()
 			toast.success('Xóa tài nguyên thành công')
 			setDeleteId(null)
+			refetch()
 		} catch (error) {
 			toast.error('Xóa tài nguyên thất bại')
 		}
 	}
 
-	const handleRetry = async (id: string) => {
-		try {
-			await retryResource(id).unwrap()
-			toast.success('Đang xử lý lại tài nguyên...')
-		} catch (error) {
-			toast.error('Thử lại thất bại')
-		}
-	}
-
-	const handleOpenDialog = (resource?: ChatbotResource) => {
+	const handleOpenDialog = (resource?: any) => {
 		setSelectedResource(resource || null)
 		setDialogOpen(true)
 	}
@@ -149,18 +164,45 @@ const ResourceList = () => {
 	const handleCloseDialog = () => {
 		setDialogOpen(false)
 		setSelectedResource(null)
+		refetch() // Refetch sau khi đóng dialog
 	}
 
-	const getProgress = (resource: ChatbotResource) => {
+	const getProgress = (resource: any) => {
 		return progressMap.get(resource._id)
 	}
 
+	const getMappedStatus = (processingStatus: string) => {
+		return statusMap[processingStatus.toLowerCase()] || 'pending'
+	}
+
+	const handleGoto = (resource: any) => {
+		switch (resource.source_type) {
+			case 'FILE':
+				const fileUrl = `${MINIO_DOWNLOAD_URL_BASE}/${resource.source_location}`
+				downloadFileWithURL(fileUrl, resource.name)
+				break
+			case 'URL':
+				window.open(resource.source_location, '_blank')
+				break
+			case 'TOPIC-REGISTERING':
+				navigate(`/detail-topic/${resource.source_location}`)
+				break
+			case 'TOPIC-LIBRARY':
+				navigate(`/detail-topic/${resource.source_location}`)
+				break
+			case 'LECTURER-PROFILE':
+				navigate(`/profile/lecturer/${resource.source_location}`)
+				break
+			default:
+				window.open(resource.source_location, '_blank')
+		}
+	}
 	return (
 		<>
 			<Card className='p-0'>
 				<CardHeader>
-					<div className='flex items-center justify-between'>
-						<div>
+					<div className='flex items-center justify-between gap-1'>
+						<div className='flex flex-col gap-1'>
 							<CardTitle>Danh sách tài nguyên</CardTitle>
 							<CardDescription>Quản lý tài nguyên cho chatbot RAG</CardDescription>
 						</div>
@@ -180,7 +222,7 @@ const ResourceList = () => {
 						</div>
 						<span className='text-sm text-muted-foreground'>•</span>
 						<span className='text-sm text-muted-foreground'>
-							Tổng: {resourcesData?.total || 0} tài nguyên
+							Tổng: {resourcesData?.data.length || 0} tài nguyên
 						</span>
 					</div>
 
@@ -189,10 +231,10 @@ const ResourceList = () => {
 							<TableHeader>
 								<TableRow>
 									<TableHead>Tiêu đề</TableHead>
-									<TableHead>Loại</TableHead>
-									<TableHead>Trạng thái</TableHead>
-									<TableHead>Tiến độ</TableHead>
-									<TableHead>Cập nhật</TableHead>
+									<TableHead className='text-center'>Loại</TableHead>
+									<TableHead className='text-center'>Trạng thái</TableHead>
+									<TableHead className='text-center'>Tiến độ</TableHead>
+									<TableHead className='text-center'>Cập nhật</TableHead>
 									<TableHead className='text-right'>Thao tác</TableHead>
 								</TableRow>
 							</TableHeader>
@@ -219,33 +261,41 @@ const ResourceList = () => {
 								) : (
 									resourcesData?.data.map((resource) => {
 										const progress = getProgress(resource)
+										const mappedStatus = getMappedStatus(resource.processing_status)
 										return (
 											<TableRow key={resource._id}>
 												<TableCell>
 													<div className='flex items-center gap-2'>
 														<div className='max-w-xs'>
-															<p className='truncate font-medium'>{resource.title}</p>
-															{resource.url && (
+															<p className='truncate font-medium'>{resource.name}</p>
+															{resource.source_location && (
 																<a
-																	href={resource.url}
+																	onClick={() => {
+																		handleGoto(resource)
+																	}}
 																	target='_blank'
 																	rel='noopener noreferrer'
-																	className='flex items-center gap-1 truncate text-xs text-blue-500 hover:underline'
+																	className={cn(
+																		'flex items-center gap-1 truncate text-xs text-blue-500 hover:underline',
+																		'cursor-pointer'
+																	)}
 																>
-																	{resource.url.slice(0, 50)}
-																	{resource.url.length > 50 && '...'}
+																	{resource.source_location.slice(0, 50)}
+																	{resource.source_location.length > 50 && '...'}
 																	<ExternalLink className='h-3 w-3 flex-shrink-0' />
 																</a>
 															)}
 														</div>
 													</div>
 												</TableCell>
-												<TableCell>
-													<Badge variant='outline'>{ResourceTypeLabels[resource.type]}</Badge>
+												<TableCell className='flex justify-center'>
+													<Badge variant='outline' className='text-center'>
+														{mapKnowledgeType[resource.source_type] || 'FILE'}
+													</Badge>
 												</TableCell>
 												<TableCell>
-													<Badge className={statusColors[resource.status]}>
-														{ResourceStatusLabels[resource.status]}
+													<Badge className={`${statusColors[mappedStatus]} text-center`}>
+														{statusLabels[mappedStatus]}
 													</Badge>
 												</TableCell>
 												<TableCell>
@@ -269,24 +319,17 @@ const ResourceList = () => {
 														<span className='text-muted-foreground'>-</span>
 													)}
 												</TableCell>
-												<TableCell className='text-sm text-muted-foreground'>
-													{formatDistanceToNow(new Date(resource.updatedAt), {
-														addSuffix: true,
-														locale: vi
-													})}
+												<TableCell className='text-center text-sm text-muted-foreground'>
+													{formatDistanceToNow(
+														new Date(resource.updatedAt || resource.createdAt),
+														{
+															addSuffix: true,
+															locale: vi
+														}
+													)}
 												</TableCell>
 												<TableCell className='text-right'>
 													<div className='flex justify-end gap-2'>
-														{resource.status === 'failed' && (
-															<Button
-																size='sm'
-																variant='outline'
-																onClick={() => handleRetry(resource._id)}
-																disabled={isRetrying}
-															>
-																<RefreshCw className='h-4 w-4' />
-															</Button>
-														)}
 														<Button
 															size='sm'
 															variant='outline'
@@ -311,30 +354,13 @@ const ResourceList = () => {
 							</TableBody>
 						</Table>
 					</div>
-
-					{/* Pagination */}
-					{resourcesData && resourcesData.total > 10 && (
-						<div className='mt-4 flex justify-center gap-2'>
-							<Button
-								variant='outline'
-								size='sm'
-								onClick={() => setPage((p) => Math.max(1, p - 1))}
-								disabled={page === 1}
-							>
-								Trước
-							</Button>
-							<span className='flex items-center px-4 text-sm'>
-								Trang {page} / {Math.ceil(resourcesData.total / 10)}
-							</span>
-							<Button
-								variant='outline'
-								size='sm'
-								onClick={() => setPage((p) => p + 1)}
-								disabled={page >= Math.ceil(resourcesData.total / 10)}
-							>
-								Sau
-							</Button>
-						</div>
+					{isLoading ? (
+						''
+					) : (
+						<CustomPagination
+							meta={resourcesData?.meta!}
+							onPageChange={(page) => setQueryParams((prev) => ({ ...prev, page }))}
+						/>
 					)}
 				</CardContent>
 			</Card>

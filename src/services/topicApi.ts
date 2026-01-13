@@ -33,7 +33,6 @@ export const topicApi = baseApi.injectEndpoints({
 			query: () => `/topics`,
 			transformResponse: (response: ApiResponse<GetPaginatedTopics>) => response.data
 		}),
-
 		getTopicsInPhase: builder.query<
 			PaginatedTopicsInPeriod,
 			{ periodId: string; queries: PaginationTopicsQueryParams }
@@ -283,28 +282,28 @@ export const topicApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: (_result, _error, { phaseId }) => [{ type: 'PhaseTopics', id: phaseId }]
 		}),
-		lecturerUploadFiles: builder.mutation<GetUploadedFileDto[], { topicId: string; files: File[] }>({
-			query: ({ topicId, files }) => {
+		lecturerUploadFiles: builder.mutation<GetUploadedFileDto[], { groupId: string; files: File[] }>({
+			query: ({ groupId, files }) => {
 				const formData = new FormData()
 				files.forEach((file) => formData.append('files', file))
 				return {
-					url: `/topics/${topicId}/lecturer/upload-files`,
+					url: `/topics/in-group/${groupId}/lecturer/upload-files`,
 					method: 'POST',
 					body: formData
 				}
 			},
 			transformResponse: (response: ApiResponse<GetUploadedFileDto[]>) => response.data
 		}),
-		lecturerDeleteFiles: builder.mutation<{ message: string }, { topicId: string; fileIds: string[] }>({
-			query: ({ topicId, fileIds }) => ({
-				url: `/topics/${topicId}/lecturer/delete-files`,
+		lecturerDeleteFiles: builder.mutation<{ message: string }, { groupId: string; fileIds: string[] }>({
+			query: ({ groupId, fileIds }) => ({
+				url: `/topics/in-group/${groupId}/lecturer/delete-files`,
 				method: 'DELETE',
 				body: fileIds // gửi mảng fileIds trong body
 			})
 		}),
-		lecturerDeleteFile: builder.mutation<{ message: string }, { topicId: string; fileId: string }>({
-			query: ({ topicId, fileId }) => ({
-				url: `/topics/${topicId}/lecturer/delete-file?fileId=${fileId}`,
+		lecturerDeleteFile: builder.mutation<{ message: string }, { groupId: string; fileId: string }>({
+			query: ({ groupId, fileId }) => ({
+				url: `/topics/in-group/${groupId}/lecturer/delete-file?fileId=${fileId}`,
 				method: 'DELETE'
 			})
 		}),
@@ -358,13 +357,13 @@ export const topicApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<string[]>) => response.data
 		}),
-		getDocumentsOfTopic: builder.query<GetUploadedFileDto[], { topicId: string }>({
-			query: ({ topicId }) => `/topics/${topicId}/documents`,
+		getDocumentsOfGroup: builder.query<GetUploadedFileDto[], { groupId: string }>({
+			query: ({ groupId }) => `/topics/in-group/${groupId}/documents`,
 			transformResponse: (response: ApiResponse<GetUploadedFileDto[]>) => response.data
 		}),
-		downloadTopicFilesZip: builder.mutation<Blob, { topicId: string }>({
-			query: ({ topicId }) => ({
-				url: `/topics/${topicId}/download-zip`,
+		downloadTopicFilesZip: builder.mutation<Blob, { groupId: string }>({
+			query: ({ groupId }) => ({
+				url: `/topics/in-group/${groupId}/download-zip`,
 				method: 'GET',
 				responseHandler: (response) => response.blob()
 			})
@@ -523,7 +522,7 @@ export const {
 	useDeleteTopicsMutation,
 	useGetMajorComboboxQuery,
 	useGetYearComboboxQuery,
-	useGetDocumentsOfTopicQuery,
+	useGetDocumentsOfGroupQuery,
 	useDownloadTopicFilesZipMutation,
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicsMutation,

@@ -32,7 +32,6 @@ interface MilestonePanelProps {
 export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProps) => {
 	const { groupId } = useParams<{ groupId: string }>()
 	const user = useAppSelector((state) => state.auth)
-	const group = useAppSelector((state) => state.group)
 	const [isOpenAskGotoDefense, setIsOpenAskGotoDefense] = useState(false)
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [isShowCreateModal, setIsShowCreateModal] = useState(false)
@@ -50,7 +49,7 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 		try {
 			await updateMilestone({
 				milestoneId: id,
-				groupId: group.activeGroup!._id!,
+				groupId: groupId!,
 				body: updates
 			})
 			setMilestones((prev) => prev.map((m) => (m._id === id ? { ...m, ...updates } : m)))
@@ -71,7 +70,7 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 		try {
 			const createdMilestone = await createMilestone({
 				...newMilestone,
-				groupId: group.activeGroup!._id!
+				groupId: groupId!
 			}).unwrap()
 			setMilestones((prev) => [...prev, createdMilestone])
 			toast.success('Tạo milestone thành công', { richColors: true })

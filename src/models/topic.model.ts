@@ -9,7 +9,7 @@ import { PaginationQueryParamsDto } from './query-params'
 import type { GetRequirementNameReponseDto } from './requirement.model'
 import type { GetMiniUserDto, MiniActorInforDto, ResponseMiniLecturerDto, ResponseMiniStudentDto } from './users'
 import type { ResponseMilestoneWithTemplate } from './milestone.model'
-import type { is } from 'date-fns/locale'
+export class RequestKnowledgeSourceDto extends PaginationQueryParamsDto {}
 export interface GetDetailGrade {
 	_id: string
 	score: number

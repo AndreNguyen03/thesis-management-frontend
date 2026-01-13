@@ -166,7 +166,7 @@ export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHea
 											type='button'
 											className='w-full px-4 py-2 text-left font-medium hover:bg-muted'
 										>
-											Quản lý các mốc quan trọng
+											Quản lý các cột mốc của khoa
 										</button>
 									</li>
 									<li>

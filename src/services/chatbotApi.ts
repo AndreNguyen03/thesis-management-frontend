@@ -32,13 +32,8 @@ export const chatbotApi = baseApi.injectEndpoints({
 			invalidatesTags: ['ChatbotConfig']
 		}),
 
-		// ========== Knowledge Sources (Legacy) ==========
-		getKnowledgeSources: builder.query<GetPaginatedKnowledgeDto, void>({
-			query: () => `/knowledge-sources`,
-			transformResponse: (response: ApiResponse<GetPaginatedKnowledgeDto>) => response.data,
-			providesTags: ['KnowledgeSources']
-		}),
 
+		
 		// ========== Resources Management (New) ==========
 		getResources: builder.query<
 			GetPaginatedResourcesDto,
@@ -158,7 +153,10 @@ export const chatbotApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<GenerateTopicResponse>) => response.data
 		}),
 
-		applyGeneratedTopic: builder.mutation<ApplyGeneratedResponse, { missingFields: string[]; missingRequirements: string[] }>({
+		applyGeneratedTopic: builder.mutation<
+			ApplyGeneratedResponse,
+			{ missingFields: string[]; missingRequirements: string[] }
+		>({
 			query: (body) => ({ url: `/chatbots/apply-field-requirement`, method: 'POST', body }),
 			transformResponse: (response: ApiResponse<ApplyGeneratedResponse>) => response.data,
 			invalidatesTags: ['ListFields']
@@ -184,7 +182,6 @@ export const chatbotApi = baseApi.injectEndpoints({
 export const {
 	useGetChatbotVersionQuery,
 	useUpdateChatbotVersionMutation,
-	useGetKnowledgeSourcesQuery,
 	useGetResourcesQuery,
 	useGetResourceQuery,
 	useCreateResourceMutation,

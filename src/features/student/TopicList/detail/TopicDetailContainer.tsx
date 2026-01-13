@@ -368,7 +368,8 @@ export const TopicDetailContainer = () => {
 				await leaveTopic({ topicId: topic._id }).unwrap()
 				toast({
 					title: 'Thành công',
-					description: 'Hủy đăng ký đề tài thành công'
+					description: 'Hủy đăng ký đề tài thành công',
+					variant: 'success'
 				})
 				refetch()
 			} catch (error) {
@@ -893,12 +894,14 @@ export const TopicDetailContainer = () => {
 									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.students.approvedStudents.length}/${topic.maxStudents})`}</h4>
 								</div>
 								<div className='flex flex-col gap-4'>
-									{currentTopic.students.approvedStudents.length > 0 &&
-									isAbleInOpenRegistrationPhase ? (
+									{currentTopic.students.approvedStudents.length > 0	 ? (
 										currentTopic.students.approvedStudents.map((student) => (
 											<div
 												key={student._id}
 												className='flex cursor-pointer items-start gap-3 py-1 hover:bg-gray-100'
+												onClick={() => {
+													navigate(`/profile/student/${student.student._id}`)
+												}}
 											>
 												<div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
 													{student.student.avatarUrl ? (
@@ -1060,37 +1063,58 @@ export const TopicDetailContainer = () => {
 									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.lecturers.length})`}</h4>
 								</div>
 								<div className='flex flex-col gap-4'>
-									{currentTopic.lecturers.map((lecturer) => (
-										<div
-											key={lecturer._id}
-											className='flex items-start gap-3 py-1 hover:bg-gray-100'
-										>
-											<div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
-												{lecturer.avatarUrl ? (
-													<img
-														src={lecturer.avatarUrl}
-														alt={lecturer.fullName}
-														className='h-10 w-10 rounded-full object-cover'
-													/>
-												) : (
-													<User className='h-5 w-5 text-primary' />
-												)}
-											</div>
-											<div className='min-w-0 flex-1'>
-												<p className='flex gap-2 font-medium text-foreground'>
-													{`${lecturer.title} ${lecturer.fullName}`}{' '}
-													<span className='font-normal text-gray-500'>
-														{lecturer.roleInTopic}
-													</span>
-												</p>
+									{currentTopic.lecturers.length > 0 ? (
+										currentTopic.lecturers.map((lecturer) => (
+											<div
+												key={lecturer._id}
+												className='flex cursor-pointer items-start gap-3 py-1 hover:bg-gray-100'
+												onClick={() => {
+													navigate(`/profile/lecturer/${lecturer._id}`)
+												}}
+											>
+												<div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
+													{lecturer.avatarUrl ? (
+														<img
+															src={lecturer.avatarUrl}
+															alt={lecturer.fullName}
+															className='h-10 w-10 rounded-full object-cover'
+														/>
+													) : (
+														<User className='h-5 w-5 text-primary' />
+													)}
+												</div>
+												<div className='min-w-0 flex-1'>
+													<p className='flex gap-2 font-medium text-foreground'>
+														{`${lecturer.title} ${lecturer.fullName}`}{' '}
+														<span className='font-normal text-gray-500'>
+															{lecturer.roleInTopic}
+														</span>
+													</p>
 
-												<p className='truncate text-sm text-muted-foreground'>
-													{lecturer.email}
-												</p>
-												<p className='text-xs text-muted-foreground'>{lecturer.facultyName}</p>
+													<p className='truncate text-sm text-muted-foreground'>
+														{lecturer.email}
+													</p>
+													<p className='text-xs text-muted-foreground'>
+														{lecturer.facultyName}
+													</p>
+												</div>
 											</div>
-										</div>
-									))}
+										))
+									) : (
+										<>
+											<div className='flex flex-col items-center justify-center text-center'>
+												<div className='mb-3 rounded-full bg-gray-50 p-3'>
+													<User className='h-6 w-6 text-gray-300' />
+												</div>
+												<p className='text-sm font-medium text-gray-500'>
+													Giảng viên hướng dẫn sẽ hiển thị ở đây
+												</p>
+												<p className='text-xs text-gray-400'>
+													Giảng viên HD chính và đồng hướng dẫn
+												</p>
+											</div>
+										</>
+									)}
 									{user &&
 										((isAbleInDraftOrSubmitPhase && user.role === 'lecturer') ||
 											user.role === 'faculty_board') &&
