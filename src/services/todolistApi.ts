@@ -47,7 +47,13 @@ export const taskApi = baseApi.injectEndpoints({
 				}
 			},
 			transformResponse: (response: ApiResponse<Task[]>) => response.data,
-			providesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
+			providesTags: (result, _error, { groupId }) =>
+				result
+					? [
+							...result.map((task) => ({ type: 'Task' as const, id: task._id })),
+							{ type: 'TaskList', id: groupId }
+						]
+					: [{ type: 'TaskList', id: groupId }]
 		}),
 		createTask: builder.mutation<Task, CreateTaskPayload>({
 			query: (payload) => ({
@@ -55,7 +61,11 @@ export const taskApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: payload
 			}),
-			transformResponse: (response: ApiResponse<Task>) => response.data
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: (_r, _e, { groupId }) => [
+				{ type: 'TaskList', id: groupId },
+				{ type: 'Milestones', id: groupId }
+			]
 		}),
 		updateTaskInfo: builder.mutation<Task, { taskId: string; groupId?: string; updates: RequestUpdate }>({
 			query: ({ taskId, updates }) => ({
@@ -64,7 +74,10 @@ export const taskApi = baseApi.injectEndpoints({
 				body: updates
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
-			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
+			invalidatesTags: (_r, _e, { taskId, groupId }) => [
+				{ type: 'Task', id: taskId },
+				{ type: 'TaskList', id: groupId }
+			]
 		}),
 		updateTaskStatus: builder.mutation<Task, { taskId: string; groupId?: string; status: string }>({
 			query: ({ taskId, status }) => ({
@@ -72,7 +85,11 @@ export const taskApi = baseApi.injectEndpoints({
 				method: 'PATCH'
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
-			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
+			invalidatesTags: (_r, _e, { taskId, groupId }) => [
+				{ type: 'Task', id: taskId },
+				{ type: 'TaskList', id: groupId },
+				{ type: 'Milestones', id: groupId }
+			]
 		}),
 		deleteTask: builder.mutation<string, { taskId: string; groupId?: string }>({
 			query: ({ taskId }) => ({
@@ -80,22 +97,42 @@ export const taskApi = baseApi.injectEndpoints({
 				method: 'DELETE'
 			}),
 			transformResponse: (response: ApiResponse<string>) => response.data,
-			invalidatesTags: (_result, _error, { groupId }) => [{ type: 'Milestones', id: groupId }]
+			invalidatesTags: (_r, _e, { taskId, groupId }) => [
+				{ type: 'Task', id: taskId },
+				{ type: 'TaskList', id: groupId }
+			]
 		}),
-		createSubtask: builder.mutation<Subtask, { taskId: string; columnId: string; title: string }>({
-			query: ({ taskId, columnId, title }) => ({
-				url: `/tasks/${taskId}/columns/${columnId}/subtasks`,
-				method: 'POST',
-				body: { title }
-			}),
-			transformResponse: (response: ApiResponse<Subtask>) => response.data
-		}),
-		deleteSubtask: builder.mutation<Task, { taskId: string; columnId: string; subtaskId: string }>({
+		createSubtask: builder.mutation<Subtask, { taskId: string; columnId: string; title: string; groupId?: string }>(
+			{
+				query: ({ taskId, columnId, title }) => ({
+					url: `/tasks/${taskId}/columns/${columnId}/subtasks`,
+					method: 'POST',
+					body: { title }
+				}),
+				transformResponse: (response: ApiResponse<Subtask>) => response.data,
+				invalidatesTags: (_r, _e, { taskId, groupId }) => [
+					{ type: 'Task', id: taskId },
+					{ type: 'TaskDetail', id: taskId },
+					{ type: 'TaskList', id: groupId },
+					{ type: 'Milestones', id: groupId }
+				]
+			}
+		),
+		deleteSubtask: builder.mutation<
+			Task,
+			{ taskId: string; columnId: string; subtaskId: string; groupId?: string }
+		>({
 			query: ({ taskId, columnId, subtaskId }) => ({
 				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}`,
 				method: 'DELETE'
 			}),
-			transformResponse: (response: ApiResponse<Task>) => response.data
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: (_r, _e, { taskId, groupId }) => [
+				{ type: 'Task', id: taskId },
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'TaskList', id: groupId },
+				{ type: 'Milestones', id: groupId }
+			]
 		}),
 		updateSubtask: builder.mutation<
 			Task,
@@ -104,6 +141,7 @@ export const taskApi = baseApi.injectEndpoints({
 				columnId: string
 				subtaskId: string
 				updates: UpdatePayload
+				groupId?: string
 			}
 		>({
 			query: ({ taskId, columnId, subtaskId, updates }) => ({
@@ -112,15 +150,29 @@ export const taskApi = baseApi.injectEndpoints({
 				body: updates
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
-			invalidatesTags: ['TaskDetail']
+			invalidatesTags: (_r, _e, { taskId, subtaskId, groupId }) => [
+				{ type: 'Task', id: taskId },
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'SubtaskDetail', id: subtaskId },
+				{ type: 'TaskList', id: groupId },
+				{ type: 'Milestones', id: groupId }
+			]
 		}),
-		toggleSubtaskComplete: builder.mutation<Task, { taskId: string; columnId: string; subtaskId: string }>({
+		toggleSubtaskComplete: builder.mutation<
+			Task,
+			{ taskId: string; columnId: string; subtaskId: string; groupId?: string }
+		>({
 			query: ({ taskId, columnId, subtaskId }) => ({
 				url: `/tasks/${taskId}/columns/${columnId}/subtasks/${subtaskId}/toggle`,
 				method: 'PATCH'
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
-			invalidatesTags: ['TaskDetail']
+			invalidatesTags: (_r, _e, { taskId, groupId }) => [
+				{ type: 'Task', id: taskId },
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'TaskList', id: groupId },
+				{ type: 'Milestones', id: groupId }
+			]
 		}),
 		updateTaskColumns: builder.mutation<Task, { taskId: string; columns: TaskColumn[] }>({
 			query: ({ taskId, columns }) => ({
@@ -128,25 +180,46 @@ export const taskApi = baseApi.injectEndpoints({
 				method: 'PUT',
 				body: columns
 			}),
-			transformResponse: (response: ApiResponse<Task>) => response.data
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: (_r, _e, { taskId }) => [{ type: 'TaskDetail', id: taskId }]
 		}),
-		moveInColumn: builder.mutation<Task, { taskId: string; columnId: string; oldPos: number; newPos: number }>({
+		moveInColumn: builder.mutation<
+			Task,
+			{ taskId: string; columnId: string; oldPos: number; newPos: number; groupId?: string }
+		>({
 			query: ({ taskId, columnId, oldPos, newPos }) => ({
 				url: `/tasks/${taskId}/columns/${columnId}/move?oldPos=${oldPos}&newPos=${newPos}`,
 				method: 'PATCH'
 			}),
-			transformResponse: (response: ApiResponse<Task>) => response.data
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: (_r, _e, { taskId, groupId }) => [
+				{ type: 'Task', id: taskId },
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'TaskList', id: groupId }
+			]
 		}),
 		moveToNewColumn: builder.mutation<
 			Task,
-			{ taskId: string; newColumnId: string; oldColumnId: string; newPos: number; subTaskId: string }
+			{
+				taskId: string
+				newColumnId: string
+				oldColumnId: string
+				newPos: number
+				subTaskId: string
+				groupId?: string
+			}
 		>({
 			query: ({ taskId, newColumnId, oldColumnId, newPos, subTaskId }) => ({
 				url: `/tasks/${taskId}/move`,
 				method: 'PATCH',
 				body: { newColumnId, oldColumnId, newPos, subTaskId }
 			}),
-			transformResponse: (response: ApiResponse<Task>) => response.data
+			transformResponse: (response: ApiResponse<Task>) => response.data,
+			invalidatesTags: (_r, _e, { taskId, groupId }) => [
+				{ type: 'Task', id: taskId },
+				{ type: 'TaskDetail', id: taskId },
+				{ type: 'TaskList', id: groupId }
+			]
 		}),
 		updateTaskMilestone: builder.mutation<Task, { taskId: string; groupId?: string; milestoneId?: string }>({
 			query: ({ taskId, milestoneId }) => ({

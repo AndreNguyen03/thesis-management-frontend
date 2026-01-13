@@ -22,7 +22,7 @@ export const SubtaskDetailModal = ({
 	const { data: subtask, isLoading, error } = useGetSubtaskDetailQuery({ taskId, columnId, subtaskId })
 	return (
 		<Dialog open={true} onOpenChange={onClose}>
-			<DialogContent className='max-h-[90vh] max-w-[90vw] gap-0 overflow-hidden bg-white p-0' hideClose>
+			<DialogContent className='max-h-[90vh] max-w-[70vw] gap-0 overflow-hidden bg-white p-0' hideClose>
 				{isLoading && (
 					<div className='flex h-96 items-center justify-center'>
 						<Loader2 className='h-8 w-8 animate-spin text-primary' />

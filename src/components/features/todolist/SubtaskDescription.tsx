@@ -35,7 +35,7 @@ export const SubtaskDescription = ({ taskId, columnId, subtaskId, initialDescrip
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to update description',
+				description: 'Failed to update description'+ error,
 				variant: 'destructive'
 			})
 		}

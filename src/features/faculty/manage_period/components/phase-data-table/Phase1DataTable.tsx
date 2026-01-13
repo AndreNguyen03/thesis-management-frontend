@@ -1,7 +1,6 @@
 import { CustomPagination } from '@/components/PaginationBar'
 import { Button } from '@/components/ui'
 import { Checkbox } from '@/components/ui/checkbox'
-import type { TableAction } from '@/components/ui/DataTable/types'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { type ApiError, type GeneralTopic, type PaginatedGeneralTopics } from '@/models'
 import { PeriodPhaseName, type PaginatedTopicsInPeriod, type PhaseType } from '@/models/period.model'
@@ -9,18 +8,21 @@ import {
 	useFacuBoardApproveTopicMutation,
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicMutation,
-	useFacuBoardRejectTopicsMutation
+	useFacuBoardRejectTopicsMutation,
+	useFacuBoardRequestEditTopicMutation
 } from '@/services/topicApi'
-import { Check, CheckCircle, Eye, Loader2, XCircle } from 'lucide-react'
+import { Check, CheckCircle, Eye, Edit, Loader2, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import EditRequestModal from '../modals/EditRequestModal'
 
 // Badge màu cho trạng thái
 const statusMap: Record<string, { label: string; color: string }> = {
 	draft: { label: 'Bản nháp', color: 'text-center bg-gray-100 text-gray-700' },
 	submitted: { label: 'Đã nộp', color: 'text-center bg-yellow-100 text-yellow-700' },
 	under_review: { label: 'Đang xét duyệt', color: 'text-center bg-blue-100 text-blue-700' },
+	need_adjust: { label: 'Chỉnh sửa', color: 'text-center bg-purple-100 text-purple-700' },
 	approved: { label: 'Đã duyệt', color: 'text-center bg-green-100 text-green-700' },
 	rejected: { label: 'Bị từ chối', color: 'text-center bg-red-100 text-red-700' },
 	pending_registration: { label: 'Mở đăng ký', color: 'text-center bg-purple-100 text-purple-700' },
@@ -61,12 +63,39 @@ const Phase1DataTable = ({
 	const handleGoDetail = (_id: string) => {
 		navigate(`/detail-topic/${_id}`)
 	}
+
 	const { id: periodId } = useParams()
 	const [isChoosingMany, setIsChoosingMany] = useState(false)
+	const [editModalOpen, setEditModalOpen] = useState(false)
+	const [editTopic, setEditTopic] = useState<GeneralTopic | null>(null)
+	const [requestEditTopic, { isLoading: isRequestingEdit }] = useFacuBoardRequestEditTopicMutation()
 	const [approveTopic, { isLoading: isLoadingApprove }] = useFacuBoardApproveTopicMutation()
 	const [approveTopics, { isLoading: isLoadingApproveMany }] = useFacuBoardApproveTopicsMutation()
 	const [rejectTopics, { isLoading: isLoadingRejectMany }] = useFacuBoardRejectTopicsMutation()
 	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()
+
+	const handleConfirmEditRequest = async (content: string) => {
+        console.log('editTopic   ', editTopic, content)
+		if (!editTopic) return
+
+		try {
+			await requestEditTopic({
+				topicId: editTopic!._id,
+				phaseId,
+				periodId: periodId!,
+				comment: content
+			}).unwrap()
+
+			toast.success('Đã gửi yêu cầu chỉnh sửa', { richColors: true })
+
+			setEditModalOpen(false)
+			setEditTopic(null)
+			refetch()
+		} catch (err) {
+			toast.error('Gửi yêu cầu chỉnh sửa thất bại', { richColors: true })
+		}
+	}
+
 	const handleApprove = async (topicId: string) => {
 		try {
 			await approveTopic({ topicId, phaseId: phaseId, periodId: periodId! }).unwrap()
@@ -119,6 +148,7 @@ const Phase1DataTable = ({
 							{isLoadingApproveMany && <Loader2 className='mr-2 inline-block h-4 w-4 animate-spin' />}
 							Duyệt ({selectedTopics.length})
 						</Button>
+
 						<Button
 							onClick={handleRejectMany}
 							className='hover:bg-red-550 h-fit bg-red-500 px-2 py-1 text-white'
@@ -148,6 +178,7 @@ const Phase1DataTable = ({
 					</Button>
 				)}
 			</div>
+
 			<div className='overflow-x-auto rounded-lg border'>
 				<table className='min-w-full bg-white'>
 					<thead>
@@ -237,6 +268,7 @@ const Phase1DataTable = ({
 										>
 											<Eye className='h-5 w-5 text-blue-500' />
 										</button>
+
 										{hic.lastStatusInPhaseHistory.status === 'submitted' && (
 											<>
 												<button
@@ -252,6 +284,16 @@ const Phase1DataTable = ({
 													onClick={() => handleReject(hic._id)}
 												>
 													<XCircle className='h-5 w-5 text-red-500' />
+												</button>
+												<button
+													className='rounded-full p-2 transition-colors hover:bg-gray-100'
+													onClick={() => {
+														setEditTopic(hic)
+														setEditModalOpen(true)
+													}}
+													disabled={isRequestingEdit}
+												>
+													<Edit className='h-5 w-5 text-indigo-500' />
 												</button>
 											</>
 										)}
@@ -294,6 +336,15 @@ const Phase1DataTable = ({
 						)}
 					</tbody>
 				</table>
+				<EditRequestModal
+					open={editModalOpen}
+					topic={editTopic}
+					onClose={() => {
+						setEditModalOpen(false)
+						setEditTopic(null)
+					}}
+					onConfirm={handleConfirmEditRequest}
+				/>
 			</div>
 		</div>
 	)

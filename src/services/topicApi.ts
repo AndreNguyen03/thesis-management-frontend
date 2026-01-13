@@ -18,11 +18,12 @@ import type {
 	DetailTopicsInDefenseMilestone,
 	UpdateDefenseResultDto,
 	PaginationRegisteredTopicsQueryParams,
-	PaginationDraftTopicsQueryParams
+	PaginationDraftTopicsQueryParams,
+	AllSubmittedTopicsParamsDto
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
-import type { PaginatedTopicInBatchMilestone, ResponseMilestoneWithTemplate } from '@/models/milestone.model'
+import type { PaginatedTopicInBatchMilestone } from '@/models/milestone.model'
 import type { PaginatedTopicsInPeriod } from '@/models/period.model'
 import { buildQueryString, type PaginationQueryParamsDto } from '@/models/query-params'
 
@@ -100,6 +101,14 @@ export const topicApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<PaginatedSubmittedTopics>) => response.data,
 			providesTags: (result, error, args) => [{ type: 'LecturerSubmittedTopics', id: args.periodId }]
 		}),
+		getAllSubmittedTopics: builder.query<PaginatedSubmittedTopics, AllSubmittedTopicsParamsDto>({
+			query: (queries) => {
+				const queryString = buildQueryString(queries)
+				return `/topics/lecturer/get-all-submitted-topics?${queryString}`
+			},
+			transformResponse: (response: ApiResponse<PaginatedSubmittedTopics>) => response.data,
+			providesTags: (result, error, args) => [{ type: 'LecturerSubmittedTopics', id: args.periodId }]
+		}),
 		createTopic: builder.mutation<CreateTopicResponse, CreateTopicRequest>({
 			query: ({ topicData, files }) => {
 				const formData = new FormData()
@@ -154,6 +163,21 @@ export const topicApi = baseApi.injectEndpoints({
 			query: ({ topicId }) => ({
 				url: `/topics/faculty-board/approve-topic/${topicId}`,
 				method: 'PATCH'
+			}),
+			invalidatesTags: (_result, _error, { phaseId, periodId }) => [
+				{ type: 'PhaseTopics', id: phaseId },
+				{ type: 'LecturerSubmittedTopics', id: periodId }
+			]
+		}),
+
+		facuBoardRequestEditTopic: builder.mutation<
+			{ message: string },
+			{ topicId: string; phaseId: string; periodId: string; comment: string }
+		>({
+			query: ({ topicId, comment }) => ({
+				url: `/topics/faculty-board/request-edit-topic/${topicId}`,
+				method: 'PATCH',
+				body: { comment }
 			}),
 			invalidatesTags: (_result, _error, { phaseId, periodId }) => [
 				{ type: 'PhaseTopics', id: phaseId },
@@ -286,10 +310,10 @@ export const topicApi = baseApi.injectEndpoints({
 		}),
 		updateTopic: builder.mutation<
 			{ messsage: string },
-			{ topicId: string; periodId: string; body: UpdateTopicPayload }
+			{ topicId: string; body: UpdateTopicPayload }
 		>({
-			query: ({ topicId, periodId, body }) => ({
-				url: `/topics/${topicId}/in-period/${periodId}`,
+			query: ({ topicId, body }) => ({
+				url: `/topics/${topicId}/in-period`,
 				method: 'PATCH',
 				body
 			})
@@ -503,11 +527,13 @@ export const {
 	useDownloadTopicFilesZipMutation,
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicsMutation,
+    useFacuBoardRequestEditTopicMutation,
 	useLecturerGetTopicsInPhaseQuery,
 	useGetTopicsAwaitingEvaluationInPeriodQuery,
 	useGetTopicApprovalRegistrationQuery,
 	useGetDetailTopicsInDefenseMilestonesQuery,
 	useBatchUpdateDefenseResultsMutation,
 	useBatchPublishDefenseResultsMutation,
-	useArchiveTopicsMutation
+	useArchiveTopicsMutation,
+	useGetAllSubmittedTopicsQuery
 } = topicApi

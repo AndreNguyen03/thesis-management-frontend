@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useAppSelector } from '@/store'
 import { getUserIdFromAppUser } from '@/utils/utils'
+import { Avatar } from '@/features/shared/workspace/components/Avatar'
 
 interface TaskCommentsProps {
 	taskId: string
@@ -54,14 +55,14 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 	const [existingFiles, setExistingFiles] = useState<FileInfo[]>([])
 	const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null)
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-	const [isDragging, setIsDragging] = useState(false)
+	// const [isDragging, setIsDragging] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const editFileInputRef = useRef<HTMLInputElement>(null)
 
 	const [addComment, { isLoading: isAdding }] = useAddCommentMutation()
 	const [addCommentWithFiles, { isLoading: isAddingWithFiles }] = useAddCommentWithFilesMutation()
 	const [updateComment, { isLoading: isUpdating }] = useUpdateCommentMutation()
-	const [updateCommentWithFiles, { isLoading: isUpdatingWithFiles }] = useUpdateCommentWithFilesMutation()
+	const [updateCommentWithFiles] = useUpdateCommentWithFilesMutation()
 	const [deleteComment, { isLoading: isDeleting }] = useDeleteCommentMutation()
 
 	const currentUser = useAppSelector((state) => state.auth.user)
@@ -101,28 +102,28 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to add comment',
+				description: 'Failed to add comment ' + error,
 				variant: 'destructive'
 			})
 		}
 	}
 
-	const handleDragOver = (e: React.DragEvent) => {
-		e.preventDefault()
-		setIsDragging(true)
-	}
+	// const handleDragOver = (e: React.DragEvent) => {
+	// 	e.preventDefault()
+	// 	setIsDragging(true)
+	// }
 
-	const handleDragLeave = (e: React.DragEvent) => {
-		e.preventDefault()
-		setIsDragging(false)
-	}
+	// const handleDragLeave = (e: React.DragEvent) => {
+	// 	e.preventDefault()
+	// 	setIsDragging(false)
+	// }
 
-	const handleDrop = (e: React.DragEvent) => {
-		e.preventDefault()
-		setIsDragging(false)
-		const files = Array.from(e.dataTransfer.files)
-		handleFiles(files)
-	}
+	// const handleDrop = (e: React.DragEvent) => {
+	// 	e.preventDefault()
+	// 	setIsDragging(false)
+	// 	const files = Array.from(e.dataTransfer.files)
+	// 	handleFiles(files)
+	// }
 
 	const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files) {
@@ -242,7 +243,7 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to update comment',
+				description: 'Failed to update comment'+ error,
 				variant: 'destructive'
 			})
 		}
@@ -265,7 +266,7 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to delete comment',
+				description: 'Failed to delete comment'+ error,
 				variant: 'destructive'
 			})
 		}
@@ -384,19 +385,10 @@ export const TaskComments = ({ taskId, comments, task }: TaskCommentsProps) => {
 							<div key={comment._id} className='group flex gap-3'>
 								{/* Avatar */}
 								<div className='flex-shrink-0'>
-									{comment.user?.avatarUrl ? (
-										<img
-											src={comment.user.avatarUrl}
-											alt={comment.user.fullName}
-											className='h-8 w-8 rounded-full'
-										/>
-									) : (
-										<div className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10'>
-											<span className='text-xs font-medium'>
-												{comment.user?.fullName?.charAt(0) || 'U'}
-											</span>
-										</div>
-									)}
+									<Avatar
+										fullName={comment.user?.fullName || 'U'}
+										avatarUrl={comment.user?.avatarUrl || ''}
+									/>
 								</div>
 
 								{/* Comment Content */}

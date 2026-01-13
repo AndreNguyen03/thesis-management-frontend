@@ -6,7 +6,6 @@ import { useState, type ReactNode } from 'react'
 import { Breadcrumbs } from '../ui/Breadcrumbs'
 import { BreadcrumbProvider } from '../../contexts/BreadcrumbContext'
 import { useAppSelector } from '../../store'
-import { AIAssistant } from '../ai-assistant/AIAssistant'
 import { useLocation } from 'react-router-dom'
 
 import type { AppUser } from '@/models'
@@ -54,7 +53,6 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 	}
 
 	const location = useLocation()
-	const isAICurrentPage = location.pathname === '/ai-chat'
 	return (
 		<>
 			{/* Header fixed at top */}
@@ -110,8 +108,7 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 						<FlashBanner />
 					</main>
 				</div>
-				{/* AI Assistant floating or fixed as needed */}
-				{!isAICurrentPage && <AIAssistant open={openAI} onClose={() => setOpenAI(false)} />}
+		
 			</div>
 		</>
 	)

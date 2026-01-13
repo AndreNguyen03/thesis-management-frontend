@@ -125,7 +125,7 @@ export const MilestoneSelector = ({
 													{formatDate(milestone.dueDate)}
 												</span>
 												<span className='rounded bg-secondary px-2 py-0.5'>
-													{milestone.progress}%
+													{milestone.progress.toFixed(2)}%
 												</span>
 											</div>
 										</div>

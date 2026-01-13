@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import type { TopicStatus } from '@/models';
+import type { TopicStatus } from '@/models'
 
 interface StatusBadgeProps {
 	status: TopicStatus
@@ -13,6 +13,7 @@ const statusConfig: Record<
 	draft: { label: 'Bản nháp', variant: 'secondary' },
 	submitted: { label: 'Đã nộp', variant: 'default' },
 	under_review: { label: 'Đang xét duyệt', variant: 'warning' },
+	need_adjust: { label: 'Cần điều chỉnh', variant: 'warning' },
 	approved: { label: 'Đã phê duyệt', variant: 'success' },
 	rejected: { label: 'Bị từ chối', variant: 'destructive' },
 	// Phase 2
@@ -31,7 +32,7 @@ const statusConfig: Record<
 	graded: { label: 'Đã chấm điểm', variant: 'success' },
 	reviewed: { label: 'Đã nhận xét', variant: 'success' },
 	archived: { label: 'Lưu trữ', variant: 'secondary' },
-	rejected_final: { label: 'Không đạt', variant: 'destructive' },
+	rejected_final: { label: 'Không đạt', variant: 'destructive' }
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {

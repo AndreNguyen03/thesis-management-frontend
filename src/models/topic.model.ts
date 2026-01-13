@@ -94,8 +94,8 @@ export interface GeneralTopic extends AbstractTopic {
 	progress?: number
 	finalGrade?: number
 	defenseMilestoneDate?: Date
-    userRegistrationStatus?: string
-    approvedStudentsNum?: number
+	userRegistrationStatus?: string
+	approvedStudentsNum?: number
 }
 
 //Định nghĩa đề tài trong thư viện số
@@ -229,6 +229,7 @@ export type TopicStatus =
 	| 'under_review'
 	| 'approved'
 	| 'rejected'
+	| 'need_adjust'
 	// Pha 2 - Mở đăng ký
 	| 'pending_registration'
 	| 'registered'
@@ -250,6 +251,7 @@ export const TopicStatus = {
 	DRAFT: 'draft',
 	SUBMITTED: 'submitted',
 	UNDER_REVIEW: 'under_review',
+	NEED_ADJUST: 'need_adjust',
 	APPROVED: 'approved',
 	REJECTED: 'rejected',
 	AVAILABLE: 'available',
@@ -280,7 +282,7 @@ export const topicStatusLabels = {
 	draft: { name: 'Bản nháp', css: 'bg-gray-200 text-gray-800' },
 	submitted: { name: 'Đã nộp', css: 'bg-yellow-200 text-yellow-800' },
 	under_review: { name: 'Đã xem', css: 'bg-blue-200 text-blue-800' },
-	revision_required: { name: 'Yêu cầu sửa', css: 'bg-orange-200 text-orange-800' },
+	need_adjust: { name: 'Yêu cầu sửa', css: 'bg-orange-200 text-orange-800' },
 	approved: { name: 'Đã duyệt', css: 'bg-green-200 text-green-800' },
 	rejected: { name: 'Bị từ chối', css: 'bg-red-200 text-red-800' },
 	pending_registration: { name: 'Mở  đăng ký', css: 'bg-purple-200 text-purple-800' },
@@ -392,8 +394,13 @@ export interface DefenseResult {
 export interface SubmittedTopicParamsDto extends PaginationQueryParamsDto {
 	periodId?: string
 }
+
+export interface AllSubmittedTopicsParamsDto extends PaginationQueryParamsDto {
+	periodId?: string
+}
+
 export interface StudentRegistration {
-    _id:string
+	_id: string
 	studentId: string
 	studentName: string
 	status: 'pending' | 'approved' | 'rejected'
@@ -409,7 +416,7 @@ export interface TopicApproval {
 	titleVN: string
 	type: string
 	deleted_at: string | null
-    maxStudents: number
+	maxStudents: number
 	allowManualApproval: boolean
 	pendingStudents: StudentRegistration[]
 	approvedStudents: StudentRegistration[]
@@ -423,7 +430,7 @@ export interface PaginatedTopicApproval {
 
 export interface ApprovalTopicQueryParams extends PaginationQueryParamsDto {
 	periodId?: string
-	type?: string 
+	type?: string
 	allowManualApproval?: boolean | 'all'
 	onlyPending?: boolean | 'all'
 }

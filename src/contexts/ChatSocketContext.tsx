@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // context/ChatContext.tsx
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
@@ -153,8 +154,13 @@ const ChatProvider: React.FC<{
 					// Push mới nếu chưa tồn tại
 					return { ...prev, [groupId]: [...list, message] }
 				})
+				// Chỉ set hasUnreadDirect nếu là direct message (không phải group workspace)
 				if (message.senderId !== userId) {
-					setHasUnreadDirect(true)
+					const isDirectMessage = directSidebars.some((g) => g._id === message.groupId)
+                    console.log('isDirectMessage', isDirectMessage)
+					if (isDirectMessage) {
+						setHasUnreadDirect(true)
+					}
 				}
 			}
 		)
@@ -298,7 +304,7 @@ const ChatProvider: React.FC<{
 			unsubGroupLastMessage()
 			unsubDirectLastMessage()
 		}
-	}, [userId, groupSidebars])
+	}, [userId])
 
 	/* ========== ACTIONS (EMIT) ========== */
 
@@ -324,11 +330,31 @@ const ChatProvider: React.FC<{
 				lastSeenAtByUser: {}
 			}
 
-			// 1️⃣ Optimistic push
+			// 1️⃣ Optimistic push messages
 			setMessagesByGroup((prev) => ({
 				...prev,
 				[data.groupId]: [...(prev[data.groupId] ?? []), optimisticMessage]
 			}))
+
+			// 1.5️⃣ Optimistic update groupSidebars với lastMessage
+			setGroupSidebars((prev) =>
+				prev.map((g) => {
+					if (g._id !== data.groupId) return g
+
+					const sender = g.participants.find((p) => p._id === userId)
+
+					return {
+						...g,
+						lastMessage: {
+							content: data.content,
+							senderId: userId,
+							createdAt: optimisticMessage.createdAt,
+							fullName: sender?.fullName
+						},
+						updatedAt: optimisticMessage.createdAt
+					}
+				})
+			)
 
 			// 2️⃣ Emit kèm clientTempId
 			socketService.emit(CHAT_NS, 'send_group_message', {
@@ -336,7 +362,7 @@ const ChatProvider: React.FC<{
 				clientTempId
 			})
 		},
-		[userId]
+		[userId, setGroupSidebars]
 	)
 
 	const sendTyping = (groupId: string, isTyping: boolean) => {

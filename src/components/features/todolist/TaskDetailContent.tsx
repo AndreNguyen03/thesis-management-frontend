@@ -17,6 +17,8 @@ import { TaskLabels } from './TaskLabels'
 import { TaskDueDate } from './TaskDueDate'
 import { Checkbox } from '@/components/ui/checkbox'
 import { SubtaskDetailModal } from './SubtaskDetailModal'
+import { Avatar } from '@/features/shared/workspace/components/Avatar'
+import type { SubTaskUser } from '@/models/todolist.model'
 
 interface TaskDetailContentProps {
 	task: TaskDetail
@@ -61,8 +63,8 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 					<Badge className={`${getStatusColor(task.status)} text-white`}>{task.status}</Badge>
 					<h2 className='truncate text-xl font-semibold'>{task.title}</h2>
 				</div>
-				<Button variant='ghost' size='icon' onClick={onClose}>
-					<X className='h-5 w-5' />
+				<Button variant='ghost' size='icon' className='hover:text-red-400' onClick={onClose}>
+					<X className='!h-6 !w-6' />
 				</Button>
 			</div>
 
@@ -122,12 +124,10 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 																	<div className='flex -space-x-2'>
 																		{subtask.assignees
 																			.slice(0, 3)
-																			.map((assignee: any) => (
-																				<img
-																					key={assignee._id}
-																					src={assignee.avatar}
-																					alt={assignee.fullname}
-																					className='h-6 w-6 rounded-full border-2 border-background'
+																			.map((assignee: SubTaskUser) => (
+																				<Avatar
+																					fullName={assignee.fullName}
+																					avatarUrl={assignee.avatarUrl}
 																				/>
 																			))}
 																	</div>
@@ -199,19 +199,10 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 								<span className='text-sm font-medium text-muted-foreground'>Người báo cáo</span>
 							</div>
 							<div className='flex items-center gap-2'>
-								{task.reporter?.avatarUrl ? (
-									<img
-										src={task.reporter.avatarUrl}
-										alt={task.reporter.fullName}
-										className='h-8 w-8 rounded-full'
-									/>
-								) : (
-									<div className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10'>
-										<span className='text-xs font-medium'>
-											{task.reporter?.fullName?.charAt(0) || 'U'}
-										</span>
-									</div>
-								)}
+								<Avatar
+									fullName={task.reporter?.fullName}
+									avatarUrl={task.reporter?.avatarUrl}
+								/>
 								<div className='text-sm'>
 									<div className='font-medium'>{task.reporter?.fullName || 'Unknown'}</div>
 									<div className='text-xs text-muted-foreground'>{task.reporter?.email}</div>

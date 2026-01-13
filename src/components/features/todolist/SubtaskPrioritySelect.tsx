@@ -30,7 +30,7 @@ export const SubtaskPrioritySelect = ({ taskId, columnId, subtaskId, currentPrio
 		} catch (error) {
 			toast.error('Cập nhật độ ưu tiên thất bại', {
 				richColors: true,
-				description: 'Cập nhật độ ưu tiên thất bại'
+				description: 'Cập nhật độ ưu tiên thất bại' + error
 			})
 		}
 	}

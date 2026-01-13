@@ -12,6 +12,7 @@ export const Avatar = ({
 	size?: number
 	className?: string
 }) => {
+
 	if (avatarUrl) {
 		return (
 			<img

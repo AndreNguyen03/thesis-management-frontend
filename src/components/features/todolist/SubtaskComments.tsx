@@ -106,7 +106,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to add comment',
+				description: 'Failed to add comment'+ error,
 				variant: 'destructive'
 			})
 		}
@@ -238,7 +238,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to update comment',
+				description: 'Failed to update comment'+ error,
 				variant: 'destructive'
 			})
 		}
@@ -263,7 +263,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'Failed to delete comment',
+				description: 'Failed to delete comment'+ error,
 				variant: 'destructive'
 			})
 		}
@@ -324,7 +324,7 @@ export const SubtaskComments = ({ taskId, columnId, subtaskId, comments }: Subta
 										<img
 											src={comment.user.avatarUrl}
 											alt={comment.user.fullName}
-											className='h-8 w-8 rounded-full'
+											className='h-8 w-8 rounded-full object-cover'
 										/>
 									) : (
 										<div className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10'>

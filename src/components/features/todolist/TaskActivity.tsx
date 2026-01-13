@@ -2,7 +2,7 @@ import type { TaskActivity as TaskActivityType } from '@/models/task-detail.mode
 import { formatDistanceToNow } from 'date-fns'
 import { vi as viLocale } from 'date-fns/locale'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Activity } from 'lucide-react'
+import { Avatar } from '@/features/shared/workspace/components/Avatar'
 
 interface TaskActivityProps {
 	activities: TaskActivityType[]
@@ -21,19 +21,10 @@ export const TaskActivity = ({ activities }: TaskActivityProps) => {
 						.map((activity) => (
 							<div key={activity._id} className='flex gap-3'>
 								{/* Avatar */}
-								<div className='flex-shrink-0'>
-									{activity.user?.avatarUrl ? (
-										<img
-											src={activity.user.avatarUrl}
-											alt={activity.user.fullName}
-											className='h-6 w-6 rounded-full'
-										/>
-									) : (
-										<div className='flex h-6 w-6 items-center justify-center rounded-full bg-primary/10'>
-											<Activity className='h-3 w-3' />
-										</div>
-									)}
-								</div>
+								<Avatar
+									fullName={activity.user?.fullName || 'Unknown'}
+									avatarUrl={activity.user?.avatarUrl}
+								/>
 
 								{/* Activity Info */}
 								<div className='flex-1'>

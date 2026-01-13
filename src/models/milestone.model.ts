@@ -68,6 +68,8 @@ export interface ResponseMilestone {
 	progress: number
 	isAbleEdit: boolean
 	creatorType: string
+    totalTasks: number
+    tasksCompleted:number
 	//isCompleted: boolean
 }
 export interface TopicSnaps {

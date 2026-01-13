@@ -1,21 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import {
-	ChevronRight,
-	Download,
-	Send,
-	XCircle,
-	LayoutDashboard,
-	Calendar,
-	CheckSquare,
-	Edit,
-	UserCircle,
-	Plus,
-	BarChart3,
-	GraduationCap,
-	PencilOff,
-	Goal
-} from 'lucide-react'
-import { StatusTag } from '../StatusTag'
+import { ChevronRight, LayoutDashboard, Calendar, CheckSquare, Edit, Plus, PencilOff } from 'lucide-react'
 import { ProgressBar, StatusBadge } from './ProcessBar'
 import {
 	creatorType,
@@ -28,25 +12,25 @@ import {
 import { StudentMilestoneDrawer } from './StudentMilestoneDrawer'
 import { LecturerMilestoneDrawer } from './LecturerMilestoneDrawer'
 import { useAppSelector } from '@/store'
-import { ROLES, topicStatusLabels } from '@/models'
+import { ROLES, TopicStatus, topicStatusLabels } from '@/models'
 import CreateMilestone from './modal/CreateMilestone'
 import { useCreateMilestoneMutation, useUpdateMilestoneMutation } from '@/services/milestoneApi'
 import { toast } from 'sonner'
 import { formatDate } from '@/utils/utils'
-import { StatusOptions } from '@/models/todolist.model'
 import { useGetGroupDetailQuery } from '@/services/groupApi'
 import AskToGoToDefense from './modal/AskToGoToDefense'
 import { useSetAwaitingEvaluationMutation } from '@/services/topicApi'
 import { cn } from '@/lib/utils'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { MilestonePanelSkeleton } from './skeleton/MilestonePanelSkeleton'
 
 interface MilestonePanelProps {
 	milestones: ResponseMilestone[]
-	totalProgress: number
 	setMilestones: React.Dispatch<React.SetStateAction<ResponseMilestone[]>>
 }
 
-export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: MilestonePanelProps) => {
+export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProps) => {
+	const { groupId } = useParams<{ groupId: string }>()
 	const user = useAppSelector((state) => state.auth)
 	const group = useAppSelector((state) => state.group)
 	const [isOpenAskGotoDefense, setIsOpenAskGotoDefense] = useState(false)
@@ -56,8 +40,8 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 	//gọi endpoint cập nhật thông tin milestone
 	const [updateMilestone] = useUpdateMilestoneMutation()
 	const { data: groupDetail, isLoading: isLoadingGroupDetail } = useGetGroupDetailQuery(
-		{ groupId: group.activeGroup?._id ?? '' },
-		{ skip: !group.activeGroup?._id }
+		{ groupId: groupId ?? '' },
+		{ skip: !groupId }
 	)
 	const navigate = useNavigate()
 	//gọi endpoint chuyển trạng thía của dề tài sang chuẩn bị đánh giá
@@ -66,11 +50,12 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 		try {
 			await updateMilestone({
 				milestoneId: id,
-				groupId: group.activeGroup?._id!,
+				groupId: group.activeGroup!._id!,
 				body: updates
 			})
 			setMilestones((prev) => prev.map((m) => (m._id === id ? { ...m, ...updates } : m)))
 			setSelectedId(null)
+            
 			toast.success('Cập nhật milestone thành công', { richColors: true })
 		} catch (error) {
 			console.error('Lỗi cập nhật milestone:', error)
@@ -81,32 +66,12 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 	} as PayloadCreateMilestone)
 	//gọi endpoint tạo milestone
 	const [createMilestone] = useCreateMilestoneMutation()
-	const renderTab = () => {
-		return (
-			<div className='flex items-center gap-3 rounded-full border border-slate-200 bg-slate-100 p-1'>
-				{user.user?.role === ROLES.STUDENT ? (
-					<button
-						className={`flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-sm font-medium text-indigo-600 shadow-sm transition-all`}
-					>
-						<GraduationCap className='h-4 w-4' />
-						Sinh viên
-					</button>
-				) : (
-					<button
-						className={`flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-sm font-medium text-orange-600 shadow-sm transition-all`}
-					>
-						<UserCircle className='h-4 w-4' />
-						Giảng viên
-					</button>
-				)}
-			</div>
-		)
-	}
+
 	const handleCreateMilestone = async () => {
 		try {
 			const createdMilestone = await createMilestone({
 				...newMilestone,
-				groupId: group.activeGroup?._id!
+				groupId: group.activeGroup!._id!
 			}).unwrap()
 			setMilestones((prev) => [...prev, createdMilestone])
 			toast.success('Tạo milestone thành công', { richColors: true })
@@ -120,108 +85,80 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 	const handleGoToDefense = async () => {
 		setIsOpenAskGotoDefense(false)
 		try {
-			await setAwaitingEvaluation({ topicId: groupDetail?.topicId! })
+			await setAwaitingEvaluation({ topicId: groupDetail!.topicId! })
 			toast.success('Đề tài đang chờ chấm điểm', { richColors: true })
 		} catch (error) {
 			toast.error('Lỗi chuyển đề tài sang trạng thái chuẩn bị đánh giá', { richColors: true })
 			console.error('Lỗi chuyển đề tài sang trạng thái chuẩn bị đánh giá:', error)
 		}
 	}
+
+	if (isLoadingGroupDetail) {
+		return <MilestonePanelSkeleton />
+	}
+
 	return (
 		<div
 			className={`min-h-screen overflow-auto font-sans transition-colors duration-300 ${user.user?.role === ROLES.STUDENT ? 'bg-slate-50' : 'bg-orange-50/30'}`}
 		>
-			{/* Top Navigation Bar with Role Switcher */}
-			<div className='sticky top-0 z-10 flex items-center justify-between border-b bg-white/80 px-6 py-3 shadow-sm backdrop-blur-md'>
-				{groupDetail?.isAbleGoToDefense && user.user?.role === ROLES.LECTURER && (
-					<div className='flex items-center gap-2'>
-						<div>
-							<span className='rounded-bl rounded-ss bg-green-600 px-2 py-1 font-semibold text-white'>
-								Đủ điều kiện bảo vệ
-							</span>
-							<span
-								className='cursor-pointer rounded-ee bg-yellow-200 px-2 py-1 font-semibold text-gray-500 transition-colors duration-200 hover:bg-yellow-300 hover:text-gray-700'
-								onClick={() => {
-									console.log('Đóng góp ý kiến')
-									setIsOpenAskGotoDefense(true)
-								}}
-							>
-								Xác nhận
-							</span>
-						</div>
-					</div>
-				)}
-				{groupDetail?.topicStatus && (
-					<span
-						className={cn(
-							'rounded-bl rounded-ss px-2 py-1 font-semibold text-white',
-							topicStatusLabels[groupDetail?.topicStatus as keyof typeof topicStatusLabels].css
-						)}
-					>
-						{topicStatusLabels[groupDetail?.topicStatus as keyof typeof topicStatusLabels].name}
-					</span>
-				)}
-				{/* Role Switcher */}
-				{renderTab()}
-			</div>
+			<div className='mx-auto h-[calc(100vh-4rem)] max-w-5xl overflow-auto p-8 pb-20'>
+				<div className='mb-10'>
+					<div className='flex flex-col gap-4 md:flex-row md:items-start md:justify-between'>
+						{/* LEFT – Topic Info */}
+						<div className='space-y-4'>
+							{/* Topic Title */}
+							<div className='space-y-1'>
+								<div className='flex items-center gap-3'>
+									<span className='text-xs font-semibold uppercase tracking-wide text-slate-400'>
+										Đề tài
+									</span>
+									{groupDetail?.topicStatus && (
+										<span
+											className={cn(
+												'rounded px-2 py-0.5 text-xs font-semibold text-white',
+												topicStatusLabels[groupDetail.topicStatus as TopicStatus].css
+											)}
+										>
+											{topicStatusLabels[groupDetail.topicStatus as TopicStatus].name}
+										</span>
+									)}
 
-			<div className='mx-auto h-[calc(100vh-11rem)] max-w-5xl overflow-auto p-8 pb-20'>
-				{/* Dashboard Header */}
-				<div className='mb-8 flex flex-col justify-between gap-4 md:items-start'>
-					<div>
-						<h1 className='text-xl font-bold text-slate-900'>
-							{user.user?.role === ROLES.STUDENT ? 'Theo dõi Tiến độ Đồ án' : 'Quản lý Tiến độ Nhóm 01'}
-						</h1>
-						<p className='font-semibold text-slate-500'>Đề tài: {groupDetail?.topicTitleVN}</p>
-						<p className='text-slate-500'>({groupDetail?.topicTitleEng})</p>
-					</div>
-					<div className='flex gap-2'>
+									{groupDetail?.isAbleGoToDefense && user.user?.role === ROLES.LECTURER && (
+										<div className='flex items-center overflow-hidden rounded'>
+											<span className='bg-green-600 px-2 py-0.5 text-xs font-semibold text-white'>
+												Đủ điều kiện bảo vệ
+											</span>
+											<span
+												className='cursor-pointer bg-yellow-200 px-2 py-0.5 text-xs font-semibold text-gray-700 hover:bg-yellow-300'
+												onClick={() => setIsOpenAskGotoDefense(true)}
+											>
+												Xác nhận
+											</span>
+										</div>
+									)}
+								</div>
+
+								<p
+									className='cursor-pointer text-2xl font-bold leading-tight text-slate-900 hover:underline'
+									onClick={() => navigate('/detail-topic/' + groupDetail?.topicId)}
+								>
+									{groupDetail?.topicTitleVN}
+								</p>
+
+								<p className='max-w-3xl text-sm italic text-slate-500'>{groupDetail?.topicTitleEng}</p>
+							</div>
+						</div>
+
+						{/* RIGHT – Action */}
 						{user.user?.role === ROLES.LECTURER && (
 							<button
 								onClick={() => setIsShowCreateModal(true)}
-								className='flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800'
+								className='mt-1 flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800'
 							>
-								<Plus className='h-4 w-4' /> Tạo Milestone Mới
+								<Plus className='h-4 w-4' />
+								Tạo milestone
 							</button>
 						)}
-						<button
-							onClick={() => navigate('/detail-topic/' + groupDetail?.topicId)}
-							className='flex items-center gap-2 rounded-lg bg-gray-300 border border-gray-500 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200'
-						>
-							<Goal className='h-4 w-4' /> Xem chi tiết đề tài
-						</button>
-					</div>
-				</div>
-
-				{/* Overview Card */}
-				<div
-					className={`mb-8 overflow-hidden rounded-2xl p-6 text-white shadow-lg transition-colors duration-500 ${user.user?.role === ROLES.STUDENT ? 'bg-gradient-to-br from-indigo-600 to-violet-700' : 'bg-gradient-to-br from-orange-500 to-red-600'}`}
-				>
-					<div className='flex items-center justify-between'>
-						<div className='flex items-center gap-4'>
-							<div className='rounded-xl bg-white/20 p-3 backdrop-blur-md'>
-								<BarChart3 className='h-6 w-6 text-white' />
-							</div>
-							<div>
-								<h3 className='text-lg font-bold'>Tổng quan dự án</h3>
-								<p className='text-sm text-white/80'>
-									{user.user?.role === ROLES.STUDENT
-										? 'Nỗ lực của bạn'
-										: 'Tiến độ hoàn thành của nhóm'}
-								</p>
-							</div>
-						</div>
-						<div className='text-right'>
-							<span className='text-4xl font-bold tracking-tight'>{totalProgress}%</span>
-						</div>
-					</div>
-					<div className='mt-6'>
-						<div className='h-2 w-full overflow-hidden rounded-full bg-black/20'>
-							<div
-								className='h-full bg-white transition-all duration-1000 ease-out'
-								style={{ width: `${totalProgress}%` }}
-							/>
-						</div>
 					</div>
 				</div>
 
@@ -239,9 +176,8 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 						//calculateProgress(milestone.requirements)
 						const isSelected = selectedId === milestone._id
 						const themeColor = user.user?.role === ROLES.STUDENT ? 'indigo' : 'orange'
-						const tasksNumber = milestone.tasks?.length || 0
-						const tasksCompleted =
-							milestone.tasks?.filter((t) => t.status === StatusOptions.DONE && !t.isDeleted).length || 0
+						const tasksNumber = milestone.totalTasks
+						const tasksCompleted = milestone.tasksCompleted
 						return (
 							<div
 								key={milestone._id}
@@ -309,7 +245,7 @@ export const MilestonePanel = ({ milestones, totalProgress, setMilestones }: Mil
 								<div className='relative z-20 mt-2 flex items-center gap-3'>
 									<ProgressBar progress={mProgress} className='h-1.5' />
 									<span className='w-8 text-right text-xs font-bold text-slate-600'>
-										{mProgress}%
+										{mProgress.toFixed(2)}%
 									</span>
 								</div>
 							</div>

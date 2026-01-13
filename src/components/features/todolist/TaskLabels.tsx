@@ -36,7 +36,7 @@ export const TaskLabels = ({ taskId, labels }: TaskLabelsProps) => {
 				description: 'Gắn nhãn thành công'
 			})
 		} catch (error) {
-			toast.error('Thêm nhãn thất bại', {
+			toast.error('Thêm nhãn thất bại'+ error, {
 				richColors: true
 			})
 		}
@@ -53,7 +53,7 @@ export const TaskLabels = ({ taskId, labels }: TaskLabelsProps) => {
 				richColors: true
 			})
 		} catch (error) {
-			toast.error('Gỡ nhãn thất bại', {
+			toast.error('Gỡ nhãn thất bại'+ error, {
 				richColors: true
 			})
 		}

@@ -29,6 +29,8 @@ export function DataTable<TData, TValue>({
 			maxSize: 500
 		}
 	})
+	console.log(' columns ::: ', columns)
+
 	useEffect(() => {
 		onChangeSelectedTopicIds(table.getSelectedRowModel().rows.map((row) => row.original))
 	}, [table.getSelectedRowModel().rows.length])

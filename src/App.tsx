@@ -13,7 +13,6 @@ import { ChatProvider } from './contexts/ChatSocketContext'
 // import { NotificationSocketProvider } from './contexts/NotificationSocketContext'
 import { useGetCurrentPeriodsQuery } from './services/periodApi'
 import { NotificationSocketProvider } from './contexts/NotificationSocketContext'
-import type { FacultyBoardProfile, LecturerProfile, StudentUser } from './models'
 
 const App = () => {
 	const dispatch = useAppDispatch()
