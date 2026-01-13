@@ -4,25 +4,24 @@ import {
 	type GetTopicsInBatchMilestoneDto
 } from '@/models/milestone.model'
 import LecturersCombobox from './combobox/LecturerCombobox'
-import { councilMemberRoleMap, type CouncilMemberDto } from '@/models/defenseCouncil.model'
+import { councilMemberRoleMap, type CouncilMemberDto, type TopicAssignment } from '@/models/defenseCouncil.model'
 import { Badge } from '@/components/ui/badge'
 import { Eye, X } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { useNavigate } from 'react-router-dom'
 
 interface TopicRowProps {
-	topic: GetTopicsInBatchMilestoneDto
+	topic: TopicAssignment
 	reviewer: CouncilMemberDto | null
 	councilMembers: CouncilMemberDto[]
 	onAddMember: (lecturer: any, role: CouncilMemberRoleType) => void
 	onRemoveMember: (memberId: string, role: CouncilMemberRoleType) => void
-	onRemoveTopic: () => void
 }
 
-const TopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMember, onRemoveTopic }: TopicRowProps) => {
+const EditTopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMember }: TopicRowProps) => {
 	const navigate = useNavigate()
 	return (
-		<tr key={topic._id} className='border-b last:border-b-0 hover:bg-gray-50'>
+		<tr key={topic.topicId} className='border-b last:border-b-0 hover:bg-gray-50'>
 			{/* Tên đề tài */}
 			<td className='px-4 py-3' style={{ minWidth: '180px', maxWidth: '220px', width: '200px' }}>
 				<div>
@@ -33,10 +32,10 @@ const TopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMember
 			{/* Tên sinh viên */}
 			<td className='px-4 py-3' style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}>
 				<div className='space-y-1'>
-					{topic.students && topic.students.length > 0 ? (
-						topic.students.map((student, idx) => (
+					{topic.studentNames && topic.studentNames.length > 0 ? (
+						topic.studentNames.map((student, idx) => (
 							<p key={idx} className='text-sm text-gray-700'>
-								{student.fullName}
+								{student}
 							</p>
 						))
 					) : (
@@ -47,10 +46,10 @@ const TopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMember
 			{/* Tên giảng viên */}
 			<td className='px-4 py-3' style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}>
 				<div className='space-y-1'>
-					{topic.lecturers && topic.lecturers.length > 0 ? (
-						topic.lecturers.map((lecturer, idx) => (
+					{topic.lecturerNames && topic.lecturerNames.length > 0 ? (
+						topic.lecturerNames.map((lecturer, idx) => (
 							<p key={idx} className='text-sm text-gray-700'>
-								{lecturer.title} {lecturer.fullName}
+								{lecturer}
 							</p>
 						))
 					) : (
@@ -101,14 +100,7 @@ const TopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMember
 				})}
 			</td>
 			<td className='gap-2 px-4 py-3' style={{ minWidth: '90px', maxWidth: '120px', width: '200px' }}>
-				<button
-					title='Loại bỏ đề tài khỏi danh sách'
-					className='rounded-lg bg-red-600 text-white hover:bg-red-500'
-					onClick={onRemoveTopic}
-				>
-					<X />
-				</button>
-				<Button variant='ghost' onClick={() => navigate(`/detail-topic/${topic._id}`)}>
+				<Button variant='ghost' onClick={() => navigate(`/detail-topic/${topic.topicId}`)}>
 					<Eye className='h-4 w-4' />
 				</Button>
 			</td>
@@ -116,4 +108,4 @@ const TopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMember
 	)
 }
 
-export default TopicRow
+export default EditTopicRow

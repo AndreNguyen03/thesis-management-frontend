@@ -32,7 +32,6 @@ import { ViewProfile } from '@/features/shared/profile/ViewProfile'
 import { ContactPage } from '@/features/shared/contact/ContactPage'
 import { ManageApproveRegistration } from '@/features/lecturer/topic_registration/ApproveRegistration'
 import DefenseScoringPage from '@/features/faculty/manage_phase/completion-phase/scoring/DefenseMilestonePage'
-import LecturerDefenseMilestonesPage from '@/features/lecturer/defense-milestones/LecturerDefenseMilestonesPage'
 import FacultyDefenseMilestonesPage from '@/features/faculty/defense-milestones/FacultyDefenseMilestonesPage'
 import ManageTopicDraft2 from '@/features/lecturer/manage_topic/draft/ManageDraftTopic2'
 import { ChatbotPage } from '@/features/chatbot/pages/ChatbotPage'
@@ -40,8 +39,9 @@ import { AIAssistantPage } from '@/features/shared/ai-assistant'
 import MilestonePage from '@/features/shared/milestone/MilestonePage'
 import DefenseMilestonesInPeriodRegistration from '@/features/faculty/defense-milestones/DefenseMilestonesInPeriodRegistration'
 import DefenseCouncils from '@/features/faculty/defense-milestones/DefenseCouncils'
-import { CouncilAssignmentPage } from '@/features/faculty/defense-milestones/CounsilAssignmentPage'
 import CouncilDetailPage from '@/features/faculty/defense-milestones/CouncilDetailPage'
+import LecturerDefenseCouncilsPage from '@/features/lecturer/defense-councils/LecturerDefenseCouncilsPage'
+import LecturerDetailConcilsPage from '@/features/lecturer/defense-councils/LecturerDetailConcilsPage'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -143,7 +143,8 @@ export const router = createBrowserRouter([
 			{ path: 'manage-period', element: <ManagePeriodPage /> },
 			{ path: 'period/:id/manage-milestones', element: <MilestonePage /> },
 			{ path: 'defense-milestones/:id/scoring', element: <DefenseScoringPage /> },
-			{ path: 'lecturer/defense-milestones', element: <LecturerDefenseMilestonesPage /> },
+			{ path: 'lecturer/defense-councils', element: <LecturerDefenseCouncilsPage /> },
+			{ path: 'lecturer/defense-councils/:councilId', element: <LecturerDetailConcilsPage /> },
 			{ path: 'faculty/defense-milestones', element: <FacultyDefenseMilestonesPage /> },
 			{
 				path: 'period/:periodId/defense-milestones-in-period',

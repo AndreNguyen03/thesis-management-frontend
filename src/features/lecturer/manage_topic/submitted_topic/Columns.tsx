@@ -22,7 +22,7 @@ type ColumnsProps = {
 	pendingWithdrawId?: string | null
 	onWithdraw: (topic: SubmittedTopic) => void
 	onCopyToDraft: (topic: SubmittedTopic) => void
-	onResubmit: (topic: SubmittedTopic) => void
+	onResubmit?: (topic: SubmittedTopic) => void
 	isCopySuccess?: boolean
 }
 interface NewSubmittedTopic extends SubmittedTopic {
@@ -216,7 +216,7 @@ export const getColumns = ({
 									variant='outline'
 									size='sm'
 									onClick={() => {
-										onResubmit(row.original)
+										onResubmit && onResubmit(row.original)
 									}}
 								>
 									{pendingWithdrawId === row.original._id ? (

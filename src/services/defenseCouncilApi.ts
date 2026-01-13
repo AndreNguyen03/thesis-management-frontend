@@ -8,9 +8,7 @@ import type {
 	UpdateTopicMembersPayload
 } from '@/models/defenseCouncil.model'
 import { baseApi, type ApiResponse } from './baseApi'
-
 import { buildQueryString } from '@/models/query-params'
-
 export const defenseCouncilApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getCouncils: builder.query<ResponseDefenseCouncil, QueryDefenseCouncilsParams>({
@@ -39,35 +37,51 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<ResDefenseCouncil>) => response.data,
-			providesTags: (_result, _error, councilId) => [{ type: 'Theses', id: councilId }]
+			providesTags: (_result, _error, councilId) => [{ type: 'DefenseCouncil', id: councilId }]
 		}),
-		addTopicToCouncil: builder.mutation<ApiResponse<any>, { councilId: string; payload: AddTopicToCouncilPayload }>(
-			{
-				query: ({ councilId, payload }) => ({
-					url: `/defense-councils/${councilId}/topics`,
-					method: 'POST',
-					body: payload
-				}),
-				invalidatesTags: (_result, _error, { councilId }) => [{ type: 'Theses', id: councilId }]
-			}
-		),
+		addTopicToCouncil: builder.mutation<
+			ApiResponse<any>,
+			{ councilId: string; payload: AddTopicToCouncilPayload; milestonesTemplateId?: string }
+		>({
+			query: ({ councilId, payload }) => ({
+				url: `/defense-councils/${councilId}/topics`,
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (_result, _error, { councilId, milestonesTemplateId }) => [
+				{ type: 'DefenseCouncil', id: councilId },
+				{ type: 'defenseCouncilsInMilestone', id: milestonesTemplateId },
+				{ type: 'AwaitingTopicsInDefensemilestone', id: milestonesTemplateId }
+			]
+		}),
 		addMultipleTopicsToCouncil: builder.mutation<
 			ApiResponse<any>,
-			{ councilId: string; payload: AddMultipleTopicsToCouncilPayload }
+			{ councilId: string; payload: AddMultipleTopicsToCouncilPayload; milestonesTemplateId?: string }
 		>({
 			query: ({ councilId, payload }) => ({
 				url: `/defense-councils/${councilId}/topics/batch`,
 				method: 'POST',
 				body: payload
 			}),
-			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'Theses', id: councilId }]
+			invalidatesTags: (_result, _error, { councilId, milestonesTemplateId }) => [
+				{ type: 'DefenseCouncil', id: councilId },
+				{ type: 'defenseCouncilsInMilestone', id: milestonesTemplateId },
+				{ type: 'AwaitingTopicsInDefensemilestone', id: milestonesTemplateId }
+			]
 		}),
-		removeTopicFromCouncil: builder.mutation<ApiResponse<any>, { councilId: string; topicId: string }>({
+		removeTopicFromCouncil: builder.mutation<
+			ApiResponse<any>,
+			{ councilId: string; topicId: string; milestonesTemplateId?: string }
+		>({
 			query: ({ councilId, topicId }) => ({
 				url: `/defense-councils/${councilId}/topics/${topicId}`,
 				method: 'DELETE'
 			}),
-			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'Theses', id: councilId }]
+			invalidatesTags: (_result, _error, { councilId, milestonesTemplateId }) => [
+				{ type: 'DefenseCouncil', id: councilId },
+				{ type: 'defenseCouncilsInMilestone', id: milestonesTemplateId },
+				{ type: 'AwaitingTopicsInDefensemilestone', id: milestonesTemplateId }
+			]
 		}),
 		updateTopicMembers: builder.mutation<
 			ApiResponse<any>,
@@ -89,7 +103,15 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 				method: 'PATCH',
 				body: { defenseOrder }
 			}),
-			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'Theses', id: councilId }]
+			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'DefenseCouncil', id: councilId }]
+		}),
+		getDetailAssignedDefenseCouncils: builder.query<ResDefenseCouncil, string>({
+			query: (councilId) => ({
+				url: `/defense-councils/lecturer/detail-assigned-defense/${councilId}`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<ResDefenseCouncil>) => response.data,
+			providesTags: (result, error, args) => [{ type: 'AssignedDefenseCouncils', id: 'LIST' }]
 		})
 	}),
 	overrideExisting: false
@@ -103,5 +125,6 @@ export const {
 	useAddMultipleTopicsToCouncilMutation,
 	useRemoveTopicFromCouncilMutation,
 	useUpdateTopicMembersMutation,
-	useUpdateTopicOrderMutation
+	useUpdateTopicOrderMutation,
+	useGetDetailAssignedDefenseCouncilsQuery
 } = defenseCouncilApi

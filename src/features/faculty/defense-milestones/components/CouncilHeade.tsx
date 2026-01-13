@@ -11,8 +11,8 @@ interface MilestoneHeaderProps {
 
 const CouncilHeader = ({ council }: MilestoneHeaderProps) => {
 	const navigate = useNavigate()
-	const { periodId } = useParams<{ periodId: string }>()
-	const { data: period, isLoading: isPeriodLoading } = useGetPeriodDetailQuery(periodId!)
+	const { councilId, periodId, templateId } = useParams<{ councilId: string; periodId: string; templateId: string }>()
+		const { data: period, isLoading: isPeriodLoading } = useGetPeriodDetailQuery(periodId!)
 	return (
 		<div className='w-full'>
 			{/* Milestone Info */}
@@ -22,7 +22,7 @@ const CouncilHeader = ({ council }: MilestoneHeaderProps) => {
 						variant='ghost'
 						size='icon'
 						className='border border-gray-200 hover:bg-gray-100'
-						onClick={() => navigate(-1)}
+						onClick={() => navigate(`/period/${periodId}/defense-milestones-in-period/${templateId}`)}
 					>
 						<ArrowLeft className='h-5 w-5' />
 					</Button>

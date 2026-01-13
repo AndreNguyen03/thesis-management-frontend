@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import {
 	useGetCouncilByIdQuery,
 	useUpdateTopicOrderMutation,
@@ -20,12 +20,12 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui'
 import type { GetTopicsInBatchMilestoneDto } from '@/models/milestone.model'
-import type { AddTopicToCouncilPayload } from '@/models/defenseCouncil.model'
-
+import { se } from 'date-fns/locale'
 export default function CouncilDetailPage() {
 	const { councilId, periodId, templateId } = useParams<{ councilId: string; periodId: string; templateId: string }>()
 	const [selectedTopics, setSelectedTopics] = useState<GetTopicsInBatchMilestoneDto[]>([])
 	const navigate = useNavigate()
+	const [searchParams, setSearchParams] = useSearchParams()
 	const [isAddTopicOpen, setIsAddTopicOpen] = useState(false)
 	const [isShowAwaitingTopicsList, setIsShowAwaitingTopicsList] = useState(false)
 	//endpoint lấy chi tiết hội đồng bảo vệ
@@ -42,10 +42,19 @@ export default function CouncilDetailPage() {
 		query: '',
 		search_by: ['titleVN', 'titleEng', 'students.fullName']
 	})
-
-	const { data: paginationTopicData, isLoading: isLoadingTopics } = useGetTopicsAwaitingEvaluationInPeriodQuery({
+	useEffect(() => {
+		setIsShowAwaitingTopicsList(searchParams.get('IsShowAwaitingTopics') === '1')
+		setIsAddTopicOpen(searchParams.get('addTopic') === '1')
+		
+	}, [searchParams, periodId, templateId])
+	const {
+		data: paginationTopicData,
+		isLoading: isLoadingTopics,
+		refetch: refetchAwaitingTopics
+	} = useGetTopicsAwaitingEvaluationInPeriodQuery({
 		periodId: periodId!,
-		queryParams: topicQueries
+		queryParams: topicQueries,
+		milestoneId: templateId
 	})
 
 	const [searchTerm, setSearchTerm] = useState('')
@@ -62,7 +71,6 @@ export default function CouncilDetailPage() {
 	}
 	const [updateTopicOrder] = useUpdateTopicOrderMutation()
 	const [removeTopic] = useRemoveTopicFromCouncilMutation()
-
 	const handleReorderTopics = async (topicId: string, newOrder: number) => {
 		if (!councilId) return
 		try {
@@ -72,7 +80,18 @@ export default function CouncilDetailPage() {
 			toast.error(error?.data?.message || 'Có lỗi xảy ra')
 		}
 	}
-
+	// State filter for awaiting topics
+	const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'blocked' | 'pending' | 'completed'>('all')
+	// Filtered topics for AwaitingTopicTable
+	const filteredAwaitingTopics =
+		paginationTopicData?.data?.filter((topic: any) => {
+			if (statusFilter === 'all') return true
+			if (statusFilter === 'pending') return !topic.isPublished && !topic.isBlocked && !topic.isCompleted
+			if (statusFilter === 'published') return topic.isPublished
+			if (statusFilter === 'blocked') return topic.isBlocked
+			if (statusFilter === 'completed') return topic.isCompleted
+			return true
+		}) || []
 	const handleRemoveTopic = async (topicId: string) => {
 		if (!councilId) return
 		try {
@@ -82,10 +101,27 @@ export default function CouncilDetailPage() {
 			toast.error(error?.data?.message || 'Có lỗi xảy ra')
 		}
 	}
+	const updateSelectedTopicsInUrl = (topics: GetTopicsInBatchMilestoneDto[]) => {
+		const ids = topics.map((t) => t._id).join(',')
+		setSearchParams({ ...Object.fromEntries(searchParams), selected: ids })
+		setSelectedTopics(topics)
+	}
 
+	useEffect(() => {
+		const selectedIds = (searchParams.get('selected') || '').split(',').filter(Boolean)
+		if (paginationTopicData?.data) {
+			const topics = paginationTopicData.data.filter((t) => selectedIds.includes(t._id))
+			setSelectedTopics(topics)
+		}
+	}, [searchParams, paginationTopicData])
+	const handleResetSelectedTopicsInUrl = () => {
+		setIsChosingMode(false)
+		setSelectedTopics([])
+		setSearchParams({ ...Object.fromEntries(searchParams), addTopic: '0', IsShowAwaitingTopics: '0', selected: '' })
+	}
 	if (isLoading) {
 		return (
-			<div className='flex h-screen items-center justify-center'>
+			<div className='flex h-full w-full items-center justify-center'>
 				<Loader2 className='h-8 w-8 animate-spin text-primary' />
 			</div>
 		)
@@ -172,10 +208,13 @@ export default function CouncilDetailPage() {
 							!isShowAwaitingTopicsList ? 'translate-x-0' : 'absolute -translate-x-full opacity-0'
 						)}
 					>
-						<CardHeader className='flex flex-row items-center justify-between'>
+						<CardHeader className='flex flex-row items-center justify-between pb-2'>
 							<CardTitle>Danh sách đề tài ({council.topics?.length || 0})</CardTitle>
 							<Button
-								onClick={() => setIsShowAwaitingTopicsList(true)}
+								onClick={() => {
+									setIsShowAwaitingTopicsList(true)
+									setSearchParams({ ...Object.fromEntries(searchParams), IsShowAwaitingTopics: '1' })
+								}}
 								variant='outline'
 								className={cn('mt-0')}
 							>
@@ -194,9 +233,6 @@ export default function CouncilDetailPage() {
 							) : (
 								<div className='py-12 text-center text-muted-foreground'>
 									<p>Chưa có đề tài nào được phân công</p>
-									<Button className='mt-4' onClick={() => setIsAddTopicOpen(true)}>
-										Thêm đề tài đầu tiên
-									</Button>
 								</div>
 							)}
 						</CardContent>
@@ -208,48 +244,80 @@ export default function CouncilDetailPage() {
 						)}
 					>
 						<CardContent>
-							<div className='flex flex-col justify-between gap-4 py-2 sm:flex-row sm:items-center'>
-								<Button onClick={() => setIsShowAwaitingTopicsList(false)} variant='outline'>
-									DS đề tài ({council.topics?.length || 0}) trong hội đồng
-									<ArrowRight />
-								</Button>
-								<h2 className='text-xl font-semibold'>
-									Đề tài chờ đánh giá ({paginationTopicData?.data.length || 0})
-								</h2>
-								<Input
-									placeholder='Tìm kiếm đề tài, sinh viên...'
-									value={searchTerm}
-									onChange={(e) => onEdit(e.target.value)}
-									className='w-[400px] border-gray-300 bg-white'
-								/>
-								{!isChosingMode && (
-									<Button className='h-fit' onClick={() => setIsChosingMode(true)}>
-										Chọn đề tài
+							<div className='flex flex-col justify-between gap-4 py-2 sm:flex-col'>
+								<div className='flex items-center gap-4'>
+									<Button
+										onClick={() => {
+											setIsShowAwaitingTopicsList(false)
+											setSearchParams({
+												...Object.fromEntries(searchParams),
+												IsShowAwaitingTopics: '0'
+											})
+										}}
+										variant='outline'
+									>
+										DS đề tài ({council.topics?.length || 0}) trong hội đồng
+										<ArrowRight />
 									</Button>
-								)}
-								{isChosingMode && (
-									<div className='flex gap-2'>
-										<Button
-											className='h-fit bg-orange-400'
-											onClick={() => {
-												setIsChosingMode(false)
-												setSelectedTopics([])
-											}}
-										>
-											Bỏ chọn
+									<h2 className='text-[18px] font-semibold'>
+										Đề tài chờ đánh giá ({paginationTopicData?.data.length || 0})
+									</h2>
+								</div>
+								<div className='flex items-center justify-between gap-4'>
+									<Input
+										placeholder='Tìm kiếm đề tài, sinh viên...'
+										value={searchTerm}
+										onChange={(e) => onEdit(e.target.value)}
+										className='w-[400px] border-gray-300 bg-white'
+									/>
+									{!isChosingMode && (
+										<Button className='h-fit' onClick={() => setIsChosingMode(true)}>
+											Chọn đề tài
 										</Button>
-										<Button className='h-fit' onClick={() => setIsAddTopicOpen(true)}>
-											Phân công ({selectedTopics.length})
-										</Button>
-									</div>
-								)}
+									)}
+
+									{isChosingMode && (
+										<div className='flex gap-2'>
+											<Button
+												className='h-fit bg-orange-400'
+												onClick={() => {
+													setIsChosingMode(false)
+													setSelectedTopics([])
+												}}
+											>
+												Bỏ chọn
+											</Button>
+											<Button
+												className='h-fit disabled:bg-gray-500'
+												disabled={isLoadingTopics || selectedTopics.length === 0}
+												onClick={() => {
+													setIsAddTopicOpen(true)
+													setSearchParams({
+														...Object.fromEntries(searchParams),
+														addTopic: '1'
+													})
+												}}
+											>
+												Phân công ({selectedTopics.length})
+											</Button>
+										</div>
+									)}
+								</div>
 							</div>
 
 							<AwaitingTopicTable
 								isChosingMode={isChosingMode}
 								isLoadingTopics={isLoadingTopics}
 								error={error}
-								paginationTopicData={paginationTopicData}
+								paginationTopicData={
+									paginationTopicData
+										? {
+												...paginationTopicData,
+												data: filteredAwaitingTopics,
+												meta: paginationTopicData.meta!
+											}
+										: undefined
+								}
 								setQuery={setTopicQueries}
 								selectedTopics={selectedTopics}
 								setSelectedTopics={(id: string) => {
@@ -257,9 +325,13 @@ export default function CouncilDetailPage() {
 									if (!selectedTopic) return
 									setSelectedTopics((prev) => {
 										if (prev.some((topic) => topic._id === id)) {
-											return prev.filter((topic) => topic._id !== id)
+											const newSelectedTopics = prev.filter((topic) => topic._id !== id)
+											updateSelectedTopicsInUrl(newSelectedTopics)
+											return newSelectedTopics
 										} else {
-											return [...prev, selectedTopic]
+											const newSelectedTopics = [...prev, selectedTopic]
+											updateSelectedTopicsInUrl(newSelectedTopics)
+											return newSelectedTopics
 										}
 									})
 								}}
@@ -272,10 +344,18 @@ export default function CouncilDetailPage() {
 			{/* Add Topic Dialog */}
 			<AddTopicDialog
 				open={isAddTopicOpen}
-				onOpenChange={setIsAddTopicOpen}
+				onOpenChange={(open) => {
+					setIsAddTopicOpen(open)
+					setSearchParams({ ...Object.fromEntries(searchParams), addTopic: open ? '1' : '0' })
+				}}
 				councilId={councilId!}
 				periodId={periodId!}
 				chosenTopics={selectedTopics}
+				onRemoveTopic={(topicId: string) => {
+					setSelectedTopics((prev) => prev.filter((topic) => topic._id !== topicId))
+				}}
+				onReset={handleResetSelectedTopicsInUrl}
+				totalInCouncilNum={council.topics.length}
 			/>
 		</div>
 	)

@@ -24,7 +24,7 @@ const ManageSubmittedTopics = ({
 }: {
 	dataInernal?: PaginatedSubmittedTopics
 	isAllSubmittedTopics?: boolean
-	onResubmit: (topic: SubmittedTopic) => void
+	onResubmit?: (topic: SubmittedTopic) => void
 }) => {
 	const navigate = useNavigate()
 	const [queries, setQueries] = useState<SubmittedTopicParamsDto>({

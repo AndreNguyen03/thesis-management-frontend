@@ -1,6 +1,6 @@
 import type { GetPaginatedObject } from './paginated-object.model'
+import type { MiniPeriod } from './period.model'
 import type { PaginationQueryParamsDto } from './query-params'
-import type { CouncilMemberScoreDto } from './topic.model'
 import type { GetMiniUserDto } from './users'
 
 export interface QueryDefenseCouncilsParams extends PaginationQueryParamsDto {
@@ -32,34 +32,36 @@ export interface Score {
 	comment: string
 	scoredAt: Date
 }
-export interface CouncilMemberInfo {
-	memberId: string
-	fullName: string
-	title: string // TS, PGS.TS, GS.TS
-	role: string
-}
+
 export interface TopicAssignment {
 	topicId: string
 	titleVN: string
 	titleEng: string
 	studentNames: string[]
+	lecturerNames: string[]
 	defenseOrder: number // Thứ tự bảo vệ (1, 2, 3...)
 	scores: Score[] // Điểm từ hội đồng và phản biện và giảng viên hướng dẫn
 	finalScore: number // Điểm tổng kết
-	members: CouncilMemberInfo[]
+	members: CouncilMemberDto[]
 }
+export interface DefenseMilestoneDto {
+	title: string
+	description: string
+}
+
+//giảng viên lấy chi tiết hội đồng bảo vệ đươc phân công
 export interface ResDefenseCouncil {
 	_id: string
-	milestoneTemplateId: string // Đợt bảo vệ
+	defenseMilestone: DefenseMilestoneDto // Đợt bảo vệ
+	periodInfo: MiniPeriod,
 	name: string // VD: "Hội đồng 1 - Phòng E03.2"
 	location: string // Phòng bảo vệ
 	scheduledDate: Date // Thời gian bảo vệ
 	topics: TopicAssignment[] // Các đề tài trong hội đồng, mỗi đề tài có bộ ba riêng
-	isCompleted: boolean // Đã hoàn thành chấm điểm
+	isBlocked: boolean
 	isPublished: boolean // Đã công bố điểm
 	createdBy: GetMiniUserDto
 }
-
 export interface ResponseDefenseCouncil extends GetPaginatedObject {
 	data: ResDefenseCouncil[]
 }
@@ -81,7 +83,6 @@ export interface DefenseCouncilMember {
 	topicId: string
 	titleVN: string
 	titleEng?: string
-	studentNames?: string[]
 	members: CouncilMemberDto[] // Bộ ba giảng viên RIÊNG cho đề tài này
 }
 
@@ -90,13 +91,15 @@ export interface AddTopicToCouncilPayload {
 	titleVN: string
 	titleEng: string
 	studentNames: string[]
-	members: CouncilMemberInfo[]
+	lecturerNames: string[]
+	members: CouncilMemberDto[]
 	defenseOrder: number
 }
 
 // Batch add multiple topics to council
 export interface AddMultipleTopicsToCouncilPayload {
 	topics: AddTopicToCouncilPayload[]
+	periodId: string
 }
 
 //update topic payload

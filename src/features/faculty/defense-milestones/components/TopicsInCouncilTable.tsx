@@ -4,9 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui'
-import { ChevronUp, ChevronDown, Trash2, Edit, Users } from 'lucide-react'
+import { ChevronUp, ChevronDown, Trash2, Edit, Users, Eye } from 'lucide-react'
 import { CouncilMemberRoleOptions } from '@/models/milestone.model'
 import EditTopicMembersDialog from './EditTopicMembersDialog'
+import { useNavigate } from 'react-router-dom'
+import { ConfirmDialog } from '../../manage_phase/completion-phase/manage-defense-milestone/ConfirmDialog'
 
 interface TopicsInCouncilTableProps {
 	topics: TopicAssignment[]
@@ -14,12 +16,23 @@ interface TopicsInCouncilTableProps {
 	onRemove: (topicId: string) => void
 	councilId: string
 }
+type ActionType = 'delete'
 
 export default function TopicsInCouncilTable({ topics, onReorder, onRemove, councilId }: TopicsInCouncilTableProps) {
 	const [editingTopicId, setEditingTopicId] = useState<string | null>(null)
 	const [editingOrder, setEditingOrder] = useState<number | null>(null)
 	const [selectedTopic, setSelectedTopic] = useState<TopicAssignment | null>(null)
-
+	const [confirmDialog, setConfirmDialog] = useState<{
+		open: boolean
+		type: ActionType | null
+		topicId?: string
+		isLoading?: boolean
+	}>({
+		open: false,
+		type: null,
+		topicId: undefined
+	})
+	const navigate = useNavigate()
 	// Sort topics by defenseOrder
 	const sortedTopics = [...topics].sort((a, b) => a.defenseOrder - b.defenseOrder)
 
@@ -51,6 +64,12 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 			onReorder(topic.topicId, newOrder)
 		}
 	}
+	const handleConfirmAction = async () => {
+		if (!councilId) return
+		if (confirmDialog.type === 'delete') {
+			onRemove(confirmDialog.topicId!)
+		}
+	}
 
 	return (
 		<>
@@ -61,7 +80,9 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 							<TableHead className='w-[80px]'>STT</TableHead>
 							<TableHead className='w-[400px]'>Đề tài</TableHead>
 							<TableHead className='w-[200px]'>Sinh viên</TableHead>
-							<TableHead className='w-[300px]'>Bộ ba giảng viên</TableHead>
+							<TableHead className='w-[200px]'>GVHD</TableHead>
+							<TableHead className='w-[300px]'>GVPB</TableHead>
+							<TableHead className='w-[300px]'>HĐ chấm</TableHead>
 							<TableHead className='w-[120px]'>Điểm TB</TableHead>
 							<TableHead className='w-[200px] text-center'>Thao tác</TableHead>
 						</TableRow>
@@ -70,7 +91,7 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 						{sortedTopics.map((topic, index) => (
 							<TableRow key={topic.topicId}>
 								{/* STT - Editable */}
-								<TableCell>
+								<TableCell style={{ minWidth: '30px', maxWidth: '10px', width: '10px' }}>
 									{editingTopicId === topic.topicId ? (
 										<div className='flex items-center gap-1'>
 											<Input
@@ -102,7 +123,7 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 												<Button
 													variant='ghost'
 													size='icon'
-													className='h-5 w-5 p-0'
+													className='h-5 w-5 p-0 text-blue-600 disabled:text-gray-400'
 													onClick={() => handleMoveUp(topic)}
 													disabled={index === 0}
 												>
@@ -111,7 +132,7 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 												<Button
 													variant='ghost'
 													size='icon'
-													className='h-5 w-5 p-0'
+													className='h-5 w-5 p-0 text-blue-600 disabled:text-gray-400'
 													onClick={() => handleMoveDown(topic)}
 													disabled={index === sortedTopics.length - 1}
 												>
@@ -123,7 +144,7 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 								</TableCell>
 
 								{/* Topic Title */}
-								<TableCell style={{ minWidth: '80px', maxWidth: '110px', width: '100px' }}>
+								<TableCell style={{ minWidth: '80px', maxWidth: '90px', width: '90px' }}>
 									<div>
 										<p className='font-medium'>{topic.titleVN}</p>
 										{topic.titleEng && (
@@ -146,37 +167,67 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 										<span className='text-sm text-muted-foreground'>Chưa có SV</span>
 									)}
 								</TableCell>
-
-								{/* Council Members */}
+								{/* GVHD */}
 								<TableCell>
-									{topic.members && topic.members.length > 0 ? (
-										<div className='space-y-2'>
-											{topic.members.map((member, idx) => (
-												<div key={idx} className='flex items-center gap-2'>
-													<Badge
-														variant={
-															CouncilMemberRoleOptions[
-																member.role as keyof typeof CouncilMemberRoleOptions
-															]?.variant || 'outline'
-														}
-													>
-														{CouncilMemberRoleOptions[
-															member.role as keyof typeof CouncilMemberRoleOptions
-														]?.label || member.role}
-													</Badge>
-													<span className='text-sm'>
-														{member.title} {member.fullName}
-													</span>
-												</div>
+									{topic.lecturerNames && topic.lecturerNames.length > 0 ? (
+										<div className='space-y-1'>
+											{topic.lecturerNames.map((name, idx) => (
+												<p key={idx} className='text-sm'>
+													{name}
+												</p>
 											))}
 										</div>
 									) : (
-										<span className='text-sm text-muted-foreground'>Chưa có bộ ba</span>
+										<span className='text-sm text-muted-foreground'>Chưa có GVHD</span>
+									)}
+								</TableCell>
+								{/* Phản biện */}
+								<TableCell>
+									{topic.members && topic.members.length > 0 ? (
+										<div className='space-y-2'>
+											{topic.members.map(
+												(member, idx) =>
+													member.role === 'reviewer' && (
+														<div key={idx} className='flex items-center gap-2'>
+															<span className='text-sm'>
+																{member.title} {member.fullName}
+															</span>
+														</div>
+													)
+											)}
+										</div>
+									) : (
+										<span className='text-sm text-muted-foreground'>Chưa có hội đồng chấm</span>
+									)}
+								</TableCell>
+								{/* Council Members */}
+								<TableCell style={{ minWidth: '300px', maxWidth: '110px', width: '100px' }}>
+									{topic.members && topic.members.length > 0 ? (
+										<div className='space-y-2'>
+											{topic.members.map(
+												(member, idx) =>
+													member.role !== 'reviewer' && (
+														<div key={idx} className='flex items-center gap-2'>
+															<span className='font-bold'>
+																{CouncilMemberRoleOptions[
+																	member.role as keyof typeof CouncilMemberRoleOptions
+																]?.label || member.role}{' '}
+																-
+															</span>
+															<span className='text-sm'>
+																{member.title} {member.fullName}
+															</span>
+														</div>
+													)
+											)}
+										</div>
+									) : (
+										<span className='text-sm text-muted-foreground'>Chưa có hội đồng chấm</span>
 									)}
 								</TableCell>
 
 								{/* Final Score */}
-								<TableCell>
+								<TableCell style={{ minWidth: '16px', maxWidth: '16px', width: '16px' }}>
 									{topic.finalScore !== undefined ? (
 										<Badge variant='default' className='bg-green-600'>
 											{topic.finalScore.toFixed(2)}
@@ -187,23 +238,32 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 								</TableCell>
 
 								{/* Actions */}
-								<TableCell>
-									<div className='flex justify-center gap-2'>
+								<TableCell style={{ minWidth: '10px', maxWidth: '10px', width: '10px' }}>
+									<div className='flex flex-col items-center justify-center gap-2'>
 										<Button
 											variant='ghost'
 											size='icon'
 											onClick={() => setSelectedTopic(topic)}
-											title='Sửa bộ ba'
+											title='Sửa hội đồng chấm'
 										>
 											<Users className='h-4 w-4' />
 										</Button>
 										<Button
 											variant='ghost'
 											size='icon'
-											onClick={() => onRemove(topic.topicId)}
+											onClick={() =>
+												setConfirmDialog({ open: true, type: 'delete', topicId: topic.topicId })
+											}
 											title='Xóa đề tài'
 										>
 											<Trash2 className='h-4 w-4 text-red-500' />
+										</Button>
+										<Button
+											className='w-fit'
+											variant='ghost'
+											onClick={() => navigate(`/detail-topic/${topic.topicId}`)}
+										>
+											<Eye className='h-4 w-4' />
 										</Button>
 									</div>
 								</TableCell>
@@ -212,7 +272,19 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 					</TableBody>
 				</Table>
 			</div>
-
+			<ConfirmDialog
+				open={confirmDialog.open}
+				onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+				title={confirmDialog.type === 'delete' ? 'Xác nhận hủy bỏ đề tài khỏi hội đồng' : ''}
+				description={
+					confirmDialog.type === 'delete'
+						? 'Đề tài sẽ được loại bỏ ra khỏi hội đồng bảo vệ. Bạn có chắc chắn muốn tiếp tục?'
+						: ''
+				}
+				onConfirm={handleConfirmAction}
+				isLoading={false}
+				confirmText={confirmDialog.type === 'delete' ? 'Xóa đề tài' : ''}
+			/>
 			{/* Edit Members Dialog */}
 			{selectedTopic && (
 				<EditTopicMembersDialog

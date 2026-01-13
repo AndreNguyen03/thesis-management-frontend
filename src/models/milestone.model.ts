@@ -68,8 +68,8 @@ export interface ResponseMilestone {
 	progress: number
 	isAbleEdit: boolean
 	creatorType: string
-    totalTasks: number
-    tasksCompleted:number
+	totalTasks: number
+	tasksCompleted: number
 	//isCompleted: boolean
 }
 export interface TopicSnaps {
@@ -79,10 +79,17 @@ export interface TopicSnaps {
 	studentName: string[]
 	lecturers: ResponseMiniLecturerDto[]
 }
-export type CouncilMemberRole = 'chairperson' | 'secretary' | 'member' | 'reviewer'
+export type CouncilMemberRoleType = 'chairperson' | 'secretary' | 'member' | 'reviewer'
+
+export const CouncilMemberRole = {
+	CHAIRPERSON: 'chairperson',
+	SECRETARY: 'secretary',
+	MEMBER: 'member',
+	REVIEWER: 'reviewer'
+}
 
 export const CouncilMemberRoleOptions: Record<
-	CouncilMemberRole,
+	CouncilMemberRoleType,
 	{ label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' }
 > = {
 	chairperson: { label: 'Chủ tịch', variant: 'default' },
@@ -92,7 +99,7 @@ export const CouncilMemberRoleOptions: Record<
 }
 export interface DefenseCouncilMember {
 	memberId: string
-	role: CouncilMemberRole
+	role: CouncilMemberRoleType
 	title: string
 	fullName: string
 }

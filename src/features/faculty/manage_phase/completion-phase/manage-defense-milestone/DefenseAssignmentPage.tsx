@@ -12,7 +12,7 @@ import { useParams } from 'react-router-dom'
 import { useGetTopicsAwaitingEvaluationInPeriodQuery } from '@/services/topicApi'
 import { ConfirmDialog } from './ConfirmDialog'
 import { toast } from 'sonner'
-import type { CouncilMemberRole, DefenseCouncilMember, TopicSnaps } from '@/models/milestone.model'
+import type { CouncilMemberRole, CouncilMemberRoleType, DefenseCouncilMember, TopicSnaps } from '@/models/milestone.model'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { LecturersPanel } from './LecturersPanel'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
@@ -270,7 +270,7 @@ export function DefenseAssignmentPage() {
 			toast.error(error?.data?.message || 'Có lỗi xảy ra')
 		}
 	}
-	const handleChangeRole = (lecturerId: string, role: CouncilMemberRole) => {
+	const handleChangeRole = (lecturerId: string, role: CouncilMemberRoleType) => {
 		const updatedLecturers = selectedLecturers.map((lecturer) =>
 			lecturer.memberId === lecturerId ? { ...lecturer, role } : lecturer
 		)

@@ -18,6 +18,9 @@ export type BadgeVariant =
 	| 'info'
 	| 'warning'
 	| 'purple'
+	| 'chairperson'
+	| 'secretary'
+	| 'member'
 
 interface BadgeProps {
 	children: ReactNode
@@ -43,9 +46,11 @@ export const Badge = ({ children, variant = 'default', className }: BadgeProps) 
 		outlineBlue: 'border border-blue-500 text-blue-700 px-1 py-0',
 		info: 'bg-indigo-600 text-white',
 		warning: 'bg-yellow-500 text-yellow-900 transition-transform scale-100 hover:scale-105',
-		purple: 'bg-purple-600 text-white transition-transform scale-100 hover:scale-105'
+		purple: 'bg-purple-600 text-white transition-transform scale-100 hover:scale-105',
+		chairperson: 'bg-[#db2777] text-white transition-transform scale-100 hover:scale-105', // Chủ tịch: hồng
+		secretary: 'bg-[#f59e42] text-white transition-transform scale-100 hover:scale-105', // Thư ký: cam
+		member: 'bg-[#059669] text-white transition-transform scale-100 hover:scale-105' // Ủy viên: xanh lá
 	}
-
 	return (
 		<span
 			className={cn(

@@ -307,10 +307,7 @@ export const topicApi = baseApi.injectEndpoints({
 				method: 'DELETE'
 			})
 		}),
-		updateTopic: builder.mutation<
-			{ messsage: string },
-			{ topicId: string; body: UpdateTopicPayload }
-		>({
+		updateTopic: builder.mutation<{ messsage: string }, { topicId: string; body: UpdateTopicPayload }>({
 			query: ({ topicId, body }) => ({
 				url: `/topics/${topicId}/in-period`,
 				method: 'PATCH',
@@ -407,7 +404,7 @@ export const topicApi = baseApi.injectEndpoints({
 		}),
 		getTopicsAwaitingEvaluationInPeriod: builder.query<
 			PaginatedTopicInBatchMilestone,
-			{ periodId: string; queryParams: PaginationQueryParamsDto }
+			{ periodId: string; queryParams: PaginationQueryParamsDto; milestoneId?: string }
 		>({
 			query: ({ periodId, queryParams }) => {
 				const queryString = buildQueryString(queryParams)
@@ -417,7 +414,10 @@ export const topicApi = baseApi.injectEndpoints({
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data
+			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data,
+			providesTags: (result, error, { periodId, milestoneId }) => [
+				{ type: 'AwaitingTopicsInDefensemilestone', id: milestoneId }
+			]
 		}),
 		getTopicApprovalRegistration: builder.query<PaginatedTopicApproval, ApprovalTopicQueryParams>({
 			query: (query) => {
@@ -526,7 +526,7 @@ export const {
 	useDownloadTopicFilesZipMutation,
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicsMutation,
-    useFacuBoardRequestEditTopicMutation,
+	useFacuBoardRequestEditTopicMutation,
 	useLecturerGetTopicsInPhaseQuery,
 	useGetTopicsAwaitingEvaluationInPeriodQuery,
 	useGetTopicApprovalRegistrationQuery,

@@ -78,7 +78,7 @@ export const TopicDetailContainer = () => {
 
 	// Call the query hook unconditionally but skip fetching when no id is present
 	const { data: topic, isLoading, refetch } = useGetTopicByIdQuery({ id: id! }, { skip: !id })
-    console.log('detail topic :::',topic)
+	console.log('detail topic :::', topic)
 	// lấy danh sách các major cùng thuộc một khoa với đề tài
 	const { data: majorsOptions } = useGetMajorsBySameFacultyIdQuery(
 		{ facultyId: topic?.major.facultyId || '', queries: { page: 1, limit: 0 } },
@@ -110,7 +110,15 @@ export const TopicDetailContainer = () => {
 
 	//Modal thêm sinh viên
 	const [openAddStudentModal, setOpenAddStudentModal] = useState(false)
-
+	const handleComeBack = () => {
+		const params = new URLSearchParams(location.search)
+		const from = params.get('from')
+		if (from) {
+			navigate(from)
+		} else {
+			navigate(-1)
+		}
+	}
 	if (!id) {
 		return <div>Invalid topic id</div>
 	}
@@ -455,7 +463,7 @@ export const TopicDetailContainer = () => {
 			<DialogContent hideClose={true} className='h-screen rounded-xl bg-[#F2F4FF] p-8 sm:min-w-full'>
 				<div className='flex flex-col gap-4'>
 					<div className='grid grid-cols-3 px-4'>
-						<Button variant='back' className='w-fit border border-gray-300' onClick={() => navigate(-1)}>
+						<Button variant='back' className='w-fit border border-gray-300' onClick={() => handleComeBack()}>
 							<ChevronLeft className='size-6' />
 							<p>Quay lại</p>
 						</Button>
@@ -481,22 +489,22 @@ export const TopicDetailContainer = () => {
 									{user && user.role === 'student' && (
 										<Badge variant='destructive' className='h-fit text-sm'>
 											<p>
-                                                {(() => {
-                                                    switch (currentTopic.registrationStatus) {
-                                                        case 'pending':
-                                                            return 'Đang chờ duyệt'
-                                                        case 'approved':
-                                                            return 'Đã được duyệt đăng ký'
-                                                        case 'rejected':
-                                                            return 'Bị từ chối'
-                                                        case 'withdrawn':
-                                                            return 'Đã rút đăng ký'
-                                                        case 'cancelled':
-                                                            return 'Đã hủy đăng ký'
-                                                        default:
-                                                            return 'Chưa đăng ký'
-                                                    }
-                                                })()}
+												{(() => {
+													switch (currentTopic.registrationStatus) {
+														case 'pending':
+															return 'Đang chờ duyệt'
+														case 'approved':
+															return 'Đã được duyệt đăng ký'
+														case 'rejected':
+															return 'Bị từ chối'
+														case 'withdrawn':
+															return 'Đã rút đăng ký'
+														case 'cancelled':
+															return 'Đã hủy đăng ký'
+														default:
+															return 'Chưa đăng ký'
+													}
+												})()}
 											</p>
 										</Badge>
 									)}
@@ -642,7 +650,7 @@ export const TopicDetailContainer = () => {
 																<div className='mb-1 flex items-center gap-2'>
 																	<PhaseBadge phase={history.phaseName} />
 																	<StatusBadge status={history.status} />
-																	{idx > 0 &&
+																	{/* {idx > 0 &&
 																		history.actor._id ===
 																			topic.phaseHistories[idx - 1].actor._id &&
 																		Math.abs(
@@ -655,7 +663,7 @@ export const TopicDetailContainer = () => {
 																			<span className='ml-2 text-xs text-primary'>
 																				Đã tạo và nộp cùng lúc
 																			</span>
-																		)}
+																		)} */}
 																</div>
 																<div className='flex items-center gap-1'>
 																	<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
@@ -714,7 +722,7 @@ export const TopicDetailContainer = () => {
 																<div className='mb-1 flex items-center gap-2'>
 																	<PhaseBadge phase={history.phaseName} />
 																	<StatusBadge status={history.status} />
-																	{idx > 0 &&
+																	{/* {idx > 0 &&
 																		history.actor._id ===
 																			topic.phaseHistories[idx - 1].actor._id &&
 																		Math.abs(
@@ -727,7 +735,7 @@ export const TopicDetailContainer = () => {
 																			<span className='ml-2 text-xs text-primary'>
 																				Đã tạo và nộp cùng lúc
 																			</span>
-																		)}
+																		)} */}
 																</div>
 																<div className='flex items-center gap-1'>
 																	<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
@@ -894,7 +902,7 @@ export const TopicDetailContainer = () => {
 									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.students.approvedStudents.length}/${topic.maxStudents})`}</h4>
 								</div>
 								<div className='flex flex-col gap-4'>
-									{currentTopic.students.approvedStudents.length > 0	 ? (
+									{currentTopic.students.approvedStudents.length > 0 ? (
 										currentTopic.students.approvedStudents.map((student) => (
 											<div
 												key={student._id}
