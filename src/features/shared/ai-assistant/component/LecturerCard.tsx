@@ -1,5 +1,5 @@
 import type { LecturerSnapshot } from '@/models/chatbot-conversation.model'
-import { BookOpen, Lightbulb, Tag } from 'lucide-react'
+import { BookOpen, Heart, Lightbulb, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 // LecturerCard Component
@@ -24,6 +24,19 @@ export const LecturerCard: React.FC<{ lecturer: LecturerSnapshot }> = ({ lecture
 
 			{lecturer.bio && <p className='mb-3 line-clamp-2 text-sm text-gray-600'>{lecturer.bio}</p>}
 
+			{/* Thêm phần Reason Match nếu có */}
+			{lecturer.matchReason && (
+				<div className='mb-3 rounded-md bg-blue-50 p-3'>
+					<div className='flex items-start gap-2'>
+						<Heart className='mt-0.5 h-4 w-4 flex-shrink-0 text-red-500' />
+						<div className='text-sm'>
+							<span className='font-medium text-gray-700'>Lý do phù hợp:</span>
+							<p className='ml-1 mt-1 text-gray-600'>{lecturer.matchReason}</p>
+						</div>
+					</div>
+				</div>
+			)}
+
 			<div className='space-y-2 text-xs'>
 				<div className='flex items-start gap-2'>
 					<Tag className='h-4 w-4 flex-shrink-0 text-blue-500' />
@@ -43,29 +56,29 @@ export const LecturerCard: React.FC<{ lecturer: LecturerSnapshot }> = ({ lecture
 					</div>
 				</div>
 
-                <div className='flex items-start gap-2'>
-                    <Lightbulb className='h-4 w-4 flex-shrink-0 text-yellow-500' />
-                    <div>
-                        <span className='font-medium text-gray-700'>Lĩnh vực nghiên cứu:</span>
-                        <span className='ml-1 text-gray-600'>
-                            {lecturer.researchInterests && lecturer.researchInterests.length > 0
-                                ? lecturer.researchInterests.join(', ')
-                                : 'Chưa cập nhật'}
-                        </span>
-                    </div>
-                </div>
+				<div className='flex items-start gap-2'>
+					<Lightbulb className='h-4 w-4 flex-shrink-0 text-yellow-500' />
+					<div>
+						<span className='font-medium text-gray-700'>Lĩnh vực nghiên cứu:</span>
+						<span className='ml-1 text-gray-600'>
+							{lecturer.researchInterests && lecturer.researchInterests.length > 0
+								? lecturer.researchInterests.join(', ')
+								: 'Chưa cập nhật'}
+						</span>
+					</div>
+				</div>
 
-                <div className='flex items-start gap-2'>
-                    <BookOpen className='h-4 w-4 flex-shrink-0 text-purple-500' />
-                    <div>
-                        <span className='font-medium text-gray-700'>Công trình:</span>
-                        <span className='ml-1 text-gray-600'>
-                            {lecturer.publications && lecturer.publications.length > 0
-                                ? `${lecturer.publications.length} bài`
-                                : 'Chưa cập nhật'}
-                        </span>
-                    </div>
-                </div>
+				<div className='flex items-start gap-2'>
+					<BookOpen className='h-4 w-4 flex-shrink-0 text-purple-500' />
+					<div>
+						<span className='font-medium text-gray-700'>Công trình:</span>
+						<span className='ml-1 text-gray-600'>
+							{lecturer.publications && lecturer.publications.length > 0
+								? `${lecturer.publications.length} bài`
+								: 'Chưa cập nhật'}
+						</span>
+					</div>
+				</div>
 			</div>
 		</div>
 	)

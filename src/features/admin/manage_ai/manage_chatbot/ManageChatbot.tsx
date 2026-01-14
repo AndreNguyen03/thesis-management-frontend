@@ -1,29 +1,24 @@
 import { TabsContent } from '@radix-ui/react-tabs'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ChatbotConfig from './components/ChatbotConfig'
-import { ChatbotSocketProvider } from '@/contexts/ChatbotSocketContext'
 import ResourceList from './components/ResourceList'
 
 const ManageChatbot = () => {
 	return (
-		<ChatbotSocketProvider>
-			<TabsContent value='manageChatbot' className='space-y-4'>
-				<Tabs defaultValue='config' className='w-full'>
-					<TabsList className='grid w-fit grid-cols-2 gap-2'>
-						<TabsTrigger value='config'>Cấu hình</TabsTrigger>
-						<TabsTrigger value='resources'>Tài nguyên</TabsTrigger>
-					</TabsList>
+		<Tabs defaultValue='config' className='w-full p-4'>
+			<TabsList className='grid w-fit grid-cols-2 gap-2'>
+				<TabsTrigger value='config'>Cấu hình</TabsTrigger>
+				<TabsTrigger value='resources'>Tài nguyên</TabsTrigger>
+			</TabsList>
 
-					<TabsContent value='config' className='mt-6'>
-						<ChatbotConfig />
-					</TabsContent>
-
-					<TabsContent value='resources' className='mt-6'>
-						<ResourceList />
-					</TabsContent>
-				</Tabs>
+			<TabsContent value='config'>
+				<ChatbotConfig />
 			</TabsContent>
-		</ChatbotSocketProvider>
+
+			<TabsContent value='resources'>
+				<ResourceList />
+			</TabsContent>
+		</Tabs>
 	)
 }
 

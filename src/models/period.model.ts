@@ -7,7 +7,6 @@ import { CalendarCheck, Clock, Lightbulb } from 'lucide-react'
 import type { Role } from './users'
 import type { BadgeVariant } from '@/components/ui'
 import type { MetaDto } from './paginated-object.model'
-import type { FileInfo } from './milestone.model'
 
 export type PeriodStatus = 'timeout' | 'active' | 'pending'
 
@@ -178,6 +177,7 @@ export interface LecturerTopicExecution {
 	titleVN: string
 	type: string
 	maxStudents: string
+	groupId?: string
 }
 
 export interface LecturerTopicSubmit {
@@ -196,10 +196,12 @@ export interface LecturerTopicCompletion {
 	maxStudents: number
 	isPublishedToLibrary: boolean
 	defenseResult?: DefenseResult
+	groupId?: string
 }
 
 export interface StudentTopicDashboard {
 	_id: string
+	groupId?: string
 	titleVN: string
 	type: string
 	defenseResult: DefenseResult

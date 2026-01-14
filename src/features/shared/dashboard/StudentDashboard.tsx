@@ -20,6 +20,9 @@ export function StudentDashboard() {
 	const currentThesisPeriod = dashboardData?.thesis
 	const currentResearchPeriod = dashboardData?.scientificResearch
 
+    const group = useAppSelector((state) => state.group)
+    console.log('Current group state:', group);
+
 	useEffect(() => {
 		if (!userId) return
 		socketService.connect(userId, '/period')

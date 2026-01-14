@@ -1,9 +1,4 @@
 import type { GetFaculty } from './faculty.model'
-import type { GetFieldNameReponseDto } from './field.model'
-import type { GetMajorMiniDto } from './major.model'
-import type { GetRequirementNameReponseDto } from './requirement.model'
-import type { ResponseMiniLecturerDto } from './users'
-
 export interface ConversationMessage {
 	index?: string
 	id: string
@@ -56,7 +51,8 @@ export interface LecturerSnapshot {
 	areaInterest?: string[]
 	researchInterests?: string[]
 	publications?: PublicationDto[]
-	similarityScore?: number
+	similarityScore?: number,
+    matchReason?: string
 }
 export interface LecturerResult extends LecturerSnapshot {
 	index: string

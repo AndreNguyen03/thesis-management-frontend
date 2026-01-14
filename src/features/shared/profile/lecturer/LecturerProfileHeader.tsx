@@ -5,6 +5,15 @@ import { useCreateOrGetDirectGroupMutation } from '@/services/groupApi'
 import { MailIcon, MessageCircle, PhoneIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+const FACULTY_LABELS: Record<string, string> = {
+	CNPM: 'Công nghệ Phần Mềm',
+	KHMT: 'Khoa học Máy tính',
+	KTMT: 'Kỹ thuật Máy tính',
+	KHKTTT: 'Khoa họ và Kỹ thuật Thông tin',
+	HTTT: 'Khoa Hệ thống Thông tin',
+	MTTTT: 'Mạng máy tính và Truyền thông Dữ liệu'
+} as const
+
 export function LecturerProfileHeader({ lecturer, isOwner }: { lecturer: LecturerProfile; isOwner: boolean }) {
 	const navigate = useNavigate()
 	const [createOrGetDirectGroup, { isLoading }] = useCreateOrGetDirectGroupMutation()
@@ -30,7 +39,7 @@ export function LecturerProfileHeader({ lecturer, isOwner }: { lecturer: Lecture
 				<div className='relative'>
 					<Avatar className='h-32 w-32 rounded-full border-4 border-white shadow-xl'>
 						<AvatarImage src={lecturer.avatarUrl} alt={lecturer.fullName} className='object-cover' />
-						<AvatarFallback className='flex items-center justify-center text-2xl font-bold text-white'>
+						<AvatarFallback className='flex items-center justify-center bg-blue-300 text-2xl font-bold text-white'>
 							{lecturer.fullName?.[0]?.toUpperCase()}
 						</AvatarFallback>
 					</Avatar>
@@ -40,9 +49,9 @@ export function LecturerProfileHeader({ lecturer, isOwner }: { lecturer: Lecture
 				<div className='space-y-2 text-center lg:text-left'>
 					<h1 className='text-center text-3xl font-bold text-gray-900'>{lecturer.fullName}</h1>
 					<p className='text-center text-xl font-semibold text-gray-600'>{lecturer?.title}</p>
-					<div className='flex items-center gap-2 text-gray-500'>
-						<span className='text-base'>Khoa:</span>
-						<p className='italic leading-relaxed'>{lecturer?.facultyName}</p>
+					<div className='mx-auto flex w-fit items-center gap-2 pt-4 text-lg'>
+						<span className=''>Khoa:</span>
+						<p className='leading-relaxed'>{FACULTY_LABELS[lecturer.facultyName]}</p>
 					</div>
 				</div>
 			</div>

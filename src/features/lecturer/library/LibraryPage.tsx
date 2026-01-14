@@ -34,6 +34,9 @@ import DOMPurify from 'dompurify'
 import { downloadFileWithURL } from '@/lib/utils'
 import Evaluation from './Evaluation'
 import { useGetTopicStatsQuery } from '@/services/ratingApi'
+import { getUserIdFromAppUser } from '@/utils/utils'
+import { socketService } from '@/services/socket.service'
+import { useAppSelector } from '@/store'
 
 // --- TYPES ---
 interface DocumentLinks {
@@ -405,7 +408,24 @@ export const LibraryPage = () => {
 		majorIds: [],
 		year: 'Tất cả'
 	})
-	const { data: topicsInLibrary, isLoading, error } = useAdvanceSearchTopicsInLibraryQuery({ queries: queries })
+	const { data: topicsInLibrary, isLoading, error, refetch } = useAdvanceSearchTopicsInLibraryQuery({ queries: queries })
+
+    const userId = getUserIdFromAppUser(useAppSelector((state) => state.auth.user))
+
+	useEffect(() => {
+		if (!userId) return
+		socketService.connect(userId, '/period')
+
+		const cleanup = socketService.on('/period', 'library:update', () => {
+			console.log('Received library:update event, refetching lecturer dashboard data...')
+			refetch()
+		})
+
+		return () => {
+			cleanup()
+			socketService.disconnect('/period')
+		}
+	}, [userId, refetch])
 
 	const handleSearch = (searchTerm: string) => {
 		setQueries((prev) => ({

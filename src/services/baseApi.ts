@@ -128,7 +128,9 @@ export const baseApi = createApi({
 		'DefenseCouncil',
 		'AwaitingTopicsInDefensemilestone',
 		'AssignedDefenseCouncils',
-		'QuickDetailCouncil'
+		'QuickDetailCouncil',
+        'LibraryStats',
+        'TopicInLibrary'
 	],
 	endpoints: () => ({})
 })

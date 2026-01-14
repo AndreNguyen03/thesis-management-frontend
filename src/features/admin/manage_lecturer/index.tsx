@@ -1,11 +1,13 @@
-import { usePageBreadcrumb } from '@/hooks'
+import { useBreadcrumb } from '@/hooks'
 import FacultyLecturerDataTable from './datatables/FacultyLecturerDataTable'
+import { useEffect } from 'react'
 
 export function ManageLecturerPage() {
-	usePageBreadcrumb([
-		{ label: 'Trang chủ', path: '/' },
-		{ label: 'Quản lý giảng viên', path: '/manage-lecturer' }
-	])
+	const { setHidden } = useBreadcrumb()
+
+	useEffect(() => {
+		setHidden(true)
+	}, [setHidden])
 
 	return (
 		<div className='mx-4 h-full w-full overflow-auto pt-4'>

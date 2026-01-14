@@ -22,7 +22,6 @@ import {
 } from '@/services/chatbotApi'
 import type { GetQuerySuggestionDto } from '@/models/chatbot-version'
 import type { PayloadSuggestion } from '@/models/chatbot-resource.model'
-import { Checkbox } from '@/components/ui/checkbox'
 import ManageSuggestion from './manage-suggestions/ManageSuggestion'
 
 const formSchema = z.object({

@@ -730,7 +730,9 @@ export const TopicDetailContainer = () => {
 																					topic.phaseHistories[idx - 1]
 																						.createdAt
 																				).getTime()
-																		) < 6000 && (
+																		) < 6000 &&
+																		history.phaseName ===
+																			PeriodPhaseName.SUBMIT_TOPIC && (
 																			<span className='ml-2 text-xs text-primary'>
 																				Đã tạo và nộp cùng lúc
 																			</span>

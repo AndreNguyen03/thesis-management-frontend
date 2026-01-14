@@ -107,6 +107,10 @@ export interface TopicInLibrary extends AbstractTopic {
 	finalProduct?: FinalProduct
 	studentsRegistered: ResponseMiniStudentDto[]
 	defenseResult: DefenseResult
+	// visibility flags
+	isHiddenInLibrary?: boolean
+	hiddenByAdmin?: string
+	hiddenAt?: string | Date
 }
 export interface PaginatedTopicsInLibrary extends GetPaginatedObject {
 	data: TopicInLibrary[]
@@ -168,6 +172,10 @@ export interface Topic {
 	allowManualApproval: boolean
 
 	students: RelatedStudentInTopic
+	// admin soft-hide
+	isHiddenInLibrary?: boolean
+	hiddenByAdmin?: string
+	hiddenAt?: string | Date
 }
 export interface GetPaginatedTopics extends GetPaginatedObject {
 	data: GeneralTopic[]
@@ -497,4 +505,34 @@ export interface PaginationRegisteredTopicsQueryParams extends PaginationQueryPa
 
 export interface PaginationDraftTopicsQueryParams extends PaginationQueryParamsDto {
 	periodId?: string
+}
+
+export interface TrendingKeyword {
+	label: string
+	count: number
+	score: number
+	color?: string
+}
+
+export interface SystemOverviewStats {
+	totalTopics: number
+	totalViews: number
+	totalDownloads: number
+	averageRating: number
+	ratingCount: number
+	newTopicsThisMonth: number
+	totalStorageBytes?: number
+}
+
+export interface MonthlyStat {
+	month: string // format YYYY-MM
+	views: number
+	downloads: number
+}
+
+export interface MajorDistribution {
+	majorId: string
+	label: string
+	count: number
+	percent: number
 }
