@@ -59,6 +59,8 @@ import {
 } from '@/services/chatbotConversationApi'
 import { useAppSelector } from '@/store'
 import { LecturerCard } from './component/LecturerCard'
+import { getUserIdFromAppUser } from '@/utils/utils'
+import { useBreadcrumb } from '@/hooks'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:3000/api'
 const DESCRIPTION_PREVIEW_LENGTH = 150
@@ -75,6 +77,13 @@ interface ChatResponse {
 
 export const AIAssistantPage = () => {
 	const { conversationId } = useParams<{ conversationId: string }>()
+
+	const { setHidden } = useBreadcrumb()
+
+	useEffect(() => {
+		setHidden(true)
+		return () => setHidden(false)
+	}, [setHidden])
 
 	const { toast } = useToast()
 	//const { data: chatbot, isLoading: isLoadingChatbot } = useGetChatbotVersionQuery()
@@ -125,6 +134,8 @@ export const AIAssistantPage = () => {
 	const [isEdittingId, setIsEdittingId] = useState<string | null>(null)
 	const messagesEndRef = useRef<HTMLDivElement>(null)
 	const inputRef = useRef<HTMLTextAreaElement>(null)
+
+	const userId = getUserIdFromAppUser(useAppSelector((state) => state.auth.user))
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -307,8 +318,6 @@ export const AIAssistantPage = () => {
 		)
 	}
 
-
-
 	const handleSend = async () => {
 		if (!inputValue.trim()) return
 
@@ -368,7 +377,8 @@ export const AIAssistantPage = () => {
 					chatHistory: messages.map((m) => ({
 						role: m.role,
 						content: m.content
-					}))
+					})),
+					userId
 				})
 			})
 
@@ -571,7 +581,7 @@ export const AIAssistantPage = () => {
 	}
 
 	return (
-		<div className='flex h-full w-full pt-6'>
+		<div className='flex h-full w-full'>
 			{/* Sidebar lịch sử */}
 			{showSidebar && (
 				<div className='flex w-80 flex-col border-r bg-muted/30'>
@@ -640,7 +650,7 @@ export const AIAssistantPage = () => {
 												/>
 											) : (
 												<p
-													className='truncate text-sm font-medium text-wrap text-gray-900 hover:bg-gray-200'
+													className='truncate text-wrap text-sm font-medium text-gray-900 hover:bg-gray-200'
 													onDoubleClick={() => setIsEdittingId(chat._id)}
 													title='Nhấn đúp để đổi tên'
 												>

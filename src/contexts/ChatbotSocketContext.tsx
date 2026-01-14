@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useEffect } from 'react'
 import { socketService } from '@/services/socket.service'
 import type { CrawlProgress } from '@/models/chatbot-resource.model'
 
@@ -28,36 +28,31 @@ const ChatbotSocketContext = createContext<ChatbotSocketContextValue | null>(nul
 /* ================= PROVIDER ================= */
 
 export const ChatbotSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [isConnected, setIsConnected] = useState(false)
-
+	const [isConnected, setIsConnected] = React.useState(false)
 	useEffect(() => {
-		const socket = socketService.getSocket(CHATBOT_NS)
-
-		if (!socket) {
-			console.error('⚠️ ChatbotSocket: socket not initialized')
-			return
-		}
+		const socket = socketService.connectAdmin(CHATBOT_NS)
 
 		const handleConnect = () => {
-			console.log('✅ ChatbotSocket: connected')
 			setIsConnected(true)
+			socket.emit('join:chatbot-admin', { roomId: 'chatbot-admin' })
+			console.log('🚪 ChatbotSocket: joined admin room')
 		}
 
 		const handleDisconnect = () => {
-			console.log('❌ ChatbotSocket: disconnected')
 			setIsConnected(false)
+			console.log('🚪 ChatbotSocket: disconnected')
 		}
 
 		socket.on('connect', handleConnect)
 		socket.on('disconnect', handleDisconnect)
 
-		if (socket.connected) {
-			handleConnect()
-		}
-
 		return () => {
+			// Cleanup: leave room và disconnect khi unmount
+			socket.emit('leave:chatbot-admin', { roomId: 'chatbot-admin' })
+			console.log('🚪 ChatbotSocket: left admin room')
 			socket.off('connect', handleConnect)
 			socket.off('disconnect', handleDisconnect)
+			socketService.disconnect(CHATBOT_NS)
 		}
 	}, [])
 
@@ -180,12 +175,4 @@ export const ChatbotSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 	)
 }
 
-/* ================= HOOK ================= */
-
-export const useChatbotSocket = () => {
-	const context = useContext(ChatbotSocketContext)
-	if (!context) {
-		throw new Error('useChatbotSocket must be used within ChatbotSocketProvider')
-	}
-	return context
-}
+export { ChatbotSocketContext }

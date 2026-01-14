@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Loader2, BookOpen, Users, Tag } from 'lucide-react'
 
@@ -8,8 +9,8 @@ const DESCRIPTION_PREVIEW_LENGTH = 150
 import { useNavigate } from 'react-router-dom'
 import { renderMarkdown } from '@/lib/utils'
 import type { TopicResult } from '@/models/chatbot-conversation.model'
-
-
+import { getUserIdFromAppUser } from '@/utils/utils'
+import { useAppSelector } from '@/store'
 
 interface Message {
 	id: string
@@ -37,6 +38,8 @@ export const AgentChat: React.FC = () => {
 	const [useStreaming, setUseStreaming] = useState(false)
 	const messagesEndRef = useRef<HTMLDivElement>(null)
 	const eventSourceRef = useRef<EventSource | null>(null)
+
+	const userId = getUserIdFromAppUser(useAppSelector((state) => state.auth.user))
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -69,7 +72,7 @@ export const AgentChat: React.FC = () => {
 				return parsed.topics
 			}
 		} catch (error) {
-			console.log('No valid topics JSON found')
+			console.log('No valid topics JSON found', error)
 		}
 		return null
 	}
@@ -89,7 +92,8 @@ export const AgentChat: React.FC = () => {
 					chatHistory: messages.map((m) => ({
 						role: m.role,
 						content: m.content
-					}))
+					})),
+					userId
 				})
 			})
 
@@ -167,7 +171,8 @@ export const AgentChat: React.FC = () => {
 					chatHistory: messages.map((m) => ({
 						role: m.role,
 						content: m.content
-					}))
+					})),
+					userId
 				})
 			})
 
@@ -186,8 +191,8 @@ export const AgentChat: React.FC = () => {
 
 				buffer += decoder.decode(value, { stream: true })
 
-				// Xử lý từng message SSE (kết thúc bằng \n\n)
-				let lines = buffer.split('\n\n')
+				// Xử lý từng message SSE (kết thúc bằng \n\n) //4:51/13/1/2026
+				const lines = buffer.split('\n\n')
 				buffer = lines.pop() || '' // Giữ lại phần chưa hoàn chỉnh
 
 				for (const line of lines) {

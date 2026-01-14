@@ -10,12 +10,13 @@ export interface StudentProfileProps {
 	viewerId?: string
 }
 
+
 export const StudentProfile = ({ student, viewerId }: StudentProfileProps) => {
 	const navigate = useNavigate()
 	usePageBreadcrumb([{ label: 'Trang chủ', path: '/' }, { label: 'Hồ sơ' }])
 
 	if (!student) return null
-    console.log('student id, viewer id :::', student.userId, viewerId)
+	console.log('student id, viewer id :::', student.userId, viewerId)
 	const isOwner = student.userId === viewerId
 
 	return (
@@ -45,7 +46,7 @@ export const StudentProfile = ({ student, viewerId }: StudentProfileProps) => {
 
 				<div className='grid gap-6 lg:grid-cols-3'>
 					{/* Left column */}
-					<StudentProfileLeft student={student} isOwner={isOwner}/>
+					<StudentProfileLeft student={student} isOwner={isOwner} />
 
 					{/* Right column */}
 					<StudentProfileRight student={student} />
