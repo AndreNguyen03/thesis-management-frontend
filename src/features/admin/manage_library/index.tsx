@@ -17,6 +17,9 @@ import {
 import type { RequestGetTopicsInAdvanceSearch } from '@/models/topicVector.model'
 import type { ApiError, MonthlyStat, TopicInLibrary } from '@/models'
 import { useBreadcrumb } from '@/hooks'
+import { getUserIdFromAppUser } from '@/utils/utils'
+import { useAppSelector } from '@/store'
+import { socketService } from '@/services/socket.service'
 
 const ManageLibraryPage: React.FC = () => {
 	const { setHidden } = useBreadcrumb()
@@ -51,16 +54,24 @@ const ManageLibraryPage: React.FC = () => {
 	const {
 		data: topicsInLibrary,
 		isLoading,
-		error
+		error,
+		refetch: refetchTopicsInLibrary
 	} = useAdvanceSearchTopicsInLibraryQuery({ queries: { ...queries, page, limit: pageSize } })
 
+	const userId = getUserIdFromAppUser(useAppSelector((state) => state.auth.user))
 
-	const { data: overview, isLoading: loadingOverview, error: errorOverview } = useGetSystemOverviewStatsQuery()
+	const {
+		data: overview,
+		isLoading: loadingOverview,
+		error: errorOverview,
+		refetch: refetchOverview
+	} = useGetSystemOverviewStatsQuery()
 
 	const {
 		data: monthlyStats = [],
 		isLoading: loadingMonthlyStats,
-		error: errorMonthlyStats
+		error: errorMonthlyStats,
+		refetch: refetchMonthlyStats
 	} = useGetSystemMonthlyStatsQuery({ months: 12 })
 
 	const trendData = useMemo(() => {
@@ -79,7 +90,12 @@ const ManageLibraryPage: React.FC = () => {
 		return res
 	}, [monthlyStats])
 
-	const { data: majors, isLoading: loadingMajors, error: errorMajors } = useGetSystemMajorDistributionQuery()
+	const {
+		data: majors,
+		isLoading: loadingMajors,
+		error: errorMajors,
+		refetch: refetchMajorDistribution
+	} = useGetSystemMajorDistributionQuery()
 
 	// Debounced search handler
 	const handleSearchImmediate = useCallback((searchTerm: string) => {
@@ -122,9 +138,13 @@ const ManageLibraryPage: React.FC = () => {
 
 	//Lấy metaData
 	//Ngành
-	const { data: majorOptions, isLoading: isLoadingMajors } = useGetMajorComboboxQuery()
+	const {
+		data: majorOptions,
+		isLoading: isLoadingMajorOptions,
+		refetch: refetchMajorOptions
+	} = useGetMajorComboboxQuery()
 	//Năm bảo vệ
-	const { data: yearOptions, isLoading: isLoadingYears } = useGetYearComboboxQuery()
+	const { data: yearOptions, isLoading: isLoadingYears, refetch: refetchYears } = useGetYearComboboxQuery()
 
 	console.log('🔥 topicsInLibrary:', topicsInLibrary)
 	console.log('majorOptions:', majorOptions)
@@ -142,6 +162,38 @@ const ManageLibraryPage: React.FC = () => {
 			console.error('ManageLibraryPage API errors:', errors)
 		}
 	}, [error, errorOverview, errorMonthlyStats, errorMajors])
+
+
+const handleRefresh = useCallback(() => {
+		refetchTopicsInLibrary?.()
+		refetchOverview?.()
+		refetchMonthlyStats?.()
+		refetchMajorDistribution?.()
+		refetchMajorOptions?.()
+		refetchYears?.()
+	}, [
+		refetchTopicsInLibrary,
+		refetchOverview,
+		refetchMonthlyStats,
+		refetchMajorDistribution,
+		refetchMajorOptions,
+		refetchYears
+	])
+
+	useEffect(() => {
+		if (!userId) return
+		socketService.connect(userId, '/period')
+
+		const cleanup = socketService.on('/period', 'library:update', () => {
+			console.log('Received library:update event, refetching lecturer dashboard data...')
+			handleRefresh()
+		})
+
+		return () => {
+			cleanup()
+			socketService.disconnect('/period')
+		}
+	}, [userId, handleRefresh])
 
 	return (
 		<div className='min-h-screen w-full bg-background'>
@@ -162,7 +214,7 @@ const ManageLibraryPage: React.FC = () => {
 							))}
 						</div>
 					) : (
-						<LibraryDashboard overview={overview} monthlyStats={monthlyStats} />
+						<LibraryDashboard overview={overview}  />
 					)}
 				</section>
 
@@ -189,7 +241,7 @@ const ManageLibraryPage: React.FC = () => {
 					)}
 				</section>
 
-				{( errorOverview || errorMonthlyStats || errorMajors) && (
+				{(errorOverview || errorMonthlyStats || errorMajors) && (
 					<section className='mb-4'>
 						<div className='space-y-2'>
 							{errorOverview && (
@@ -216,7 +268,7 @@ const ManageLibraryPage: React.FC = () => {
 
 				{/* Search Bar */}
 				<section className='mb-4'>
-					{isLoadingMajors || isLoadingYears ? (
+					{isLoadingMajorOptions || isLoadingYears ? (
 						<div className='flex gap-2'>
 							<Skeleton className='h-12 w-full rounded-lg' />
 							<Skeleton className='h-12 w-[140px] rounded-lg' />

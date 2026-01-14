@@ -1,6 +1,7 @@
 import React from 'react'
 import { BookOpen, Eye, Download, Star, HardDrive } from 'lucide-react'
 import { StatCard } from './StatCard'
+import type { SystemOverviewStats } from '@/models'
 
 const formatBytes = (bytes?: number) => {
 	if (!bytes || bytes <= 0) return '0 B'
