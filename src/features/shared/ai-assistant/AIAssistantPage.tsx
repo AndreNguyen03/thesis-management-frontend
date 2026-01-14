@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
@@ -26,7 +27,8 @@ import {
 	Tag,
 	Users,
 	Menu,
-	Loader2
+	Loader2,
+	CheckCircle2
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { cn, renderMarkdown } from '@/lib/utils'
@@ -59,8 +61,9 @@ import {
 } from '@/services/chatbotConversationApi'
 import { useAppSelector } from '@/store'
 import { LecturerCard } from './component/LecturerCard'
-import { getUserIdFromAppUser } from '@/utils/utils'
+import { getUserIdFromAppUser, sleep } from '@/utils/utils'
 import { useBreadcrumb } from '@/hooks'
+import clsx from 'clsx'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:3000/api'
 const DESCRIPTION_PREVIEW_LENGTH = 150
@@ -73,6 +76,86 @@ interface ChatResponse {
 		output: string
 	}>
 	success: boolean
+}
+
+type AgentUXEvent =
+	| {
+			type: 'step'
+			step: 'receive_request' | 'thinking' | 'tool_running' | 'tool_done'
+			tool?: string
+			message?: string
+	  }
+	| {
+			type: 'content'
+			delta: string
+	  }
+	| {
+			type: 'result'
+			resultType: 'topics' | 'lecturers'
+			payload: any
+	  }
+	| {
+			type: 'done'
+	  }
+	| {
+			type: 'error'
+			error: string
+	  }
+
+type UXStepStatus = 'pending' | 'running' | 'done'
+
+interface UXStep {
+	key: string
+	label: string
+	status: UXStepStatus
+	runtimeLabel?: string
+}
+
+interface AgentStepperProps {
+	steps: UXStep[]
+}
+
+export function AgentStepper({ steps }: AgentStepperProps) {
+	return (
+		<div className='flex flex-col gap-3 rounded-lg border bg-muted/30 p-4'>
+			{steps.map((step, index) => {
+				const isLast = index === steps.length - 1
+
+				return (
+					<div key={step.key} className='flex items-start gap-3'>
+						{/* ICON + LINE */}
+						<div className='flex flex-col items-center'>
+							{step.status === 'done' && <CheckCircle2 className='h-4 w-4 text-green-600' />}
+
+							{step.status === 'running' && <Loader2 className='h-4 w-4 animate-spin text-blue-600' />}
+
+							{step.status === 'pending' && (
+								<div className='h-4 w-4 rounded-full border border-muted-foreground/40' />
+							)}
+
+							{!isLast && <div className='mt-1 h-6 w-px bg-muted-foreground/20' />}
+						</div>
+
+						{/* LABEL */}
+						<div
+							className={cn(
+								'text-sm leading-snug transition-all',
+								step.status === 'running' && 'font-medium',
+								step.status === 'done' && 'text-muted-foreground',
+								step.status === 'pending' && 'text-muted-foreground/60'
+							)}
+						>
+							{step.status === 'running' ? (
+								<span className='shimmer-text'>{step.runtimeLabel ?? step.label}</span>
+							) : (
+								<span>{step.runtimeLabel ?? step.label}</span>
+							)}
+						</div>
+					</div>
+				)
+			})}
+		</div>
+	)
 }
 
 export const AIAssistantPage = () => {
@@ -128,12 +211,16 @@ export const AIAssistantPage = () => {
 	const [isLoading, setIsLoading] = useState(false)
 	const [showSidebar, setShowSidebar] = useState(true)
 	const [useStreaming, setUseStreaming] = useState(false)
+	const [agentSteps, setAgentSteps] = useState<AgentUXEvent[]>([])
+	const [uxSteps, setUxSteps] = useState<UXStep[]>([])
+	const [collapseStepper, setCollapseStepper] = useState(false)
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 	const [chatToDelete, setChatToDelete] = useState<string | null>(null)
 	const navigate = useNavigate()
 	const [isEdittingId, setIsEdittingId] = useState<string | null>(null)
 	const messagesEndRef = useRef<HTMLDivElement>(null)
 	const inputRef = useRef<HTMLTextAreaElement>(null)
+	const fullContentRef = useRef('')
 
 	const userId = getUserIdFromAppUser(useAppSelector((state) => state.auth.user))
 
@@ -156,6 +243,52 @@ export const AIAssistantPage = () => {
 	useEffect(() => {
 		inputRef.current?.focus()
 	}, [])
+
+	const updateStepStatus = (key: string, status: UXStepStatus) => {
+		setUxSteps((prev) => prev.map((s) => (s.key === key ? { ...s, status } : s)))
+	}
+
+	const runStep = async (key: string, runtimeLabel?: string) => {
+		setUxSteps((prev) =>
+			prev.map((s) => {
+				if (s.key === key) {
+					return {
+						...s,
+						status: 'running',
+						runtimeLabel: runtimeLabel ?? s.runtimeLabel
+					}
+				}
+				if (s.status === 'running') {
+					return { ...s, status: 'done' }
+				}
+				return s
+			})
+		)
+	}
+
+	const finishStep = (key: string) => {
+		setUxSteps((prev) => prev.map((s) => (s.key === key ? { ...s, status: 'done' } : s)))
+	}
+	const pushStep = (key: string, label: string, runtimeLabel?: string) => {
+		setUxSteps((prev) => {
+			if (prev.some((s) => s.key === key)) return prev
+
+			return [
+				...prev.map((s) =>
+					s.status === ('running' as UXStepStatus) ? { ...s, status: 'done' as UXStepStatus } : s
+				),
+				{
+					key,
+					label,
+					runtimeLabel,
+					status: 'running' as UXStepStatus
+				}
+			]
+		})
+	}
+	const updateRuntimeLabel = (key: string, runtimeLabel: string) => {
+		setUxSteps((prev) => prev.map((s) => (s.key === key && s.status === 'running' ? { ...s, runtimeLabel } : s)))
+	}
 
 	const selectChat = (chatId: string) => {
 		const chat = chatHistories.find((c) => c._id === chatId)
@@ -354,7 +487,14 @@ export const AIAssistantPage = () => {
 			setIsLoading(false)
 		}
 	}
+	const hasStartedContentRef = useRef(false)
+
 	const sendStreamingChat = async (chatId: string) => {
+		setCollapseStepper(false)
+		setUxSteps([])
+		hasStartedContentRef.current = false
+		fullContentRef.current = ''
+
 		const streamingMessageId = Date.now().toString()
 		const streamingMessage: ConversationMessage = {
 			id: streamingMessageId,
@@ -365,6 +505,126 @@ export const AIAssistantPage = () => {
 		}
 
 		setMessages((prev) => [...prev, streamingMessage])
+
+		const handleAgentEvent = (event: AgentUXEvent) => {
+			switch (event.type) {
+				/**
+				 * =====================
+				 * STEP EVENTS
+				 * =====================
+				 */
+				case 'step': {
+					switch (event.step) {
+						case 'receive_request': {
+							pushStep('receive_request', 'Nhận yêu cầu')
+							break
+						}
+
+						case 'thinking': {
+							pushStep('thinking', 'Đang phân tích yêu cầu')
+							break
+						}
+
+						case 'tool_running': {
+							if (!event.tool) return
+
+							pushStep(event.tool, 'Đang xử lý', event.message ?? 'Đang xử lý')
+							break
+						}
+
+						case 'tool_done': {
+							if (!event.tool) return
+
+							finishStep(event.tool)
+							break
+						}
+					}
+
+					break
+				}
+
+				/**
+				 * =====================
+				 * STREAMING CONTENT
+				 * =====================
+				 */
+				case 'content': {
+					// Collapse thinking NGAY KHI có content đầu tiên
+					if (!hasStartedContentRef.current) {
+						hasStartedContentRef.current = true
+						finishStep('thinking')
+						setCollapseStepper(true)
+					}
+
+					fullContentRef.current += event.delta
+
+					setMessages((prev) =>
+						prev.map((m) => (m.id === streamingMessageId ? { ...m, content: fullContentRef.current } : m))
+					)
+					break
+				}
+
+				/**
+				 * =====================
+				 * FINAL RESULTS (OPTIONAL)
+				 * =====================
+				 */
+				case 'result': {
+					setMessages((prev) =>
+						prev.map((m) =>
+							m.id === streamingMessageId
+								? {
+										...m,
+										[event.resultType]: event.resultType === 'topics' ? event.payload : undefined,
+										lecturers: event.resultType === 'lecturers' ? event.payload : undefined
+									}
+								: m
+						)
+					)
+					break
+				}
+
+				/**
+				 * =====================
+				 * DONE
+				 * =====================
+				 */
+				case 'done': {
+					setMessages((prev) =>
+						prev.map((m) => (m.id === streamingMessageId ? { ...m, isStreaming: false } : m))
+					)
+
+					setTimeout(() => {
+						setCollapseStepper(true)
+					}, 200)
+
+					break
+				}
+
+				/**
+				 * =====================
+				 * ERROR
+				 * =====================
+				 */
+				case 'error': {
+					console.error('Agent error:', event.error)
+
+					setMessages((prev) =>
+						prev.map((m) =>
+							m.id === streamingMessageId
+								? {
+										...m,
+										content: m.content || `Xin lỗi, đã xảy ra lỗi: ${event.error}`,
+										isStreaming: false
+									}
+								: m
+						)
+					)
+					setCollapseStepper(true)
+					break
+				}
+			}
+		}
 
 		try {
 			const response = await fetch(`${API_BASE}/chatbot-agent/stream-chat`, {
@@ -386,122 +646,33 @@ export const AIAssistantPage = () => {
 				throw new Error('Stream failed')
 			}
 
-			const reader = response.body?.getReader()
+			const reader = response.body!.getReader()
 			const decoder = new TextDecoder()
 			let buffer = ''
-			let fullContent = ''
 
 			while (true) {
-				const { done, value } = await reader!.read()
+				const { done, value } = await reader.read()
 				if (done) break
 
 				buffer += decoder.decode(value, { stream: true })
 
-				// Xử lý từng message SSE (kết thúc bằng \n\n)
-				let lines = buffer.split('\n\n')
-				buffer = lines.pop() || '' // Giữ lại phần chưa hoàn chỉnh
+				let lines = buffer.split('\n')
+				buffer = lines.pop() || ''
 
 				for (const line of lines) {
-					if (!line.startsWith('data: ')) continue
+					if (!line.trim()) continue
 
-					try {
-						const jsonStr = line.slice(6)
-						const data = JSON.parse(jsonStr)
-
-						if (data.error) throw new Error(data.error)
-
-						if (data.done) {
-							// Parse topics từ fullContent nếu có
-							const topicsMatch = fullContent.match(
-								/__TOPICS_DATA_START__\n([\s\S]*?)\n__TOPICS_DATA_END__/
-							)
-							const lecturersMatch = fullContent.match(
-								/__LECTURERS_DATA_START__\n([\s\S]*?)\n__LECTURERS_DATA_END__/
-							)
-
-							let topics: TopicResult[] | undefined
-							let lecturers: LecturerResult[] | undefined
-
-							if (topicsMatch) {
-								try {
-									const topicsData = JSON.parse(topicsMatch[1])
-									topics = topicsData.topics || []
-									console.log('📚 Parsed topics:', topics?.length)
-
-									// Remove markers từ content để không hiển thị
-									fullContent = fullContent
-										.replace(/__TOPICS_DATA_START__[\s\S]*?__TOPICS_DATA_END__/g, '')
-										.trim()
-								} catch (e) {
-									console.error('Failed to parse topics:', e)
-								}
-							}
-
-							if (lecturersMatch) {
-								try {
-									const lecturersData = JSON.parse(lecturersMatch[1])
-									lecturers = lecturersData.lecturers || []
-									console.log('👨‍🏫 Parsed lecturers:', lecturers?.length)
-
-									// Remove markers từ content
-									fullContent = fullContent
-										.replace(/__LECTURERS_DATA_START__[\s\S]*?__LECTURERS_DATA_END__/g, '')
-										.trim()
-								} catch (e) {
-									console.error('Failed to parse lecturers:', e)
-								}
-							}
-
-							console.log('topics', topics)
-							console.log('lecturers', lecturers)
-
-							// Update message với content đã clean, topics và lecturers
-							const cleanedTopics = topics?.map(({ index, ...rest }) => rest)
-							const cleanedLecturers = lecturers?.map(({ index, similarityScore, ...rest }) => ({
-								...rest,
-								similarityScore
-							}))
-
-							const newPayload: AddMessgePayload = {
-								role: 'assistant',
-								content: fullContent,
-								topics: cleanedTopics,
-								lecturers: cleanedLecturers
-							}
-
-							console.log('newPayload.topics', newPayload.topics)
-							console.log('newPayload.lecturers', newPayload.lecturers)
-
-							setMessages((prev) =>
-								prev.map((m) =>
-									m.id === streamingMessageId
-										? {
-												...m,
-												content: fullContent,
-												isStreaming: false,
-												topics: topics,
-												lecturers: lecturers
-											}
-										: m
-								)
-							)
-							await addMessage({ id: chatId, data: newPayload })
-						} else if (data.content) {
-							// Tích lũy content
-							fullContent += data.content
-
-							// Update UI (hiển thị real-time, kể cả markers)
-							setMessages((prev) =>
-								prev.map((m) =>
-									m.id === streamingMessageId ? { ...m, content: m.content + data.content } : m
-								)
-							)
-						}
-					} catch (e) {
-						console.error('Parse error:', e)
-					}
+					const event: AgentUXEvent = JSON.parse(line)
+					handleAgentEvent(event)
 				}
 			}
+			const newMessage = messages.filter((m) => m.id === streamingMessageId)[0]
+            
+			const newPayload: AddMessgePayload = {
+				role: 'assistant',
+				content: newMessage.content 
+			}
+			await addMessage({ id: chatId, data: newPayload })
 		} catch (error: any) {
 			console.error('❌ Stream error:', error)
 			const newMessagePayload: AddMessgePayload = {
@@ -520,12 +691,6 @@ export const AIAssistantPage = () => {
 						: m
 				)
 			)
-			const newMessage = messages.filter((m) => m.id === streamingMessageId)[0]
-			const newPayload: AddMessgePayload = {
-				role: 'assistant',
-				content: newMessage.content || `Xin lỗi, đã có lỗi xảy ra: ${error.message}`
-			}
-			await addMessage({ id: chatId, data: newPayload })
 		}
 	}
 
@@ -792,35 +957,46 @@ export const AIAssistantPage = () => {
 									)}
 
 									<div className='max-w-[85%]'>
-										<div
-											className={`rounded-2xl p-4 ${
-												message.role === 'user'
-													? 'rounded-br-md bg-blue-600 text-primary-foreground'
-													: 'rounded-bl-md border bg-card shadow-sm'
-											}`}
-										>
+										{message.role === 'assistant' && message.isStreaming && (
 											<div
-												className={`text-sm leading-relaxed ${
-													message.role === 'user' ? 'text-white' : 'text-black'
+												className={cn(
+													'mb-3 overflow-hidden transition-all duration-500',
+													collapseStepper ? 'max-h-0 opacity-0' : 'max-h-40 opacity-100'
+												)}
+											>
+												<AgentStepper steps={uxSteps} />
+											</div>
+										)}
+										{(message.content.trim().length > 0 ||
+											message.topics?.length ||
+											message.lecturers?.length) && (
+											<div
+												className={`rounded-2xl p-4 ${
+													message.role === 'user'
+														? 'rounded-br-md bg-blue-600 text-primary-foreground'
+														: 'rounded-bl-md border bg-card shadow-sm'
 												}`}
-												dangerouslySetInnerHTML={{
-													__html: renderMarkdown(
-														message.role === 'assistant'
-															? parseAgentResponse(message.content)
-															: message.content
-													)
-												}}
-											/>
-											{message.isStreaming && (
-												<span className='ml-1 inline-block h-4 w-2 animate-pulse bg-gray-400'></span>
-											)}
-										</div>
+											>
+												<div
+													className={`text-sm leading-relaxed ${
+														message.role === 'user' ? 'text-white' : 'text-black'
+													}`}
+													dangerouslySetInnerHTML={{
+														__html: renderMarkdown(
+															message.role === 'assistant'
+																? parseAgentResponse(message.content)
+																: message.content
+														)
+													}}
+												/>
+											</div>
+										)}
 
 										{/* Topic cards */}
 										{message.topics && message.topics.length > 0 && (
 											<div className='mt-3'>
 												<div className='mb-2 text-sm font-medium text-gray-700'>
-													📚 Tìm thấy {message.topics.length} đề tài:
+													Tìm thấy {message.topics.length} đề tài:
 												</div>
 												{message.topics.map((topic) => (
 													<TopicCard key={topic._id} topic={topic} />
@@ -832,7 +1008,7 @@ export const AIAssistantPage = () => {
 										{message.lecturers && message.lecturers.length > 0 && (
 											<div className='mt-3'>
 												<div className='mb-2 text-sm font-medium text-gray-700'>
-													👨‍🏫 Tìm thấy {message.lecturers.length} giảng viên:
+													Tìm thấy {message.lecturers.length} giảng viên:
 												</div>
 												{message.lecturers.map((lecturer) => (
 													<LecturerCard key={lecturer._id} lecturer={lecturer} />
@@ -869,32 +1045,6 @@ export const AIAssistantPage = () => {
 									</div>
 								</div>
 							))}
-
-							{isLoading && (
-								<div className='flex gap-4'>
-									<Avatar className='h-10 w-10 border-2 border-primary/20'>
-										<AvatarFallback className='bg-blue-700 text-primary-foreground'>
-											<Bot className='h-5 w-5' />
-										</AvatarFallback>
-									</Avatar>
-									<div className='rounded-2xl rounded-bl-md border bg-card p-4 shadow-sm'>
-										<div className='flex items-center gap-1'>
-											<div className='h-2 w-2 animate-bounce rounded-full bg-primary/60'></div>
-											<div
-												className='h-2 w-2 animate-bounce rounded-full bg-primary/60'
-												style={{ animationDelay: '0.1s' }}
-											></div>
-											<div
-												className='h-2 w-2 animate-bounce rounded-full bg-primary/60'
-												style={{ animationDelay: '0.2s' }}
-											></div>
-											<span className='ml-2 text-sm text-muted-foreground'>
-												AI đang suy nghĩ...
-											</span>
-										</div>
-									</div>
-								</div>
-							)}
 
 							<div ref={messagesEndRef} />
 						</div>

@@ -10,7 +10,6 @@ import {
 	Loader2,
 	FileText,
 	User,
-	Database
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
