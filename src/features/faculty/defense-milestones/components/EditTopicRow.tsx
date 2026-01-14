@@ -1,10 +1,11 @@
-import {
-	CouncilMemberRole,
-	type CouncilMemberRoleType,
-	type GetTopicsInBatchMilestoneDto
-} from '@/models/milestone.model'
+import { type GetTopicsInBatchMilestoneDto } from '@/models/milestone.model'
 import LecturersCombobox from './combobox/LecturerCombobox'
-import { councilMemberRoleMap, type CouncilMemberDto, type TopicAssignment } from '@/models/defenseCouncil.model'
+import {
+	councilMemberRoleMap,
+	type CouncilMemberDto,
+	type CouncilMemberRole,
+	type TopicAssignment
+} from '@/models/defenseCouncil.model'
 import { Badge } from '@/components/ui/badge'
 import { Eye, X } from 'lucide-react'
 import { Button } from '@/components/ui'
@@ -14,23 +15,29 @@ interface TopicRowProps {
 	topic: TopicAssignment
 	reviewer: CouncilMemberDto | null
 	councilMembers: CouncilMemberDto[]
-	onAddMember: (lecturer: any, role: CouncilMemberRoleType) => void
-	onRemoveMember: (memberId: string, role: CouncilMemberRoleType) => void
+	onAddMember: (lecturer: any, role: CouncilMemberRole) => void
+	onRemoveMember: (memberId: string, role: CouncilMemberRole) => void
 }
 
 const EditTopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMember }: TopicRowProps) => {
 	const navigate = useNavigate()
 	return (
-		<tr key={topic.topicId} className='border-b last:border-b-0 hover:bg-gray-50'>
+		<tr key={topic.topicId} className='border-b border-t border-gray-400 last:border-b-0 hover:bg-gray-50'>
 			{/* Tên đề tài */}
-			<td className='px-4 py-3' style={{ minWidth: '180px', maxWidth: '220px', width: '200px' }}>
+			<td
+				className='border-r border-gray-400 px-4 py-3'
+				style={{ minWidth: '180px', maxWidth: '220px', width: '200px' }}
+			>
 				<div>
 					<p className='text-wrap text-[14px] font-medium text-gray-900'>{topic.titleVN}</p>
 					{topic.titleEng && <p className='text-wrap text-[12px] text-gray-500'>{topic.titleEng}</p>}
 				</div>
 			</td>
 			{/* Tên sinh viên */}
-			<td className='px-4 py-3' style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}>
+			<td
+				className='border-r border-gray-400 px-4 py-3'
+				style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}
+			>
 				<div className='space-y-1'>
 					{topic.studentNames && topic.studentNames.length > 0 ? (
 						topic.studentNames.map((student, idx) => (
@@ -44,7 +51,10 @@ const EditTopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMe
 				</div>
 			</td>
 			{/* Tên giảng viên */}
-			<td className='px-4 py-3' style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}>
+			<td
+				className='border-r border-gray-400 px-4 py-3'
+				style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}
+			>
 				<div className='space-y-1'>
 					{topic.lecturerNames && topic.lecturerNames.length > 0 ? (
 						topic.lecturerNames.map((lecturer, idx) => (
@@ -57,7 +67,10 @@ const EditTopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMe
 					)}
 				</div>
 			</td>
-			<td className='px-4 py-3' style={{ minWidth: '140px', maxWidth: '180px', width: '200px' }}>
+			<td
+				className='border-r border-gray-400 px-4 py-3'
+				style={{ minWidth: '140px', maxWidth: '180px', width: '200px' }}
+			>
 				{reviewer ? (
 					<Badge variant='outline' className='flex items-center gap-1'>
 						<span className='text-xs'>
@@ -65,20 +78,18 @@ const EditTopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMe
 						</span>
 						<X
 							className='h-3 w-3 cursor-pointer hover:text-red-500'
-							onClick={() =>
-								onRemoveMember(reviewer.memberId, CouncilMemberRole.REVIEWER as CouncilMemberRoleType)
-							}
+							onClick={() => onRemoveMember(reviewer.memberId, reviewer.role)}
 						/>
 					</Badge>
 				) : (
 					<LecturersCombobox onSelect={(lecturer) => onAddMember(lecturer, 'reviewer')} />
 				)}
 			</td>
-			<td className='flex flex-col gap-2 px-4 py-3'>
-				{(['chairperson', 'secretary', 'member'] as CouncilMemberRoleType[]).map((role) => {
+			<td className='flex flex-col gap-2 border-r border-gray-400 px-4 py-3'>
+				{(['chairperson', 'secretary', 'member'] as CouncilMemberRole[]).map((role) => {
 					const member = councilMembers.find((m) => m.role === role)
 					return (
-						<div key={role} className='flex items-center justify-between gap-2'>
+						<div key={role} className='flex items-center justify-between px-20'>
 							<span className='block min-w-[60px] text-sm font-semibold text-blue-800'>
 								{councilMemberRoleMap[role]}
 							</span>

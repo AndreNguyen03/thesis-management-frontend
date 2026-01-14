@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx'
 import ExcelJS from 'exceljs'
-import type { DetailTopicsInDefenseMilestone, TopicsInDefenseMilestone } from '@/models'
-import type { DefenseCouncilMember } from '@/models/milestone.model'
+import type { DetailTopicsInDefenseMilestone } from '@/models'
+
 import { formatPeriodInfoMiniPeriod } from './utils'
 
 /**
@@ -35,532 +35,517 @@ export interface ExcelScoreRow {
 /**
  * Tải file template Excel từ public folder
  */
-async function loadTemplate(templatePath: string): Promise<XLSX.WorkBook> {
-	const response = await fetch(templatePath)
-	if (!response.ok) {
-		throw new Error('Không thể tải file template')
-	}
-	const arrayBuffer = await response.arrayBuffer()
-	// Thêm cellStyles để giữ style, cellNF cho number format
-	return XLSX.read(arrayBuffer, {
-		type: 'array',
-		cellStyles: true,
-		cellNF: true,
-		cellDates: true
-	})
-}
-
 /**
  * Xuất file Excel mẫu để chấm điểm (sử dụng ExcelJS với màu sắc)
- */
-export async function exportScoringTemplate(
-	data: DetailTopicsInDefenseMilestone,
-	fileName: string = 'BangChamDiem.xlsx',
-	includeScores: boolean = true
-) {
-	const { data: topics, milestoneInfo, periodInfo } = data
-	const workbook = new ExcelJS.Workbook()
+//  */
+// export async function exportScoringTemplate(
+// 	data: DetailTopicsInDefenseMilestone,
+// 	fileName: string = 'BangChamDiem.xlsx',
+// 	includeScores: boolean = true
+// ) {
+// 	const { data: topics, milestoneInfo, periodInfo } = data
+// 	const workbook = new ExcelJS.Workbook()
 
-	// Xác định số lượng thành viên hội đồng từ milestoneInfo
-	const councilCount = milestoneInfo?.defenseCouncil?.length || 3
-	// const councilMembers = milestoneInfo?.defenseCouncil || []
+// 	// Xác định số lượng thành viên hội đồng từ milestoneInfo
+// 	const councilCount = milestoneInfo?.defenseCouncil?.length || 3
+// 	// const councilMembers = milestoneInfo?.defenseCouncil || []
 
-	// ===== SHEET 1: THÔNG TIN ĐỢT BẢO VỆ =====
-	const infoSheet = workbook.addWorksheet('ℹ️ Thông tin bảo vệ', {
-		views: [{ showGridLines: false }]
-	})
+// 	// ===== SHEET 1: THÔNG TIN ĐỢT BẢO VỆ =====
+// 	const infoSheet = workbook.addWorksheet('ℹ️ Thông tin bảo vệ', {
+// 		views: [{ showGridLines: false }]
+// 	})
 
-	infoSheet.columns = [{ width: 20 }, { width: 35 }, { width: 35 }]
+// 	infoSheet.columns = [{ width: 20 }, { width: 35 }, { width: 35 }]
 
-	// Tiêu đề
-	const infoTitle = infoSheet.addRow(['THÔNG TIN ĐỢT BẢO VỆ ĐỒ ÁN'])
-	infoTitle.font = { bold: true, size: 16, color: { argb: 'FF0066CC' } }
-	infoTitle.height = 35
-	infoTitle.alignment = { vertical: 'middle', horizontal: 'center' }
-	infoSheet.mergeCells('A1:C1')
-	infoSheet.addRow([])
+// 	// Tiêu đề
+// 	const infoTitle = infoSheet.addRow(['THÔNG TIN ĐỢT BẢO VỆ ĐỒ ÁN'])
+// 	infoTitle.font = { bold: true, size: 16, color: { argb: 'FF0066CC' } }
+// 	infoTitle.height = 35
+// 	infoTitle.alignment = { vertical: 'middle', horizontal: 'center' }
+// 	infoSheet.mergeCells('A1:C1')
+// 	infoSheet.addRow([])
 
-	// Thông tin đợt bảo vệ
-	const defenseData = [
-		['Đợt bảo vệ:', formatPeriodInfoMiniPeriod(periodInfo) || topics[0]?.defenseResult?.periodName || 'N/A'],
-		['Hội đồng:', milestoneInfo?.title || topics[0]?.defenseResult?.councilName || 'N/A'],
-		[
-			'Ngày bảo vệ:',
-			data?.milestoneInfo.dueDate ? new Date(milestoneInfo.dueDate).toLocaleDateString('vi-VN') : 'N/A'
-		],
-		['Tổng số đề tài:', topics.length.toString()]
-	]
+// 	// Thông tin đợt bảo vệ
+// 	const defenseData = [
+// 		['Đợt bảo vệ:', formatPeriodInfoMiniPeriod(periodInfo) || topics[0]?.defenseResult?.periodName || 'N/A'],
+// 		['Hội đồng:', milestoneInfo?.title || topics[0]?.defenseResult?.councilName || 'N/A'],
+// 		[
+// 			'Ngày bảo vệ:',
+// 			data?.milestoneInfo.dueDate ? new Date(milestoneInfo.dueDate).toLocaleDateString('vi-VN') : 'N/A'
+// 		],
+// 		['Tổng số đề tài:', topics.length.toString()]
+// 	]
 
-	defenseData.forEach(([label, value]) => {
-		const row = infoSheet.addRow([label, value])
-		row.height = 25
+// 	defenseData.forEach(([label, value]) => {
+// 		const row = infoSheet.addRow([label, value])
+// 		row.height = 25
 
-		// Style cho label
-		row.getCell(1).font = { bold: true, size: 12, color: { argb: 'FF0066CC' } }
-		row.getCell(1).fill = {
-			type: 'pattern',
-			pattern: 'solid',
-			fgColor: { argb: 'FFE7E6E6' }
-		}
-		row.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' }
+// 		// Style cho label
+// 		row.getCell(1).font = { bold: true, size: 12, color: { argb: 'FF0066CC' } }
+// 		row.getCell(1).fill = {
+// 			type: 'pattern',
+// 			pattern: 'solid',
+// 			fgColor: { argb: 'FFE7E6E6' }
+// 		}
+// 		row.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' }
 
-		// Style cho value
-		row.getCell(2).font = { size: 11 }
-		row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' }
-		// Merge value thành 2 cột
-		infoSheet.mergeCells(`B${row.number}:C${row.number}`)
+// 		// Style cho value
+// 		row.getCell(2).font = { size: 11 }
+// 		row.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' }
+// 		// Merge value thành 2 cột
+// 		infoSheet.mergeCells(`B${row.number}:C${row.number}`)
 
-		// Border
-		row.eachCell((cell) => {
-			cell.border = {
-				top: { style: 'thin', color: { argb: 'FF000000' } },
-				left: { style: 'thin', color: { argb: 'FF000000' } },
-				bottom: { style: 'thin', color: { argb: 'FF000000' } },
-				right: { style: 'thin', color: { argb: 'FF000000' } }
-			}
-		})
-	})
+// 		// Border
+// 		row.eachCell((cell) => {
+// 			cell.border = {
+// 				top: { style: 'thin', color: { argb: 'FF000000' } },
+// 				left: { style: 'thin', color: { argb: 'FF000000' } },
+// 				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+// 				right: { style: 'thin', color: { argb: 'FF000000' } }
+// 			}
+// 		})
+// 	})
 
-	infoSheet.addRow([])
-	infoSheet.addRow([])
+// 	infoSheet.addRow([])
+// 	infoSheet.addRow([])
 
-	// Thành viên hội đồng
-	const councilTitle = infoSheet.addRow(['DANH SÁCH THÀNH VIÊN HỘI ĐỒNG'])
-	councilTitle.font = { bold: true, size: 14, color: { argb: 'FFFF0000' } }
-	councilTitle.height = 30
-	councilTitle.alignment = { vertical: 'middle', horizontal: 'center' }
-	infoSheet.mergeCells(`A${councilTitle.number}:C${councilTitle.number}`)
+// 	// Thành viên hội đồng
+// 	const councilTitle = infoSheet.addRow(['DANH SÁCH THÀNH VIÊN HỘI ĐỒNG'])
+// 	councilTitle.font = { bold: true, size: 14, color: { argb: 'FFFF0000' } }
+// 	councilTitle.height = 30
+// 	councilTitle.alignment = { vertical: 'middle', horizontal: 'center' }
+// 	infoSheet.mergeCells(`A${councilTitle.number}:C${councilTitle.number}`)
 
-	// Header cho bảng thành viên
-	const memberHeader = infoSheet.addRow(['Vai trò', 'Học vị/Chức danh', 'Họ và tên'])
-	memberHeader.height = 25
-	memberHeader.eachCell((cell) => {
-		cell.fill = {
-			type: 'pattern',
-			pattern: 'solid',
-			fgColor: { argb: 'FF4472C4' }
-		}
-		cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 }
-		cell.alignment = { vertical: 'middle', horizontal: 'center' }
-		cell.border = {
-			top: { style: 'thin', color: { argb: 'FF000000' } },
-			left: { style: 'thin', color: { argb: 'FF000000' } },
-			bottom: { style: 'thin', color: { argb: 'FF000000' } },
-			right: { style: 'thin', color: { argb: 'FF000000' } }
-		}
-	})
+// 	// Header cho bảng thành viên
+// 	const memberHeader = infoSheet.addRow(['Vai trò', 'Học vị/Chức danh', 'Họ và tên'])
+// 	memberHeader.height = 25
+// 	memberHeader.eachCell((cell) => {
+// 		cell.fill = {
+// 			type: 'pattern',
+// 			pattern: 'solid',
+// 			fgColor: { argb: 'FF4472C4' }
+// 		}
+// 		cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 }
+// 		cell.alignment = { vertical: 'middle', horizontal: 'center' }
+// 		cell.border = {
+// 			top: { style: 'thin', color: { argb: 'FF000000' } },
+// 			left: { style: 'thin', color: { argb: 'FF000000' } },
+// 			bottom: { style: 'thin', color: { argb: 'FF000000' } },
+// 			right: { style: 'thin', color: { argb: 'FF000000' } }
+// 		}
+// 	})
 
-	// Danh sách thành viên (lấy từ milestoneInfo.defenseCouncil)
-	if (milestoneInfo?.defenseCouncil && milestoneInfo.defenseCouncil.length > 0) {
-		milestoneInfo.defenseCouncil.forEach((member) => {
-			const memberRow = infoSheet.addRow([getCouncilRoleLabel(member.role), member.title || '', member.fullName])
-			memberRow.height = 22
+// 	// Danh sách thành viên (lấy từ milestoneInfo.defenseCouncil)
+// 	if (milestoneInfo?.defenseCouncil && milestoneInfo.defenseCouncil.length > 0) {
+// 		milestoneInfo.defenseCouncil.forEach((member) => {
+// 			const memberRow = infoSheet.addRow([getCouncilRoleLabel(member.role), member.title || '', member.fullName])
+// 			memberRow.height = 22
 
-			// Style cho vai trò
-			memberRow.getCell(1).font = { bold: true, size: 11 }
-			memberRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' }
+// 			// Style cho vai trò
+// 			memberRow.getCell(1).font = { bold: true, size: 11 }
+// 			memberRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' }
 
-			// Style cho học vị
-			memberRow.getCell(2).font = { size: 11, italic: true }
-			memberRow.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' }
+// 			// Style cho học vị
+// 			memberRow.getCell(2).font = { size: 11, italic: true }
+// 			memberRow.getCell(2).alignment = { vertical: 'middle', horizontal: 'left' }
 
-			// Style cho họ tên
-			memberRow.getCell(3).font = { size: 11 }
-			memberRow.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' }
+// 			// Style cho họ tên
+// 			memberRow.getCell(3).font = { size: 11 }
+// 			memberRow.getCell(3).alignment = { vertical: 'middle', horizontal: 'left' }
 
-			memberRow.eachCell((cell) => {
-				cell.border = {
-					top: { style: 'thin', color: { argb: 'FF000000' } },
-					left: { style: 'thin', color: { argb: 'FF000000' } },
-					bottom: { style: 'thin', color: { argb: 'FF000000' } },
-					right: { style: 'thin', color: { argb: 'FF000000' } }
-				}
-			})
-		})
-	}
+// 			memberRow.eachCell((cell) => {
+// 				cell.border = {
+// 					top: { style: 'thin', color: { argb: 'FF000000' } },
+// 					left: { style: 'thin', color: { argb: 'FF000000' } },
+// 					bottom: { style: 'thin', color: { argb: 'FF000000' } },
+// 					right: { style: 'thin', color: { argb: 'FF000000' } }
+// 				}
+// 			})
+// 		})
+// 	}
 
-	// ===== SHEET 2: HƯỚNG DẪN SỬ DỤNG =====
-	const guideSheet = workbook.addWorksheet('📖 Hướng dẫn', {
-		views: [{ showGridLines: false }]
-	})
+// 	// ===== SHEET 2: HƯỚNG DẪN SỬ DỤNG =====
+// 	const guideSheet = workbook.addWorksheet('📖 Hướng dẫn', {
+// 		views: [{ showGridLines: false }]
+// 	})
 
-	guideSheet.columns = [{ width: 80 }]
+// 	guideSheet.columns = [{ width: 80 }]
 
-	// Tiêu đề
-	const titleRow = guideSheet.addRow(['HƯỚNG DẪN NHẬP ĐIỂM CHẤM ĐỒ ÁN'])
-	titleRow.font = { bold: true, size: 16, color: { argb: 'FF0066CC' } }
-	titleRow.height = 30
-	titleRow.alignment = { vertical: 'middle', horizontal: 'center' }
-	guideSheet.addRow([])
+// 	// Tiêu đề
+// 	const titleRow = guideSheet.addRow(['HƯỚNG DẪN NHẬP ĐIỂM CHẤM ĐỒ ÁN'])
+// 	titleRow.font = { bold: true, size: 16, color: { argb: 'FF0066CC' } }
+// 	titleRow.height = 30
+// 	titleRow.alignment = { vertical: 'middle', horizontal: 'center' }
+// 	guideSheet.addRow([])
 
-	// Nội dung hướng dẫn
-	const instructions = [
-		'📌 CÁC BƯỚC THỰC HIỆN:',
-		'',
-		'1️⃣ Xem sheet "ℹ️ Thông tin bảo vệ" để kiểm tra thông tin đợt bảo vệ và hội đồng',
-		'',
-		'2️⃣ Chuyển sang sheet "Bảng chấm điểm"',
-		'',
-		'3️⃣ Chỉ nhập điểm vào các cột: Điểm GV1, Điểm GV2, Điểm GV3',
-		'   • Điểm phải nằm trong khoảng từ 0 đến 10',
-		'   • Có thể nhập số thập phân (VD: 8.5)',
-		'',
-		'4️⃣ Cột "DTB" và "Xếp loại" sẽ TỰ ĐỘNG tính toán:',
-		'   • DTB = Trung bình của 3 điểm',
-		'   • Xếp loại dựa trên DTB:',
-		'     - 9.0 - 10: Xuất sắc',
-		'     - 8.0 - 8.9: Giỏi',
-		'     - 7.0 - 7.9: Khá',
-		'     - 5.5 - 6.9: Trung bình',
-		'     - < 5.5: Yếu',
-		'',
-		'5️⃣ KHÔNG được chỉnh sửa các cột màu xám (thông tin đề tài)',
-		'',
-		'6️⃣ Sau khi nhập xong, lưu file và import lại vào hệ thống',
-		'',
-		'⚠️ LƯU Ý:',
-		'• Không xóa hoặc thêm dòng',
-		'• Không thay đổi thứ tự các cột',
-		'• Không xóa mã đề tài (cột A)',
-		'• Cột DTB và Xếp loại TỰ ĐỘNG - KHÔNG cần nhập',
-		'',
-		'✅ File được bảo vệ - chỉ các ô điểm có thể chỉnh sửa'
-	]
+// 	// Nội dung hướng dẫn
+// 	const instructions = [
+// 		'📌 CÁC BƯỚC THỰC HIỆN:',
+// 		'',
+// 		'1️⃣ Xem sheet "ℹ️ Thông tin bảo vệ" để kiểm tra thông tin đợt bảo vệ và hội đồng',
+// 		'',
+// 		'2️⃣ Chuyển sang sheet "Bảng chấm điểm"',
+// 		'',
+// 		'3️⃣ Chỉ nhập điểm vào các cột: Điểm GV1, Điểm GV2, Điểm GV3',
+// 		'   • Điểm phải nằm trong khoảng từ 0 đến 10',
+// 		'   • Có thể nhập số thập phân (VD: 8.5)',
+// 		'',
+// 		'4️⃣ Cột "DTB" và "Xếp loại" sẽ TỰ ĐỘNG tính toán:',
+// 		'   • DTB = Trung bình của 3 điểm',
+// 		'   • Xếp loại dựa trên DTB:',
+// 		'     - 9.0 - 10: Xuất sắc',
+// 		'     - 8.0 - 8.9: Giỏi',
+// 		'     - 7.0 - 7.9: Khá',
+// 		'     - 5.5 - 6.9: Trung bình',
+// 		'     - < 5.5: Yếu',
+// 		'',
+// 		'5️⃣ KHÔNG được chỉnh sửa các cột màu xám (thông tin đề tài)',
+// 		'',
+// 		'6️⃣ Sau khi nhập xong, lưu file và import lại vào hệ thống',
+// 		'',
+// 		'⚠️ LƯU Ý:',
+// 		'• Không xóa hoặc thêm dòng',
+// 		'• Không thay đổi thứ tự các cột',
+// 		'• Không xóa mã đề tài (cột A)',
+// 		'• Cột DTB và Xếp loại TỰ ĐỘNG - KHÔNG cần nhập',
+// 		'',
+// 		'✅ File được bảo vệ - chỉ các ô điểm có thể chỉnh sửa'
+// 	]
 
-	instructions.forEach((text, idx) => {
-		const row = guideSheet.addRow([text])
-		row.height = 20
+// 	instructions.forEach((text) => {
+// 		const row = guideSheet.addRow([text])
+// 		row.height = 20
 
-		if (text.startsWith('📌') || text.startsWith('⚠️')) {
-			row.font = { bold: true, size: 12, color: { argb: 'FFFF0000' } }
-		} else if (text.match(/^\d️⃣/)) {
-			row.font = { bold: true, size: 11, color: { argb: 'FF0066CC' } }
-		} else if (text.startsWith('   •')) {
-			row.font = { size: 10 }
-			row.alignment = { indent: 2 }
-		} else {
-			row.font = { size: 11 }
-		}
-	})
+// 		if (text.startsWith('📌') || text.startsWith('⚠️')) {
+// 			row.font = { bold: true, size: 12, color: { argb: 'FFFF0000' } }
+// 		} else if (text.match(/^\d️⃣/)) {
+// 			row.font = { bold: true, size: 11, color: { argb: 'FF0066CC' } }
+// 		} else if (text.startsWith('   •')) {
+// 			row.font = { size: 10 }
+// 			row.alignment = { indent: 2 }
+// 		} else {
+// 			row.font = { size: 11 }
+// 		}
+// 	})
 
-	// ===== SHEET 3: BẢNG CHẤM ĐIỂM =====
-	const worksheet = workbook.addWorksheet('Bảng chấm điểm')
+// 	// ===== SHEET 3: BẢNG CHẤM ĐIỂM =====
+// 	const worksheet = workbook.addWorksheet('Bảng chấm điểm')
 
-	// Định nghĩa các cột cơ bản
-	const baseColumns = [
-		{ header: 'Mã đề tài', key: 'topicId', width: 25 },
-		{ header: 'Tên đề tài (VN)', key: 'titleVN', width: 40 },
-		{ header: 'Tên đề tài (EN)', key: 'titleEng', width: 40 },
-		{ header: 'Sinh viên', key: 'students', width: 30 },
-		{ header: 'Giảng viên', key: 'lecturers', width: 30 }
-	]
+// 	// Định nghĩa các cột cơ bản
+// 	const baseColumns = [
+// 		{ header: 'Mã đề tài', key: 'topicId', width: 25 },
+// 		{ header: 'Tên đề tài (VN)', key: 'titleVN', width: 40 },
+// 		{ header: 'Tên đề tài (EN)', key: 'titleEng', width: 40 },
+// 		{ header: 'Sinh viên', key: 'students', width: 30 },
+// 		{ header: 'Giảng viên', key: 'lecturers', width: 30 }
+// 	]
 
-	// Thêm cột điểm và ghi chú cho từng thành viên hội đồng
-	const scoreColumns: any[] = []
-	for (let i = 0; i < councilCount; i++) {
-		const memberLabel = `GV${i + 1}`
+// 	// Thêm cột điểm và ghi chú cho từng thành viên hội đồng
+// 	const scoreColumns: any[] = []
+// 	for (let i = 0; i < councilCount; i++) {
+// 		const memberLabel = `GV${i + 1}`
 
-		scoreColumns.push(
-			{ header: `Điểm ${memberLabel}`, key: `score${i + 1}`, width: 12 },
-			{ header: `Ghi chú ${memberLabel}`, key: `note${i + 1}`, width: 25 }
-		)
-	}
+// 		scoreColumns.push(
+// 			{ header: `Điểm ${memberLabel}`, key: `score${i + 1}`, width: 12 },
+// 			{ header: `Ghi chú ${memberLabel}`, key: `note${i + 1}`, width: 25 }
+// 		)
+// 	}
 
-	// Thêm cột DTB và xếp loại
-	const finalColumns = [
-		{ header: 'DTB', key: 'finalScore', width: 12 },
-		{ header: 'Xếp loại', key: 'gradeText', width: 15 }
-	]
+// 	// Thêm cột DTB và xếp loại
+// 	const finalColumns = [
+// 		{ header: 'DTB', key: 'finalScore', width: 12 },
+// 		{ header: 'Xếp loại', key: 'gradeText', width: 15 }
+// 	]
 
-	// Kết hợp tất cả các cột
-	worksheet.columns = [...baseColumns, ...scoreColumns, ...finalColumns]
+// 	// Kết hợp tất cả các cột
+// 	worksheet.columns = [...baseColumns, ...scoreColumns, ...finalColumns]
 
-	// Style cho header row (dòng 1)
-	const headerRow = worksheet.getRow(1)
-	headerRow.height = 30
+// 	// Style cho header row (dòng 1)
+// 	const headerRow = worksheet.getRow(1)
+// 	headerRow.height = 30
 
-	// Tính toán vị trí cột
-	const baseColCount = 5 // topicId, titleVN, titleEng, students, lecturers
-	const scoreColStart = baseColCount + 1 // Cột đầu tiên của điểm (6)
-	const dtbColIndex = baseColCount + councilCount * 2 + 1 // Cột DTB
-	const gradeColIndex = dtbColIndex + 1 // Cột xếp loại
+// 	// Tính toán vị trí cột
+// 	const baseColCount = 5 // topicId, titleVN, titleEng, students, lecturers
+// 	const scoreColStart = baseColCount + 1 // Cột đầu tiên của điểm (6)
+// 	const dtbColIndex = baseColCount + councilCount * 2 + 1 // Cột DTB
+// 	const gradeColIndex = dtbColIndex + 1 // Cột xếp loại
 
-	headerRow.eachCell((cell, colNumber) => {
-		// Xác định loại cột
-		const isScoreCol =
-			colNumber >= scoreColStart && colNumber < dtbColIndex && (colNumber - scoreColStart) % 2 === 0
-		const isNoteCol = colNumber >= scoreColStart && colNumber < dtbColIndex && (colNumber - scoreColStart) % 2 === 1
-		const isDtbCol = colNumber === dtbColIndex
-		const isGradeCol = colNumber === gradeColIndex
+// 	headerRow.eachCell((cell, colNumber) => {
+// 		// Xác định loại cột
+// 		const isScoreCol =
+// 			colNumber >= scoreColStart && colNumber < dtbColIndex && (colNumber - scoreColStart) % 2 === 0
+// 		const isNoteCol = colNumber >= scoreColStart && colNumber < dtbColIndex && (colNumber - scoreColStart) % 2 === 1
+// 		const isDtbCol = colNumber === dtbColIndex
+// 		const isGradeCol = colNumber === gradeColIndex
 
-		// Màu nền khác nhau cho cột có thể chỉnh sửa và không thể chỉnh sửa
-		if (isScoreCol) {
-			// Cột điểm - màu xanh dương (có thể chỉnh sửa)
-			cell.fill = {
-				type: 'pattern',
-				pattern: 'solid',
-				fgColor: { argb: 'FF4472C4' }
-			}
-			cell.note = 'Nhập điểm từ 0-10. Có thể để trống nếu chưa chấm.'
-		} else if (isNoteCol) {
-			// Cột ghi chú - màu xanh nhạt (có thể chỉnh sửa)
-			cell.fill = {
-				type: 'pattern',
-				pattern: 'solid',
-				fgColor: { argb: 'FF4472C4' }
-			}
-			cell.note = 'Nhập ghi chú, nhận xét về điểm (không bắt buộc).'
-		} else if (isDtbCol) {
-			// Cột DTB - màu vàng (tự động tính)
-			cell.fill = {
-				type: 'pattern',
-				pattern: 'solid',
-				fgColor: { argb: 'FFFFC000' }
-			}
-			cell.note = 'Cột này tự động tính DTB. KHÔNG cần nhập.'
-		} else if (isGradeCol) {
-			// Cột xếp loại - màu cam (tự động tính)
-			cell.fill = {
-				type: 'pattern',
-				pattern: 'solid',
-				fgColor: { argb: 'FFED7D31' }
-			}
-			cell.note = 'Cột này tự động tính toán dựa trên DTB. KHÔNG cần nhập.'
-		} else {
-			// Cột thông tin - màu xám (không chỉnh sửa)
-			cell.fill = {
-				type: 'pattern',
-				pattern: 'solid',
-				fgColor: { argb: 'FF7F7F7F' }
-			}
-			cell.note = 'Cột này KHÔNG được chỉnh sửa.'
-		}
+// 		// Màu nền khác nhau cho cột có thể chỉnh sửa và không thể chỉnh sửa
+// 		if (isScoreCol) {
+// 			// Cột điểm - màu xanh dương (có thể chỉnh sửa)
+// 			cell.fill = {
+// 				type: 'pattern',
+// 				pattern: 'solid',
+// 				fgColor: { argb: 'FF4472C4' }
+// 			}
+// 			cell.note = 'Nhập điểm từ 0-10. Có thể để trống nếu chưa chấm.'
+// 		} else if (isNoteCol) {
+// 			// Cột ghi chú - màu xanh nhạt (có thể chỉnh sửa)
+// 			cell.fill = {
+// 				type: 'pattern',
+// 				pattern: 'solid',
+// 				fgColor: { argb: 'FF4472C4' }
+// 			}
+// 			cell.note = 'Nhập ghi chú, nhận xét về điểm (không bắt buộc).'
+// 		} else if (isDtbCol) {
+// 			// Cột DTB - màu vàng (tự động tính)
+// 			cell.fill = {
+// 				type: 'pattern',
+// 				pattern: 'solid',
+// 				fgColor: { argb: 'FFFFC000' }
+// 			}
+// 			cell.note = 'Cột này tự động tính DTB. KHÔNG cần nhập.'
+// 		} else if (isGradeCol) {
+// 			// Cột xếp loại - màu cam (tự động tính)
+// 			cell.fill = {
+// 				type: 'pattern',
+// 				pattern: 'solid',
+// 				fgColor: { argb: 'FFED7D31' }
+// 			}
+// 			cell.note = 'Cột này tự động tính toán dựa trên DTB. KHÔNG cần nhập.'
+// 		} else {
+// 			// Cột thông tin - màu xám (không chỉnh sửa)
+// 			cell.fill = {
+// 				type: 'pattern',
+// 				pattern: 'solid',
+// 				fgColor: { argb: 'FF7F7F7F' }
+// 			}
+// 			cell.note = 'Cột này KHÔNG được chỉnh sửa.'
+// 		}
 
-		cell.font = {
-			bold: true,
-			color: { argb: 'FFFFFFFF' },
-			size: 11,
-			name: 'Calibri'
-		}
-		cell.alignment = {
-			vertical: 'middle',
-			horizontal: 'center',
-			wrapText: true
-		}
-		cell.border = {
-			top: { style: 'thin', color: { argb: 'FF000000' } },
-			left: { style: 'thin', color: { argb: 'FF000000' } },
-			bottom: { style: 'thin', color: { argb: 'FF000000' } },
-			right: { style: 'thin', color: { argb: 'FF000000' } }
-		}
-	})
+// 		cell.font = {
+// 			bold: true,
+// 			color: { argb: 'FFFFFFFF' },
+// 			size: 11,
+// 			name: 'Calibri'
+// 		}
+// 		cell.alignment = {
+// 			vertical: 'middle',
+// 			horizontal: 'center',
+// 			wrapText: true
+// 		}
+// 		cell.border = {
+// 			top: { style: 'thin', color: { argb: 'FF000000' } },
+// 			left: { style: 'thin', color: { argb: 'FF000000' } },
+// 			bottom: { style: 'thin', color: { argb: 'FF000000' } },
+// 			right: { style: 'thin', color: { argb: 'FF000000' } }
+// 		}
+// 	})
 
-	// Thêm dữ liệu từ topics
-	topics.forEach((topic, index) => {
-		const rowNumber = index + 2 // Dòng 2 trở đi
+// 	// Thêm dữ liệu từ topics
+// 	topics.forEach((topic, index) => {
+// 		const rowNumber = index + 2 // Dòng 2 trở đi
 
-		// Tạo object dữ liệu cho row
-		const rowData: any = {
-			topicId: topic._id,
-			titleVN: topic.titleVN,
-			titleEng: topic.titleEng,
-			students: topic.students?.map((s) => s.fullName).join(', ') || '',
-			lecturers: topic.lecturers?.map((l) => l.fullName).join(', ') || ''
-		}
+// 		// Tạo object dữ liệu cho row
+// 		const rowData: any = {
+// 			topicId: topic._id,
+// 			titleVN: topic.titleVN,
+// 			titleEng: topic.titleEng,
+// 			students: topic.students?.map((s) => s.fullName).join(', ') || '',
+// 			lecturers: topic.lecturers?.map((l) => l.fullName).join(', ') || ''
+// 		}
 
-		// Thêm điểm và ghi chú cho từng thành viên hội đồng
+// 		// Thêm điểm và ghi chú cho từng thành viên hội đồng
 
-		for (let i = 0; i < councilCount; i++) {
-			if (includeScores) {
-				rowData[`score${i + 1}`] = topic.defenseResult?.councilMembers?.[i]?.score || ''
-				rowData[`note${i + 1}`] = topic.defenseResult?.councilMembers?.[i]?.note || ''
-			} else {
-				rowData[`score${i + 1}`] = ''
-				rowData[`note${i + 1}`] = ''
-			}
-		}
+// 		for (let i = 0; i < councilCount; i++) {
+// 			if (includeScores) {
+// 				rowData[`score${i + 1}`] = topic.defenseResult?.councilMembers?.[i]?.score || ''
+// 				rowData[`note${i + 1}`] = topic.defenseResult?.councilMembers?.[i]?.note || ''
+// 			} else {
+// 				rowData[`score${i + 1}`] = ''
+// 				rowData[`note${i + 1}`] = ''
+// 			}
+// 		}
 
-		rowData.finalScore = '' // Sẽ dùng công thức
-		rowData.gradeText = '' // Sẽ dùng công thức
+// 		rowData.finalScore = '' // Sẽ dùng công thức
+// 		rowData.gradeText = '' // Sẽ dùng công thức
 
-		const row = worksheet.addRow(rowData)
+// 		const row = worksheet.addRow(rowData)
 
-		// Tạo công thức tính DTB động dựa trên số lượng thành viên
-		const scoreCellRefs: string[] = []
-		for (let i = 0; i < councilCount; i++) {
-			const colLetter = String.fromCharCode(70 + i * 2) // F, H, J, L, N, P...
-			scoreCellRefs.push(`${colLetter}${rowNumber}`)
-		}
+// 		// Tạo công thức tính DTB động dựa trên số lượng thành viên
+// 		const scoreCellRefs: string[] = []
+// 		for (let i = 0; i < councilCount; i++) {
+// 			const colLetter = String.fromCharCode(70 + i * 2) // F, H, J, L, N, P...
+// 			scoreCellRefs.push(`${colLetter}${rowNumber}`)
+// 		}
 
-		// Tạo điều kiện AND cho tất cả các điểm
-		const andConditions = scoreCellRefs.map((ref) => `ISNUMBER(${ref})`).join(',')
-		const averageFormula = `AVERAGE(${scoreCellRefs.join(',')})`
+// 		// Tạo điều kiện AND cho tất cả các điểm
+// 		const andConditions = scoreCellRefs.map((ref) => `ISNUMBER(${ref})`).join(',')
+// 		const averageFormula = `AVERAGE(${scoreCellRefs.join(',')})`
 
-		// Thêm công thức tính DTB tự động
-		const dtbColLetter = String.fromCharCode(65 + dtbColIndex - 1)
-		const dtbCell = worksheet.getCell(`${dtbColLetter}${rowNumber}`)
-		dtbCell.value = {
-			formula: `IF(AND(${andConditions}),ROUND(${averageFormula},2),"")`
-		}
-		dtbCell.numFmt = '0.00' // Format 2 chữ số thập phân
+// 		// Thêm công thức tính DTB tự động
+// 		const dtbColLetter = String.fromCharCode(65 + dtbColIndex - 1)
+// 		const dtbCell = worksheet.getCell(`${dtbColLetter}${rowNumber}`)
+// 		dtbCell.value = {
+// 			formula: `IF(AND(${andConditions}),ROUND(${averageFormula},2),"")`
+// 		}
+// 		dtbCell.numFmt = '0.00' // Format 2 chữ số thập phân
 
-		// Thêm công thức tính xếp loại tự động
-		const gradeColLetter = String.fromCharCode(65 + gradeColIndex - 1)
-		const gradeCell = worksheet.getCell(`${gradeColLetter}${rowNumber}`)
-		gradeCell.value = {
-			formula: `IF(ISNUMBER(${dtbColLetter}${rowNumber}),IF(${dtbColLetter}${rowNumber}>=9,"Xuất sắc",IF(${dtbColLetter}${rowNumber}>=8,"Giỏi",IF(${dtbColLetter}${rowNumber}>=7,"Khá",IF(${dtbColLetter}${rowNumber}>=5.5,"Trung bình","Yếu")))),"")`
-		}
+// 		// Thêm công thức tính xếp loại tự động
+// 		const gradeColLetter = String.fromCharCode(65 + gradeColIndex - 1)
+// 		const gradeCell = worksheet.getCell(`${gradeColLetter}${rowNumber}`)
+// 		gradeCell.value = {
+// 			formula: `IF(ISNUMBER(${dtbColLetter}${rowNumber}),IF(${dtbColLetter}${rowNumber}>=9,"Xuất sắc",IF(${dtbColLetter}${rowNumber}>=8,"Giỏi",IF(${dtbColLetter}${rowNumber}>=7,"Khá",IF(${dtbColLetter}${rowNumber}>=5.5,"Trung bình","Yếu")))),"")`
+// 		}
 
-		// Style cho các dòng dữ liệu
-		row.eachCell((cell, colNumber) => {
-			// Xác định loại cột
-			const isScoreCol =
-				colNumber >= scoreColStart && colNumber < dtbColIndex && (colNumber - scoreColStart) % 2 === 0
-			const isNoteCol =
-				colNumber >= scoreColStart && colNumber < dtbColIndex && (colNumber - scoreColStart) % 2 === 1
-			const isDtbCol = colNumber === dtbColIndex
-			const isGradeCol = colNumber === gradeColIndex
+// 		// Style cho các dòng dữ liệu
+// 		row.eachCell((cell, colNumber) => {
+// 			// Xác định loại cột
+// 			const isScoreCol =
+// 				colNumber >= scoreColStart && colNumber < dtbColIndex && (colNumber - scoreColStart) % 2 === 0
+// 			const isNoteCol =
+// 				colNumber >= scoreColStart && colNumber < dtbColIndex && (colNumber - scoreColStart) % 2 === 1
+// 			const isDtbCol = colNumber === dtbColIndex
+// 			const isGradeCol = colNumber === gradeColIndex
 
-			// Border cho tất cả các ô
-			cell.border = {
-				top: { style: 'thin', color: { argb: 'FF000000' } },
-				left: { style: 'thin', color: { argb: 'FF000000' } },
-				bottom: { style: 'thin', color: { argb: 'FF000000' } },
-				right: { style: 'thin', color: { argb: 'FF000000' } }
-			}
+// 			// Border cho tất cả các ô
+// 			cell.border = {
+// 				top: { style: 'thin', color: { argb: 'FF000000' } },
+// 				left: { style: 'thin', color: { argb: 'FF000000' } },
+// 				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+// 				right: { style: 'thin', color: { argb: 'FF000000' } }
+// 			}
 
-			// Font
-			cell.font = {
-				name: 'Calibri',
-				size: 11
-			}
+// 			// Font
+// 			cell.font = {
+// 				name: 'Calibri',
+// 				size: 11
+// 			}
 
-			// Màu nền và căn chỉnh
-			if (isScoreCol) {
-				// Cột điểm - màu vàng nhạt (có thể chỉnh sửa)
-				cell.fill = {
-					type: 'pattern',
-					pattern: 'solid',
-					fgColor: { argb: 'FFFFFF00' }
-				}
-				cell.alignment = {
-					horizontal: 'center',
-					vertical: 'middle'
-				}
-			} else if (isNoteCol) {
-				// Cột ghi chú - màu trắng (có thể chỉnh sửa)
-				cell.fill = {
-					type: 'pattern',
-					pattern: 'solid',
-					fgColor: { argb: 'FFFFFFFF' }
-				}
-				cell.alignment = {
-					vertical: 'middle',
-					horizontal: 'left',
-					wrapText: true
-				}
-			} else if (isDtbCol) {
-				// Cột DTB - màu vàng đậm hơn (tự động tính)
-				cell.fill = {
-					type: 'pattern',
-					pattern: 'solid',
-					fgColor: { argb: 'FFFFC000' }
-				}
-				cell.alignment = {
-					horizontal: 'center',
-					vertical: 'middle'
-				}
-				cell.font = { ...cell.font, bold: true }
-			} else if (isGradeCol) {
-				// Cột xếp loại - màu cam nhạt (tự động)
-				cell.fill = {
-					type: 'pattern',
-					pattern: 'solid',
-					fgColor: { argb: 'FFFED9A6' }
-				}
-				cell.alignment = {
-					horizontal: 'center',
-					vertical: 'middle'
-				}
-				cell.font = { ...cell.font, bold: true, color: { argb: 'FFFF0000' } }
-			} else {
-				// Cột thông tin - màu xám nhạt (không chỉnh sửa)
-				cell.fill = {
-					type: 'pattern',
-					pattern: 'solid',
-					fgColor: { argb: 'FFD9D9D9' }
-				}
-				cell.alignment = {
-					vertical: 'middle',
-					wrapText: true
-				}
-			}
-		})
+// 			// Màu nền và căn chỉnh
+// 			if (isScoreCol) {
+// 				// Cột điểm - màu vàng nhạt (có thể chỉnh sửa)
+// 				cell.fill = {
+// 					type: 'pattern',
+// 					pattern: 'solid',
+// 					fgColor: { argb: 'FFFFFF00' }
+// 				}
+// 				cell.alignment = {
+// 					horizontal: 'center',
+// 					vertical: 'middle'
+// 				}
+// 			} else if (isNoteCol) {
+// 				// Cột ghi chú - màu trắng (có thể chỉnh sửa)
+// 				cell.fill = {
+// 					type: 'pattern',
+// 					pattern: 'solid',
+// 					fgColor: { argb: 'FFFFFFFF' }
+// 				}
+// 				cell.alignment = {
+// 					vertical: 'middle',
+// 					horizontal: 'left',
+// 					wrapText: true
+// 				}
+// 			} else if (isDtbCol) {
+// 				// Cột DTB - màu vàng đậm hơn (tự động tính)
+// 				cell.fill = {
+// 					type: 'pattern',
+// 					pattern: 'solid',
+// 					fgColor: { argb: 'FFFFC000' }
+// 				}
+// 				cell.alignment = {
+// 					horizontal: 'center',
+// 					vertical: 'middle'
+// 				}
+// 				cell.font = { ...cell.font, bold: true }
+// 			} else if (isGradeCol) {
+// 				// Cột xếp loại - màu cam nhạt (tự động)
+// 				cell.fill = {
+// 					type: 'pattern',
+// 					pattern: 'solid',
+// 					fgColor: { argb: 'FFFED9A6' }
+// 				}
+// 				cell.alignment = {
+// 					horizontal: 'center',
+// 					vertical: 'middle'
+// 				}
+// 				cell.font = { ...cell.font, bold: true, color: { argb: 'FFFF0000' } }
+// 			} else {
+// 				// Cột thông tin - màu xám nhạt (không chỉnh sửa)
+// 				cell.fill = {
+// 					type: 'pattern',
+// 					pattern: 'solid',
+// 					fgColor: { argb: 'FFD9D9D9' }
+// 				}
+// 				cell.alignment = {
+// 					vertical: 'middle',
+// 					wrapText: true
+// 				}
+// 			}
+// 		})
 
-		// Thêm Data Validation cho các ô điểm
-		for (let i = 0; i < councilCount; i++) {
-			const scoreColNumber = scoreColStart + i * 2
-			const scoreCell = worksheet.getCell(rowNumber, scoreColNumber)
-			scoreCell.dataValidation = {
-				type: 'decimal',
-				operator: 'between',
-				allowBlank: true,
-				showErrorMessage: true,
-				formulae: [0, 10],
-				errorStyle: 'error',
-				errorTitle: 'Điểm không hợp lệ',
-				error: 'Điểm phải từ 0 đến 10',
-				promptTitle: 'Nhập điểm',
-				prompt: 'Nhập điểm từ 0 đến 10 (có thể để trống)'
-			}
-		}
-	})
+// 		// Thêm Data Validation cho các ô điểm
+// 		for (let i = 0; i < councilCount; i++) {
+// 			const scoreColNumber = scoreColStart + i * 2
+// 			const scoreCell = worksheet.getCell(rowNumber, scoreColNumber)
+// 			scoreCell.dataValidation = {
+// 				type: 'decimal',
+// 				operator: 'between',
+// 				allowBlank: true,
+// 				showErrorMessage: true,
+// 				formulae: [0, 10],
+// 				errorStyle: 'error',
+// 				errorTitle: 'Điểm không hợp lệ',
+// 				error: 'Điểm phải từ 0 đến 10',
+// 				promptTitle: 'Nhập điểm',
+// 				prompt: 'Nhập điểm từ 0 đến 10 (có thể để trống)'
+// 			}
+// 		}
+// 	})
 
-	// Freeze header row
-	worksheet.views = [{ state: 'frozen', ySplit: 1 }]
+// 	// Freeze header row
+// 	worksheet.views = [{ state: 'frozen', ySplit: 1 }]
 
-	// Bảo vệ sheet - chỉ cho phép chỉnh sửa cột điểm
-	await worksheet.protect('', {
-		selectLockedCells: true,
-		selectUnlockedCells: true,
-		formatCells: false,
-		formatColumns: false,
-		formatRows: true, // Cho phép kéo dãn dòng
-		insertRows: false,
-		deleteRows: false,
-		insertColumns: false,
-		deleteColumns: false,
-		sort: false,
-		autoFilter: false
-	})
+// 	// Bảo vệ sheet - chỉ cho phép chỉnh sửa cột điểm
+// 	await worksheet.protect('', {
+// 		selectLockedCells: true,
+// 		selectUnlockedCells: true,
+// 		formatCells: false,
+// 		formatColumns: false,
+// 		formatRows: true, // Cho phép kéo dãn dòng
+// 		insertRows: false,
+// 		deleteRows: false,
+// 		insertColumns: false,
+// 		deleteColumns: false,
+// 		sort: false,
+// 		autoFilter: false
+// 	})
 
-	// Mở khóa các ô điểm và ghi chú
-	topics.forEach((_, index) => {
-		const rowNumber = index + 2
-		// Mở khóa tất cả các cột điểm và ghi chú
-		for (let i = 0; i < councilCount; i++) {
-			const scoreCol = scoreColStart + i * 2
-			const noteCol = scoreCol + 1
+// 	// Mở khóa các ô điểm và ghi chú
+// 	topics.forEach((_, index) => {
+// 		const rowNumber = index + 2
+// 		// Mở khóa tất cả các cột điểm và ghi chú
+// 		for (let i = 0; i < councilCount; i++) {
+// 			const scoreCol = scoreColStart + i * 2
+// 			const noteCol = scoreCol + 1
 
-			worksheet.getCell(rowNumber, scoreCol).protection = { locked: false }
-			worksheet.getCell(rowNumber, noteCol).protection = { locked: false }
-		}
-	})
+// 			worksheet.getCell(rowNumber, scoreCol).protection = { locked: false }
+// 			worksheet.getCell(rowNumber, noteCol).protection = { locked: false }
+// 		}
+// 	})
 
-	// Xuất file
-	const buffer = await workbook.xlsx.writeBuffer()
-	const blob = new Blob([buffer], {
-		type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-	})
+// 	// Xuất file
+// 	const buffer = await workbook.xlsx.writeBuffer()
+// 	const blob = new Blob([buffer], {
+// 		type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+// 	})
 
-	// Download file
-	const url = window.URL.createObjectURL(blob)
-	const a = document.createElement('a')
-	a.href = url
-	a.download = fileName
-	a.click()
-	window.URL.revokeObjectURL(url)
-}
+// 	// Download file
+// 	const url = window.URL.createObjectURL(blob)
+// 	const a = document.createElement('a')
+// 	a.href = url
+// 	a.download = fileName
+// 	a.click()
+// 	window.URL.revokeObjectURL(url)
+// }
 
 /**
  * Nhập file Excel đã chấm điểm
@@ -641,6 +626,281 @@ export function calculateGradeText(averageScore: number): string {
 	if (averageScore >= 7.0) return 'Khá'
 	if (averageScore >= 5.5) return 'Trung bình'
 	return 'Yếu'
+}
+
+/**
+ * Xuất file Excel cho hội đồng bảo vệ (Council Scoring) - Đơn giản, chỉ ghi nhận điểm
+ */
+export async function exportCouncilScoresTemplate(
+	council: any, // ResDefenseCouncil
+	fileName: string = 'BangChamDiem_HoiDong.xlsx',
+	includeScores: boolean = false
+) {
+	const workbook = new ExcelJS.Workbook()
+
+	// Lấy danh sách thành viên hội đồng từ topic đầu tiên
+	const firstTopic = council.topics[0]
+	const councilMembers = firstTopic?.members || []
+	const councilCount = councilMembers.length
+
+	// ===== SHEET DUY NHẤT: BẢNG CHẤM ĐIỂM =====
+	const worksheet = workbook.addWorksheet('Bảng chấm điểm')
+
+	// ===== HEADER THÔNG TIN HỘI ĐỒNG (3 dòng đầu) =====
+	// Dòng 1: Tiêu đề
+	const titleRow = worksheet.addRow([`BIÊN BẢN CHẤM ĐIỂM HỘI ĐỒNG BẢO VỆ KHÓA LUẬN TỐT NGHIỆP`])
+	worksheet.mergeCells(1, 1, 1, 7 + councilCount)
+	titleRow.height = 30
+	titleRow.getCell(1).font = { bold: true, size: 14, name: 'Times New Roman' }
+	titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' }
+
+	// Dòng 2: Thông tin hội đồng
+	const infoRow = worksheet.addRow([
+		`Hội đồng: ${council.name} | Địa điểm: ${council.location} | Ngày: ${new Date(council.scheduledDate).toLocaleDateString('vi-VN')}`
+	])
+	worksheet.mergeCells(2, 1, 2, 7 + councilCount)
+	infoRow.height = 22
+	infoRow.getCell(1).font = { size: 11, name: 'Times New Roman' }
+	infoRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' }
+
+	// Dòng 3: Danh sách thành viên
+	const membersText = councilMembers
+		.map((m: any) => `${getCouncilRoleLabel(m.role)}: ${m.title || ''} ${m.fullName}`)
+		.join(' | ')
+	const membersRow = worksheet.addRow([membersText])
+	worksheet.mergeCells(3, 1, 3, 7 + councilCount)
+	membersRow.height = 20
+	membersRow.getCell(1).font = { size: 10, italic: true, name: 'Times New Roman' }
+	membersRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+
+	// Dòng trống
+	worksheet.addRow([])
+
+	// ===== HEADER BẢNG ĐIỂM (Dòng 5) =====
+	const baseColumns = [
+		{ header: 'STT', key: 'stt', width: 8 },
+		{ header: 'Mã ĐT', key: 'topicId', width: 18 },
+		{ header: 'Tên đề tài', key: 'titleVN', width: 45 },
+		{ header: 'Sinh viên', key: 'students', width: 28 },
+		{ header: 'GVHD', key: 'lecturers', width: 22 }
+	]
+
+	const scoreColumns: any[] = []
+	councilMembers.forEach((member: any) => {
+		const roleLabel = getCouncilRoleLabel(member.role)
+		scoreColumns.push({
+			header: roleLabel,
+			key: `score_${member.role}`,
+			width: 10
+		})
+	})
+
+	const finalColumns = [
+		{ header: 'ĐTB', key: 'finalScore', width: 10 },
+		{ header: 'Xếp loại', key: 'gradeText', width: 12 }
+	]
+
+	worksheet.columns = [...baseColumns, ...scoreColumns, ...finalColumns]
+
+	// Style header row
+	const headerRow = worksheet.getRow(5)
+	headerRow.height = 35
+
+	headerRow.eachCell((cell, colNumber) => {
+		const isScoreCol = colNumber > 5 && colNumber <= 5 + councilCount
+		const isDtbCol = colNumber === 6 + councilCount
+		const isGradeCol = colNumber === 7 + councilCount
+
+		if (isScoreCol) {
+			cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } }
+		} else if (isDtbCol) {
+			cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC000' } }
+		} else if (isGradeCol) {
+			cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFED7D31' } }
+		} else {
+			cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } }
+		}
+
+		cell.font = { bold: true, size: 11, name: 'Times New Roman', color: isScoreCol || isDtbCol || isGradeCol ? { argb: 'FFFFFFFF' } : { argb: 'FF000000' } }
+		cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+		cell.border = {
+			top: { style: 'medium' },
+			left: { style: 'thin' },
+			bottom: { style: 'medium' },
+			right: { style: 'thin' }
+		}
+	})
+
+	// ===== THÊM DỮ LIỆU TOPICS =====
+	council.topics
+		.sort((a: any, b: any) => (a.defenseOrder || 0) - (b.defenseOrder || 0))
+		.forEach((topic: any, index: number) => {
+			const rowNumber = index + 6 // Bắt đầu từ dòng 6 (sau header ở dòng 5)
+
+			const rowData: any = {
+				stt: index + 1,
+				topicId: topic.topicId,
+				titleVN: topic.titleVN,
+				students: topic.studentNames.join(', '),
+				lecturers: topic.lecturerNames.join(', ')
+			}
+
+			// Thêm điểm từ scores nếu includeScores = true
+			councilMembers.forEach((member: any) => {
+				const memberScore = includeScores 
+					? topic.scores?.find((s: any) => s.scoreType === member.role)
+					: null
+				rowData[`score_${member.role}`] = memberScore?.total || ''
+			})
+
+			rowData.finalScore = ''
+			rowData.gradeText = ''
+
+			const row = worksheet.addRow(rowData)
+			row.height = 30
+
+			// Công thức tính ĐTB
+			const scoreCellRefs: string[] = []
+			for (let i = 0; i < councilCount; i++) {
+				const colLetter = String.fromCharCode(70 + i) // F, G, H, I...
+				scoreCellRefs.push(`${colLetter}${rowNumber}`)
+			}
+
+			const dtbColLetter = String.fromCharCode(70 + councilCount) // Cột ĐTB
+			const gradeColLetter = String.fromCharCode(70 + councilCount + 1) // Cột Xếp loại
+
+			// Công thức DTB = AVERAGE các điểm (nếu có)
+			const andConditions = scoreCellRefs.map((ref) => `ISNUMBER(${ref})`).join(',')
+			const averageFormula = `AVERAGE(${scoreCellRefs.join(',')})`
+			
+			const dtbCell = worksheet.getCell(`${dtbColLetter}${rowNumber}`)
+			dtbCell.value = { formula: `IF(AND(${andConditions}),ROUND(${averageFormula},2),"")` }
+			dtbCell.numFmt = '0.00'
+
+			// Công thức Xếp loại
+			const gradeCell = worksheet.getCell(`${gradeColLetter}${rowNumber}`)
+			gradeCell.value = {
+				formula: `IF(ISNUMBER(${dtbColLetter}${rowNumber}),IF(${dtbColLetter}${rowNumber}>=9,"Xuất sắc",IF(${dtbColLetter}${rowNumber}>=8,"Giỏi",IF(${dtbColLetter}${rowNumber}>=7,"Khá",IF(${dtbColLetter}${rowNumber}>=5.5,"Trung bình","Yếu")))),"")`
+			}
+
+			// Style cho các dòng dữ liệu
+			row.eachCell((cell, colNumber) => {
+				const isScoreCol = colNumber > 5 && colNumber <= 5 + councilCount
+				const isDtbCol = colNumber === 6 + councilCount
+				const isGradeCol = colNumber === 7 + councilCount
+
+				cell.border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' }
+				}
+
+				cell.font = { size: 11, name: 'Times New Roman' }
+
+				if (colNumber === 1) {
+					// STT
+					cell.alignment = { horizontal: 'center', vertical: 'middle' }
+					cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } }
+				} else if (colNumber === 2) {
+					// Mã ĐT
+					cell.alignment = { horizontal: 'center', vertical: 'middle' }
+					cell.font = { ...cell.font, size: 10 }
+				} else if (colNumber === 3) {
+					// Tên đề tài
+					cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }
+				} else if (colNumber === 4 || colNumber === 5) {
+					// Sinh viên, GVHD
+					cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }
+					cell.font = { ...cell.font, size: 10 }
+				} else if (isScoreCol) {
+					// Các cột điểm
+					cell.alignment = { horizontal: 'center', vertical: 'middle' }
+					cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9E6' } }
+					cell.font = { ...cell.font, bold: true, size: 12 }
+				} else if (isDtbCol) {
+					// ĐTB
+					cell.alignment = { horizontal: 'center', vertical: 'middle' }
+					cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFD966' } }
+					cell.font = { ...cell.font, bold: true, size: 12 }
+				} else if (isGradeCol) {
+					// Xếp loại
+					cell.alignment = { horizontal: 'center', vertical: 'middle' }
+					cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4B084' } }
+					cell.font = { ...cell.font, bold: true }
+				}
+			})
+
+			// Data validation cho các ô điểm
+			for (let i = 0; i < councilCount; i++) {
+				const scoreColNumber = 6 + i
+				const scoreCell = worksheet.getCell(rowNumber, scoreColNumber)
+				scoreCell.dataValidation = {
+					type: 'decimal',
+					operator: 'between',
+					allowBlank: true,
+					showErrorMessage: true,
+					formulae: [0, 10],
+					errorStyle: 'error',
+					errorTitle: 'Điểm không hợp lệ',
+					error: 'Vui lòng nhập điểm từ 0 đến 10',
+					prompt: 'Nhập điểm từ 0-10'
+				}
+			}
+		})
+
+	// Dòng chữ ký cuối trang
+	const lastRow = 6 + council.topics.length + 2
+	const signRow = worksheet.addRow([''])
+	worksheet.mergeCells(lastRow, 1, lastRow, 7 + councilCount)
+	signRow.height = 80
+	
+	const signText = 'CHỮ KÝ CỦA CÁC THÀNH VIÊN HỘI ĐỒNG\n\n' + 
+		councilMembers.map((m: any) => `${getCouncilRoleLabel(m.role)}: ${m.fullName} _______________`).join('     ')
+	
+	signRow.getCell(1).value = signText
+	signRow.getCell(1).alignment = { vertical: 'top', horizontal: 'center', wrapText: true }
+	signRow.getCell(1).font = { size: 10, name: 'Times New Roman', italic: true }
+
+	// Freeze panes (đóng băng header và thông tin đầu trang)
+	worksheet.views = [{ state: 'frozen', ySplit: 5, xSplit: 1 }]
+
+	// Bảo vệ sheet - chỉ cho phép sửa ô điểm
+	await worksheet.protect('', {
+		selectLockedCells: true,
+		selectUnlockedCells: true,
+		formatCells: false,
+		formatColumns: false,
+		formatRows: false,
+		insertRows: false,
+		deleteRows: false,
+		insertColumns: false,
+		deleteColumns: false,
+		sort: false,
+		autoFilter: false
+	})
+
+	// Mở khóa các ô điểm
+	council.topics.forEach((_: any, index: number) => {
+		const rowNumber = index + 6
+		for (let i = 0; i < councilCount; i++) {
+			const scoreCol = 6 + i
+			worksheet.getCell(rowNumber, scoreCol).protection = { locked: false }
+		}
+	})
+
+	// Xuất file
+	const buffer = await workbook.xlsx.writeBuffer()
+	const blob = new Blob([buffer], {
+		type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+	})
+
+	const url = window.URL.createObjectURL(blob)
+	const a = document.createElement('a')
+	a.href = url
+	a.download = fileName
+	a.click()
+	window.URL.revokeObjectURL(url)
 }
 
 /** * Validate dữ liệu điểm

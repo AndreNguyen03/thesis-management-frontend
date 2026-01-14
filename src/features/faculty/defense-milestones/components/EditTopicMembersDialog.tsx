@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import type { CouncilMemberDto, TopicAssignment } from '@/models/defenseCouncil.model'
+import type { CouncilMemberDto, CouncilMemberRole, TopicAssignment } from '@/models/defenseCouncil.model'
 import { Button } from '@/components/ui/Button'
 import { useUpdateTopicMembersMutation } from '@/services/defenseCouncilApi'
-import { type CouncilMemberRoleType } from '@/models/milestone.model'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { ConfirmDialog } from '../../manage_phase/completion-phase/manage-defense-milestone/ConfirmDialog'
@@ -28,7 +27,7 @@ export default function EditTopicMembersDialog({ open, onOpenChange, topic, coun
 	})
 	const [updateMembers, { isLoading }] = useUpdateTopicMembersMutation()
 
-	const handleAddMember = (lecturer: any, role: CouncilMemberRoleType) => {
+	const handleAddMember = (lecturer: any, role: CouncilMemberRole) => {
 		// Kiểm tra nếu đã là phản biện thì không thể là chủ tịch hoặc thư ký
 		const isReviewer = members.some((m) => m.memberId === lecturer._id && m.role === 'reviewer')
 		if (isReviewer && (role === 'chairperson' || role === 'secretary')) {
@@ -85,7 +84,7 @@ export default function EditTopicMembersDialog({ open, onOpenChange, topic, coun
 		setMembers([...members, newMember])
 	}
 
-	const handleRemoveMember = (memberId: string, role: CouncilMemberRoleType) => {
+	const handleRemoveMember = (memberId: string, role: CouncilMemberRole) => {
 		// Chỉ xóa member có cả memberId VÀ role khớp (không xóa các role khác của cùng memberId)
 		setMembers(members.filter((m) => !(m.memberId === memberId && m.role === role)))
 	}
@@ -129,7 +128,7 @@ export default function EditTopicMembersDialog({ open, onOpenChange, topic, coun
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='max-h-[220vh] min-w-[200vh] max-w-4xl overflow-y-auto border border-blue-500'>
+			<DialogContent className='max-h-[220vh] min-w-[150vh] max-w-4xl overflow-y-auto border border-blue-500'>
 				<DialogHeader>
 					<DialogTitle>Chỉnh sửa hội đồng chấm đề tài</DialogTitle>
 				</DialogHeader>
@@ -138,17 +137,26 @@ export default function EditTopicMembersDialog({ open, onOpenChange, topic, coun
 					<div className='overflow-x-auto rounded-lg border border-blue-500'>
 						<table className='min-w-full table-auto bg-white'>
 							<thead>
-								<tr className='bg-gray-50 text-gray-700'>
+								<tr className='border-t bg-gray-50 text-gray-700'>
 									<th
-										className='px-4 py-3 text-left text-sm font-semibold'
+										className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'
 										style={{ minWidth: '180px', maxWidth: '220px', width: '200px' }}
 									>
 										Đề tài
 									</th>
-									<th className='px-4 py-3 text-left text-sm font-semibold'>Sinh viên</th>
-									<th className='px-4 py-3 text-left text-sm font-semibold'>GVHD</th>
-									<th className='px-4 py-3 text-left text-sm font-semibold'>Phản biện</th>
-									<th className='px-4 py-3 text-left text-sm font-semibold'>Hội đồng chấm</th>
+									<th className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'>
+										Sinh viên
+									</th>
+									<th className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'>
+										GVHD
+									</th>
+									<th className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'>
+										Phản biện
+									</th>
+									<th className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'>
+										Hội đồng chấm
+									</th>
+									<th className='px-4 py-3 text-center text-sm font-semibold'>Hành động</th>
 								</tr>
 							</thead>
 							<tbody>

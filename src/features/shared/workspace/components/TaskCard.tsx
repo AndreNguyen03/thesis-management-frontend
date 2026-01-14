@@ -21,12 +21,11 @@ import { TaskDetailModal } from '@/components/features/todolist/TaskDetailModal'
 interface TaskCardProps {
 	task: Task
 	setTasks?: React.Dispatch<React.SetStateAction<Task[]>>
-	onUpdateTask?: (taskId: string, update: RequestUpdate) => void
+	onUpdateTask?: (update: RequestUpdate) => void
 	isUpdating?: boolean
 	onDeleteTask?: (taskId: string) => void
 	onUpdateMilestone?: (taskId: string, milestoneId: string | undefined) => void
 	milestones?: ResponseMilestone[]
-	refetchMilestones: () => void
 }
 
 const TaskCard = ({
@@ -36,8 +35,7 @@ const TaskCard = ({
 	onDeleteTask,
 	onUpdateMilestone,
 	isUpdating,
-	milestones,
-	refetchMilestones
+	milestones
 }: TaskCardProps) => {
 	const [editingValue, setEditingValue] = useState<RequestUpdate>({
 		title: task.title,
@@ -104,7 +102,6 @@ const TaskCard = ({
 					newPos: newIndex,
 					groupId: group.activeGroup?._id
 				})
-				refetchMilestones()
 				if (!setTasks) {
 					toast.success('Đã di chuyển nhiệm vụ', { richColors: true })
 				}
@@ -163,7 +160,6 @@ const TaskCard = ({
 					subTaskId: activeId,
 					groupId: group.activeGroup?._id
 				})
-				refetchMilestones()
 				if (!setTasks) {
 					toast.success('Đã di chuyển nhiệm vụ sang cột mới', { richColors: true })
 				}
@@ -187,8 +183,7 @@ const TaskCard = ({
 
 		// Call parent update function if provided
 		if (onUpdateTask && task._id) {
-			onUpdateTask(task._id, editingValue)
-                refetchMilestones()
+			onUpdateTask({ title: editingValue.title, description: editingValue.description })
 		}
 		setIsEditingInfo(false)
 	}
@@ -366,7 +361,7 @@ const TaskCard = ({
 						strategy={verticalListSortingStrategy}
 					>
 						{task.columns.map((column) => {
-							return <Column key={column._id} taskId={task._id} column={column} setTasks={setTasks} refetchMilestones={refetchMilestones} />
+							return <Column key={column._id} taskId={task._id} column={column} setTasks={setTasks} />
 						})}
 					</SortableContext>
 				</DndContext>

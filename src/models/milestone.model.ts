@@ -1,3 +1,4 @@
+import type { CouncilMemberRole } from './defenseCouncil.model'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod } from './period.model'
@@ -79,30 +80,6 @@ export interface TopicSnaps {
 	studentName: string[]
 	lecturers: ResponseMiniLecturerDto[]
 }
-export type CouncilMemberRoleType = 'chairperson' | 'secretary' | 'member' | 'reviewer'
-
-export const CouncilMemberRole = {
-	CHAIRPERSON: 'chairperson',
-	SECRETARY: 'secretary',
-	MEMBER: 'member',
-	REVIEWER: 'reviewer'
-}
-
-export const CouncilMemberRoleOptions: Record<
-	CouncilMemberRoleType,
-	{ label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' }
-> = {
-	chairperson: { label: 'Chủ tịch', variant: 'default' },
-	secretary: { label: 'Thư ký', variant: 'secondary' },
-	member: { label: 'Ủy viên', variant: 'outline' },
-	reviewer: { label: 'Phản biện', variant: 'outline' }
-}
-export interface DefenseCouncilMember {
-	memberId: string
-	role: CouncilMemberRoleType
-	title: string
-	fullName: string
-}
 
 export interface GetUploadedFileDto {
 	_id: string
@@ -125,7 +102,6 @@ export interface ResponseMilestoneWithTemplate {
 	count: string
 	isActive: string
 	periodId: string
-	defenseCouncil: DefenseCouncilMember[]
 	topicSnaps?: TopicSnaps[]
 	location: string
 	isScorable: boolean
@@ -197,7 +173,7 @@ export const milestoneTypeMap: Record<string, { label: string; color: string }> 
 
 export const creatorType: Record<string, { label: string; color: string }> = {
 	lecturer: { label: 'Giảng viên', color: 'bg-blue-100 text-blue-700' },
-	faculty_board: { label: 'Bắt buộc', color: 'bg-red-600 text-white ' }
+	faculty_board: { label: 'BCN khoa', color: 'bg-red-600 text-white ' }
 }
 export const milestoneStatusMap: Record<string, { label: string; color: string }> = {
 	timeout: { label: 'Quá hạn', color: 'bg-red-100 text-red-700' },
@@ -242,7 +218,6 @@ export interface ResponseDefenseMilestone {
 	dueDate: string
 	isPublished: boolean
 	isBlock: boolean
-	defenseCouncil: DefenseCouncilMember[]
 	councilMembers: number
 	topicsCount: number
 	periodInfo: MiniPeriod
@@ -260,4 +235,5 @@ export interface DefenseMilestoneDetail {
 	isPublished: boolean // Đã công bố điểm
 	isBlock: boolean // Đã khóa (không cho chỉnh sửa)
 	createdBy: string
+	periodInfo: MiniPeriod
 }

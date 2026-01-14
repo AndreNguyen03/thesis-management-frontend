@@ -9,12 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
 import { useDebounce } from '@/hooks/useDebounce'
 import { formatPeriodInfo2, formatPeriodInfoMiniPeriod } from '@/utils/utils'
-import {
-	CouncilMemberRoleOptions,
-	type CouncilMemberRole,
-	type CouncilMemberRoleType,
-	type PaginationAllDefenseMilestonesQuery
-} from '@/models/milestone.model'
+import { type PaginationAllDefenseMilestonesQuery } from '@/models/milestone.model'
 import { useGetPeriodDetailQuery } from '@/services/periodApi'
 
 export default function DefenseMilestonesInPeriodRegistration() {
@@ -79,6 +74,15 @@ export default function DefenseMilestonesInPeriodRegistration() {
 			</Badge>
 		)
 	}
+	const handleComeBack = () => {
+		const params = new URLSearchParams(location.search)
+		const from = params.get('from')
+		if (from) {
+			navigate(from)
+		} else {
+			navigate(-1)
+		}
+	}
 	const handleYear = (value: string) => {
 		setQueryParams((prev) => ({
 			...prev,
@@ -88,16 +92,22 @@ export default function DefenseMilestonesInPeriodRegistration() {
 	return (
 		<div className='container mx-auto space-y-6 p-6'>
 			{/* Header */}
-			<div className='space-y-2'>
-				<h1 className='text-3xl font-bold tracking-tight'>
-					Quản lý đợt bảo vệ trong{' '}
-					{periodDetail ? (
-						<span className='text-blue-700'>{formatPeriodInfo2(periodDetail)}</span>
-					) : (
-						'Đang tải...'
-					)}
-				</h1>
-				<p className='text-muted-foreground'>Danh sách tất cả các đợt bảo vệ của khoa</p>
+			<div>
+				<div className='space-y-2'>
+					<h1 className='gap-5 text-3xl font-bold tracking-tight'>
+						<span>Quản lý đợt bảo vệ trong </span>
+
+						{periodDetail ? (
+							<span className='text-blue-700'>{formatPeriodInfo2(periodDetail)}</span>
+						) : (
+							<span>Đang tải...</span>
+						)}
+					</h1>
+					<p className='text-muted-foreground'>Danh sách tất cả các đợt bảo vệ của khoa</p>
+				</div>
+				<Button className='mt-4' onClick={handleComeBack}>
+					Quay lại
+				</Button>
 			</div>
 
 			{/* Filters & Search */}
@@ -253,7 +263,7 @@ export default function DefenseMilestonesInPeriodRegistration() {
 										</div>
 									</div>
 
-									{/* Council Info */}
+									{/* Council Info
 									{milestone.defenseCouncil && milestone.defenseCouncil.length > 0 ? (
 										<div className='rounded-md bg-muted/50 p-2 text-xs'>
 											<div className='font-semibold'>Hội đồng:</div>
@@ -283,14 +293,14 @@ export default function DefenseMilestonesInPeriodRegistration() {
 										<div className='rounded-md bg-muted/50 p-2 text-xs'>
 											<div className='font-semibold'>Hội đồng:</div>
 										</div>
-									)}
+									)} */}
 
 									<div className='flex flex-col gap-2'>
 										{/* Action Button */}
 										<Button
 											className='mt-2 w-full'
 											variant='outline'
-											onClick={() => navigate(`/defense-milestones/${milestone._id}/scoring`)}
+											onClick={() => navigate(`/defense-councils/`)}
 										>
 											Quản lý chấm điểm
 											<ChevronRight className='ml-2 h-4 w-4' />

@@ -1,17 +1,23 @@
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/Button'
-import { Calendar, Clock, MapPin, Users, ChevronRight, Loader2 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Calendar, Clock, MapPin, Users, Loader2 } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useGetCouncilsQuery } from '@/services/defenseCouncilApi'
-import type { QueryDefenseCouncilsParams } from '@/models/defenseCouncil.model'
+import {
+	CouncilMemberRoleOptions,
+	type CouncilMemberRole,
+	type QueryDefenseCouncilsParams
+} from '@/models/defenseCouncil.model'
 import { formatPeriodInfoMiniPeriod } from '@/utils/utils'
+import { CustomPagination } from '@/components/PaginationBar'
 
 export default function LecturerDefenseCouncilsPage() {
 	const navigate = useNavigate()
+	const location = useLocation()
+
 	const [searchTerm, setSearchTerm] = useState('')
 
 	//query params
@@ -37,9 +43,12 @@ export default function LecturerDefenseCouncilsPage() {
 		setSearchTerm(val)
 		debounceOnChange(val)
 	}
-
+	const handleGotoDetailCouncil = (councilId: string) => {
+		navigate(`/defense-councils/${councilId}?from=${encodeURIComponent(location.pathname + location.search)}`)
+	}
+	console.log('defenseCouncils', defenseCouncils)
 	return (
-		<div className='container mx-auto space-y-6 p-6'>
+		<div className='container mx-auto space-y-6 p-6 pt-8'>
 			{/* Header */}
 			<div className='space-y-2'>
 				<h1 className='text-3xl font-bold tracking-tight'>Danh sách các hội đồng</h1>
@@ -70,7 +79,7 @@ export default function LecturerDefenseCouncilsPage() {
 						<Card
 							key={council._id}
 							className='cursor-pointer p-0 transition-all hover:border-primary/50 hover:shadow-lg'
-							onClick={() => navigate(`/lecturer/defense-councils/${council._id}`)}
+							onClick={() => handleGotoDetailCouncil(council._id)}
 						>
 							<CardHeader>
 								<div className='flex items-center gap-2'>
@@ -83,6 +92,16 @@ export default function LecturerDefenseCouncilsPage() {
 											<span> {formatPeriodInfoMiniPeriod(council.periodInfo) || 'Kỳ học'}</span>
 										</CardTitle>
 									</div>
+									{/* Assignment badge */}
+									<div className='flex flex-wrap gap-2 pt-2'>
+										{council.yourRoles &&
+											council.yourRoles.map((role) => (
+												<Badge key={role} variant='outline'>
+													{' '}
+													{CouncilMemberRoleOptions[role as CouncilMemberRole].label}
+												</Badge>
+											))}
+									</div>
 									{/* Status Badges */}
 									<div className='flex flex-wrap gap-2 pt-2'>
 										{council.isPublished && (
@@ -90,7 +109,7 @@ export default function LecturerDefenseCouncilsPage() {
 												Đã công bố
 											</Badge>
 										)}
-										{council.isBlocked ? (
+										{council.isLocked ? (
 											<Badge variant='secondary' className='bg-orange-600'>
 												Đã khóa
 											</Badge>
@@ -144,6 +163,14 @@ export default function LecturerDefenseCouncilsPage() {
 							</CardContent>
 						</Card>
 					))}
+					{isLoading ? (
+						<Loader2 className='m-4 h-6 w-6 animate-spin text-primary' />
+					) : (
+						<CustomPagination
+							meta={defenseCouncils?.meta!}
+							onPageChange={(page) => setQueryParams((prev) => ({ ...prev, page }))}
+						/>
+					)}
 				</div>
 			) : (
 				<Card className='p-12'>

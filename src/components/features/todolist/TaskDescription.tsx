@@ -72,7 +72,7 @@ export const TaskDescription = ({ taskId, initialDescription }: TaskDescriptionP
 				<div
 					className='prose prose-sm min-h-[100px] bg-white max-w-none rounded-md border bg-muted/30 p-3'
 					dangerouslySetInnerHTML={{
-						__html: description || '<p class="text-muted-foreground italic">No description yet</p>'
+						__html: description || '<p class="text-muted-foreground italic">Chưa có mô tả</p>'
 					}}
 				/>
 			)}

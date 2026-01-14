@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { Calendar as CalendarIcon, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Calendar } from '@/components/ui/calendar'
+import { Input } from '@/components/ui/input'
 import { vi as viLocale } from 'date-fns/locale'
 import { toast } from 'sonner'
 
@@ -19,22 +20,37 @@ interface SubtaskDueDateProps {
 export const SubtaskDueDate = ({ taskId, columnId, subtaskId, dueDate }: SubtaskDueDateProps) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [date, setDate] = useState<Date | undefined>(dueDate ? new Date(dueDate) : undefined)
+	const [time, setTime] = useState<string>(() => {
+		if (dueDate) {
+			const d = new Date(dueDate)
+			return d.toTimeString().slice(0, 5)
+		}
+		return '00:00'
+	})
 	const [updateSubtask, { isLoading }] = useUpdateSubtaskMutation()
 
-	const handleSave = async (selectedDate: Date | undefined) => {
+	const handleSave = async (selectedDate: Date | undefined, selectedTime?: string) => {
+		let finalDate: Date | undefined = selectedDate
+		if (selectedDate && (selectedTime || time)) {
+			const [h, m] = (selectedTime || time).split(':')
+			finalDate = new Date(selectedDate)
+			finalDate.setHours(Number(h))
+			finalDate.setMinutes(Number(m))
+			finalDate.setSeconds(0)
+			finalDate.setMilliseconds(0)
+		}
 		try {
 			await updateSubtask({
 				taskId,
 				columnId,
 				subtaskId,
-				updates: { dueDate: selectedDate ? selectedDate.toISOString() : null }
+				updates: { dueDate: finalDate ? finalDate.toISOString() : null }
 			}).unwrap()
-
-			setDate(selectedDate)
+			setDate(finalDate)
 			setIsOpen(false)
 			toast.success('Cập nhật hạn chót', {
 				richColors: true,
-				description: selectedDate ? 'Cập nhật hạn chót thành công' : 'Đã xóa hạn chót'
+				description: finalDate ? 'Cập nhật hạn chót thành công' : 'Đã xóa hạn chót'
 			})
 		} catch (error) {
 			toast.error('Cập nhật hạn chót thất bại' + error, {
@@ -46,6 +62,7 @@ export const SubtaskDueDate = ({ taskId, columnId, subtaskId, dueDate }: Subtask
 
 	const handleRemove = async () => {
 		await handleSave(undefined)
+		setTime('00:00')
 	}
 
 	const isOverdue = date && new Date(date) < new Date()
@@ -70,17 +87,39 @@ export const SubtaskDueDate = ({ taskId, columnId, subtaskId, dueDate }: Subtask
 				<PopoverTrigger asChild>
 					<Button variant='outline' size='sm' className='w-full' disabled={isLoading}>
 						<CalendarIcon className='mr-2 h-4 w-4' />
-						{date ? 'Thay đổi ngày' : 'Đặt hạn chót'}
+						{date ? 'Thay đổi ngày/giờ' : 'Đặt hạn chót'}
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className='w-auto p-0' align='start'>
+				<PopoverContent className='w-auto space-y-2 p-4' align='start'>
 					<Calendar
 						mode='single'
 						selected={date}
-						onSelect={handleSave}
+						onSelect={(d) => {
+							if (d) setDate(d)
+						}}
 						initialFocus
 						disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
 					/>
+					<div className='flex items-center gap-2'>
+						<Input
+							type='time'
+							value={time}
+							onChange={(e) => setTime(e.target.value)}
+							className='w-28'
+							step='60'
+							min='00:00'
+							max='23:59'
+						/>
+						<Button
+							size='sm'
+							onClick={async () => {
+								if (date) await handleSave(date, time)
+							}}
+							disabled={!date || isLoading}
+						>
+							Lưu
+						</Button>
+					</div>
 				</PopoverContent>
 			</Popover>
 		</div>

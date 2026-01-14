@@ -5,7 +5,8 @@ import type {
 	QueryDefenseCouncilsParams,
 	ResDefenseCouncil,
 	ResponseDefenseCouncil,
-	UpdateTopicMembersPayload
+	UpdateTopicMembersPayload,
+	ScorePayload
 } from '@/models/defenseCouncil.model'
 import { baseApi, type ApiResponse } from './baseApi'
 import { buildQueryString } from '@/models/query-params'
@@ -65,6 +66,7 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: (_result, _error, { councilId, milestonesTemplateId }) => [
 				{ type: 'DefenseCouncil', id: councilId },
+				{ type: 'QuickDetailCouncil', id: councilId },
 				{ type: 'defenseCouncilsInMilestone', id: milestonesTemplateId },
 				{ type: 'AwaitingTopicsInDefensemilestone', id: milestonesTemplateId }
 			]
@@ -92,7 +94,10 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 				method: 'PATCH',
 				body: payload
 			}),
-			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'Theses', id: councilId }]
+			invalidatesTags: (_result, _error, { councilId }) => [
+				{ type: 'Theses', id: councilId },
+				{ type: 'QuickDetailCouncil', id: councilId }
+			]
 		}),
 		updateTopicOrder: builder.mutation<
 			ApiResponse<any>,
@@ -105,13 +110,119 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'DefenseCouncil', id: councilId }]
 		}),
-		getDetailAssignedDefenseCouncils: builder.query<ResDefenseCouncil, string>({
+		getDetailScoringDefenseCouncil: builder.query<ResDefenseCouncil, string>({
 			query: (councilId) => ({
-				url: `/defense-councils/lecturer/detail-assigned-defense/${councilId}`,
+				url: `/defense-councils/detail-scoring-council/${councilId}`,
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<ResDefenseCouncil>) => response.data,
-			providesTags: (result, error, args) => [{ type: 'AssignedDefenseCouncils', id: 'LIST' }]
+			providesTags: (result, error, args) => [{ type: 'QuickDetailCouncil', id: args }]
+		}),
+
+		// === NEW SCORING ENDPOINTS ===
+
+		// Thư ký nhập điểm cho đề tài
+		submitTopicScores: builder.mutation<
+			ApiResponse<ResDefenseCouncil>,
+			{ councilId: string; topicId: string; scores: ScorePayload[] }
+		>({
+			query: ({ councilId, topicId, scores }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/submit-scores`,
+				method: 'POST',
+				body: { scores }
+			}),
+			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'DefenseCouncil', id: councilId }]
+		}),
+
+		// Khóa điểm một đề tài
+		lockTopicScores: builder.mutation<ApiResponse<ResDefenseCouncil>, { councilId: string; topicId: string }>({
+			query: ({ councilId, topicId }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/lock`,
+				method: 'POST'
+			}),
+			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'DefenseCouncil', id: councilId }]
+		}),
+
+		// Mở khóa điểm một đề tài (BCN)
+		unlockTopicScores: builder.mutation<ApiResponse<ResDefenseCouncil>, { councilId: string; topicId: string }>({
+			query: ({ councilId, topicId }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/unlock`,
+				method: 'POST'
+			}),
+			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'DefenseCouncil', id: councilId }]
+		}),
+
+		// Khóa hội đồng với validation
+		completeCouncilWithValidation: builder.mutation<ApiResponse<ResDefenseCouncil>, string>({
+			query: (councilId) => ({
+				url: `/defense-councils/${councilId}/complete-with-validation`,
+				method: 'POST'
+			}),
+			invalidatesTags: (_result, _error, councilId) => [
+				{ type: 'DefenseCouncil', id: councilId },
+				{ type: 'defenseCouncilsInMilestone', id: 'LIST' }
+			]
+		}),
+
+		// Công bố điểm
+		publishCouncilScores: builder.mutation<ApiResponse<ResDefenseCouncil>, string>({
+			query: (councilId) => ({
+				url: `/defense-councils/${councilId}/publish-scores`,
+				method: 'POST'
+			}),
+			invalidatesTags: (_result, _error, councilId) => [
+				{ type: 'DefenseCouncil', id: councilId },
+				{ type: 'defenseCouncilsInMilestone', id: 'LIST' }
+			]
+		}),
+
+		// Import điểm từ Excel
+		importScores: builder.mutation<
+			ApiResponse<{ successCount: number; totalCount: number; errorCount: number; errors: string[] }>,
+			{ councilId: string; data: any[] }
+		>({
+			query: ({ councilId, data }) => ({
+				url: `/defense-councils/${councilId}/import-scores`,
+				method: 'POST',
+				body: { data }
+			}),
+			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'DefenseCouncil', id: councilId }]
+		}),
+
+		// Tải template Excel
+		exportScoresTemplate: builder.query<Blob, { councilId: string; includeScores?: boolean }>({
+			query: ({ councilId, includeScores = false }) => ({
+				url: `/defense-councils/${councilId}/export-scores-template?includeScores=${includeScores}`,
+				method: 'GET',
+				responseHandler: (response) => response.blob()
+			})
+		}),
+
+		// Export PDF báo cáo
+		exportPdfReport: builder.query<Blob, string>({
+			query: (councilId) => ({
+				url: `/defense-councils/${councilId}/export-pdf-report`,
+				method: 'GET',
+				responseHandler: (response) => response.blob()
+			})
+		}),
+
+		// Export PDF phiếu điểm
+		exportScoreCardPdf: builder.query<Blob, { councilId: string; topicId: string }>({
+			query: ({ councilId, topicId }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/score-card-pdf`,
+				method: 'GET',
+				responseHandler: (response) => response.blob()
+			})
+		}),
+
+		// Lấy analytics
+		getCouncilAnalytics: builder.query<any, string>({
+			query: (councilId) => ({
+				url: `/defense-councils/${councilId}/analytics`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<any>) => response.data
 		})
 	}),
 	overrideExisting: false
@@ -126,5 +237,16 @@ export const {
 	useRemoveTopicFromCouncilMutation,
 	useUpdateTopicMembersMutation,
 	useUpdateTopicOrderMutation,
-	useGetDetailAssignedDefenseCouncilsQuery
+	useGetDetailScoringDefenseCouncilQuery,
+	// New hooks
+	useSubmitTopicScoresMutation,
+	useLockTopicScoresMutation,
+	useUnlockTopicScoresMutation,
+	useCompleteCouncilWithValidationMutation,
+	usePublishCouncilScoresMutation,
+	useImportScoresMutation,
+	useLazyExportScoresTemplateQuery,
+	useLazyExportPdfReportQuery,
+	useLazyExportScoreCardPdfQuery,
+	useGetCouncilAnalyticsQuery
 } = defenseCouncilApi

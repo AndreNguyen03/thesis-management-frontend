@@ -32,8 +32,16 @@ export interface Score {
 	comment: string
 	scoredAt: Date
 }
+export interface ScorePayload {
+	scorerId: string
+	scorerName: string
+	scoreType: ScoreType
+	total: number // Tổng điểm
+	comment: string
+}
 
 export interface TopicAssignment {
+	index?: number
 	topicId: string
 	titleVN: string
 	titleEng: string
@@ -43,24 +51,33 @@ export interface TopicAssignment {
 	scores: Score[] // Điểm từ hội đồng và phản biện và giảng viên hướng dẫn
 	finalScore: number // Điểm tổng kết
 	members: CouncilMemberDto[]
+	isAssigned: boolean
+	yourRole?: string[]
+	gradeText: string
+	isLocked: boolean
 }
 export interface DefenseMilestoneDto {
+	_id: string
 	title: string
 	description: string
+	dueDate: string
+	isPublished: boolean
+	isBlock: boolean
 }
 
 //giảng viên lấy chi tiết hội đồng bảo vệ đươc phân công
 export interface ResDefenseCouncil {
 	_id: string
 	defenseMilestone: DefenseMilestoneDto // Đợt bảo vệ
-	periodInfo: MiniPeriod,
+	periodInfo: MiniPeriod
 	name: string // VD: "Hội đồng 1 - Phòng E03.2"
 	location: string // Phòng bảo vệ
 	scheduledDate: Date // Thời gian bảo vệ
 	topics: TopicAssignment[] // Các đề tài trong hội đồng, mỗi đề tài có bộ ba riêng
-	isBlocked: boolean
+	isLocked: boolean
 	isPublished: boolean // Đã công bố điểm
 	createdBy: GetMiniUserDto
+	yourRoles?: string[]
 }
 export interface ResponseDefenseCouncil extends GetPaginatedObject {
 	data: ResDefenseCouncil[]
@@ -72,12 +89,30 @@ export interface CreateDefenseCouncilPayload {
 	location: string
 	scheduledDate: string
 }
-export type CouncilMemberRole = 'chairperson' | 'secretary' | 'member' | 'reviewer'
+export type CouncilMemberRole = 'chairperson' | 'secretary' | 'member' | 'reviewer' | 'supervisor'
+export const CouncilMember = {
+	Chairperson: 'chairperson',
+	Secretary: 'secretary',
+	Member: 'member',
+	Reviewer: 'reviewer',
+	Supervisor: 'supervisor'
+}
+
 export interface CouncilMemberDto {
 	memberId: string
 	fullName: string
 	title?: string
 	role: CouncilMemberRole
+}
+export const CouncilMemberRoleOptions: Record<
+	CouncilMemberRole,
+	{ label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' }
+> = {
+	chairperson: { label: 'Chủ tịch', variant: 'default' },
+	secretary: { label: 'Thư ký', variant: 'secondary' },
+	member: { label: 'Ủy viên', variant: 'outline' },
+	reviewer: { label: 'Phản biện', variant: 'outline' },
+	supervisor: { label: 'GVHD', variant: 'success' }
 }
 export interface DefenseCouncilMember {
 	topicId: string
@@ -111,5 +146,6 @@ export const councilMemberRoleMap: Record<CouncilMemberRole, string> = {
 	chairperson: 'Chủ tịch',
 	secretary: 'Thư ký',
 	member: 'Ủy viên',
-	reviewer: 'Phản biện'
+	reviewer: 'Phản biện',
+	supervisor: 'GVHD'
 }

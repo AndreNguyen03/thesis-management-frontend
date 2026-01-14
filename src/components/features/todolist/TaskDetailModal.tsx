@@ -23,7 +23,7 @@ export const TaskDetailModal = ({ taskId, isOpen, onClose }: TaskDetailModalProp
 
 				{error && (
 					<div className='flex h-96 items-center justify-center text-destructive'>
-						<p>Failed to load task details</p>
+						<p>Lỗi khi tải chi tiết công việc</p>
 					</div>
 				)}
 

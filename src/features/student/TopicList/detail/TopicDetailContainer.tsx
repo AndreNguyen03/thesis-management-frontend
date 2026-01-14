@@ -78,7 +78,6 @@ export const TopicDetailContainer = () => {
 
 	// Call the query hook unconditionally but skip fetching when no id is present
 	const { data: topic, isLoading, refetch } = useGetTopicByIdQuery({ id: id! }, { skip: !id })
-	console.log('detail topic :::', topic)
 	// lấy danh sách các major cùng thuộc một khoa với đề tài
 	const { data: majorsOptions } = useGetMajorsBySameFacultyIdQuery(
 		{ facultyId: topic?.major.facultyId || '', queries: { page: 1, limit: 0 } },

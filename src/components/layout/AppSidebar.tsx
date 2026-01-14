@@ -60,7 +60,7 @@ const menuItems: Record<Role | 'common' | 'chung', MenuItem[]> = {
 		//{ title: 'Đăng đề tài', url: '/create-topic', icon: PlusCircle },
 		{ title: 'Quản lý đề tài', url: '/manage-topics', icon: FileText },
 		{ title: 'Xét duyệt đăng ký', url: '/approve-registrations', icon: UserCheck },
-		{ title: 'Chấm điểm', url: '/lecturer/defense-councils', icon: ClipboardCheck }, // Route riêng cho giảng viên
+		{ title: 'Chấm điểm', url: '/defense-councils', icon: ClipboardCheck }, // Route riêng cho giảng viên
 		{ title: 'Đợt đăng ký', url: '/registration', icon: Search },
 		{ title: 'Nhóm của tôi', url: '/group-workspace', icon: Users }
 		// { title: 'Xu hướng đề tài', url: '/trends', icon: TrendingUp },
@@ -78,7 +78,7 @@ const menuItems: Record<Role | 'common' | 'chung', MenuItem[]> = {
 		{ title: 'Quản lý giảng viên khoa', url: '/manage-faculty-lecturers', icon: Users },
 		{ title: 'Quản lý sinh viên khoa', url: '/manage-faculty-students', icon: Users },
 		{ title: 'Quản lý đợt đăng ký', url: '/manage-period', icon: Users },
-		{ title: 'Quản lý đợt bảo vệ', url: '/faculty/defense-councils', icon: ClipboardCheck }, // Route riêng cho BCN
+		{ title: 'Quản lý hội đồng bảo vệ', url: '/defense-councils', icon: ClipboardCheck }, // Route riêng cho BCN
 		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 }
 		// { title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	]

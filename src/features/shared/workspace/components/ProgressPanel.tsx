@@ -1,11 +1,12 @@
-import  { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, CheckCircle, Clock, Zap, LayoutDashboard } from 'lucide-react'
 import { ProgressBar } from './ProgressBar'
-import type { CreateTaskPayload, Task } from '@/models/todolist.model'
+import type { CreateTaskPayload, RequestUpdate, Task } from '@/models/todolist.model'
 import {
 	useCreateTaskMutation,
 	useDeleteTaskMutation,
 	useGetStaskQuery,
+	useUpdateTaskInfoMutation
 	// useUpdateTaskInfoMutation
 } from '@/services/todolistApi'
 import { toast } from 'sonner'
@@ -20,7 +21,7 @@ import { Stat } from './milestone/component/Stat'
 interface ProgressPanelProps {
 	milestones: ResponseMilestone[]
 	totalProgress: number
-    refetchMilestones: () => void
+	refetchMilestones: () => void
 }
 
 export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: ProgressPanelProps) => {
@@ -50,7 +51,7 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 
 	const [createTask] = useCreateTaskMutation()
 	const [deleteTask, { isLoading: isDeleteLoading }] = useDeleteTaskMutation()
-	// const [updateTaskInfo, { isLoading: isUpdatingTaskInfo }] = useUpdateTaskInfoMutation()
+	const [updateTaskInfo, { isLoading: isUpdatingTaskInfo }] = useUpdateTaskInfoMutation()
 
 	/* ================= STATS ================= */
 
@@ -88,6 +89,18 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 	}, [milestones])
 
 	/* ================= HANDLERS ================= */
+	const handleUpdateTask = async (taskId: string, updates: RequestUpdate) => {
+		try {
+			await updateTaskInfo({
+				taskId,
+				groupId: groupId ?? '',
+				updates
+			}).unwrap()
+			toast.success('Cập nhật công việc thành công', { richColors: true })
+		} catch {
+			toast.error('Cập nhật công việc thất bại', { richColors: true })
+		}
+	}
 
 	const handleCreateTask = async () => {
 		if (!newTask.title.trim()) return
@@ -100,7 +113,7 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 				description: '',
 				milestoneId: undefined
 			})
-            refetchMilestones()
+			refetchMilestones()
 			setOpenCreateModal(false)
 			toast.success('Đã tạo công việc', { richColors: true })
 		} catch {
@@ -119,7 +132,7 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 
 			setOpenDeleteModal(false)
 			setDeletedTask(null)
-                refetchMilestones()
+			refetchMilestones()
 			toast.success('Đã xoá công việc', { richColors: true })
 		} catch {
 			toast.error('Xóa thất bại', { richColors: true })
@@ -191,13 +204,13 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 						<TaskCard
 							key={task._id}
 							task={task}
-                            setTasks={setTasks}
+							setTasks={setTasks}
 							onDeleteTask={() => {
 								setDeletedTask(task)
 								setOpenDeleteModal(true)
 							}}
 							milestones={milestones}
-                            refetchMilestones={refetchMilestones}
+							onUpdateTask={(updates: RequestUpdate) => handleUpdateTask(task._id, updates)}
 						/>
 					))
 				) : (

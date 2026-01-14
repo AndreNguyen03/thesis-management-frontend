@@ -3,16 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/Button'
 import { useAddMultipleTopicsToCouncilMutation } from '@/services/defenseCouncilApi'
 import { toast } from 'sonner'
-import type { AddTopicToCouncilPayload, CouncilMemberDto } from '@/models/defenseCouncil.model'
-import {
-	CouncilMemberRole,
-	type CouncilMemberRoleType,
-	type GetTopicsInBatchMilestoneDto
-} from '@/models/milestone.model'
+import type { AddTopicToCouncilPayload, CouncilMemberDto, CouncilMemberRole } from '@/models/defenseCouncil.model'
+
+
 import TopicRow from './TopicRow'
 import { ConfirmDialog } from '../../manage_phase/completion-phase/manage-defense-milestone/ConfirmDialog'
 import { useParams } from 'react-router-dom'
 import type { ResponseMiniLecturerDto, ResponseMiniStudentDto } from '@/models'
+import type { GetTopicsInBatchMilestoneDto } from '@/models/milestone.model'
 
 interface AddTopicDialogProps {
 	mode?: 'add' | 'edit'
@@ -63,7 +61,7 @@ export default function AddTopicDialog({
 		type: null,
 		topicId: undefined
 	})
-	const handleAddMember = (topicId: string, lecturer: any, role: CouncilMemberRoleType) => {
+	const handleAddMember = (topicId: string, lecturer: any, role: CouncilMemberRole) => {
 		const currentMembers = topicMembers[topicId] || []
 
 		// Kiểm tra nếu đã là phản biện thì không thể là chủ tịch hoặc thư ký
@@ -124,7 +122,7 @@ export default function AddTopicDialog({
 		})
 	}
 
-	const handleRemoveMember = (topicId: string, memberId: string, role: CouncilMemberRoleType) => {
+	const handleRemoveMember = (topicId: string, memberId: string, role: CouncilMemberRole) => {
 		const currentMembers = topicMembers[topicId] || []
 		// Chỉ xóa member có cả memberId VÀ role khớp (không xóa các role khác của cùng memberId)
 		setTopicMembers({
@@ -161,7 +159,15 @@ export default function AddTopicDialog({
 				studentNames: topic.students?.map((s: ResponseMiniStudentDto) => s.fullName) || [],
 				lecturerNames: topic.lecturers?.map((l: ResponseMiniLecturerDto) => `${l.title} ${l.fullName}`) || [],
 				defenseOrder: totalInCouncilNum + index + 1,
-				members: topicMembers[topic._id]
+				members: [
+					...topicMembers[topic._id],
+					...topic.lecturers.map((l) => ({
+						memberId: l._id,
+						fullName: l.fullName,
+						title: l.title,
+						role: 'supervisor' as CouncilMemberRole
+					}))
+				]
 			}))
 
 			await addMultipleTopics({
@@ -247,6 +253,14 @@ export default function AddTopicDialog({
 														type: 'remove-eliminated',
 														topicId: topic._id
 													})
+												}
+												supervisors={
+													topic.lecturers.map((l) => ({
+														memberId: l._id,
+														fullName: l.fullName,
+														title: l.title,
+														role: 'supervisor'
+													})) as CouncilMemberDto[]
 												}
 											/>
 										)

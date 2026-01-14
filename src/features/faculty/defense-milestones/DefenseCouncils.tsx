@@ -216,9 +216,9 @@ export default function DefenseCouncils() {
 						.filter((council: ResDefenseCouncil) => {
 							if (statusFilter === 'all') return true
 							if (statusFilter === 'pending')
-								return !council.isPublished && !council.isBlocked 
+								return !council.isPublished && !council.isLocked 
 							if (statusFilter === 'published') return council.isPublished
-							if (statusFilter === 'blocked') return council.isBlocked
+							if (statusFilter === 'blocked') return council.isLocked
 							return true
 						})
 						.map((council: ResDefenseCouncil) => (
@@ -293,10 +293,11 @@ export default function DefenseCouncils() {
 										<Button
 											className='mt-2'
 											variant='outline'
-											onClick={() =>
+											onClick={() =>{
 												navigate(
-													`/period/${periodId}/defense-milestones-in-period/${council.milestoneTemplateId}/manage-council-assignment/${council._id}`
+													`/period/${periodId}/defense-milestones-in-period/${templateId}/manage-council-assignment/${council._id}`
 												)
+											}
 											}
 										>
 											Phân công hội đồng
