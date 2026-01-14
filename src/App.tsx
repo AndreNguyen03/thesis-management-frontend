@@ -13,6 +13,8 @@ import { ChatProvider } from './contexts/ChatSocketContext'
 // import { NotificationSocketProvider } from './contexts/NotificationSocketContext'
 import { useGetCurrentPeriodsQuery } from './services/periodApi'
 import { NotificationSocketProvider } from './contexts/NotificationSocketContext'
+import { getUserIdFromAppUser } from './utils/utils'
+import { ChatbotSocketProvider } from './contexts/ChatbotSocketContext'
 
 const App = () => {
 	const dispatch = useAppDispatch()
@@ -23,6 +25,8 @@ const App = () => {
 	const { data: userData, isLoading: isUserLoading } = useGetProfileQuery(undefined, {
 		skip: !token
 	})
+
+	console.log('App rendering, user:', userData)
 
 	// 🔹 PERIODS (RTK QUERY = source of truth)
 	const { isLoading: isPeriodLoading } = useGetCurrentPeriodsQuery()
@@ -36,20 +40,24 @@ const App = () => {
 
 	if (!userData) return null
 
-	const userId = 'userId' in userData ? userData.userId : userData._id
+	const userId = getUserIdFromAppUser(userData)
+
+	console.log('App rendered with userId:', userId)
 
 	return (
 		<ChatProvider userId={userId}>
 			<NotificationSocketProvider userId={userId}>
-				{isUserLoading || isPeriodLoading ? (
-					<LoadingOverlay />
-				) : (
-					<Layout>
-						<Outlet />
-						<Toaster />
-						<ToasterSonner />
-					</Layout>
-				)}
+				<ChatbotSocketProvider>
+					{isUserLoading || isPeriodLoading ? (
+						<LoadingOverlay />
+					) : (
+						<Layout>
+							<Outlet />
+							<Toaster />
+							<ToasterSonner />
+						</Layout>
+					)}
+				</ChatbotSocketProvider>
 			</NotificationSocketProvider>
 		</ChatProvider>
 	)

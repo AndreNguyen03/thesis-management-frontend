@@ -1,18 +1,14 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useBreadcrumb } from '@/hooks'
 import ManageChatbotPage from './manage_chatbot/ManageChatbot'
+import { useEffect } from 'react'
 
 const ManageAI = () => {
-	return (
-		<div className='container mx-auto p-6'>
-			<h1 className='mb-6 text-3xl font-bold'>Quản lý AI</h1>
-			<Tabs defaultValue='manageChatbot' className='w-full'>
-				<TabsList>
-					<TabsTrigger value='manageChatbot'>Quản lý Chatbot</TabsTrigger>
-				</TabsList>
-				<ManageChatbotPage />
-			</Tabs>
-		</div>
-	)
+	const { setHidden } = useBreadcrumb()
+
+	useEffect(() => {
+		setHidden(true)
+	}, [setHidden])
+	return <ManageChatbotPage />
 }
 
 export default ManageAI

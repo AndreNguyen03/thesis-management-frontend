@@ -31,10 +31,10 @@ export const periodApi = baseApi.injectEndpoints({
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<any>) => ({
+			transformResponse: (response: ApiResponse<PaginatedResponse<Period>>) => ({
 				data: response.data.data,
-				meta: response.data.meta,
-				links: response.data.links
+				meta: response.data.meta
+				// links: response.data.links
 			}),
 			providesTags: ['Periods']
 		}),
@@ -113,7 +113,7 @@ export const periodApi = baseApi.injectEndpoints({
 		// --- Tạo pha hoàn thành ---
 		createCompletionPhase: builder.mutation<
 			CreatePhaseResponse,
-			{ periodId: string; body: CreateCompletionPhaseDto, force?: boolean }
+			{ periodId: string; body: CreateCompletionPhaseDto; force?: boolean }
 		>({
 			query: ({ periodId, body, force }) => ({
 				url: `periods/${periodId}/config-completion-phase${force ? '?force=true' : ''}`,
@@ -159,7 +159,7 @@ export const periodApi = baseApi.injectEndpoints({
 			Phase1Response | Phase2Response | Phase3Response,
 			{ periodId: string; phase: string; phaseId?: string }
 		>({
-			query: ({ periodId, phase, phaseId }) => ({
+			query: ({ periodId, phase }) => ({
 				url: `/periods/${periodId}/phases/${phase}/resolve`,
 				method: 'POST'
 			}),

@@ -42,6 +42,7 @@ import DefenseMilestonesInPeriodRegistration from '@/features/faculty/defense-mi
 import DefenseCouncils from '@/features/faculty/defense-milestones/DefenseCouncils'
 import { CouncilAssignmentPage } from '@/features/faculty/defense-milestones/CounsilAssignmentPage'
 import CouncilDetailPage from '@/features/faculty/defense-milestones/CouncilDetailPage'
+import { ManageLibraryPage } from '@/features/admin/manage_library'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -112,6 +113,11 @@ export const router = createBrowserRouter([
 				path: 'manage-lecturers',
 				element: <ManageLecturerPage />
 			},
+            {
+				path: 'manage-library',
+				element: <ManageLibraryPage />
+			},
+           
 			{
 				path: 'manage-students',
 				element: <ManageStudentPage />

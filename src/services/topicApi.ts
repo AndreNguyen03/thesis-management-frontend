@@ -19,7 +19,11 @@ import type {
 	UpdateDefenseResultDto,
 	PaginationRegisteredTopicsQueryParams,
 	PaginationDraftTopicsQueryParams,
-	AllSubmittedTopicsParamsDto
+	AllSubmittedTopicsParamsDto,
+	TrendingKeyword,
+	SystemOverviewStats,
+	MonthlyStat,
+	MajorDistribution
 } from '@/models'
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
@@ -307,10 +311,7 @@ export const topicApi = baseApi.injectEndpoints({
 				method: 'DELETE'
 			})
 		}),
-		updateTopic: builder.mutation<
-			{ messsage: string },
-			{ topicId: string; body: UpdateTopicPayload }
-		>({
+		updateTopic: builder.mutation<{ messsage: string }, { topicId: string; body: UpdateTopicPayload }>({
 			query: ({ topicId, body }) => ({
 				url: `/topics/${topicId}/in-period`,
 				method: 'PATCH',
@@ -481,12 +482,43 @@ export const topicApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<{ success: number; failed: number; message: string }>) =>
 				response.data,
 			invalidatesTags: (result, error, { topicIds }) => topicIds.map((id) => ({ type: 'Topic', id }))
+		}),
+		getTrendingKeywords: builder.query<TrendingKeyword[], number | void>({
+			query: (limit = 10) => `/topics/trending-keywords?limit=${limit}`,
+			transformResponse: (response: ApiResponse<TrendingKeyword[]>) => response.data,
+			providesTags: ['LibraryStats']
+		}),
+		getSystemOverviewStats: builder.query<SystemOverviewStats, void>({
+			query: () => `/topics/stats/overview-system`,
+			transformResponse: (response: ApiResponse<SystemOverviewStats>) => response.data,
+			providesTags: ['LibraryStats']
+		}),
+
+		getSystemMonthlyStats: builder.query<MonthlyStat[], { months?: number } | void>({
+			query: ({ months = 12 } = {}) => `/topics/stats/monthly-system?months=${months}`,
+			transformResponse: (response: ApiResponse<MonthlyStat[]>) => response.data,
+			providesTags: ['LibraryStats']
+		}),
+
+		getSystemMajorDistribution: builder.query<MajorDistribution[], void>({
+			query: () => `/topics/stats/majors-system`,
+			transformResponse: (response: ApiResponse<MajorDistribution[]>) => response.data,
+			providesTags: ['LibraryStats']
+		}),
+		hideTopic: builder.mutation<{ message: string }, { topicId: string; hide: boolean }>({
+			query: ({ topicId, hide }) => ({
+				url: `/topics/${topicId}/hide`,
+				method: 'PATCH',
+				body: { hide }
+			}),
+			invalidatesTags: ['TopicInLibrary']
 		})
 	}),
 	overrideExisting: false
 })
 
 export const {
+	useHideTopicMutation,
 	useGetTopicsQuery,
 	useGetTopicByIdQuery,
 	useGetTopicsInPhaseQuery,
@@ -526,7 +558,7 @@ export const {
 	useDownloadTopicFilesZipMutation,
 	useFacuBoardApproveTopicsMutation,
 	useFacuBoardRejectTopicsMutation,
-    useFacuBoardRequestEditTopicMutation,
+	useFacuBoardRequestEditTopicMutation,
 	useLecturerGetTopicsInPhaseQuery,
 	useGetTopicsAwaitingEvaluationInPeriodQuery,
 	useGetTopicApprovalRegistrationQuery,
@@ -534,5 +566,9 @@ export const {
 	useBatchUpdateDefenseResultsMutation,
 	useBatchPublishDefenseResultsMutation,
 	useArchiveTopicsMutation,
-	useGetAllSubmittedTopicsQuery
+	useGetAllSubmittedTopicsQuery,
+	useGetTrendingKeywordsQuery,
+	useGetSystemOverviewStatsQuery,
+	useGetSystemMonthlyStatsQuery,
+	useGetSystemMajorDistributionQuery
 } = topicApi

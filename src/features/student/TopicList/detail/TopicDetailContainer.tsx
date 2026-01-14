@@ -78,7 +78,7 @@ export const TopicDetailContainer = () => {
 
 	// Call the query hook unconditionally but skip fetching when no id is present
 	const { data: topic, isLoading, refetch } = useGetTopicByIdQuery({ id: id! }, { skip: !id })
-    console.log('detail topic :::',topic)
+	console.log('detail topic :::', topic)
 	// lấy danh sách các major cùng thuộc một khoa với đề tài
 	const { data: majorsOptions } = useGetMajorsBySameFacultyIdQuery(
 		{ facultyId: topic?.major.facultyId || '', queries: { page: 1, limit: 0 } },
@@ -481,22 +481,22 @@ export const TopicDetailContainer = () => {
 									{user && user.role === 'student' && (
 										<Badge variant='destructive' className='h-fit text-sm'>
 											<p>
-                                                {(() => {
-                                                    switch (currentTopic.registrationStatus) {
-                                                        case 'pending':
-                                                            return 'Đang chờ duyệt'
-                                                        case 'approved':
-                                                            return 'Đã được duyệt đăng ký'
-                                                        case 'rejected':
-                                                            return 'Bị từ chối'
-                                                        case 'withdrawn':
-                                                            return 'Đã rút đăng ký'
-                                                        case 'cancelled':
-                                                            return 'Đã hủy đăng ký'
-                                                        default:
-                                                            return 'Chưa đăng ký'
-                                                    }
-                                                })()}
+												{(() => {
+													switch (currentTopic.registrationStatus) {
+														case 'pending':
+															return 'Đang chờ duyệt'
+														case 'approved':
+															return 'Đã được duyệt đăng ký'
+														case 'rejected':
+															return 'Bị từ chối'
+														case 'withdrawn':
+															return 'Đã rút đăng ký'
+														case 'cancelled':
+															return 'Đã hủy đăng ký'
+														default:
+															return 'Chưa đăng ký'
+													}
+												})()}
 											</p>
 										</Badge>
 									)}
@@ -723,7 +723,9 @@ export const TopicDetailContainer = () => {
 																					topic.phaseHistories[idx - 1]
 																						.createdAt
 																				).getTime()
-																		) < 6000 && (
+																		) < 6000 &&
+																		history.phaseName ===
+																			PeriodPhaseName.SUBMIT_TOPIC && (
 																			<span className='ml-2 text-xs text-primary'>
 																				Đã tạo và nộp cùng lúc
 																			</span>
@@ -894,7 +896,7 @@ export const TopicDetailContainer = () => {
 									<h4 className='mb-1 ml-2 text-lg font-semibold text-blue-600'>{`(${currentTopic.students.approvedStudents.length}/${topic.maxStudents})`}</h4>
 								</div>
 								<div className='flex flex-col gap-4'>
-									{currentTopic.students.approvedStudents.length > 0	 ? (
+									{currentTopic.students.approvedStudents.length > 0 ? (
 										currentTopic.students.approvedStudents.map((student) => (
 											<div
 												key={student._id}

@@ -38,7 +38,7 @@ export function TopicExecutionCard({ dashboardData }: TopicExecutionCardProps) {
 										<Button
 											size='default'
 											className='w-full sm:w-auto'
-											onClick={() => navigate('/group-workspace')}
+											onClick={() => navigate(`/group-workspace/${topic.groupId}`)}
 										>
 											Vào nhóm
 										</Button>

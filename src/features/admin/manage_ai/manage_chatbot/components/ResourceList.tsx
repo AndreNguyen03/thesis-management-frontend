@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
-import { Edit, Trash2, RefreshCw, ExternalLink, FileText, Plus } from 'lucide-react'
+import { Edit, Trash2, ExternalLink, FileText, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { vi } from 'date-fns/locale'
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +21,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { useDeleteResourceMutation } from '@/services/chatbotApi'
-import { useChatbotSocket } from '@/contexts/ChatbotSocketContext'
 import type { CrawlProgress } from '@/models/chatbot-resource.model'
 import ResourceDialog from './ResourceDialog'
 import { mapKnowledgeType } from '@/models/knowledge-source.model'
@@ -30,6 +29,7 @@ import type { RequestKnowledgeSourceDto } from '@/models'
 import { useGetKnowledgeSourcesQuery } from '@/services/knowledgeSourceApi'
 import { cn, downloadFileWithURL } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
+import { useChatbotSocket } from '@/hooks/useChatbot'
 
 // Map processing status to UI status
 const statusMap: Record<string, string> = {
@@ -66,12 +66,11 @@ const ResourceList = () => {
 		query: ''
 	})
 	const { data: resourcesData, isLoading, refetch } = useGetKnowledgeSourcesQuery({ queries: queryParams })
+	console.log('resourcesData', resourcesData)
 	const [deleteResource, { isLoading: isDeleting }] = useDeleteResourceMutation()
 	const navigate = useNavigate()
 	const {
 		isConnected,
-		joinAdminRoom,
-		leaveAdminRoom,
 		onCrawlProgress,
 		onCrawlCompleted,
 		onCrawlFailed,
@@ -79,15 +78,6 @@ const ResourceList = () => {
 		onEmbeddingCompleted
 	} = useChatbotSocket()
 
-	// Join admin room on mount
-	useEffect(() => {
-		if (isConnected) {
-			joinAdminRoom()
-		}
-		return () => {
-			leaveAdminRoom()
-		}
-	}, [isConnected, joinAdminRoom, leaveAdminRoom])
 
 	// Socket event listeners
 	useEffect(() => {
@@ -152,7 +142,7 @@ const ResourceList = () => {
 			setDeleteId(null)
 			refetch()
 		} catch (error) {
-			toast.error('Xóa tài nguyên thất bại')
+			toast.error('Xóa tài nguyên thất bại' + error)
 		}
 	}
 
@@ -177,24 +167,30 @@ const ResourceList = () => {
 
 	const handleGoto = (resource: any) => {
 		switch (resource.source_type) {
-			case 'FILE':
+			case 'FILE': {
 				const fileUrl = `${MINIO_DOWNLOAD_URL_BASE}/${resource.source_location}`
 				downloadFileWithURL(fileUrl, resource.name)
 				break
-			case 'URL':
+			}
+			case 'URL': {
 				window.open(resource.source_location, '_blank')
 				break
-			case 'TOPIC-REGISTERING':
+			}
+			case 'TOPIC-REGISTERING': {
 				navigate(`/detail-topic/${resource.source_location}`)
 				break
-			case 'TOPIC-LIBRARY':
+			}
+			case 'TOPIC-LIBRARY': {
 				navigate(`/detail-topic/${resource.source_location}`)
 				break
-			case 'LECTURER-PROFILE':
+			}
+			case 'LECTURER-PROFILE': {
 				navigate(`/profile/lecturer/${resource.source_location}`)
 				break
-			default:
+			}
+			default: {
 				window.open(resource.source_location, '_blank')
+			}
 		}
 	}
 	return (
@@ -222,7 +218,7 @@ const ResourceList = () => {
 						</div>
 						<span className='text-sm text-muted-foreground'>•</span>
 						<span className='text-sm text-muted-foreground'>
-							Tổng: {resourcesData?.data.length || 0} tài nguyên
+							Tổng: {resourcesData?.meta.totalItems || 0} tài nguyên
 						</span>
 					</div>
 
@@ -358,7 +354,7 @@ const ResourceList = () => {
 						''
 					) : (
 						<CustomPagination
-							meta={resourcesData?.meta!}
+							meta={resourcesData!.meta!}
 							onPageChange={(page) => setQueryParams((prev) => ({ ...prev, page }))}
 						/>
 					)}

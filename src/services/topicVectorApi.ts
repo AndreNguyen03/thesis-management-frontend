@@ -25,8 +25,9 @@ export const topicVectorApi = baseApi.injectEndpoints({
 				const queriesString = buildQueryString(queries)
 				return `/topic-search/advance/topics-in-library?${queriesString}`
 			},
-			transformResponse: (response: ApiResponse<PaginatedTopicsInLibrary>) => response.data
-		})
+			transformResponse: (response: ApiResponse<PaginatedTopicsInLibrary>) => response.data,
+            providesTags: ['TopicInLibrary']
+		}),
 	}),
 	overrideExisting: false
 })

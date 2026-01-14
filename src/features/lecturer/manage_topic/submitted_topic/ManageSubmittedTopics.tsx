@@ -24,7 +24,7 @@ const ManageSubmittedTopics = ({
 }: {
 	dataInernal?: PaginatedSubmittedTopics
 	isAllSubmittedTopics?: boolean
-	onResubmit: (topic: SubmittedTopic) => void
+	onResubmit?: (topic: SubmittedTopic) => void
 }) => {
 	const navigate = useNavigate()
 	const [queries, setQueries] = useState<SubmittedTopicParamsDto>({
@@ -86,10 +86,10 @@ const ManageSubmittedTopics = ({
 				setOpenWithdrawModal(false)
 				refetch()
 			}
-		} catch (err: any) {
+		} catch (err) {
 			console.log('Withdraw error:', err)
 			setOpenWithdrawModal(false)
-			toast('Rút đề tài thất bại. Vui lòng thử lại sau.')
+			toast('Rút đề tài thất bại. Vui lòng thử lại sau.'+ err)
 		}
 	}
 	const handleCopyTodraft = async (topic: SubmittedTopic) => {
@@ -100,9 +100,9 @@ const ManageSubmittedTopics = ({
 				setPendingCopyId(null)
 				toast('Sao chép đề tài thành công vào bản nháp.')
 			}, 1000)
-		} catch (err: any) {
+		} catch (err) {
 			setPendingCopyId(null)
-			toast('Sao chép đề tài thất bại. Vui lòng thử lại sau.')
+			toast('Sao chép đề tài thất bại. Vui lòng thử lại sau.'+ err)
 		}
 	}
 	// const isAbleInSubmitPhase =

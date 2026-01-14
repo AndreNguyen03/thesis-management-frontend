@@ -9,5 +9,5 @@ export interface RequestGetTopicsInAdvanceSearch extends PaginationQueryParamsDt
 	fieldIds?: string[]
 	queryStatus?: string[]
 	majorIds?: string[]
-	year?: string
+	year?: string | number
 }

@@ -1,289 +1,360 @@
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    // services/socket.service.ts
-    import { io, Socket } from 'socket.io-client'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// services/socket.service.ts
+import { io, Socket } from 'socket.io-client'
 
-    /**
-     * Multi-Namespace Socket Service - Singleton pattern
-     * Quản lý nhiều socket connections cho các namespaces khác nhau
-     */
-    class SocketService {
-        private sockets: Map<string, Socket> = new Map() // namespace -> socket
-        private userId: string | null = null
-        private baseUrl: string
-        private reconnectAttempts: Map<string, number> = new Map()
-        private maxReconnectAttempts: number = 5
+/**
+ * Multi-Namespace Socket Service - Singleton pattern
+ * Quản lý nhiều socket connections cho các namespaces khác nhau
+ */
+class SocketService {
+	private sockets: Map<string, Socket> = new Map() // namespace -> socket
+	private userId: string | null = null
+	private baseUrl: string
+	private reconnectAttempts: Map<string, number> = new Map()
+	private maxReconnectAttempts: number = 5
 
-        constructor() {
-            this.baseUrl = 'http://localhost:3000'
-        }
+	constructor() {
+		this.baseUrl = 'http://localhost:3000'
+	}
 
-        /**
-         * Connect đến một namespace
-         * @param userId - ID của user hiện tại
-         * @param namespace - Namespace name (vd: '/chat', '/notification')
-         * @param options - Config options
-         */
-        connect(
-            userId: string,
-            namespace: string = '/chat',
-            options?: {
-                url?: string
-                autoConnect?: boolean
-            }
-        ): Socket {
-            // Kiểm tra đã connect namespace này chưa
-            const existingSocket = this.sockets.get(namespace)
-            if (existingSocket?.connected && this.userId === userId) {
-                console.log(`✅ Socket already connected to ${namespace}`)
-                return existingSocket
-            }
+	/**
+	 * Connect đến một namespace
+	 * @param userId - ID của user hiện tại
+	 * @param namespace - Namespace name (vd: '/chat', '/notification')
+	 * @param options - Config options
+	 */
+	connect(
+		userId: string,
+		namespace: string = '/chat',
+		options?: {
+			url?: string
+			autoConnect?: boolean
+		}
+	): Socket {
+		// Kiểm tra đã connect namespace này chưa
+		const existingSocket = this.sockets.get(namespace)
+		if (existingSocket?.connected && this.userId === userId) {
+			console.log(`✅ Socket already connected to ${namespace}`)
+			return existingSocket
+		}
 
-            // Nếu user changed, disconnect all old sockets
-            if (this.userId && this.userId !== userId) {
-                console.log('🔄 User changed, disconnecting all sockets...')
-                this.disconnectAll()
-            }
+		// Nếu user changed, disconnect all old sockets
+		if (this.userId && this.userId !== userId) {
+			console.log('🔄 User changed, disconnecting all sockets...')
+			this.disconnectAll()
+		}
 
-            this.userId = userId
-            const url = options?.url || this.baseUrl
+		this.userId = userId
+		const url = options?.url || this.baseUrl
 
-            console.log(`🔌 Connecting to ${url}${namespace}...`)
+		console.log(`🔌 Connecting to ${url}${namespace}...`)
 
-            const socket = io(`${url}${namespace}`, {
-                auth: { userId },
-                transports: ['websocket', 'polling'],
-                reconnection: true,
-                reconnectionAttempts: this.maxReconnectAttempts,
-                reconnectionDelay: 1000,
-                reconnectionDelayMax: 5000,
-                timeout: 20000,
-                autoConnect: options?.autoConnect ?? true
-            })
+		const socket = io(`${url}${namespace}`, {
+			auth: { userId },
+			transports: ['websocket', 'polling'],
+			reconnection: true,
+			reconnectionAttempts: this.maxReconnectAttempts,
+			reconnectionDelay: 1000,
+			reconnectionDelayMax: 5000,
+			timeout: 20000,
+			autoConnect: options?.autoConnect ?? true
+		})
 
-            // Setup listeners cho namespace này
-            this.setupListeners(socket, namespace)
+		// Setup listeners cho namespace này
+		this.setupListeners(socket, namespace)
 
-            // Lưu socket
-            this.sockets.set(namespace, socket)
-            this.reconnectAttempts.set(namespace, 0)
+		// Lưu socket
+		this.sockets.set(namespace, socket)
+		this.reconnectAttempts.set(namespace, 0)
 
-            return socket
-        }
+		return socket
+	}
 
-        /**
-         * Setup event listeners cho một socket
-         */
-        private setupListeners(socket: Socket, namespace: string): void {
-            socket.on('connect', () => {
-                console.log(`✅ [${namespace}] Socket connected:`, socket.id)
-                this.reconnectAttempts.set(namespace, 0)
-            })
+	connectAdmin(
+		namespace: string = '/chat',
+		options?: {
+			url?: string
+			autoConnect?: boolean
+		}
+	): Socket {
+		// Kiểm tra đã connect namespace này chưa
+		const existingSocket = this.sockets.get(namespace)
+		if (existingSocket?.connected) {
+			console.log(`✅ Admin socket already connected to ${namespace}`)
+			return existingSocket
+		}
 
-            socket.on('disconnect', (reason) => {
-                console.log(`❌ [${namespace}] Socket disconnected:`, reason)
+		const url = options?.url || this.baseUrl
+		console.log(`🔌 Connecting admin socket to ${url}${namespace}...`)
 
-                if (reason === 'io server disconnect') {
-                    socket.connect()
-                }
-            })
+		const socket = io(`${url}${namespace}`, {
+			transports: ['websocket', 'polling'],
+			reconnection: true,
+			reconnectionAttempts: this.maxReconnectAttempts,
+			reconnectionDelay: 1000,
+			reconnectionDelayMax: 5000,
+			timeout: 20000,
+			autoConnect: options?.autoConnect ?? true
+		})
 
-            socket.on('connect_error', (error) => {
-                console.error(`⚠️ [${namespace}] Connection error:`, error.message)
+		// Setup listeners đầy đủ
+		socket.on('connect', () => {
+			console.log(`✅ [${namespace}] Admin socket connected:`, socket.id)
+			this.reconnectAttempts.set(namespace, 0)
+			// Join admin room ngay khi connect
+			socket.emit('join-admin')
+		})
 
-                const attempts = (this.reconnectAttempts.get(namespace) || 0) + 1
-                this.reconnectAttempts.set(namespace, attempts)
+		socket.on('disconnect', (reason) => {
+			console.log(`❌ [${namespace}] Admin socket disconnected:`, reason)
+			if (reason === 'io server disconnect') {
+				socket.connect()
+			}
+		})
 
-                if (attempts >= this.maxReconnectAttempts) {
-                    console.error(`❌ [${namespace}] Max reconnect attempts reached`)
-                }
-            })
+		socket.on('connect_error', (error) => {
+			console.error(`⚠️ [${namespace}] Admin connection error:`, error.message)
+			const attempts = (this.reconnectAttempts.get(namespace) || 0) + 1
+			this.reconnectAttempts.set(namespace, attempts)
+			if (attempts >= this.maxReconnectAttempts) {
+				console.error(`❌ [${namespace}] Admin max reconnect attempts reached`)
+			}
+		})
 
-            socket.io.on('reconnect_attempt', (attempt) => {
-                console.log(`🔄 [${namespace}] Reconnect attempt ${attempt}...`)
-            })
+		socket.io.on('reconnect_attempt', (attempt) => {
+			console.log(`🔄 [${namespace}] Admin reconnect attempt ${attempt}...`)
+		})
 
-            socket.io.on('reconnect', (attempt) => {
-                console.log(`✅ [${namespace}] Reconnected after ${attempt} attempts`)
-                this.reconnectAttempts.set(namespace, 0)
-            })
+		socket.io.on('reconnect', (attempt) => {
+			console.log(`✅ [${namespace}] Admin reconnected after ${attempt} attempts`)
+			this.reconnectAttempts.set(namespace, 0)
+		})
 
-            socket.io.on('reconnect_failed', () => {
-                console.error(`❌ [${namespace}] Reconnection failed`)
-            })
-        }
+		socket.io.on('reconnect_failed', () => {
+			console.error(`❌ [${namespace}] Admin reconnection failed`)
+		})
 
-        /**
-         * Lấy socket của một namespace cụ thể
-         */
-        getSocket(namespace: string = '/chat'): Socket | null {
-            return this.sockets.get(namespace) || null
-        }
+		// Lưu socket
+		this.sockets.set(namespace, socket)
+		this.reconnectAttempts.set(namespace, 0)
 
-        /**
-         * Lấy tất cả sockets
-         */
-        getAllSockets(): Map<string, Socket> {
-            return this.sockets
-        }
+		return socket
+	}
 
-        /**
-         * Emit event đến một namespace
-         */
-        emit(namespace: string, event: string, data?: any, callback?: (response: any) => void): void {
-            const socket = this.sockets.get(namespace)
+	/**
+	 * Setup event listeners cho một socket
+	 */
+	private setupListeners(socket: Socket, namespace: string): void {
+		socket.on('connect', () => {
+			console.log(`✅ [${namespace}] Socket connected:`, socket.id)
+			this.reconnectAttempts.set(namespace, 0)
+		})
 
-            if (!socket) {
-                console.error(`❌ Socket for namespace ${namespace} not initialized`)
-                return
-            }
+		socket.on('disconnect', (reason) => {
+			console.log(`❌ [${namespace}] Socket disconnected:`, reason)
 
-            if (!socket.connected) {
-                console.warn(`⚠️ Socket ${namespace} not connected. Event will be queued.`)
-            }
+			if (reason === 'io server disconnect') {
+				socket.connect()
+			}
+		})
 
-            if (callback) {
-                socket.emit(event, data, callback)
-            } else {
-                socket.emit(event, data)
-            }
-        }
+		socket.on('connect_error', (error) => {
+			console.error(`⚠️ [${namespace}] Connection error:`, error.message)
 
-        /**
-         * Subscribe to event trong một namespace
-         */
-        on(namespace: string, event: string, handler: (...args: any[]) => void): () => void {
-            const socket = this.sockets.get(namespace)
+			const attempts = (this.reconnectAttempts.get(namespace) || 0) + 1
+			this.reconnectAttempts.set(namespace, attempts)
 
-            if (!socket) {
-                console.error(`❌ Socket for namespace ${namespace} not initialized`)
-                return () => {}
-            }
+			if (attempts >= this.maxReconnectAttempts) {
+				console.error(`❌ [${namespace}] Max reconnect attempts reached`)
+			}
+		})
 
-            socket.on(event, handler)
+		socket.io.on('reconnect_attempt', (attempt) => {
+			console.log(`🔄 [${namespace}] Reconnect attempt ${attempt}...`)
+		})
 
-            // Return cleanup function
-            return () => {
-                socket.off(event, handler)
-            }
-        }
+		socket.io.on('reconnect', (attempt) => {
+			console.log(`✅ [${namespace}] Reconnected after ${attempt} attempts`)
+			this.reconnectAttempts.set(namespace, 0)
+		})
 
-        /**
-         * Unsubscribe khỏi event
-         */
-        off(namespace: string, event: string, handler?: (...args: any[]) => void): void {
-            const socket = this.sockets.get(namespace)
-            if (!socket) return
+		socket.io.on('reconnect_failed', () => {
+			console.error(`❌ [${namespace}] Reconnection failed`)
+		})
+	}
 
-            if (handler) {
-                socket.off(event, handler)
-            } else {
-                socket.off(event)
-            }
-        }
+	/**
+	 * Lấy socket của một namespace cụ thể
+	 */
+	getSocket(namespace: string = '/chat'): Socket | null {
+		return this.sockets.get(namespace) || null
+	}
 
-        /**
-         * Disconnect một namespace cụ thể
-         */
-        disconnect(namespace: string): void {
-            const socket = this.sockets.get(namespace)
+	/**
+	 * Lấy tất cả sockets
+	 */
+	getAllSockets(): Map<string, Socket> {
+		return this.sockets
+	}
 
-            if (socket) {
-                console.log(`🔌 Disconnecting ${namespace}...`)
-                socket.disconnect()
-                this.sockets.delete(namespace)
-                this.reconnectAttempts.delete(namespace)
-            }
-        }
+	/**
+	 * Emit event đến một namespace
+	 */
+	emit(namespace: string, event: string, data?: any, callback?: (response: any) => void): void {
+		const socket = this.sockets.get(namespace)
 
-        /**
-         * Disconnect tất cả namespaces (khi logout)
-         */
-        disconnectAll(): void {
-            console.log('🔌 Disconnecting all sockets...')
+		if (!socket) {
+			console.error(`❌ Socket for namespace ${namespace} not initialized`)
+			return
+		}
 
-            this.sockets.forEach((socket, namespace) => {
-                console.log(`  Disconnecting ${namespace}...`)
-                socket.disconnect()
-            })
+		if (!socket.connected) {
+			console.warn(`⚠️ Socket ${namespace} not connected. Event will be queued.`)
+		}
 
-            this.sockets.clear()
-            this.reconnectAttempts.clear()
-            this.userId = null
-        }
+		if (callback) {
+			socket.emit(event, data, callback)
+		} else {
+			socket.emit(event, data)
+		}
+	}
 
-        /**
-         * Reconnect một namespace
-         */
-        reconnect(namespace: string): void {
-            const socket = this.sockets.get(namespace)
+	/**
+	 * Subscribe to event trong một namespace
+	 */
+	on(namespace: string, event: string, handler: (...args: any[]) => void): () => void {
+		const socket = this.sockets.get(namespace)
 
-            if (socket && !socket.connected) {
-                console.log(`🔄 Reconnecting ${namespace}...`)
-                socket.connect()
-            }
-        }
+		if (!socket) {
+			console.error(`❌ Socket for namespace ${namespace} not initialized`)
+			return () => {}
+		}
 
-        /**
-         * Reconnect tất cả namespaces
-         */
-        reconnectAll(): void {
-            this.sockets.forEach((socket, namespace) => {
-                if (!socket.connected) {
-                    console.log(`🔄 Reconnecting ${namespace}...`)
-                    socket.connect()
-                }
-            })
-        }
+		socket.on(event, handler)
 
-        /**
-         * Kiểm tra connection status của một namespace
-         */
-        isConnected(namespace: string): boolean {
-            const socket = this.sockets.get(namespace)
-            return socket?.connected || false
-        }
+		// Return cleanup function
+		return () => {
+			socket.off(event, handler)
+		}
+	}
 
-        /**
-         * Kiểm tra tất cả namespaces có connected không
-         */
-        isAllConnected(): boolean {
-            if (this.sockets.size === 0) return false
+	/**
+	 * Unsubscribe khỏi event
+	 */
+	off(namespace: string, event: string, handler?: (...args: any[]) => void): void {
+		const socket = this.sockets.get(namespace)
+		if (!socket) return
 
-            return Array.from(this.sockets.values()).every((socket) => socket.connected)
-        }
+		if (handler) {
+			socket.off(event, handler)
+		} else {
+			socket.off(event)
+		}
+	}
 
-        /**
-         * Get current userId
-         */
-        getUserId(): string | null {
-            return this.userId
-        }
+	/**
+	 * Disconnect một namespace cụ thể
+	 */
+	disconnect(namespace: string): void {
+		const socket = this.sockets.get(namespace)
 
-        /**
-         * Get socket ID của một namespace
-         */
-        getSocketId(namespace: string): string | undefined {
-            return this.sockets.get(namespace)?.id
-        }
+		if (socket) {
+			console.log(`🔌 Disconnecting ${namespace}...`)
+			socket.disconnect()
+			this.sockets.delete(namespace)
+			this.reconnectAttempts.delete(namespace)
+		}
+	}
 
-        /**
-         * Get tất cả namespaces đang connected
-         */
-        getConnectedNamespaces(): string[] {
-            const connected: string[] = []
+	/**
+	 * Disconnect tất cả namespaces (khi logout)
+	 */
+	disconnectAll(): void {
+		console.log('🔌 Disconnecting all sockets...')
 
-            this.sockets.forEach((socket, namespace) => {
-                if (socket.connected) {
-                    connected.push(namespace)
-                }
-            })
+		this.sockets.forEach((socket, namespace) => {
+			console.log(`  Disconnecting ${namespace}...`)
+			socket.disconnect()
+		})
 
-            return connected
-        }
-    }
+		this.sockets.clear()
+		this.reconnectAttempts.clear()
+		this.userId = null
+	}
 
-    // Export singleton instance
-    export const socketService = new SocketService()
+	/**
+	 * Reconnect một namespace
+	 */
+	reconnect(namespace: string): void {
+		const socket = this.sockets.get(namespace)
 
-    // Export class
-    export { SocketService }
+		if (socket && !socket.connected) {
+			console.log(`🔄 Reconnecting ${namespace}...`)
+			socket.connect()
+		}
+	}
+
+	/**
+	 * Reconnect tất cả namespaces
+	 */
+	reconnectAll(): void {
+		this.sockets.forEach((socket, namespace) => {
+			if (!socket.connected) {
+				console.log(`🔄 Reconnecting ${namespace}...`)
+				socket.connect()
+			}
+		})
+	}
+
+	/**
+	 * Kiểm tra connection status của một namespace
+	 */
+	isConnected(namespace: string): boolean {
+		const socket = this.sockets.get(namespace)
+		return socket?.connected || false
+	}
+
+	/**
+	 * Kiểm tra tất cả namespaces có connected không
+	 */
+	isAllConnected(): boolean {
+		if (this.sockets.size === 0) return false
+
+		return Array.from(this.sockets.values()).every((socket) => socket.connected)
+	}
+
+	/**
+	 * Get current userId
+	 */
+	getUserId(): string | null {
+		return this.userId
+	}
+
+	/**
+	 * Get socket ID của một namespace
+	 */
+	getSocketId(namespace: string): string | undefined {
+		return this.sockets.get(namespace)?.id
+	}
+
+	/**
+	 * Get tất cả namespaces đang connected
+	 */
+	getConnectedNamespaces(): string[] {
+		const connected: string[] = []
+
+		this.sockets.forEach((socket, namespace) => {
+			if (socket.connected) {
+				connected.push(namespace)
+			}
+		})
+
+		return connected
+	}
+}
+
+// Export singleton instance
+export const socketService = new SocketService()
+
+// Export class
+export { SocketService }
