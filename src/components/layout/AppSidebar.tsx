@@ -71,7 +71,8 @@ const menuItems: Record<Role | 'common' | 'chung', MenuItem[]> = {
 		{ title: 'Quản lý sinh viên', url: '/manage-students', icon: Users },
 		{ title: 'Quản lý thư viện số', url: '/manage-library', icon: Library },
 		{ title: 'Quản lý AI thông minh', url: '/manage-ai', icon: BotMessageSquare },
-		{ title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 }
+		{ title: 'Quản lý Concept', url: '/manage-concept', icon: BookOpen },
+		// { title: 'Thống kê & báo cáo', url: '/statistics', icon: BarChart3 }
 		// { title: 'Kiểm tra đạo văn', url: '/plagiarism-check', icon: Shield }
 	],
 	faculty_board: [

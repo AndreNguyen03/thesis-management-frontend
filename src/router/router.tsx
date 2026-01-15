@@ -43,6 +43,7 @@ import DefenseCouncils from '@/features/faculty/defense-milestones/DefenseCounci
 import { CouncilAssignmentPage } from '@/features/faculty/defense-milestones/CounsilAssignmentPage'
 import CouncilDetailPage from '@/features/faculty/defense-milestones/CouncilDetailPage'
 import { ManageLibraryPage } from '@/features/admin/manage_library'
+import ManageConcept from '@/features/admin/manage_concept/ManageConcept'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -117,7 +118,10 @@ export const router = createBrowserRouter([
 				path: 'manage-library',
 				element: <ManageLibraryPage />
 			},
-           
+           {
+				path: 'manage-concept',
+				element: <ManageConcept />
+			},
 			{
 				path: 'manage-students',
 				element: <ManageStudentPage />
