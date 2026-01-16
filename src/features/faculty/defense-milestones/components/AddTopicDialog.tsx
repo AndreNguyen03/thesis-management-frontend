@@ -5,7 +5,6 @@ import { useAddMultipleTopicsToCouncilMutation } from '@/services/defenseCouncil
 import { toast } from 'sonner'
 import type { AddTopicToCouncilPayload, CouncilMemberDto, CouncilMemberRole } from '@/models/defenseCouncil.model'
 
-
 import TopicRow from './TopicRow'
 import { ConfirmDialog } from '../../manage_phase/completion-phase/manage-defense-milestone/ConfirmDialog'
 import { useParams } from 'react-router-dom'
@@ -156,8 +155,20 @@ export default function AddTopicDialog({
 				topicId: topic._id,
 				titleVN: topic.titleVN,
 				titleEng: topic.titleEng || '',
-				studentNames: topic.students?.map((s: ResponseMiniStudentDto) => s.fullName) || [],
-				lecturerNames: topic.lecturers?.map((l: ResponseMiniLecturerDto) => `${l.title} ${l.fullName}`) || [],
+				students:
+					topic.students?.map((s: ResponseMiniStudentDto) => ({
+						userId: s._id,
+						fullName: s.fullName,
+						studentCode: s.studentCode,
+						email: s.email
+					})) || [],
+				lecturers:
+					topic.lecturers?.map((l: ResponseMiniLecturerDto) => ({
+						userId: l._id,
+						fullName: l.fullName,
+						title: l.title,
+						email: l.email
+					})) || [],
 				defenseOrder: totalInCouncilNum + index + 1,
 				members: [
 					...topicMembers[topic._id],

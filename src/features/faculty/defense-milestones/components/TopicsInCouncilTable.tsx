@@ -154,12 +154,17 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 
 								{/* Students */}
 								<TableCell>
-									{topic.studentNames && topic.studentNames.length > 0 ? (
+									{topic.students && topic.students.length > 0 ? (
 										<div className='space-y-1'>
-											{topic.studentNames.map((name, idx) => (
-												<p key={idx} className='text-sm'>
-													{name}
-												</p>
+											{topic.students.map((student) => (
+												<div key={student._id} className='text-sm'>
+													<p className='font-medium'>{student.fullName}</p>
+													{student.studentCode && (
+														<p className='text-xs text-muted-foreground'>
+															{student.studentCode}
+														</p>
+													)}
+												</div>
 											))}
 										</div>
 									) : (
@@ -168,11 +173,11 @@ export default function TopicsInCouncilTable({ topics, onReorder, onRemove, coun
 								</TableCell>
 								{/* GVHD */}
 								<TableCell>
-									{topic.lecturerNames && topic.lecturerNames.length > 0 ? (
+									{topic.lecturers && topic.lecturers.length > 0 ? (
 										<div className='space-y-1'>
-											{topic.lecturerNames.map((name, idx) => (
-												<p key={idx} className='text-sm'>
-													{name}
+											{topic.lecturers.map((lecturer) => (
+												<p key={lecturer._id} className='text-sm'>
+													{lecturer.title} {lecturer.fullName}
 												</p>
 											))}
 										</div>

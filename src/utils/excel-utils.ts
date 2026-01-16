@@ -721,7 +721,12 @@ export async function exportCouncilScoresTemplate(
 			cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } }
 		}
 
-		cell.font = { bold: true, size: 11, name: 'Times New Roman', color: isScoreCol || isDtbCol || isGradeCol ? { argb: 'FFFFFFFF' } : { argb: 'FF000000' } }
+		cell.font = {
+			bold: true,
+			size: 11,
+			name: 'Times New Roman',
+			color: isScoreCol || isDtbCol || isGradeCol ? { argb: 'FFFFFFFF' } : { argb: 'FF000000' }
+		}
 		cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
 		cell.border = {
 			top: { style: 'medium' },
@@ -741,15 +746,13 @@ export async function exportCouncilScoresTemplate(
 				stt: index + 1,
 				topicId: topic.topicId,
 				titleVN: topic.titleVN,
-				students: topic.studentNames.join(', '),
-				lecturers: topic.lecturerNames.join(', ')
+				students: topic.students?.map((s: any) => s.fullName).join(', ') || '',
+				lecturers: topic.lecturers?.map((l: any) => `${l.title} ${l.fullName}`).join(', ') || ''
 			}
 
 			// Thêm điểm từ scores nếu includeScores = true
 			councilMembers.forEach((member: any) => {
-				const memberScore = includeScores 
-					? topic.scores?.find((s: any) => s.scoreType === member.role)
-					: null
+				const memberScore = includeScores ? topic.scores?.find((s: any) => s.scoreType === member.role) : null
 				rowData[`score_${member.role}`] = memberScore?.total || ''
 			})
 
@@ -772,7 +775,7 @@ export async function exportCouncilScoresTemplate(
 			// Công thức DTB = AVERAGE các điểm (nếu có)
 			const andConditions = scoreCellRefs.map((ref) => `ISNUMBER(${ref})`).join(',')
 			const averageFormula = `AVERAGE(${scoreCellRefs.join(',')})`
-			
+
 			const dtbCell = worksheet.getCell(`${dtbColLetter}${rowNumber}`)
 			dtbCell.value = { formula: `IF(AND(${andConditions}),ROUND(${averageFormula},2),"")` }
 			dtbCell.numFmt = '0.00'
@@ -854,10 +857,11 @@ export async function exportCouncilScoresTemplate(
 	const signRow = worksheet.addRow([''])
 	worksheet.mergeCells(lastRow, 1, lastRow, 7 + councilCount)
 	signRow.height = 80
-	
-	const signText = 'CHỮ KÝ CỦA CÁC THÀNH VIÊN HỘI ĐỒNG\n\n' + 
+
+	const signText =
+		'CHỮ KÝ CỦA CÁC THÀNH VIÊN HỘI ĐỒNG\n\n' +
 		councilMembers.map((m: any) => `${getCouncilRoleLabel(m.role)}: ${m.fullName} _______________`).join('     ')
-	
+
 	signRow.getCell(1).value = signText
 	signRow.getCell(1).alignment = { vertical: 'top', horizontal: 'center', wrapText: true }
 	signRow.getCell(1).font = { size: 10, name: 'Times New Roman', italic: true }

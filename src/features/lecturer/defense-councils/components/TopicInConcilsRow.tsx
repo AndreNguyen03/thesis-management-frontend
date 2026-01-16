@@ -43,11 +43,12 @@ const TopicInConcilsRow = ({ topic, councilMembers, index }: TopicRowProps) => {
 				style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}
 			>
 				<div className='space-y-1'>
-					{topic.studentNames && topic.studentNames.length > 0 ? (
-						topic.studentNames.map((student, idx) => (
-							<p key={idx} className='text-sm text-gray-700'>
-								{student}
-							</p>
+					{topic.students && topic.students.length > 0 ? (
+						topic.students.map((student) => (
+							<div key={student._id} className='text-sm'>
+								<p className='font-medium text-gray-700'>{student.fullName}</p>
+								{student.studentCode && <p className='text-xs text-gray-500'>{student.studentCode}</p>}
+							</div>
 						))
 					) : (
 						<span className='text-sm text-gray-400'>Chưa có SV</span>
@@ -60,10 +61,10 @@ const TopicInConcilsRow = ({ topic, councilMembers, index }: TopicRowProps) => {
 				style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}
 			>
 				<div className='space-y-1'>
-					{topic.lecturerNames && topic.lecturerNames.length > 0 ? (
-						topic.lecturerNames.map((lecturer, idx) => (
-							<p key={idx} className='text-sm text-gray-700'>
-								{lecturer}
+					{topic.lecturers && topic.lecturers.length > 0 ? (
+						topic.lecturers.map((lecturer) => (
+							<p key={lecturer._id} className='text-sm text-gray-700'>
+								{lecturer.title} {lecturer.fullName}
 							</p>
 						))
 					) : (

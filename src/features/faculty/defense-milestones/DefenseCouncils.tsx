@@ -280,16 +280,7 @@ export default function DefenseCouncils() {
 										<span>{council.createdBy.fullName}</span>
 									</div>
 									<div className='flex flex-col justify-center gap-2'>
-										<Button
-											className='mt-2'
-											variant='outline'
-											onClick={() =>
-												navigate(`/defense-milestones/${council.milestoneTemplateId}/scoring`)
-											}
-										>
-											Quản lý chấm điểm
-											<ChevronRight className='ml-2 h-4 w-4' />
-										</Button>
+										
 										<Button
 											className='mt-2'
 											variant='outline'

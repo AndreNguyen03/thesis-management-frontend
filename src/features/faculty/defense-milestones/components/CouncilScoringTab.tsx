@@ -11,7 +11,6 @@ import {
 	useLazyExportPdfReportQuery,
 	useGetDetailScoringDefenseCouncilQuery
 } from '@/services/defenseCouncilApi'
-import { ScoreEntryModal } from './ScoreEntryModal'
 import { ExcelImportDialog } from './ExcelImportDialog'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2, Lock, Unlock, Eye, Edit, Upload, Download, FileDown } from 'lucide-react'
@@ -36,6 +35,7 @@ import {
 import { EvaluationFormModal } from './EvaluationFormModal'
 import { CouncilMinutesModal } from './CouncilMinutesModal'
 import type { MiniPeriod } from '@/models/period.model'
+import { ScoreViewModal } from './ScoreViewModal'
 
 interface CouncilScoringTabProps {
 	councilId: string
@@ -48,10 +48,18 @@ interface ContextData {
 	location: string // Phòng bảo vệ
 	scheduledDate: Date // Thời gian bảo vệ
 	topic: TopicAssignment
+	councilId: string
+	evaluationTemplateId?: string
 }
 export function CouncilScoringTab({ councilId, isFacultyBoard = false }: CouncilScoringTabProps) {
 	const { toast } = useToast()
-	const { data: council, isLoading: loadingCouncil, refetch } = useGetDetailScoringDefenseCouncilQuery(councilId)
+	const {
+		data: council,
+		isLoading: loadingCouncil,
+		error,
+		refetch
+	} = useGetDetailScoringDefenseCouncilQuery(councilId)
+	console.log(council)
 	const [completeCouncil, { isLoading: completing }] = useCompleteCouncilWithValidationMutation()
 	const [publishScores, { isLoading: publishing }] = usePublishCouncilScoresMutation()
 	const [lockTopic] = useLockTopicScoresMutation()
@@ -59,34 +67,44 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 	const [exportTemplate] = useLazyExportScoresTemplateQuery()
 	const [exportPdf] = useLazyExportPdfReportQuery()
 	const location = useLocation()
-	const [selectedContext, setSelectedContext] = useState<ContextData | null>(null)
+	const [selectedContext, setSelectedContext] = useState<ContextData | undefined>(undefined)
 	const [openEvaluationModal, setOpenEvaluationModal] = useState(false)
 	const [openCouncilModal, setOpenCouncilModal] = useState(false)
 	const [showScoreModal, setShowScoreModal] = useState(false)
 	const [showImportDialog, setShowImportDialog] = useState(false)
 	const [showCompleteDialog, setShowCompleteDialog] = useState(false)
 	const [showPublishDialog, setShowPublishDialog] = useState(false)
+	const [selectedTopicForView, setSelectedTopicForView] = useState<TopicAssignment | null>(null)
+	const [showScoreViewModal, setShowScoreViewModal] = useState(false)
 	const navigate = useNavigate()
+	console.log('councilddđ', council)
 	const handleOpenEvaluationModal = (topic: TopicAssignment) => {
+		console.log('openEvaluationModal called', topic)
+		if (!council) return
 		setSelectedContext({
-			defenseMilestone: council!.defenseMilestone,
-			periodInfo: council!.periodInfo,
-			name: council!.name,
-			location: council!.location,
-			scheduledDate: council!.scheduledDate,
-			topic: topic
+			defenseMilestone: council.defenseMilestone,
+			periodInfo: council.periodInfo,
+			name: council.name,
+			location: council.location,
+			scheduledDate: council.scheduledDate,
+			topic: topic,
+			councilId: councilId,
+			evaluationTemplateId: council?.evaluationTemplateId
 		})
 		setOpenEvaluationModal(true)
 	}
 
 	const handleOpenCouncilModal = (topic: TopicAssignment) => {
+		if (!council) return
 		setSelectedContext({
-			defenseMilestone: council!.defenseMilestone,
-			periodInfo: council!.periodInfo,
-			name: council!.name,
-			location: council!.location,
-			scheduledDate: council!.scheduledDate,
-			topic: topic
+			defenseMilestone: council.defenseMilestone,
+			periodInfo: council.periodInfo,
+			name: council.name,
+			location: council.location,
+			scheduledDate: council.scheduledDate,
+			topic: topic,
+			councilId: councilId,
+			evaluationTemplateId: council?.evaluationTemplateId
 		})
 		setOpenCouncilModal(true)
 	}
@@ -142,6 +160,22 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 				variant: 'destructive'
 			})
 		}
+	}
+
+	const handleOpenScoreView = (topic: TopicAssignment) => {
+		setSelectedTopicForView(topic)
+		setShowScoreViewModal(true)
+	}
+
+	const handleEditFromScoreView = () => {
+		if (selectedTopicForView) {
+			setShowScoreViewModal(false)
+			handleOpenEvaluationModal(selectedTopicForView)
+		}
+	}
+	// Check if user is assigned to this topic
+	const isUserAssigned = (topic: TopicAssignment, userId: string) => {
+		return topic.members?.some((m) => m.memberId === userId)
 	}
 
 	const handleUnlockTopic = async (topicId: string) => {
@@ -233,6 +267,17 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 		)
 	}
 
+	if (error) {
+		return (
+			<div className='p-8 text-center'>
+				<p className='text-destructive'>Không thể tải dữ liệu hội đồng</p>
+				<p className='mt-2 text-sm text-muted-foreground'>
+					{(error as any)?.data?.message || 'Vui lòng thử lại sau'}
+				</p>
+			</div>
+		)
+	}
+
 	if (!council) {
 		return <div className='p-8 text-center'>Không tìm thấy hội đồng</div>
 	}
@@ -316,7 +361,7 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 								<TableHead className='border-r border-gray-400 text-center'>Điểm TB</TableHead>
 								<TableHead className='border-r border-gray-400 text-center'>Xếp loại</TableHead>
 								<TableHead className='border-r border-gray-400 text-center'>Trạng thái</TableHead>
-								<TableHead className='text-right'>Thao tác</TableHead>
+								<TableHead className='text-center'>Thao tác</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -343,7 +388,11 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 											</div>
 										</TableCell>
 										<TableCell>
-											<div className='text-sm'>{topic.studentNames.join(', ')}</div>
+											<div className='text-sm'>
+												{topic.students && topic.students.length > 0
+													? topic.students.map((s) => s.fullName).join(', ')
+													: 'Chưa có SV'}
+											</div>
 										</TableCell>
 										<TableCell>
 											<div className='text-sm'>
@@ -352,8 +401,14 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 														if (m.role === CouncilMember.Supervisor)
 															return `${m.title} ${m.fullName}`
 													})
+												) : topic.lecturers && topic.lecturers.length > 0 ? (
+													<span>
+														{topic.lecturers
+															.map((l) => `${l.title} ${l.fullName}`)
+															.join(', ')}
+													</span>
 												) : (
-													<span>{topic.lecturerNames.map((name) => name).join(', ')}</span>
+													'Chưa có GV'
 												)}
 											</div>
 										</TableCell>
@@ -399,25 +454,40 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 										<TableCell className='text-right'>
 											{topic.isAssigned || isFacultyBoard ? (
 												<div className='flex justify-end gap-2'>
+													{/* View Comprehensive Score Button - for BCN and Secretary */}
+													{(isFacultyBoard ||
+														topic.members?.some((m) => m.role === 'secretary')) && (
+														<Button
+															size='sm'
+															variant='outline'
+															onClick={() => handleOpenScoreView(topic)}
+														>
+															<Eye className='mr-1 h-4 w-4' />
+															Xem tổng hợp
+														</Button>
+													)}
+
+													{/* Edit/View Own Score Button */}
 													<Button
 														size='sm'
 														variant={topic.isLocked ? 'outline' : 'default'}
-														onClick={() => handleOpenCouncilModal(topic)}
+														onClick={() => handleOpenEvaluationModal(topic)}
 														disabled={council.isCompleted && !isFacultyBoard}
 													>
 														{topic.isLocked ? (
 															<>
 																<Eye className='mr-1 h-4 w-4' />
-																Xem
+																Xem điểm của tôi
 															</>
 														) : (
 															<>
 																<Edit className='mr-1 h-4 w-4' />
-																{topic.scores?.length > 0 ? 'Sửa' : 'Nhập'}
+																{topic.scores?.length > 0 ? 'Sửa điểm' : 'Nhập điểm'}
 															</>
 														)}
 													</Button>
-													{/* Lock button for secretary - show if topic not locked and has scores */}
+
+													{/* Lock/Unlock buttons - existing code */}
 													{!council.isCompleted &&
 														!topic.isLocked &&
 														topic.scores?.length > 0 && (
@@ -430,7 +500,6 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 																<Lock className='h-4 w-4' />
 															</Button>
 														)}
-													{/* Unlock button for BCN - show if topic locked and council not published */}
 													{isFacultyBoard && topic.isLocked && !council.isPublished && (
 														<Button
 															size='sm'
@@ -457,20 +526,28 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 				)}
 			</div>
 
-			{/* Score Entry Modal */}
-			{/* {selectedTopic && (
-				<ScoreEntryModal
-					open={showScoreModal}
-					onClose={handleCloseScoreModal}
-					councilId={councilId}
-					topicId={selectedTopic.topicId}
-					topicTitle={selectedTopic.titleVN}
-					studentNames={selectedTopic.studentNames}
-					members={selectedTopic.members}
-					existingScores={selectedTopic.scores}
-					isLocked={selectedTopic.isLocked}
+			{/* Score View Modal - Comprehensive view for BCN/Secretary */}
+			{selectedTopicForView && (
+				<ScoreViewModal
+					isOpen={showScoreViewModal}
+					onClose={() => {
+						setShowScoreViewModal(false)
+						setSelectedTopicForView(null)
+					}}
+					topic={selectedTopicForView}
+					canEdit={!council.isCompleted || isFacultyBoard}
+					onEdit={handleEditFromScoreView}
 				/>
-			)} */}
+			)}
+
+			{/* Evaluation Form Modal - Individual scoring */}
+			{selectedContext && (
+				<EvaluationFormModal
+					isOpen={openEvaluationModal}
+					onClose={() => setOpenEvaluationModal(false)}
+					context={selectedContext}
+				/>
+			)}
 
 			{/* Excel Import Dialog */}
 			<ExcelImportDialog
@@ -486,17 +563,21 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 					setShowImportDialog(false)
 				}}
 			/>
-			<EvaluationFormModal
-				isOpen={openEvaluationModal}
-				onClose={() => setOpenEvaluationModal(false)}
-				context={selectedContext}
-			/>
+			{selectedContext && (
+				<EvaluationFormModal
+					isOpen={openEvaluationModal}
+					onClose={() => setOpenEvaluationModal(false)}
+					context={selectedContext}
+				/>
+			)}
+			{/* {selectedContext && (
+				<CouncilMinutesModal
+					isOpen={openCouncilModal}
+					onClose={() => setOpenCouncilModal(false)}
+					context={selectedContext}
+				/>
+			)} */}
 
-			<CouncilMinutesModal
-				isOpen={openCouncilModal}
-				onClose={() => setOpenCouncilModal(false)}
-				context={selectedContext}
-			/>
 			{/* Complete Council Dialog */}
 			<AlertDialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
 				<AlertDialogContent>

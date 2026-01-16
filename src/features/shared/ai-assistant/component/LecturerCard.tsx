@@ -1,5 +1,5 @@
 import type { LecturerSnapshot } from '@/models/chatbot-conversation.model'
-import { BookOpen, Heart, Lightbulb, Tag } from 'lucide-react'
+import { BookOpen, Heart, Lightbulb, Tag, TrendingUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 // LecturerCard Component
@@ -32,6 +32,52 @@ export const LecturerCard: React.FC<{ lecturer: LecturerSnapshot }> = ({ lecture
 						<div className='text-sm'>
 							<span className='font-medium text-gray-700'>Lý do phù hợp:</span>
 							<p className='ml-1 mt-1 text-gray-600'>{lecturer.matchReason}</p>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Hiển thị scores nếu có (từ ProfileMatchingTool) */}
+			{lecturer.scores && (
+				<div className='mb-3 rounded-md bg-purple-50 p-3'>
+					<div className='flex items-start gap-2'>
+						<TrendingUp className='mt-0.5 h-4 w-4 flex-shrink-0 text-purple-500' />
+						<div className='w-full text-xs'>
+							<span className='font-medium text-gray-700'>Điểm số chi tiết:</span>
+							<div className='mt-2 grid grid-cols-2 gap-2'>
+								{lecturer.scores.semantic !== undefined && (
+									<div className='flex items-center justify-between rounded bg-white px-2 py-1'>
+										<span className='text-gray-600'>Semantic:</span>
+										<span className='font-semibold text-purple-600'>
+											{(lecturer.scores.semantic * 100).toFixed(1)}%
+										</span>
+									</div>
+								)}
+								{lecturer.scores.name !== undefined && (
+									<div className='flex items-center justify-between rounded bg-white px-2 py-1'>
+										<span className='text-gray-600'>Name:</span>
+										<span className='font-semibold text-blue-600'>
+											{(lecturer.scores.name * 100).toFixed(1)}%
+										</span>
+									</div>
+								)}
+								{lecturer.scores.rerank !== undefined && (
+									<div className='flex items-center justify-between rounded bg-white px-2 py-1'>
+										<span className='text-gray-600'>Rerank:</span>
+										<span className='font-semibold text-green-600'>
+											{(lecturer.scores.rerank * 100).toFixed(1)}%
+										</span>
+									</div>
+								)}
+								{lecturer.scores.combined !== undefined && (
+									<div className='flex items-center justify-between rounded bg-white px-2 py-1'>
+										<span className='text-gray-600'>Combined:</span>
+										<span className='font-semibold text-orange-600'>
+											{(lecturer.scores.combined * 100).toFixed(1)}%
+										</span>
+									</div>
+								)}
+							</div>
 						</div>
 					</div>
 				</div>

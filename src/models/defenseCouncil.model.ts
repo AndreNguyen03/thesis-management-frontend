@@ -1,3 +1,4 @@
+import type { ScoreDto, ScoreState } from './criterion.models'
 import type { GetPaginatedObject } from './paginated-object.model'
 import type { MiniPeriod } from './period.model'
 import type { PaginationQueryParamsDto } from './query-params'
@@ -24,6 +25,20 @@ export interface ResDefenseCouncil {
 
 export type ScoreType = 'chairperson' | 'secretary' | 'member' | 'reviewer' | 'supervisor'
 
+export interface StudentInCouncil {
+	userId: string
+	fullName: string
+	studentCode?: string
+	email?: string
+}
+
+export interface LecturerInCouncil {
+	userId: string
+	fullName: string
+	title: string
+	email?: string
+}
+
 export interface Score {
 	scorerId: string
 	scorerName: string
@@ -45,10 +60,10 @@ export interface TopicAssignment {
 	topicId: string
 	titleVN: string
 	titleEng: string
-	studentNames: string[]
-	lecturerNames: string[]
+	students: StudentInCouncil[]
+	lecturers: LecturerInCouncil[]
 	defenseOrder: number // Thứ tự bảo vệ (1, 2, 3...)
-	scores: Score[] // Điểm từ hội đồng và phản biện và giảng viên hướng dẫn
+	scores: ScoreDto[] // Điểm từ hội đồng và phản biện và giảng viên hướng dẫn
 	finalScore: number // Điểm tổng kết
 	members: CouncilMemberDto[]
 	isAssigned: boolean
@@ -68,6 +83,7 @@ export interface DefenseMilestoneDto {
 //giảng viên lấy chi tiết hội đồng bảo vệ đươc phân công
 export interface ResDefenseCouncil {
 	_id: string
+	evaluationTemplateId: string
 	defenseMilestone: DefenseMilestoneDto // Đợt bảo vệ
 	periodInfo: MiniPeriod
 	name: string // VD: "Hội đồng 1 - Phòng E03.2"
@@ -125,8 +141,8 @@ export interface AddTopicToCouncilPayload {
 	topicId: string
 	titleVN: string
 	titleEng: string
-	studentNames: string[]
-	lecturerNames: string[]
+	students: StudentInCouncil[]
+	lecturers: LecturerInCouncil[]
 	members: CouncilMemberDto[]
 	defenseOrder: number
 }

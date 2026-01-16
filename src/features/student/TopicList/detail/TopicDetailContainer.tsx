@@ -137,7 +137,23 @@ export const TopicDetailContainer = () => {
 		)
 	}
 	if (topic == null) {
-		return <div>Topic not found</div>
+		return (
+			<Dialog open={true}>
+				<DialogContent hideClose={true} className='h-screen w- rounded-xl bg-[#F2F4FF] p-8'>
+					<div className='flex flex-col items-center justify-center gap-4 w-full'>
+						<div>Không tìm thấy đề tài</div>
+						<Button
+							variant='back'
+							className='w-fit border border-gray-300'
+							onClick={() => handleComeBack()}
+						>
+							<ChevronLeft className='size-6' />
+							<p>Quay lại</p>
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+		)
 	}
 	if (isSuccessDelete) {
 		navigate(-1)
@@ -462,7 +478,11 @@ export const TopicDetailContainer = () => {
 			<DialogContent hideClose={true} className='h-screen rounded-xl bg-[#F2F4FF] p-8 sm:min-w-full'>
 				<div className='flex flex-col gap-4'>
 					<div className='grid grid-cols-3 px-4'>
-						<Button variant='back' className='w-fit border border-gray-300' onClick={() => handleComeBack()}>
+						<Button
+							variant='back'
+							className='w-fit border border-gray-300'
+							onClick={() => handleComeBack()}
+						>
 							<ChevronLeft className='size-6' />
 							<p>Quay lại</p>
 						</Button>

@@ -10,6 +10,16 @@ import type {
 } from '@/models/defenseCouncil.model'
 import { baseApi, type ApiResponse } from './baseApi'
 import { buildQueryString } from '@/models/query-params'
+import type {
+	DetailedCriterionScore,
+	DraftScoreResponse,
+	EvaluationTemplate,
+	SaveDraftScoreDto,
+	SubmitDetailedScoreDto,
+	MyScoreResponse,
+	ScoreState
+} from '@/models/criterion.models'
+
 export const defenseCouncilApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getCouncils: builder.query<ResponseDefenseCouncil, QueryDefenseCouncilsParams>({
@@ -223,6 +233,83 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<any>) => response.data
+		}),
+
+		// === EVALUATION TEMPLATE & DETAILED SCORING ===
+
+		// Lấy evaluation template theo councilId (từ councilData.evaluationTemplateId)
+		getEvaluationTemplate: builder.query<EvaluationTemplate, string>({
+			query: (templateId) => ({
+				url: `/evaluation-templates/${templateId}`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<EvaluationTemplate>) => response.data,
+			providesTags: (_result, _error, templateId) => [{ type: 'EvaluationTemplate', id: templateId }]
+		}),
+
+		// Lưu draft scores (auto-save, không invalidate tags)
+		saveDraftScores: builder.mutation<
+			ApiResponse<DraftScoreResponse>,
+			{ councilId: string; topicId: string; payload: SaveDraftScoreDto }
+		>({
+			query: ({ councilId, topicId, payload }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/draft-scores`,
+				method: 'POST',
+				body: payload
+			})
+			// Không invalidate tags để tránh refetch nhiều lần khi auto-save
+		}),
+
+		// Load draft của user hiện tại
+		getMyDraft: builder.query<
+			DraftScoreResponse | null,
+			{ councilId: string; topicId: string; studentId?: string }
+		>({
+			query: ({ councilId, topicId, studentId }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/my-draft${studentId ? `?studentId=${studentId}` : ''}`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<DraftScoreResponse | null>) => response.data,
+			providesTags: (_result, _error, { councilId, topicId }) => [
+				{ type: 'DraftScore', id: `${councilId}_${topicId}` }
+			]
+		}),
+
+		// Submit detailed scores (final submission)
+		submitDetailedScores: builder.mutation<
+			ApiResponse<ResDefenseCouncil>,
+			{ councilId: string; topicId: string; payload: SubmitDetailedScoreDto }
+		>({
+			query: ({ councilId, topicId, payload }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/submit-detailed-scores`,
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (_result, _error, { councilId, topicId }) => [
+				{ type: 'DefenseCouncil', id: councilId },
+				{ type: 'DraftScore', id: `${councilId}_${topicId}` }
+			]
+		}),
+		//lấy điểm mà người dùng đã chấm cho đề tài trong council
+		// Xóa draft (discard)
+		deleteDraft: builder.mutation<ApiResponse<void>, { councilId: string; topicId: string; studentId?: string }>({
+			query: ({ councilId, topicId, studentId }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/draft-scores${studentId ? `?studentId=${studentId}` : ''}`,
+				method: 'DELETE'
+			}),
+			invalidatesTags: (_result, _error, { councilId, topicId }) => [
+				{ type: 'DraftScore', id: `${councilId}_${topicId}` }
+			]
+		}),
+
+		// Lấy điểm mà user đã chấm (trả về array of student scores)
+		getMyScoreForTopic: builder.query<MyScoreResponse, { councilId: string; topicId: string }>({
+			query: ({ councilId, topicId }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/my-score`,
+				method: 'GET'
+			}),
+			transformResponse: (response: ApiResponse<MyScoreResponse>) => response.data,
+			providesTags: (_result, _error, { councilId }) => [{ type: 'DefenseCouncil', id: councilId }]
 		})
 	}),
 	overrideExisting: false
@@ -248,5 +335,14 @@ export const {
 	useLazyExportScoresTemplateQuery,
 	useLazyExportPdfReportQuery,
 	useLazyExportScoreCardPdfQuery,
-	useGetCouncilAnalyticsQuery
+	useGetCouncilAnalyticsQuery,
+	// Evaluation template & detailed scoring hooks
+	useGetEvaluationTemplateQuery,
+	useSaveDraftScoresMutation,
+	useGetMyDraftQuery,
+	useLazyGetMyDraftQuery,
+	useSubmitDetailedScoresMutation,
+	useDeleteDraftMutation,
+	useGetMyScoreForTopicQuery,
+	useLazyGetMyScoreForTopicQuery
 } = defenseCouncilApi
