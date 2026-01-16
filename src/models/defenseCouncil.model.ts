@@ -21,6 +21,7 @@ export interface ResDefenseCouncil {
 	isCompleted: boolean // Đã hoàn thành chấm điểm
 	isPublished: boolean // Đã công bố điểm
 	createdBy: GetMiniUserDto
+	councilComments?: string // Ý kiến trao đổi của hội đồng
 }
 
 export type ScoreType = 'chairperson' | 'secretary' | 'member' | 'reviewer' | 'supervisor'
@@ -80,7 +81,7 @@ export interface DefenseMilestoneDto {
 	isBlock: boolean
 }
 
-//giảng viên lấy chi tiết hội đồng bảo vệ đươc phân công
+//giảng viên lấy chi tiết hội đồng bảo vệ được phân công
 export interface ResDefenseCouncil {
 	_id: string
 	evaluationTemplateId: string
@@ -94,6 +95,7 @@ export interface ResDefenseCouncil {
 	isPublished: boolean // Đã công bố điểm
 	createdBy: GetMiniUserDto
 	yourRoles?: string[]
+	councilComments?: string // Ý kiến trao đổi của hội đồng
 }
 export interface ResponseDefenseCouncil extends GetPaginatedObject {
 	data: ResDefenseCouncil[]

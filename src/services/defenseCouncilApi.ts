@@ -226,6 +226,34 @@ export const defenseCouncilApi = baseApi.injectEndpoints({
 			})
 		}),
 
+		// Export PDF phiếu đánh giá chi tiết
+		exportEvaluationFormPdf: builder.query<Blob, { councilId: string; topicId: string }>({
+			query: ({ councilId, topicId }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/evaluation-form-pdf`,
+				method: 'GET',
+				responseHandler: (response) => response.blob()
+			})
+		}),
+
+		// Cập nhật ý kiến hội đồng
+		updateCouncilComments: builder.mutation<ApiResponse<any>, { councilId: string; councilComments: string }>({
+			query: ({ councilId, councilComments }) => ({
+				url: `/defense-councils/${councilId}/comments`,
+				method: 'PATCH',
+				body: { councilComments }
+			}),
+			invalidatesTags: (_result, _error, { councilId }) => [{ type: 'DefenseCouncil', id: councilId }]
+		}),
+
+		// Export PDF biên bản hội đồng
+		exportCouncilMinutesPdf: builder.query<Blob, { councilId: string; topicId: string }>({
+			query: ({ councilId, topicId }) => ({
+				url: `/defense-councils/${councilId}/topics/${topicId}/council-minutes-pdf`,
+				method: 'GET',
+				responseHandler: (response) => response.blob()
+			})
+		}),
+
 		// Lấy analytics
 		getCouncilAnalytics: builder.query<any, string>({
 			query: (councilId) => ({
@@ -335,6 +363,10 @@ export const {
 	useLazyExportScoresTemplateQuery,
 	useLazyExportPdfReportQuery,
 	useLazyExportScoreCardPdfQuery,
+	useLazyExportEvaluationFormPdfQuery,
+	useExportEvaluationFormPdfQuery,
+	useLazyExportCouncilMinutesPdfQuery,
+	useUpdateCouncilCommentsMutation,
 	useGetCouncilAnalyticsQuery,
 	// Evaluation template & detailed scoring hooks
 	useGetEvaluationTemplateQuery,

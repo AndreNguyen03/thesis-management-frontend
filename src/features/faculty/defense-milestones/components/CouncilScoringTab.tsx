@@ -30,12 +30,20 @@ import {
 	CouncilMember,
 	councilMemberRoleMap,
 	type DefenseMilestoneDto,
-	type TopicAssignment
+	type TopicAssignment,
+	type CouncilMemberDto
 } from '@/models/defenseCouncil.model'
 import { EvaluationFormModal } from './EvaluationFormModal'
 import { CouncilMinutesModal } from './CouncilMinutesModal'
 import type { MiniPeriod } from '@/models/period.model'
 import { ScoreViewModal } from './ScoreViewModal'
+
+interface AggregatedCouncilMember {
+	memberId: string
+	fullName: string
+	title?: string
+	roles: string[]
+}
 
 interface CouncilScoringTabProps {
 	councilId: string
@@ -50,6 +58,9 @@ interface ContextData {
 	topic: TopicAssignment
 	councilId: string
 	evaluationTemplateId?: string
+	allCouncilMembers?: AggregatedCouncilMember[]
+	allTopics?: TopicAssignment[] // Tất cả đề tài trong hội đồng
+	councilComments?: string // Ý kiến hội đồng
 }
 export function CouncilScoringTab({ councilId, isFacultyBoard = false }: CouncilScoringTabProps) {
 	const { toast } = useToast()
@@ -70,16 +81,54 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 	const [selectedContext, setSelectedContext] = useState<ContextData | undefined>(undefined)
 	const [openEvaluationModal, setOpenEvaluationModal] = useState(false)
 	const [openCouncilModal, setOpenCouncilModal] = useState(false)
-	const [showScoreModal, setShowScoreModal] = useState(false)
 	const [showImportDialog, setShowImportDialog] = useState(false)
 	const [showCompleteDialog, setShowCompleteDialog] = useState(false)
 	const [showPublishDialog, setShowPublishDialog] = useState(false)
 	const [selectedTopicForView, setSelectedTopicForView] = useState<TopicAssignment | null>(null)
 	const [showScoreViewModal, setShowScoreViewModal] = useState(false)
+	const [showCouncilMinutesForAll, setShowCouncilMinutesForAll] = useState(false)
 	const navigate = useNavigate()
-	console.log('councilddđ', council)
+	const isSecretary = council?.topics.some((topic) =>
+		topic.members.some(
+			(member) => member.memberId === location.state?.userId && member.role === councilMemberRoleMap.secretary
+		)
+	)
+	// Aggregate all unique council members across all topics with their roles
+	const aggregateCouncilMembers = (council: any) => {
+		const memberMap = new Map<
+			string,
+			{
+				memberId: string
+				fullName: string
+				title?: string
+				roles: Set<string>
+			}
+		>()
+
+		council.topics.forEach((topic: TopicAssignment) => {
+			topic.members.forEach((member: CouncilMemberDto) => {
+				if (!memberMap.has(member.memberId)) {
+					memberMap.set(member.memberId, {
+						memberId: member.memberId,
+						fullName: member.fullName,
+						title: member.title || '',
+						roles: new Set([member.role])
+					})
+				} else {
+					memberMap.get(member.memberId)!.roles.add(member.role)
+				}
+			})
+		})
+
+		return Array.from(memberMap.values()).map((member) => ({
+			memberId: member.memberId,
+			fullName: member.fullName,
+			title: member.title,
+			roles: Array.from(member.roles)
+		}))
+	}
+
 	const handleOpenEvaluationModal = (topic: TopicAssignment) => {
-		console.log('openEvaluationModal called', topic)
 		if (!council) return
 		setSelectedContext({
 			defenseMilestone: council.defenseMilestone,
@@ -107,6 +156,35 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 			evaluationTemplateId: council?.evaluationTemplateId
 		})
 		setOpenCouncilModal(true)
+	}
+
+	const handleOpenCouncilModalForAll = () => {
+		if (!council || !council.topics || council.topics.length === 0) {
+			toast({
+				title: 'Thông báo',
+				description: 'Chưa có đề tài nào trong hội đồng',
+				variant: 'default'
+			})
+			return
+		}
+		// Use first topic as context for council-level minutes
+		const firstTopic = council.topics[0]
+		// Aggregate all unique members from all topics
+		const aggregatedMembers = aggregateCouncilMembers(council)
+		setSelectedContext({
+			defenseMilestone: council.defenseMilestone,
+			periodInfo: council.periodInfo,
+			name: council.name,
+			location: council.location,
+			scheduledDate: council.scheduledDate,
+			topic: firstTopic,
+			councilId: councilId,
+			evaluationTemplateId: council?.evaluationTemplateId,
+			allCouncilMembers: aggregatedMembers,
+			allTopics: council.topics, // Tất cả đề tài trong hội đồng
+			councilComments: council.councilComments || '' // Ý kiến hội đồng
+		})
+		setShowCouncilMinutesForAll(true)
 	}
 
 	const handleCompleteCouncil = async () => {
@@ -283,7 +361,6 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 	}
 
 	const progress = calculateProgress()
-	console.log(council.topics)
 	return (
 		<div className='space-y-4'>
 			{/* Header Actions */}
@@ -294,6 +371,20 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 						Tiến độ: {progress}% ({council.topics.filter((t) => t.scores?.length > 0).length}/
 						{council.topics.length} đề tài đã nhập điểm)
 					</div>
+				</div>
+				<div>
+					<Button
+						className='disabled:opacity-50'
+						onClick={handleOpenCouncilModalForAll}
+					//	disabled={!isFacultyBoard && !isSecretary}
+						// title={
+						// 	!isFacultyBoard && !isSecretary
+						// 		? 'Chỉ thư ký và CBHD Khoa mới có thể xem biên bản hội đồng'
+						// 		: 'Biển bản hội đồng'
+						// }
+					>
+						Xem Biên bản hội đồng
+					</Button>
 				</div>
 				<div className='flex gap-2'>
 					{/* Excel Import/Export */}
@@ -455,7 +546,7 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 											{topic.isAssigned || isFacultyBoard ? (
 												<div className='flex justify-end gap-2'>
 													{/* View Comprehensive Score Button - for BCN and Secretary */}
-													{(isFacultyBoard ||
+													{/* {(isFacultyBoard ||
 														topic.members?.some((m) => m.role === 'secretary')) && (
 														<Button
 															size='sm'
@@ -465,7 +556,7 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 															<Eye className='mr-1 h-4 w-4' />
 															Xem tổng hợp
 														</Button>
-													)}
+													)} */}
 
 													{/* Edit/View Own Score Button */}
 													<Button
@@ -549,6 +640,24 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 				/>
 			)}
 
+			{/* Council Minutes Modal for specific topic */}
+			{selectedContext && (
+				<CouncilMinutesModal
+					isOpen={openCouncilModal}
+					onClose={() => setOpenCouncilModal(false)}
+					context={selectedContext}
+				/>
+			)}
+
+			{/* Council Minutes Modal for all topics/council overview */}
+			{selectedContext && (
+				<CouncilMinutesModal
+					isOpen={showCouncilMinutesForAll}
+					onClose={() => setShowCouncilMinutesForAll(false)}
+					context={selectedContext}
+				/>
+			)}
+
 			{/* Excel Import Dialog */}
 			<ExcelImportDialog
 				councilId={councilId}
@@ -570,13 +679,6 @@ export function CouncilScoringTab({ councilId, isFacultyBoard = false }: Council
 					context={selectedContext}
 				/>
 			)}
-			{/* {selectedContext && (
-				<CouncilMinutesModal
-					isOpen={openCouncilModal}
-					onClose={() => setOpenCouncilModal(false)}
-					context={selectedContext}
-				/>
-			)} */}
 
 			{/* Complete Council Dialog */}
 			<AlertDialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -12,7 +12,8 @@ import type { MiniPeriod } from '@/models/period.model'
 import {
 	useGetEvaluationTemplateQuery,
 	useSubmitDetailedScoresMutation,
-	useGetMyScoreForTopicQuery
+	useGetMyScoreForTopicQuery,
+	useLazyExportEvaluationFormPdfQuery
 } from '@/services/defenseCouncilApi'
 import { useToast } from '@/hooks/use-toast'
 import type { ScoreState } from '@/models/criterion.models'
@@ -37,7 +38,7 @@ interface EvaluationFormModalProps {
 }
 
 export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationFormModalProps) {
-	const [selectedStudent, setSelectedStudent] = useState(0)
+	const [selectedStudent, setSelectedStudent] = useState<number>(0)
 	const [scores, setScores] = useState<ScoreState>({})
 	const { toast } = useToast()
 
@@ -49,13 +50,16 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 	} = useGetEvaluationTemplateQuery(context?.evaluationTemplateId || '', {
 		skip: !context?.evaluationTemplateId
 	})
-	console.log('templateData', templateData)
+
 	// Add state to track current user's role
 	const user = useAppSelector((state) => state.auth.user)
 	const userId = getUserIdFromAppUser(user)
 
 	// Submit mutation
 	const [submitScores, { isLoading: isSubmitting }] = useSubmitDetailedScoresMutation()
+
+	// Export PDF mutation
+	const [triggerExportPdf, { isLoading: isDownloadingPdf }] = useLazyExportEvaluationFormPdfQuery()
 
 	// Fetch existing scores for all students in topic
 	const { data: existingScoresData } = useGetMyScoreForTopicQuery(
@@ -67,7 +71,8 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 			skip: !context?.councilId || !context?.topic.topicId
 		}
 	)
-	console.log('existingScoresData', existingScoresData)
+	// Track initial scores for change detection
+	const [initialScores, setInitialScores] = useState<ScoreState>({})
 	// Load existing score for selected student when data arrives or student changes
 	useEffect(() => {
 		if (!context?.topic.students?.[selectedStudent]) {
@@ -92,6 +97,7 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 				})
 
 				setScores(clonedScoreState)
+				setInitialScores(clonedScoreState)
 				return
 			}
 		}
@@ -129,12 +135,14 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 			})
 
 			setScores(loadedScores)
+			setInitialScores(loadedScores)
 			return
 		}
 
 		// No score found for this student, reset form
 		setScores({})
-	}, [existingScoresData, selectedStudent, context, userId])
+		setInitialScores({})
+	}, [existingScoresData?.data, selectedStudent, context?.topic.students, userId])
 	// // localStorage auto-save hook
 	// const { draftData, saveDraft, clearDraft, lastSaved, isExpired } = useEvaluationDraft({
 	// 	councilId: context?.councilId || '',
@@ -199,6 +207,25 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 		return Object.values(criterion.subScores).reduce((sum, score) => (sum ?? 0) + (score ?? 0), 0) ?? 0
 	}
 
+	const isScoresChanged = useMemo(() => {
+		const keys = new Set([...Object.keys(initialScores), ...Object.keys(scores)])
+		for (const key of keys) {
+			const a = initialScores[key]
+			const b = scores[key]
+			if (!a && !b) continue
+			if (!a || !b) return true
+			if (a.mainScore !== b.mainScore) return true
+			const subKeys = new Set([
+				...(a.subScores ? Object.keys(a.subScores) : []),
+				...(b.subScores ? Object.keys(b.subScores) : [])
+			])
+			for (const subKey of subKeys) {
+				if ((a.subScores?.[subKey] ?? null) !== (b.subScores?.[subKey] ?? null)) return true
+			}
+		}
+		return false
+	}, [initialScores, scores])
+
 	// Handle score input change
 	const handleScoreChange = (
 		criterionId: string,
@@ -207,31 +234,43 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 		subCriterionId?: string
 	) => {
 		const numValue = value === '' ? null : parseFloat(value)
-
 		setScores((prev) => {
-			const updated = { ...prev }
-			if (!updated[criterionId]) {
-				updated[criterionId] = { mainScore: null, subScores: {} }
-			}
-
-			if (isSubCriterion && subCriterionId) {
-				// Update the subscore first
-				updated[criterionId].subScores = {
-					...updated[criterionId].subScores,
+			if (!isSubCriterion || !subCriterionId) {
+				// Update mainScore immutably
+				return {
+					...prev,
+					[criterionId]: {
+						...prev[criterionId],
+						mainScore: numValue,
+						subScores: { ...(prev[criterionId]?.subScores || {}) }
+					}
+				}
+			} else {
+				// Update subScore immutably, then recalculate mainScore
+				const newSubScores = {
+					...(prev[criterionId]?.subScores || {}),
 					[subCriterionId]: numValue
 				}
-				// Then calculate sum based on the UPDATED state
-				updated[criterionId].mainScore = calculateCategorySum(criterionId, updated)
-			} else {
-				updated[criterionId].mainScore = numValue
+				const newMainScore = calculateCategorySum(criterionId, {
+					...prev,
+					[criterionId]: {
+						...prev[criterionId],
+						subScores: newSubScores
+					}
+				})
+				return {
+					...prev,
+					[criterionId]: {
+						...prev[criterionId],
+						subScores: newSubScores,
+						mainScore: newMainScore
+					}
+				}
 			}
-
-			return updated
 		})
 	}
 
-	// Get current user info
-	const currentUserRole = context?.topic.members?.find((m) => m.memberId === userId)?.role
+	// Get current student score for UI display
 	const currentStudentScore = context?.topic.scores?.find(
 		(s) => s.scorerId === userId && s.studentId === context?.topic.students?.[selectedStudent]?.userId
 	)
@@ -294,6 +333,56 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 			})
 		}
 	}
+
+	// Handle download PDF - xuất phiếu cho tất cả sinh viên
+	const handleDownload = async () => {
+		if (!context?.councilId || !context?.topic.topicId) {
+			toast({ title: 'Lỗi', description: 'Thiếu thông tin cần thiết', variant: 'destructive' })
+			return
+		}
+
+		// Check if user has submitted scores for at least one student
+		const hasAnyScore = existingScoresData?.data && existingScoresData.data.length > 0
+
+		if (!hasAnyScore) {
+			toast({
+				title: 'Chưa có điểm',
+				description: 'Vui lòng chấm điểm và lưu trước khi tải xuống',
+				variant: 'destructive'
+			})
+			return
+		}
+
+		try {
+			const blob = await triggerExportPdf({
+				councilId: context.councilId,
+				topicId: context.topic.topicId
+			}).unwrap()
+
+			// Create download link
+			const url = window.URL.createObjectURL(blob)
+			const a = document.createElement('a')
+			a.href = url
+
+			// Generate filename
+			const topicId = context.topic.topicId.substring(0, 8)
+			a.download = `PhieuDanhGia_${topicId}.pdf`
+
+			document.body.appendChild(a)
+			a.click()
+			document.body.removeChild(a)
+			window.URL.revokeObjectURL(url)
+
+			toast({ title: 'Thành công', description: 'Đã tải xuống phiếu đánh giá' })
+		} catch (error: any) {
+			toast({
+				title: 'Lỗi',
+				description: error?.data?.message || 'Không thể tải xuống phiếu đánh giá',
+				variant: 'destructive'
+			})
+		}
+	}
+
 	// Show loading state
 	if (isLoadingTemplate) {
 		return (
@@ -342,6 +431,16 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 			})) || []
 	}
 
+	const handleChangeStudentScoring = (index: number) => {
+		// Show confirm dialog before switching student if there are unsaved changes
+		if (isScoresChanged) {
+			const confirmSwitch = window.confirm(
+				'Bạn có thay đổi chưa lưu. Bạn có chắc muốn chuyển sang sinh viên khác?'
+			)
+			if (!confirmSwitch) return
+		}
+		setSelectedStudent(index)
+	}
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent
@@ -385,7 +484,7 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 				</div>
 
 				{/* Student Selection */}
-				<div>
+				<div className='flex flex-col gap-1'>
 					<p className='mb-3 text-sm font-semibold text-muted-foreground'>
 						SINH VIÊN/NHÓM SINH VIÊN THỰC HIỆN
 					</p>
@@ -393,7 +492,7 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 						{evaluationData.students?.map((student, index) => (
 							<Button
 								key={index}
-								onClick={() => setSelectedStudent(index)}
+								onClick={() => handleChangeStudentScoring(index)}
 								variant={selectedStudent === index ? 'default' : 'outline'}
 								className={
 									selectedStudent === index
@@ -403,10 +502,29 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 							>
 								<span className='font-medium'>{student.code}.</span>
 								<span className='font-medium'>{student.name}</span>
-								<span className='ml-2 text-xs opacity-70'>({student.userId})</span>
+								<span className='ml-2 text-xs opacity-70'>
+									(
+									{existingScoresData?.data?.some((c) => c.scoreState !== null)
+										? 'Đã chấm'
+										: 'Chưa chấm'}
+									)
+								</span>
 							</Button>
 						))}
 					</div>
+					<Button
+						variant='outline'
+						className='w-fit border-border bg-transparent text-foreground hover:bg-secondary'
+						onClick={handleDownload}
+						disabled={isDownloadingPdf || !existingScoresData?.data || existingScoresData.data.length === 0}
+					>
+						{isDownloadingPdf ? (
+							<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+						) : (
+							<Download className='mr-2 h-4 w-4' />
+						)}
+						{isDownloadingPdf ? 'Đang tải...' : 'Tải xuống'}
+					</Button>
 				</div>
 
 				{/* Evaluation Criteria - Table */}
@@ -453,6 +571,7 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 														<Input
 															type='number'
 															min={0}
+															disabled={true}
 															max={criterion.maxScore}
 															step={0.1}
 															value={criterionScore?.mainScore ?? ''}
@@ -494,7 +613,9 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 																onChange={(e) =>
 																	handleScoreChange(
 																		criterion.id,
-																		e.target.value,
+																		Number(e.target.value) <= sub.maxScore
+																			? e.target.value
+																			: sub.maxScore.toString(),
 																		true,
 																		sub.id
 																	)
@@ -534,11 +655,11 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 					</CardHeader>
 				</Card>
 				{/* Show total score info */}
-				<Card className='bg-muted'>
+				<Card className='bg-muted p-0'>
 					<CardContent className='p-4'>
 						<div className='flex items-center justify-between'>
 							<div>
-								<p className='text-sm text-muted-foreground'>Điểm của bạn</p>
+								<p className='text-sm text-muted-foreground'>Điểm của sinh viên</p>
 								<p className='text-2xl font-bold'>{calculateTotalScore().toFixed(2)} / 10.00</p>
 							</div>
 							<div className='text-right'>
@@ -555,17 +676,12 @@ export function EvaluationFormModal({ isOpen, onClose, context }: EvaluationForm
 					<Button
 						className='flex-1 bg-primary text-primary-foreground hover:bg-primary/90'
 						onClick={handleSubmit}
-						disabled={isSubmitting || calculateTotalScore() > 10}
+						disabled={
+							isSubmitting || calculateTotalScore() > 10 || !isScoresChanged || context?.topic.isLocked
+						}
 					>
 						<CheckCircle2 className='mr-2 h-4 w-4' />
-						{isSubmitting ? 'Đang lưu...' : 'Xác nhận'}
-					</Button>
-					<Button
-						variant='outline'
-						className='border-border bg-transparent text-foreground hover:bg-secondary'
-					>
-						<Download className='mr-2 h-4 w-4' />
-						Tải xuống
+						{context?.topic.isLocked ? 'Không thể chỉnh sửa' : isSubmitting ? 'Đang lưu...' : 'Xác nhận'}
 					</Button>
 				</div>
 			</DialogContent>
