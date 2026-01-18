@@ -15,12 +15,10 @@ export const Column = ({
 	taskId,
 	column,
 	setTasks,
-	refetchMilestones
 }: {
 	taskId: string
 	column: TaskColumn
 	setTasks?: React.Dispatch<React.SetStateAction<Task[]>>
-	refetchMilestones: () => void
 }) => {
 	const { groupId } = useParams<{ groupId: string }>()
 
@@ -65,7 +63,6 @@ export const Column = ({
 					return t
 				})
 			})
-			refetchMilestones()
 		} catch (error) {
 			console.error('Failed to add subtask:', error)
 			toast.error('Thêm thất bại. Vui lòng thử lại.', { richColors: true })
@@ -99,7 +96,6 @@ export const Column = ({
 			)
 			setIsAddingItem(false)
 			setDeletingSubtask(null)
-			refetchMilestones()
 			toast.success('Xóa nhiệm vụ thành công', { richColors: true })
 		} catch (error) {
 			console.error('Failed to delete subtask:', error)
@@ -128,7 +124,6 @@ export const Column = ({
 							onOpenModal={() => {
 								setSelectedSubTaskId(item._id)
 							}}
-                            refetchMilestones={refetchMilestones}
 						/>
 					))}
 

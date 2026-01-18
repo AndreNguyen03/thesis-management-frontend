@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react'
 import { PeriodPhaseStatus, phaseLabels, type PeriodPhase } from '@/models/period-phase.models'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
-import { CalendarDays, Clock, Settings, Bell } from 'lucide-react'
+import { CalendarDays, Clock, Settings, Bell, Archive } from 'lucide-react'
 import { SendNotificationModal } from '@/components/NotificationModal'
 import type { ResponseMiniLecturerDto } from '@/models'
-import { set } from 'zod'
 import { cn } from '@/lib/utils'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useSendCustomNotificationMutation } from '@/services/notificationApi'
@@ -180,6 +179,18 @@ export function PhaseHeader({ phase, onViewConfig, onManageMilestone }: PhaseHea
 											className='w-full px-4 py-2 text-left font-medium hover:bg-muted'
 										>
 											Quản lý các đợt bảo vệ
+										</button>
+									</li>
+									<li>
+										<button
+											onMouseDown={() => {
+												setIsCollapsed(true)
+												navigate(`/period/${periodId}/archive-topics`)
+											}}
+											type='button'
+											className='w-full px-4 py-2 text-left font-medium hover:bg-muted'
+										>
+											Quản lý lưu trữ đề tài vào thư viện
 										</button>
 									</li>
 								</ul>

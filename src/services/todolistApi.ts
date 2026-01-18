@@ -47,13 +47,7 @@ export const taskApi = baseApi.injectEndpoints({
 				}
 			},
 			transformResponse: (response: ApiResponse<Task[]>) => response.data,
-			providesTags: (result, _error, { groupId }) =>
-				result
-					? [
-							...result.map((task) => ({ type: 'Task' as const, id: task._id })),
-							{ type: 'TaskList', id: groupId }
-						]
-					: [{ type: 'TaskList', id: groupId }]
+			providesTags: (result, _error, { groupId }) => [{ type: 'TaskList', id: groupId }]
 		}),
 		createTask: builder.mutation<Task, CreateTaskPayload>({
 			query: (payload) => ({
@@ -76,7 +70,8 @@ export const taskApi = baseApi.injectEndpoints({
 			transformResponse: (response: ApiResponse<Task>) => response.data,
 			invalidatesTags: (_r, _e, { taskId, groupId }) => [
 				{ type: 'Task', id: taskId },
-				{ type: 'TaskList', id: groupId }
+				{ type: 'TaskList', id: groupId },
+				{ type: 'TaskDetail', id: taskId }
 			]
 		}),
 		updateTaskStatus: builder.mutation<Task, { taskId: string; groupId?: string; status: string }>({
@@ -86,7 +81,7 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
 			invalidatesTags: (_r, _e, { taskId, groupId }) => [
-				{ type: 'Task', id: taskId },
+				{ type: 'TaskDetail', id: taskId },
 				{ type: 'TaskList', id: groupId },
 				{ type: 'Milestones', id: groupId }
 			]
@@ -98,7 +93,7 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<string>) => response.data,
 			invalidatesTags: (_r, _e, { taskId, groupId }) => [
-				{ type: 'Task', id: taskId },
+				{ type: 'TaskDetail', id: taskId },
 				{ type: 'TaskList', id: groupId }
 			]
 		}),
@@ -111,7 +106,6 @@ export const taskApi = baseApi.injectEndpoints({
 				}),
 				transformResponse: (response: ApiResponse<Subtask>) => response.data,
 				invalidatesTags: (_r, _e, { taskId, groupId }) => [
-					{ type: 'Task', id: taskId },
 					{ type: 'TaskDetail', id: taskId },
 					{ type: 'TaskList', id: groupId },
 					{ type: 'Milestones', id: groupId }
@@ -128,7 +122,6 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
 			invalidatesTags: (_r, _e, { taskId, groupId }) => [
-				{ type: 'Task', id: taskId },
 				{ type: 'TaskDetail', id: taskId },
 				{ type: 'TaskList', id: groupId },
 				{ type: 'Milestones', id: groupId }
@@ -151,7 +144,6 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
 			invalidatesTags: (_r, _e, { taskId, subtaskId, groupId }) => [
-				{ type: 'Task', id: taskId },
 				{ type: 'TaskDetail', id: taskId },
 				{ type: 'SubtaskDetail', id: subtaskId },
 				{ type: 'TaskList', id: groupId },
@@ -168,7 +160,6 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
 			invalidatesTags: (_r, _e, { taskId, groupId }) => [
-				{ type: 'Task', id: taskId },
 				{ type: 'TaskDetail', id: taskId },
 				{ type: 'TaskList', id: groupId },
 				{ type: 'Milestones', id: groupId }
@@ -193,9 +184,9 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
 			invalidatesTags: (_r, _e, { taskId, groupId }) => [
-				{ type: 'Task', id: taskId },
 				{ type: 'TaskDetail', id: taskId },
-				{ type: 'TaskList', id: groupId }
+				{ type: 'TaskList', id: groupId },
+				{ type: 'Milestones', id: groupId }
 			]
 		}),
 		moveToNewColumn: builder.mutation<
@@ -216,9 +207,9 @@ export const taskApi = baseApi.injectEndpoints({
 			}),
 			transformResponse: (response: ApiResponse<Task>) => response.data,
 			invalidatesTags: (_r, _e, { taskId, groupId }) => [
-				{ type: 'Task', id: taskId },
 				{ type: 'TaskDetail', id: taskId },
-				{ type: 'TaskList', id: groupId }
+				{ type: 'TaskList', id: groupId },
+				{ type: 'Milestones', id: groupId }
 			]
 		}),
 		updateTaskMilestone: builder.mutation<Task, { taskId: string; groupId?: string; milestoneId?: string }>({

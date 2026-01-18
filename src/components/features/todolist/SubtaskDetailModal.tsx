@@ -31,7 +31,7 @@ export const SubtaskDetailModal = ({
 
 				{error && (
 					<div className='flex h-96 items-center justify-center text-destructive'>
-						<p>Failed to load subtask details</p>
+						<p>Lỗi khi lấy chi tiết subtask</p>
 					</div>
 				)}
 

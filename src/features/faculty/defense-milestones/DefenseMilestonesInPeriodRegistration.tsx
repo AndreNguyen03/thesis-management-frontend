@@ -9,20 +9,16 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
 import { useDebounce } from '@/hooks/useDebounce'
 import { formatPeriodInfo2, formatPeriodInfoMiniPeriod } from '@/utils/utils'
-import {
-	CouncilMemberRoleOptions,
-	type CouncilMemberRole,
-	type PaginationAllDefenseMilestonesQuery
-} from '@/models/milestone.model'
+import { type PaginationAllDefenseMilestonesQuery } from '@/models/milestone.model'
 import { useGetPeriodDetailQuery } from '@/services/periodApi'
+import CreateDefenseMilestoneForm from '@/features/shared/milestone/modal/CreateDefenseMilestoneForm'
 
 export default function DefenseMilestonesInPeriodRegistration() {
 	const user = useAppSelector((state) => state.auth.user)
 	const { periodId } = useParams()
-	console.log('periodId', periodId)
 	const navigate = useNavigate()
 	const [searchTerm, setSearchTerm] = useState('')
-
+	const [isCreateDefenseMilestoneModalOpen, setIsCreateDefenseMilestoneModalOpen] = useState(false)
 	const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'blocked' | 'pending'>('all')
 	//query params
 	const [queryParams, setQueryParams] = useState<PaginationAllDefenseMilestonesQuery>({
@@ -32,13 +28,11 @@ export default function DefenseMilestonesInPeriodRegistration() {
 		query: '',
 		year: undefined,
 		sort_by: 'dueDate',
-		sort_order: 'desc',
+		sort_order: 'asc',
 		periodId: periodId
 	})
 	//endpoint lấy các mốc bảo vệ
 	const { data: milestonesData, isLoading } = useGetAllDefenseMilestonesQuery(queryParams)
-	//endpoint lấy combobox option cho năm
-	const { data: yearOptions, isLoading: isYearOptionsLoading } = useGetDefenseMilestoneYearsQuery()
 	const setQuerySearch = (val: string) => {
 		setQueryParams((prev) => ({
 			...prev,
@@ -80,6 +74,15 @@ export default function DefenseMilestonesInPeriodRegistration() {
 			</Badge>
 		)
 	}
+	const handleComeBack = () => {
+		const params = new URLSearchParams(location.search)
+		const from = params.get('from')
+		if (from) {
+			navigate(from)
+		} else {
+			navigate(-1)
+		}
+	}
 	const handleYear = (value: string) => {
 		setQueryParams((prev) => ({
 			...prev,
@@ -89,48 +92,38 @@ export default function DefenseMilestonesInPeriodRegistration() {
 	return (
 		<div className='container mx-auto space-y-6 p-6'>
 			{/* Header */}
-			<div className='space-y-2'>
-				<h1 className='text-3xl font-bold tracking-tight'>
-					Quản lý đợt bảo vệ trong{' '}
-					{periodDetail ? (
-						<span className='text-blue-700'>{formatPeriodInfo2(periodDetail)}</span>
-					) : (
-						'Đang tải...'
-					)}
-				</h1>
-				<p className='text-muted-foreground'>Danh sách tất cả các đợt bảo vệ của khoa</p>
+			<div>
+				<div className='space-y-2'>
+					<h1 className='gap-5 text-3xl font-bold tracking-tight'>
+						<span>Quản lý đợt bảo vệ trong </span>
+
+						{periodDetail ? (
+							<span className='text-blue-700'>{formatPeriodInfo2(periodDetail)}</span>
+						) : (
+							<span>Đang tải...</span>
+						)}
+					</h1>
+					<p className='text-muted-foreground'>Danh sách tất cả các đợt bảo vệ của khoa</p>
+				</div>
+				<Button className='mt-4' onClick={handleComeBack}>
+					Quay lại
+				</Button>
 			</div>
 
 			{/* Filters & Search */}
 			<div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-				<Input
-					placeholder='Tìm kiếm theo tên đợt bảo vệ, địa điểm...'
-					value={searchTerm}
-					onChange={(e) => handleSearch(e.target.value)}
-					className='max-w-md'
-				/>
+				<div className='flex w-fit gap-5'>
+					<Input
+						placeholder='Tìm kiếm theo tên đợt bảo vệ, địa điểm...'
+						value={searchTerm}
+						onChange={(e) => handleSearch(e.target.value)}
+						className='min-w-full'
+					/>
+					<Button onClick={() => setIsCreateDefenseMilestoneModalOpen(true)}>Tạo đợt bảo vệ mới</Button>
+				</div>
 
 				<div className='flex items-center gap-4'>
 					<Filter className='h-4 w-4 text-muted-foreground' />
-					{/* Năm học */}
-					<div className='space-y-3'>
-						<Select
-							value={queryParams.year === undefined ? 'Tất cả' : queryParams.year}
-							onValueChange={(value) => handleYear(value)}
-						>
-							<SelectTrigger className='w-full bg-white'>
-								<SelectValue placeholder='Chọn năm' />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value='Tất cả'>Tất cả</SelectItem>
-								{yearOptions?.map((y) => (
-									<SelectItem key={y} value={y}>
-										{y}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
 					<div className='flex gap-2'>
 						<Button
 							variant={statusFilter === 'all' ? 'default' : 'outline'}
@@ -205,119 +198,136 @@ export default function DefenseMilestonesInPeriodRegistration() {
 				</div>
 			) : milestonesData && milestonesData.data.length > 0 ? (
 				<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-					{milestonesData.data.map((milestone) => (
-						<Card
-							key={milestone._id}
-							className='cursor-pointer p-0 transition-all hover:border-primary/50 hover:shadow-lg'
-						>
-							<CardHeader>
-								<div className='flex items-start justify-between gap-2'>
-									<div className='flex-1'>
-										<CardTitle className='text-lg'>{milestone.title}</CardTitle>
-										<CardDescription className='mt-1'>
-											{formatPeriodInfoMiniPeriod(milestone.periodInfo) || 'Kỳ học'}
-										</CardDescription>
+					{milestonesData.data
+						.filter((milestone) => {
+							if (statusFilter === 'all') return true
+							if (statusFilter === 'pending') return !milestone.isPublished && !milestone.isBlock
+							if (statusFilter === 'published') return milestone.isPublished
+							if (statusFilter === 'blocked') return milestone.isBlock
+							return true
+						})
+						.map((milestone) => (
+							<Card
+								key={milestone._id}
+								className='cursor-pointer p-0 transition-all hover:border-primary/50 hover:shadow-lg'
+							>
+								<CardHeader>
+									<div className='flex items-start justify-between gap-2'>
+										<div className='flex-1'>
+											<CardTitle className='text-lg'>{milestone.title}</CardTitle>
+											<CardDescription className='mt-1'>
+												{formatPeriodInfoMiniPeriod(milestone.periodInfo) || 'Kỳ học'}
+											</CardDescription>
+										</div>
+										{getStatusBadge(milestone)}
 									</div>
-									{getStatusBadge(milestone)}
-								</div>
-							</CardHeader>
-							<CardContent className='space-y-3'>
-								{/* Date & Time */}
-								<div className='flex items-center gap-2 text-sm'>
-									<Calendar className='h-4 w-4 text-muted-foreground' />
-									<span>
-										{new Date(milestone.dueDate).toLocaleDateString('vi-VN', {
-											weekday: 'long',
-											year: 'numeric',
-											month: 'long',
-											day: 'numeric'
-										})}
-									</span>
-								</div>
-
-								<div className='flex items-center gap-2 text-sm'>
-									<Clock className='h-4 w-4 text-muted-foreground' />
-									<span>
-										{new Date(milestone.dueDate).toLocaleTimeString('vi-VN', {
-											hour: '2-digit',
-											minute: '2-digit'
-										})}
-									</span>
-								</div>
-
-								{/* Location */}
-								{milestone.location && (
+								</CardHeader>
+								<CardContent className='space-y-3'>
+									{/* Date & Time */}
 									<div className='flex items-center gap-2 text-sm'>
-										<MapPin className='h-4 w-4 text-muted-foreground' />
-										<span className='line-clamp-1'>{milestone.location}</span>
+										<Calendar className='h-4 w-4 text-muted-foreground' />
+										<span>
+											{new Date(milestone.dueDate).toLocaleDateString('vi-VN', {
+												weekday: 'long',
+												year: 'numeric',
+												month: 'long',
+												day: 'numeric'
+											})}
+										</span>
 									</div>
-								)}
 
-								{/* Topics & Lecturers Count */}
-								<div className='flex items-center justify-between text-sm'>
-									<div className='flex items-center gap-2'>
-										<Users className='h-4 w-4 text-muted-foreground' />
-										<span>{milestone.topicsCount || 0} đề tài</span>
+									<div className='flex items-center gap-2 text-sm'>
+										<Clock className='h-4 w-4 text-muted-foreground' />
+										<span>
+											{new Date(milestone.dueDate).toLocaleTimeString('vi-VN', {
+												hour: '2-digit',
+												minute: '2-digit'
+											})}
+										</span>
 									</div>
-									<div className='flex items-center gap-2'>
-										<Users className='h-4 w-4 text-muted-foreground' />
-										<span>{milestone.councilMembers || 0} trong hội đồng</span>
-									</div>
-								</div>
 
-								{/* Council Info */}
-								{milestone.defenseCouncil && milestone.defenseCouncil.length > 0 ? (
-									<div className='rounded-md bg-muted/50 p-2 text-xs'>
-										<div className='font-semibold'>Hội đồng:</div>
-										<div className='mt-1 space-y-0.5'>
-											{milestone.defenseCouncil.slice(0, 2).map((member: any, idx: number) => (
-												<div key={idx} className='flex items-center justify-between'>
-													<span className='truncate'>{member.fullName}</span>
-													<Badge variant='outline' className='ml-2 text-xs'>
-														{
-															CouncilMemberRoleOptions[member.role as CouncilMemberRole]
-																.label
-														}
-													</Badge>
-												</div>
-											))}
-											{milestone.defenseCouncil.length > 2 && (
-												<div className='text-muted-foreground'>
-													+{milestone.defenseCouncil.length - 2} thành viên khác
-												</div>
-											)}
+									{/* Location */}
+									{milestone.location && (
+										<div className='flex items-center gap-2 text-sm'>
+											<MapPin className='h-4 w-4 text-muted-foreground' />
+											<span className='line-clamp-1'>{milestone.location}</span>
+										</div>
+									)}
+
+									{/* Topics & Lecturers Count */}
+									<div className='flex items-center justify-between text-sm'>
+										<div className='flex items-center gap-2'>
+											<Users className='h-4 w-4 text-muted-foreground' />
+											<span>{milestone.topicsCount || 0} đề tài</span>
+										</div>
+										<div className='flex items-center gap-2'>
+											<Users className='h-4 w-4 text-muted-foreground' />
+											<span>{milestone.councilMembers || 0} trong hội đồng</span>
 										</div>
 									</div>
-								) : (
-									<div className='rounded-md bg-muted/50 p-2 text-xs'>
-										<div className='font-semibold'>Hội đồng:</div>
-									</div>
-								)}
 
-								<div className='flex gap-2'>
-									{/* Action Button */}
-									<Button
-										className='mt-2 w-full'
-										variant='outline'
-										onClick={() => navigate(`/defense-milestones/${milestone._id}/scoring`)}
-									>
-										Quản lý chấm điểm
-										<ChevronRight className='ml-2 h-4 w-4' />
-									</Button>
-									{/* Action Button */}
-									<Button
-										className='mt-2 w-full'
-										variant='outline'
-										onClick={() => navigate(`/period/${periodId}/defense-milestones-in-period/${milestone._id}`)}
-									>
-										
-										Quản lý DS hội đồng
-										<ChevronRight className='ml-2 h-4 w-4' />
-									</Button>
-								</div>
-							</CardContent>
-						</Card>
-					))}
+									{/* Council Info
+									{milestone.defenseCouncil && milestone.defenseCouncil.length > 0 ? (
+										<div className='rounded-md bg-muted/50 p-2 text-xs'>
+											<div className='font-semibold'>Hội đồng:</div>
+											<div className='mt-1 space-y-0.5'>
+												{milestone.defenseCouncil
+													.slice(0, 2)
+													.map((member: any, idx: number) => (
+														<div key={idx} className='flex items-center justify-between'>
+															<span className='truncate'>{member.fullName}</span>
+															<Badge variant='outline' className='ml-2 text-xs'>
+																{
+																	CouncilMemberRoleOptions[
+																		member.role as CouncilMemberRoleType
+																	].label
+																}
+															</Badge>
+														</div>
+													))}
+												{milestone.defenseCouncil.length > 2 && (
+													<div className='text-muted-foreground'>
+														+{milestone.defenseCouncil.length - 2} thành viên khác
+													</div>
+												)}
+											</div>
+										</div>
+									) : (
+										<div className='rounded-md bg-muted/50 p-2 text-xs'>
+											<div className='font-semibold'>Hội đồng:</div>
+										</div>
+									)} */}
+
+									<div className='flex flex-col gap-2'>
+										{/* Action Button */}
+										<Button
+											className='w-full'
+											variant='outline'
+											onClick={() =>
+												navigate(
+													`/period/${periodId}/defense-milestones-in-period/${milestone._id}`
+												)
+											}
+										>
+											Quản lý DS hội đồng
+											<ChevronRight className='ml-2 h-4 w-4' />
+										</Button>
+										<Button
+											className='w-full'
+											variant='outline'
+											onClick={() =>
+												navigate(
+													`/period/${periodId}/defense-milestones-in-period/${milestone._id}/archive-topics`
+												)
+											}
+										>
+											Quản lý lưu trữ đề tài
+											<ChevronRight className='ml-2 h-4 w-4' />
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
+						))}
 				</div>
 			) : (
 				<Card className='p-12'>
@@ -336,6 +346,11 @@ export default function DefenseMilestonesInPeriodRegistration() {
 					</div>
 				</Card>
 			)}
+			<CreateDefenseMilestoneForm
+				periodId={periodId!}
+				open={isCreateDefenseMilestoneModalOpen}
+				setIsOpen={setIsCreateDefenseMilestoneModalOpen}
+			/>
 		</div>
 	)
 }

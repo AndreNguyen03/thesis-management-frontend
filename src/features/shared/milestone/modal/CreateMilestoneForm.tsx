@@ -32,20 +32,20 @@ const MILESTONE_TEMPLATES = [
 <li>Nộp báo cáo theo định dạng quy định</li>
 </ul>`,
 		type: MilestoneType.SUBMISSION
-	},
-	{
-		id: 'thesis-defense',
-		title: 'Đợt bảo vệ khóa luận',
-		description: `<h3>Yêu cầu bảo vệ khóa luận</h3>
-<ul>
-<li>Thuyết trình kết quả nghiên cứu trước hội đồng</li>
-<li>Trả lời câu hỏi của hội đồng</li>
-<li>Thời gian thuyết trình: 15-20 phút</li>
-<li>Chuẩn bị slide và demo sản phẩm (nếu có)</li>
-<li>Trang phục lịch sự, chuyên nghiệp</li>
-</ul>`,
-		type: MilestoneType.DEFENSE
 	}
+	// 	{
+	// 		id: 'thesis-defense',
+	// 		title: 'Đợt bảo vệ khóa luận',
+	// 		description: `<h3>Yêu cầu bảo vệ khóa luận</h3>
+	// <ul>
+	// <li>Thuyết trình kết quả nghiên cứu trước hội đồng</li>
+	// <li>Trả lời câu hỏi của hội đồng</li>
+	// <li>Thời gian thuyết trình: 15-20 phút</li>
+	// <li>Chuẩn bị slide và demo sản phẩm (nếu có)</li>
+	// <li>Trang phục lịch sự, chuyên nghiệp</li>
+	// </ul>`,
+	// 		type: MilestoneType.DEFENSE
+	// 	}
 ]
 
 const CreateMilestoneForm = ({ periodId }: { periodId: string }) => {

@@ -19,19 +19,6 @@ export const AIGenerator = ({ onGenerate, isLoading: externalIsLoading }: AIGene
 	const [generateTopic, { isLoading: mutationLoading }] = useGenerateTopicMutation()
 	const loading = creating || externalIsLoading || mutationLoading
 
-	console.log(
-		'AIGenerator rendered with loading:',
-		loading,
-		'prompt:',
-		prompt,
-		'creating:',
-		creating,
-		'externalIsLoading:',
-		externalIsLoading,
-		'mutationLoading:',
-		mutationLoading
-	)
-
 	const handleGenerate = async () => {
 		if (!prompt.trim()) return
 

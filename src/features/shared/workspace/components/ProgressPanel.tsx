@@ -1,11 +1,12 @@
-import  { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, CheckCircle, Clock, Zap, LayoutDashboard } from 'lucide-react'
 import { ProgressBar } from './ProgressBar'
-import type { CreateTaskPayload, Task } from '@/models/todolist.model'
+import type { CreateTaskPayload, RequestUpdate, Task } from '@/models/todolist.model'
 import {
 	useCreateTaskMutation,
 	useDeleteTaskMutation,
 	useGetStaskQuery,
+	useUpdateTaskInfoMutation
 	// useUpdateTaskInfoMutation
 } from '@/services/todolistApi'
 import { toast } from 'sonner'
@@ -20,7 +21,7 @@ import { Stat } from './milestone/component/Stat'
 interface ProgressPanelProps {
 	milestones: ResponseMilestone[]
 	totalProgress: number
-    refetchMilestones: () => void
+	refetchMilestones: () => void
 }
 
 export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: ProgressPanelProps) => {
@@ -50,7 +51,7 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 
 	const [createTask] = useCreateTaskMutation()
 	const [deleteTask, { isLoading: isDeleteLoading }] = useDeleteTaskMutation()
-	// const [updateTaskInfo, { isLoading: isUpdatingTaskInfo }] = useUpdateTaskInfoMutation()
+	const [updateTaskInfo, { isLoading: isUpdatingTaskInfo }] = useUpdateTaskInfoMutation()
 
 	/* ================= STATS ================= */
 
@@ -88,6 +89,18 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 	}, [milestones])
 
 	/* ================= HANDLERS ================= */
+	const handleUpdateTask = async (taskId: string, updates: RequestUpdate) => {
+		try {
+			await updateTaskInfo({
+				taskId,
+				groupId: groupId ?? '',
+				updates
+			}).unwrap()
+			toast.success('Cập nhật công việc thành công', { richColors: true })
+		} catch {
+			toast.error('Cập nhật công việc thất bại', { richColors: true })
+		}
+	}
 
 	const handleCreateTask = async () => {
 		if (!newTask.title.trim()) return
@@ -100,7 +113,7 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 				description: '',
 				milestoneId: undefined
 			})
-            refetchMilestones()
+			refetchMilestones()
 			setOpenCreateModal(false)
 			toast.success('Đã tạo công việc', { richColors: true })
 		} catch {
@@ -119,7 +132,7 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 
 			setOpenDeleteModal(false)
 			setDeletedTask(null)
-                refetchMilestones()
+			refetchMilestones()
 			toast.success('Đã xoá công việc', { richColors: true })
 		} catch {
 			toast.error('Xóa thất bại', { richColors: true })
@@ -134,28 +147,8 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 			<section className='space-y-4'>
 				<h3 className='text-lg font-semibold'>Tổng quan tiến độ</h3>
 
-				<div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-					<div className='rounded-xl bg-gradient-to-br from-primary to-primary/80 p-5 text-white'>
-						<p className='text-sm opacity-90'>Tiến độ hoàn thành</p>
-
-						<div className='mt-3 flex items-end justify-between'>
-							<span className='text-3xl font-bold'>{totalProgress.toFixed(2)}%</span>
-							<span className='text-xs opacity-80'>
-								{totalProgress === 100 ? 'Hoàn tất' : 'Đang thực hiện'}
-							</span>
-						</div>
-
-						<div className='mt-3'>
-							<ProgressBar progress={totalProgress} status='' />
-						</div>
-
-						<div className='mt-4 space-y-1 text-xs opacity-90'>
-							<p>{milestoneStats.completed} milestone hoàn thành</p>
-							<p>{taskStats.inProgress} công việc đang làm</p>
-							<p>{milestoneStats.overdue} milestone quá hạn</p>
-						</div>
-					</div>
-
+				<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+    
 					<div className='grid grid-cols-2 gap-4 lg:col-span-2'>
 						<Stat title='Tiến độ dự án' value={`${totalProgress}%`} icon={LayoutDashboard} variant='info' />
 						<Stat
@@ -191,13 +184,13 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 						<TaskCard
 							key={task._id}
 							task={task}
-                            setTasks={setTasks}
+							setTasks={setTasks}
 							onDeleteTask={() => {
 								setDeletedTask(task)
 								setOpenDeleteModal(true)
 							}}
 							milestones={milestones}
-                            refetchMilestones={refetchMilestones}
+							onUpdateTask={(updates: RequestUpdate) => handleUpdateTask(task._id, updates)}
 						/>
 					))
 				) : (

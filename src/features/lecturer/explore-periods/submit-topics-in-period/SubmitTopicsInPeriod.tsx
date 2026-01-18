@@ -15,8 +15,20 @@ import { CustomPagination } from '@/components/PaginationBar'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 // API & Models
-import { useGetAllSubmittedTopicsQuery, useGetDraftTopicsQuery, useGetSubmittedTopicsQuery, useSubmitTopicMutation } from '@/services/topicApi'
-import type { AllSubmittedTopicsParamsDto, DraftTopic, GeneralTopic, PaginationDraftTopicsQueryParams, SubmittedTopic, SubmittedTopicParamsDto } from '@/models'
+import {
+	useGetAllSubmittedTopicsQuery,
+	useGetDraftTopicsQuery,
+	useGetSubmittedTopicsQuery,
+	useSubmitTopicMutation
+} from '@/services/topicApi'
+import type {
+	AllSubmittedTopicsParamsDto,
+	DraftTopic,
+	GeneralTopic,
+	PaginationDraftTopicsQueryParams,
+	SubmittedTopic,
+	SubmittedTopicParamsDto
+} from '@/models'
 import ManageSubmittedTopics from '../../manage_topic/submitted_topic/ManageSubmittedTopics'
 import DraftTopicsDatatable from './DraftTopicsDatatable'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -99,7 +111,7 @@ const SubmitTopicsInPeriod = () => {
 			await submitTopic({ topicId: topic._id, periodId }).unwrap()
 			toast.success('Nộp lại đề tài thành công!')
 			refetchSubmitted()
-            refetchAllSubmitted()
+			refetchAllSubmitted()
 		} catch (error: any) {
 			toast.error(error?.data?.message || 'Nộp lại đề tài thất bại')
 		}
@@ -216,6 +228,14 @@ const SubmitTopicsInPeriod = () => {
 								className='px-4 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700'
 							>
 								Tất cả đề tài đã nộp trong đợt
+								{allSubmittedTopics?.meta.totalItems ? (
+									<Badge
+										variant='secondary'
+										className='ml-2 h-5 bg-emerald-200 px-1.5 text-emerald-800'
+									>
+										{allSubmittedTopics.meta.totalItems}
+									</Badge>
+								) : null}
 							</TabsTrigger>
 						</TabsList>
 
@@ -322,7 +342,11 @@ const SubmitTopicsInPeriod = () => {
 							<EmptyState title='Chưa có đề tài nào' />
 						) : (
 							<>
-								<ManageSubmittedTopics dataInernal={allSubmittedTopics} isAllSubmittedTopics={true} onResubmit={handleSubmit}/>
+								<ManageSubmittedTopics
+									dataInernal={allSubmittedTopics}
+									isAllSubmittedTopics={true}
+									onResubmit={handleSubmit}
+								/>
 							</>
 						)}
 					</TabsContent>

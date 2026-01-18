@@ -108,7 +108,7 @@ export const AIAssistantPage = () => {
 				{
 					id: '1',
 					content:
-						'Chào bạn! Tôi là AI Assistant của hệ thống UIT Thesis Management. Tôi có thể hỗ trợ bạn:\n\n• 🎯 Gợi ý đề tài phù hợp\n• 🔍 Tìm kiếm thông tin trong thư viện số\n• 📊 Đánh giá tiến độ nghiên cứu\n• 🛡️ Kiểm tra đạo văn\n• 📈 Phân tích xu hướng đề tài\n\nBạn cần hỗ trợ gì hôm nay?',
+						'Chào bạn!',
 					role: 'assistant',
 					timestamp: new Date(),
 					topics: []
@@ -207,40 +207,7 @@ export const AIAssistantPage = () => {
 		const title = firstMessage.slice(0, 30) + (firstMessage.length > 30 ? '...' : '')
 		setChatHistories((prev) => prev.map((chat) => (chat._id === chatId ? { ...chat, title } : chat)))
 	}
-
-	const quickPrompts = [
-		{
-			text: 'Gợi ý đề tài phù hợp với tôi',
-			icon: Lightbulb,
-			category: 'suggestion'
-		},
-		{
-			text: 'Tìm đề tài về AI trong y tế',
-			icon: Search,
-			category: 'search'
-		},
-		{
-			text: 'Kiểm tra đạo văn cho báo cáo',
-			icon: CheckCircle,
-			category: 'plagiarism'
-		},
-		{
-			text: 'Xu hướng đề tài hot năm 2024',
-			icon: TrendingUp,
-			category: 'trends'
-		},
-		{
-			text: 'Cấu trúc luận văn chuẩn',
-			icon: FileText,
-			category: 'structure'
-		},
-		{
-			text: 'Phương pháp nghiên cứu nào phù hợp?',
-			icon: BookOpen,
-			category: 'methodology'
-		}
-	]
-
+	
 	// Helper function: Parse topics từ output JSON nếu có
 	const parseTopicsFromContent = (content: string): TopicSnapshot[] | null => {
 		try {
@@ -556,7 +523,7 @@ export const AIAssistantPage = () => {
 			{
 				id: '1',
 				content:
-					'Chào bạn! Tôi là AI Assistant của hệ thống UIT Thesis Management. Tôi có thể hỗ trợ bạn:\n\n• 🎯 Gợi ý đề tài phù hợp\n• 🔍 Tìm kiếm thông tin trong thư viện số\n• 📊 Đánh giá tiến độ nghiên cứu\n• 🛡️ Kiểm tra đạo văn\n• 📈 Phân tích xu hướng đề tài\n\nBạn cần hỗ trợ gì hôm nay?',
+					'Chào bạn!',
 				role: 'assistant',
 				timestamp: new Date(),
 				topics: []

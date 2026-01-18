@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
-import { Calendar, Clock, Users, ChevronRight, Loader2, Filter } from 'lucide-react'
+import { Calendar, Clock, Users, ChevronRight, Loader2, Filter, ArrowLeft } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Input } from '@/components/ui'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -29,8 +29,8 @@ export default function DefenseCouncils() {
 		search_by: ['title', 'location', 'periodInfo.year'],
 		query: '',
 		milestoneTemplateId: templateId,
-		sort_by: 'dueDate',
-		sort_order: 'desc'
+		sort_by: 'scheduledDate',
+		sort_order: 'asc'
 	})
 	//endpoint lấy các hội dồng trong đợt bảo vệ
 	const { data: defenseCouncils, isLoading } = useGetCouncilsQuery(queryParams)
@@ -80,38 +80,56 @@ export default function DefenseCouncils() {
 			</Badge>
 		)
 	}
-	const handleYear = (value: string) => {
-		setQueryParams((prev) => ({
-			...prev,
-			year: value === 'Tất cả' ? undefined : value
-		}))
-	}
 	return (
-		<div className='container mx-auto space-y-6 p-6'>
+		<div className='container mx-auto space-y-6 pt-6'>
 			{/* Header */}
-			<div className='space-y-2'>
-				<h1 className='text-3xl font-bold tracking-tight'>Quản lý các hội đồng bảo vệ</h1>
-				<p className='text-muted-foreground'>
-					Danh sách tất cả hội đồng bảo vệ trong đợt{' '}
-					<span className='font-semibold text-blue-700'>{defenseMilestoneDetail?.title}</span>
-				</p>
-				<p>
-					{periodDetail ? (
-						<span className='font-semibold text-blue-700'>{formatPeriodInfo2(periodDetail)}</span>
-					) : (
-						'Đang tải...'
-					)}
-				</p>
+			<div className='flex flex-row items-start gap-5'>
+				<Button
+					variant='ghost'
+					size='icon'
+					className='border border-gray-200 hover:bg-gray-100'
+					onClick={() => navigate(`/period/${periodId}/defense-milestones-in-period`)}
+				>
+					<ArrowLeft className='h-5 w-5' />
+				</Button>
+				<div className='space-y-2'>
+					<h1 className='text-3xl font-bold tracking-tight'>Quản lý các hội đồng bảo vệ</h1>
+					<p className='text-muted-foreground'>
+						Danh sách tất cả hội đồng bảo vệ trong đợt{' '}
+						<span className='font-semibold text-blue-700'>{defenseMilestoneDetail?.title}</span>
+					</p>
+					<p>
+						{periodDetail ? (
+							<span className='font-semibold text-blue-700'>{formatPeriodInfo2(periodDetail)}</span>
+						) : (
+							'Đang tải...'
+						)}
+					</p>
+				</div>
+				<Card className='p-0'>
+					<CardHeader className='pb-3'>
+						<CardDescription>Tổng số hội đồng</CardDescription>
+						<CardTitle className='text-3xl'>{defenseCouncils?.meta.totalItems || 0}</CardTitle>
+					</CardHeader>
+				</Card>
 			</div>
 
 			{/* Filters & Search */}
 			<div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-				<Input
-					placeholder='Tìm kiếm theo tên đợt bảo vệ, địa điểm...'
-					value={searchTerm}
-					onChange={(e) => handleSearch(e.target.value)}
-					className='max-w-md'
-				/>
+				<div className='flex gap-44'>
+					<Input
+						placeholder='Tìm kiếm theo tên đợt bảo vệ, địa điểm...'
+						value={searchTerm}
+						onChange={(e) => handleSearch(e.target.value)}
+						className='max-w-md'
+					/>
+					<Button
+						className='cursor-pointer text-white hover:font-semibold hover:underline'
+						onClick={() => setIsNewDefenseCouncil(true)}
+					>
+						Tạo hội đồng
+					</Button>
+				</div>
 
 				<div className='flex items-center gap-4'>
 					<Filter className='h-4 w-4 text-muted-foreground' />
@@ -168,14 +186,8 @@ export default function DefenseCouncils() {
 			</div>
 
 			{/* Stats */}
-			{/* <div className='grid gap-4 md:grid-cols-4'>
-				<Card className='p-0'>
-					<CardHeader className='pb-3'>
-						<CardDescription>Tổng số đợt</CardDescription>
-						<CardTitle className='text-3xl'>{milestonesData?.data.length || 0}</CardTitle>
-					</CardHeader>
-				</Card>
-				<Card className='p-0'>
+			{/* <div className='grid gap-4 md:grid-cols-4'> */}
+			{/* <Card className='p-0'>
 					<CardHeader className='pb-3'>
 						<CardDescription>Chờ xử lý</CardDescription>
 						<CardTitle className='text-3xl text-blue-600'>
@@ -198,8 +210,8 @@ export default function DefenseCouncils() {
 							{milestonesData?.data.filter((m) => m.isBlock).length || 0}
 						</CardTitle>
 					</CardHeader>
-				</Card>
-			</div> */}
+				</Card> */}
+			{/* </div> */}
 
 			{/* Milestones List */}
 			{isLoading ? (
@@ -207,90 +219,90 @@ export default function DefenseCouncils() {
 					<Loader2 className='h-8 w-8 animate-spin text-primary' />
 				</div>
 			) : defenseCouncils && Array.isArray(defenseCouncils.data) && defenseCouncils.data.length > 0 ? (
-				<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-					{defenseCouncils.data.map((council: ResDefenseCouncil) => (
-						<Card
-							key={council.milestoneTemplateId + council.name}
-							className='cursor-pointer p-0 transition-all hover:border-primary/50 hover:shadow-lg'
-						>
-							<CardHeader>
-								<div className='flex items-start justify-between gap-2'>
-									<div className='flex-1'>
-										<CardTitle className='text-lg'>{council.name}</CardTitle>
-										<CardDescription className='mt-1'>{council.location}</CardDescription>
+				<div className='grid gap-4 pb-16 md:grid-cols-2 lg:grid-cols-3'>
+					{defenseCouncils.data
+						.filter((council: ResDefenseCouncil) => {
+							if (statusFilter === 'all') return true
+							if (statusFilter === 'pending') return !council.isPublished && !council.isLocked
+							if (statusFilter === 'published') return council.isPublished
+							if (statusFilter === 'blocked') return council.isLocked
+							return true
+						})
+						.map((council: ResDefenseCouncil) => (
+							<Card
+								key={council.milestoneTemplateId + council.name}
+								className='cursor-pointer p-0 transition-all hover:border-primary/50 hover:shadow-lg'
+							>
+								<CardHeader>
+									<div className='flex items-start justify-between gap-2'>
+										<div className='flex-1'>
+											<CardTitle className='text-lg'>{council.name}</CardTitle>
+											<CardDescription className='mt-1'>{council.location}</CardDescription>
+										</div>
+										{council.isCompleted ? (
+											<Badge variant='secondary' className='bg-green-600'>
+												Đã hoàn thành
+											</Badge>
+										) : council.isPublished ? (
+											<Badge variant='default' className='bg-blue-600'>
+												Đã công bố
+											</Badge>
+										) : (
+											<Badge variant='outline' className='border-blue-600 text-blue-600'>
+												Chờ xử lý
+											</Badge>
+										)}
 									</div>
-									{council.isCompleted ? (
-										<Badge variant='secondary' className='bg-green-600'>
-											Đã hoàn thành
-										</Badge>
-									) : council.isPublished ? (
-										<Badge variant='default' className='bg-blue-600'>
-											Đã công bố
-										</Badge>
-									) : (
-										<Badge variant='outline' className='border-blue-600 text-blue-600'>
-											Chờ xử lý
-										</Badge>
-									)}
-								</div>
-							</CardHeader>
-							<CardContent className='space-y-3'>
-								{/* Date & Time */}
-								<div className='flex items-center gap-2 text-sm'>
-									<Calendar className='h-4 w-4 text-muted-foreground' />
-									<span>
-										{new Date(council.scheduledDate).toLocaleDateString('vi-VN', {
-											weekday: 'long',
-											year: 'numeric',
-											month: 'long',
-											day: 'numeric'
-										})}
-									</span>
-								</div>
-								<div className='flex items-center gap-2 text-sm'>
-									<Clock className='h-4 w-4 text-muted-foreground' />
-									<span>
-										{new Date(council.scheduledDate).toLocaleTimeString('vi-VN', {
-											hour: '2-digit',
-											minute: '2-digit'
-										})}
-									</span>
-								</div>
-								{/* Topics Count */}
-								<div className='flex items-center gap-2 text-sm'>
-									<Users className='h-4 w-4 text-muted-foreground' />
-									<span>{council.topicsNum || 0} đề tài</span>
-								</div>
-								{/* Created By */}
-								<div className='flex items-center gap-2 text-sm'>
-									<span className='font-semibold'>Người tạo:</span>
-									<span>{council.createdBy.fullName}</span>
-								</div>
-								<div className='flex flex-wrap justify-center gap-2'>
-									<Button
-										className='mt-2 w-fit'
-										variant='outline'
-										onClick={() =>
-											navigate(`/defense-milestones/${council.milestoneTemplateId}/scoring`)
-										}
-									>
-										Quản lý chấm điểm
-										<ChevronRight className='ml-2 h-4 w-4' />
-									</Button>
-									<Button
-										className='mt-2 w-fit'
-										variant='outline'
-										onClick={() =>
-											navigate(`/period/${periodId}/defense-milestones-in-period/${council.milestoneTemplateId}/manage-council-assignment/${council._id}`)
-										}
-									>
-										Phân công hội đồng
-										<ChevronRight className='ml-2 h-4 w-4' />
-									</Button>
-								</div>
-							</CardContent>
-						</Card>
-					))}
+								</CardHeader>
+								<CardContent className='space-y-3'>
+									{/* Date & Time */}
+									<div className='flex items-center gap-2 text-sm'>
+										<Calendar className='h-4 w-4 text-muted-foreground' />
+										<span>
+											{new Date(council.scheduledDate).toLocaleDateString('vi-VN', {
+												weekday: 'long',
+												year: 'numeric',
+												month: 'long',
+												day: 'numeric'
+											})}
+										</span>
+									</div>
+									<div className='flex items-center gap-2 text-sm'>
+										<Clock className='h-4 w-4 text-muted-foreground' />
+										<span>
+											{new Date(council.scheduledDate).toLocaleTimeString('vi-VN', {
+												hour: '2-digit',
+												minute: '2-digit'
+											})}
+										</span>
+									</div>
+									{/* Topics Count */}
+									<div className='flex items-center gap-2 text-sm'>
+										<Users className='h-4 w-4 text-muted-foreground' />
+										<span>{council.topicsNum || 0} đề tài</span>
+									</div>
+									{/* Created By */}
+									<div className='flex items-center gap-2 text-sm'>
+										<span className='font-semibold'>Người tạo:</span>
+										<span>{council.createdBy.fullName}</span>
+									</div>
+									<div className='flex flex-col justify-center gap-2'>
+										<Button
+											className='mt-2'
+											variant='outline'
+											onClick={() => {
+												navigate(
+													`/period/${periodId}/defense-milestones-in-period/${templateId}/manage-council-assignment/${council._id}`
+												)
+											}}
+										>
+											Phân công hội đồng và chấm điểm
+											<ChevronRight className='ml-2 h-4 w-4' />
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
+						))}
 				</div>
 			) : (
 				!isNewDefenseCouncil && (
@@ -307,16 +319,12 @@ export default function DefenseCouncils() {
 									? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm'
 									: 'Chưa có hội đồng nào được tạo trong hệ thống.'}
 							</p>
-							{searchTerm || statusFilter !== 'all' ? (
-								''
-							) : (
-								<span
-									className='cursor-pointer text-blue-700 hover:font-semibold hover:underline'
-									onClick={() => setIsNewDefenseCouncil(true)}
-								>
-									Tạo hội đồng
-								</span>
-							)}
+							<span
+								className='cursor-pointer text-blue-700 hover:font-semibold hover:underline'
+								onClick={() => setIsNewDefenseCouncil(true)}
+							>
+								Tạo hội đồng
+							</span>
 						</div>
 					</Card>
 				)

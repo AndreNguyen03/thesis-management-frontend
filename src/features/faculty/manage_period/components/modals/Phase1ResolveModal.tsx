@@ -16,7 +16,7 @@ interface SubmissionPhaseResolveModalProps {
 	phaseId?: string
 }
 
-type StepType = 'pendingTopics' | 'lecturerMissing'
+type StepType = 'notTimeout' | 'pendingTopics' | 'lecturerMissing'
 
 export function SubmissionPhaseResolveModal({
 	open,
@@ -25,16 +25,20 @@ export function SubmissionPhaseResolveModal({
 	onComplete,
 	phaseId
 }: SubmissionPhaseResolveModalProps) {
-	const [currentStep, setCurrentStep] = useState<StepType>('pendingTopics')
+	const [currentStep, setCurrentStep] = useState<StepType>('notTimeout')
 	const [approveTopic, { isLoading: isLoadingApprove }] = useFacuBoardApproveTopicMutation()
 	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()
 
-	const steps: StepType[] = ['pendingTopics', 'lecturerMissing']
+	const steps: StepType[] = ['notTimeout', 'pendingTopics', 'lecturerMissing']
 	const currentStepIndex = steps.indexOf(currentStep)
 	const stepConfig = {
 		notTimeout: {
 			title: 'Pha chưa kết thúc',
-			description: 'Pha hiện tại chưa đến thời gian kết thúc, không thể hoàn thành pha',
+			description: 'Pha Nộp đề tài chưa đến thời gian kết thúc, không thể hoàn thành pha',
+			color: 'text-red-600',
+			data: undefined,
+			bgColor: 'bg-red-50',
+			borderColor: 'border-red-200',
 			icon: AlertCircle,
 			isTimeout: false
 		},
@@ -130,7 +134,7 @@ export function SubmissionPhaseResolveModal({
 
 				{/* Content */}
 				<div className='max-h-[400px] space-y-3 overflow-y-auto'>
-					{currentConfig.data.length === 0 ? (
+					{currentConfig.data?.length === 0 ? (
 						<Card
 							className={`border p-8 text-center ${currentConfig.borderColor} ${currentConfig.bgColor}`}
 						>
@@ -141,13 +145,13 @@ export function SubmissionPhaseResolveModal({
 						<>
 							<div className='mb-2 flex items-center justify-between'>
 								<Badge variant='secondary' className='text-sm'>
-									Tổng số: {currentConfig.data.length}{' '}
+									Tổng số: {currentConfig.data?.length}{' '}
 									{currentStep === 'pendingTopics' ? 'đề tài' : 'giảng viên'}
 								</Badge>
 							</div>
 							{currentStep === 'pendingTopics'
 								? // Render pending topics
-									currentConfig.data.map((topic: any, index: number) => (
+									currentConfig.data?.map((topic: any, index: number) => (
 										<Card
 											key={topic._id}
 											className={`border p-4 transition-all hover:shadow-md ${currentConfig.borderColor}`}
@@ -220,7 +224,7 @@ export function SubmissionPhaseResolveModal({
 										</Card>
 									))
 								: // Render missing lecturers
-									currentConfig.data.map((lecturer: any, index: number) => (
+									currentConfig.data?.map((lecturer: any, index: number) => (
 										<Card
 											key={lecturer.userId}
 											className={`border p-4 transition-all hover:shadow-md ${currentConfig.borderColor}`}

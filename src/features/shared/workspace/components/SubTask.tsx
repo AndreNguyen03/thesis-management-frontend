@@ -15,7 +15,6 @@ const SubTaskContainer = ({
 	columnId: string
 	taskId: string
 	onOpenModal: () => void
-    refetchMilestones: () => void
 }) => {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item._id })
 

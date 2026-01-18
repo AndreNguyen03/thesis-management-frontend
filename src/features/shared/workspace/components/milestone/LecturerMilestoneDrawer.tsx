@@ -18,7 +18,6 @@ import {
 } from '@/services/milestoneApi'
 import { toast } from 'sonner'
 import DOMPurify from 'dompurify'
-import AskToGoToDefense from './modal/AskToGoToDefense'
 import { useParams } from 'react-router-dom'
 
 export const LecturerMilestoneDrawer = ({

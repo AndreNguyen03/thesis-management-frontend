@@ -51,8 +51,15 @@ export interface LecturerSnapshot {
 	areaInterest?: string[]
 	researchInterests?: string[]
 	publications?: PublicationDto[]
-	similarityScore?: number,
-    matchReason?: string
+	similarityScore?: number
+	matchReason?: string
+	matchType?: string // 'name' | 'semantic' | 'hybrid'
+	scores?: {
+		name?: number
+		semantic?: number
+		combined?: number
+		rerank?: number
+	}
 }
 export interface LecturerResult extends LecturerSnapshot {
 	index: string

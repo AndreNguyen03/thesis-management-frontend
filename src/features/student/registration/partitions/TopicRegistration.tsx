@@ -240,10 +240,16 @@ export default function TopicRegistration() {
 				<div className='container'>
 					<Tabs value={activeTab} onValueChange={setActiveTab}>
 						<TabsList className='h-10'>
-							<TabsTrigger value='list'>
+							<TabsTrigger
+								value='list'
+								className='data-[state=active]:bg-blue-600 data-[state=active]:text-white'
+							>
 								<List className='mr-1 h-4 w-4' /> Danh sách
 							</TabsTrigger>
-							<TabsTrigger value='registered'>
+							<TabsTrigger
+								value='registered'
+								className='data-[state=active]:bg-blue-600 data-[state=active]:text-white'
+							>
 								<FileCheck className='mr-1 h-4 w-4' /> Đã đăng ký
 							</TabsTrigger>
 						</TabsList>

@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Input } from '@/components/ui'
 import { CustomPagination } from '@/components/PaginationBar'
 import type { GetTopicsInBatchMilestoneDto, PaginatedTopicInBatchMilestone } from '@/models/milestone.model'
@@ -31,7 +31,8 @@ const AwaitingTopicTable = ({
 			</div>
 		)
 	}
-
+	const location = useLocation()
+	const navigate = useNavigate()
 	if (error) {
 		return (
 			<div className='rounded-lg border border-red-200 bg-red-50 p-4'>
@@ -57,11 +58,18 @@ const AwaitingTopicTable = ({
 						{paginationTopicData && paginationTopicData.data.length > 0 ? (
 							paginationTopicData.data.map((topic) => (
 								<tr key={topic._id} className='border-b last:border-b-0 hover:bg-gray-50'>
-									<td className='px-4 py-3'>
+									<td
+										className='group cursor-pointer px-4 py-3'
+										onClick={() => navigate(`/detail-topic/${topic._id}?from=${encodeURIComponent(location.pathname + location.search)}`)}
+									>
 										<div>
-											<p className='font-medium text-gray-900'>{topic.titleVN}</p>
+											<p className='font-medium text-gray-900 group-hover:text-blue-600 group-hover:underline'>
+												{topic.titleVN}
+											</p>
 											{topic.titleEng && (
-												<p className='text-sm text-gray-500'>{topic.titleEng}</p>
+												<p className='text-sm text-gray-500 group-hover:text-blue-600 group-hover:underline'>
+													{topic.titleEng}
+												</p>
 											)}
 										</div>
 									</td>
@@ -102,7 +110,10 @@ const AwaitingTopicTable = ({
 												className='h-4 w-4'
 												checked={selectedTopicIds && selectedTopicIds.includes(topic._id)}
 												value={topic._id}
-												onChange={(e) => setSelectedTopics(e.target.value)}
+												onChange={(e) => {
+													e.stopPropagation()
+													setSelectedTopics(e.target.value)
+												}}
 											/>
 										</td>
 									)}

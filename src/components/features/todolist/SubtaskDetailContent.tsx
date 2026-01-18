@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { X, User, Tag, Calendar, AlertCircle, Clock } from 'lucide-react'
+import { X, User, Tag, Calendar, AlertCircle, Clock, Check, Delete } from 'lucide-react'
 import { vi as viLocale } from 'date-fns/locale'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -15,6 +15,10 @@ import { SubtaskDueDate } from './SubtaskDueDate'
 import { SubtaskDescription } from './SubtaskDescription'
 import { SubtaskComments } from './SubtaskComments'
 import type { Subtask } from '@/models/todolist.model'
+import { Input } from '@/components/ui/input'
+import { useUpdateSubtaskMutation, useUpdateTaskInfoMutation } from '@/services/todolistApi'
+import { toast } from 'sonner'
+import { set } from 'zod'
 
 interface SubtaskDetailContentProps {
 	subtask: Subtask
@@ -26,6 +30,10 @@ interface SubtaskDetailContentProps {
 
 export const SubtaskDetailContent = ({ subtask, taskId, columnId, onClose, groupId }: SubtaskDetailContentProps) => {
 	const [activeTab, setActiveTab] = useState('comments')
+	const [isEditting, setIsEditting] = useState(false)
+	const [newTitle, setNewTitle] = useState(subtask.title)
+	//gọi endpoint chỉnh sửa tiêu đề
+	const [updateSubTaskInfo, { isLoading: isUpdating }] = useUpdateSubtaskMutation()
 	// const [toggleComplete] = useToggleSubtaskCompleteMutation()
 
 	// const handleToggleComplete = async () => {
@@ -53,7 +61,27 @@ export const SubtaskDetailContent = ({ subtask, taskId, columnId, onClose, group
 	// 			return 'bg-gray-500'
 	// 	}
 	// }
-
+	const saveNewTitle = async () => {
+		try {
+			await updateSubTaskInfo({
+				taskId,
+				columnId,
+				subtaskId: subtask._id,
+				groupId,
+				updates: { title: newTitle }
+			})
+			toast.success('Cập nhật tiêu đề thành công', {
+				richColors: true,
+				description: 'Tiêu đề subtask đã được cập nhật'
+			})
+			setIsEditting(false)
+		} catch (error) {
+			toast.error('Cập nhật tiêu đề thất bại' + error, {
+				richColors: true,
+				description: 'Không thể cập nhật tiêu đề subtask'
+			})
+		}
+	}
 	const getPriorityIcon = (priority: TaskPriority) => {
 		switch (priority) {
 			case 'Highest':
@@ -72,7 +100,38 @@ export const SubtaskDetailContent = ({ subtask, taskId, columnId, onClose, group
 			<div className='flex items-center justify-between border-b p-6'>
 				<div className='flex flex-1 items-center justify-between gap-3'>
 					{/* <Badge className={`${getStatusColor(subtask.)} text-white`}>{subtask.status}</Badge> */}
-					<h2 className='truncate text-xl font-semibold'>{subtask.title}</h2>
+
+					{isEditting ? (
+						<div className='flex items-center gap-2'>
+							<Input
+								className='min-w-96'
+								value={newTitle}
+								onChange={(e) => setNewTitle(e.target.value)}
+							/>
+							<Button
+								className='h-fit cursor-pointer border bg-white text-black hover:border-green-500 hover:text-green-500'
+								onClick={() => saveNewTitle()}
+							>
+								<Check className='h-4 w-4' />
+							</Button>
+							<Button
+								className='h-fit cursor-pointer border bg-white text-black hover:border-red-400 hover:text-red-400'
+								onClick={() => {
+									setIsEditting(false)
+									setNewTitle(subtask.title)
+								}}
+							>
+								<X className='h-4 w-4' />
+							</Button>
+						</div>
+					) : (
+						<h2
+							className='cursor-pointer truncate px-2 py-1 text-xl font-semibold hover:bg-gray-100'
+							onDoubleClick={() => setIsEditting(true)}
+						>
+							{subtask.title}
+						</h2>
+					)}
 					<Button variant='ghost' className='hover:text-red-400' size='default' onClick={onClose}>
 						<X className='h-12 w-12' />
 					</Button>

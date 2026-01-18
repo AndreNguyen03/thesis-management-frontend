@@ -1,13 +1,11 @@
 import { useState } from 'react'
-import type { TopicAssignment, CouncilMemberDto, CouncilMemberInfo } from '@/models/defenseCouncil.model'
+import type { CouncilMemberDto, CouncilMemberRole, TopicAssignment } from '@/models/defenseCouncil.model'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/badge'
 import { useUpdateTopicMembersMutation } from '@/services/defenseCouncilApi'
-import { CouncilMemberRoleOptions, type CouncilMemberRole } from '@/models/milestone.model'
 import { toast } from 'sonner'
-import { X } from 'lucide-react'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
-import LecturerSelector from './LecturerSelector'
+import { ConfirmDialog } from '../../manage_phase/completion-phase/manage-defense-milestone/ConfirmDialog'
+import EditTopicRow from './EditTopicRow'
 
 interface EditTopicMembersDialogProps {
 	open: boolean
@@ -16,49 +14,90 @@ interface EditTopicMembersDialogProps {
 	councilId: string
 }
 
+type ActionType = 'save' | 'cancel'
+
 export default function EditTopicMembersDialog({ open, onOpenChange, topic, councilId }: EditTopicMembersDialogProps) {
-	const [members, setMembers] = useState<CouncilMemberInfo[]>(topic.members || [])
+	const [members, setMembers] = useState<CouncilMemberDto[]>(topic.members || [])
+	const [confirmDialog, setConfirmDialog] = useState<{
+		open: boolean
+		type: ActionType | null
+	}>({
+		open: false,
+		type: null
+	})
 	const [updateMembers, { isLoading }] = useUpdateTopicMembersMutation()
 
 	const handleAddMember = (lecturer: any, role: CouncilMemberRole) => {
-		// Check if already exists
-		if (members.some((m) => m.memberId === lecturer._id)) {
-			toast.error('Giảng viên này đã có trong bộ ba')
+		// Kiểm tra nếu đã là phản biện thì không thể là chủ tịch hoặc thư ký
+		const isReviewer = members.some((m) => m.memberId === lecturer._id && m.role === 'reviewer')
+		if (isReviewer && (role === 'chairperson' || role === 'secretary')) {
+			toast.error('Giảng viên phản biện không thể là chủ tịch hoặc thư ký')
 			return
 		}
 
-		// Check role conflict
-		if (members.some((m) => m.role === role)) {
-			toast.error(`Đã có ${CouncilMemberRoleOptions[role].label} trong bộ ba`)
+		// Kiểm tra nếu đã là chủ tịch hoặc thư ký hoặc là ủy viên thì không thể là các vai trò đó
+		const isChairpersonOrSecretaryOrMember = members.some(
+			(m) =>
+				m.memberId === lecturer._id &&
+				(m.role === 'chairperson' || m.role === 'secretary' || m.role === 'member')
+		)
+
+		if (isChairpersonOrSecretaryOrMember && (role === 'chairperson' || role === 'secretary' || role === 'member')) {
+			toast.error('Chủ tịch, thư ký hoặc ủy viên không thể là chủ tịch, thư ký hoặc ủy viên')
 			return
 		}
 
-		const newMember: CouncilMemberInfo = {
+		// Kiểm tra nếu đã là chủ tịch hoặc thư ký thì không thể là phản biện
+		const isChairpersonOrSecretary = members.some(
+			(m) => m.memberId === lecturer._id && (m.role === 'chairperson' || m.role === 'secretary')
+		)
+		if (isChairpersonOrSecretary && role === 'reviewer') {
+			toast.error('Chủ tịch hoặc thư ký không thể là phản biện')
+			return
+		}
+
+		// Kiểm tra nếu giảng viên này đã có vai trò này rồi
+		if (members.some((m) => m.memberId === lecturer._id && m.role === role)) {
+			toast.error('Giảng viên này đã được chọn cho vai trò này')
+			return
+		}
+
+		// Kiểm tra nếu vai trò này đã có người khác đảm nhiệm
+		if (members.some((m) => m.role === role && m.memberId !== lecturer._id)) {
+			const roleNames: Record<string, string> = {
+				reviewer: 'phản biện',
+				chairperson: 'chủ tịch',
+				secretary: 'thư ký',
+				member: 'ủy viên'
+			}
+			toast.error(`Đã có người làm vai trò ${roleNames[role] || 'này'}`)
+			return
+		}
+
+		const newMember: CouncilMemberDto = {
 			memberId: lecturer._id,
 			fullName: lecturer.fullName,
 			title: lecturer.title || '',
-			role: role
+			role
 		}
+
 		setMembers([...members, newMember])
 	}
 
-	const handleRemoveMember = (memberId: string) => {
-		setMembers(members.filter((m) => m.memberId !== memberId))
+	const handleRemoveMember = (memberId: string, role: CouncilMemberRole) => {
+		// Chỉ xóa member có cả memberId VÀ role khớp (không xóa các role khác của cùng memberId)
+		setMembers(members.filter((m) => !(m.memberId === memberId && m.role === role)))
 	}
 
 	const handleSave = async () => {
-		// Validate: must have exactly 3 members (1 chairperson, 1 secretary, 1 member)
-		if (members.length !== 3) {
-			toast.error('Bộ ba phải có đúng 3 giảng viên')
-			return
-		}
-
+		// Validate all roles (reviewer có thể kiêm member)
+		const hasReviewer = members.some((m) => m.role === 'reviewer')
 		const hasChairperson = members.some((m) => m.role === 'chairperson')
 		const hasSecretary = members.some((m) => m.role === 'secretary')
 		const hasMember = members.some((m) => m.role === 'member')
 
-		if (!hasChairperson || !hasSecretary || !hasMember) {
-			toast.error('Bộ ba phải có 1 chủ tịch, 1 thư ký, 1 ủy viên')
+		if (!hasReviewer || !hasChairperson || !hasSecretary || !hasMember) {
+			toast.error('Cần đủ 4 vai trò: 1 phản biện, 1 chủ tịch, 1 thư ký, 1 ủy viên')
 			return
 		}
 
@@ -66,84 +105,118 @@ export default function EditTopicMembersDialog({ open, onOpenChange, topic, coun
 			await updateMembers({
 				councilId,
 				topicId: topic.topicId,
-				payload: { members }
+				payload: { members: members }
 			}).unwrap()
-			toast.success('Cập nhật bộ ba thành công')
+			toast.success('Cập nhật hội đồng chấm thành công')
 			onOpenChange(false)
 		} catch (error: any) {
 			toast.error(error?.data?.message || 'Có lỗi xảy ra')
 		}
 	}
 
-	const availableRoles = (['chairperson', 'secretary', 'member'] as CouncilMemberRole[]).filter(
-		(role) => !members.some((m) => m.role === role)
-	)
+	const handleConfirmAction = async () => {
+		if (confirmDialog.type === 'save') {
+			await handleSave()
+		} else if (confirmDialog.type === 'cancel') {
+			setMembers(topic.members || [])
+			onOpenChange(false)
+		}
+	}
+
+	const reviewer = members.find((m) => m.role === 'reviewer') || null
+	const councilMembers = members.filter((m) => m.role !== 'reviewer')
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='max-w-3xl'>
+			<DialogContent className='max-h-[220vh] min-w-[150vh] max-w-4xl overflow-y-auto border border-blue-500'>
 				<DialogHeader>
-					<DialogTitle>Chỉnh sửa bộ ba giảng viên</DialogTitle>
-					<p className='text-sm text-muted-foreground'>{topic.titleVN}</p>
+					<DialogTitle>Chỉnh sửa hội đồng chấm đề tài</DialogTitle>
 				</DialogHeader>
 
-				<div className='space-y-4'>
-					{/* Current Members */}
-					<div>
-						<h3 className='mb-2 font-medium'>Thành viên hiện tại ({members.length}/3)</h3>
-						{members.length > 0 ? (
-							<div className='space-y-2'>
-								{members.map((member) => (
-									<div
-										key={member.memberId}
-										className='flex items-center justify-between rounded-lg border p-3'
+				<div className='px-2'>
+					<div className='overflow-x-auto rounded-lg border border-blue-500'>
+						<table className='min-w-full table-auto bg-white'>
+							<thead>
+								<tr className='border-t bg-gray-50 text-gray-700'>
+									<th
+										className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'
+										style={{ minWidth: '180px', maxWidth: '220px', width: '200px' }}
 									>
-										<div className='flex items-center gap-3'>
-											<Badge
-												variant={
-													CouncilMemberRoleOptions[
-														member.role as keyof typeof CouncilMemberRoleOptions
-													]?.variant || 'outline'
-												}
-											>
-												{CouncilMemberRoleOptions[
-													member.role as keyof typeof CouncilMemberRoleOptions
-												]?.label || member.role}
-											</Badge>
-											<span>
-												{member.title} {member.fullName}
-											</span>
-										</div>
-										<Button
-											variant='ghost'
-											size='icon'
-											onClick={() => handleRemoveMember(member.memberId)}
-										>
-											<X className='h-4 w-4' />
-										</Button>
-									</div>
-								))}
-							</div>
-						) : (
-							<p className='text-sm text-muted-foreground'>Chưa có thành viên nào</p>
-						)}
+										Đề tài
+									</th>
+									<th className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'>
+										Sinh viên
+									</th>
+									<th className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'>
+										GVHD
+									</th>
+									<th className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'>
+										Phản biện
+									</th>
+									<th className='border-r border-gray-400 px-4 py-3 text-center text-sm font-semibold'>
+										Hội đồng chấm
+									</th>
+									<th className='px-4 py-3 text-center text-sm font-semibold'>Hành động</th>
+								</tr>
+							</thead>
+							<tbody>
+								<EditTopicRow
+									topic={topic}
+									reviewer={reviewer}
+									councilMembers={councilMembers}
+									onAddMember={(lecturer, role) => handleAddMember(lecturer, role)}
+									onRemoveMember={(memberId, role) => handleRemoveMember(memberId, role)}
+								/>
+							</tbody>
+						</table>
 					</div>
-
-					{/* Add Member */}
-					{availableRoles.length > 0 && (
-						<div>
-							<h3 className='mb-2 font-medium'>Thêm thành viên</h3>
-							<LecturerSelector onSelect={handleAddMember} availableRoles={availableRoles} />
-						</div>
-					)}
 				</div>
 
+				<ConfirmDialog
+					open={confirmDialog.open}
+					onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+					title={
+						confirmDialog.type === 'save'
+							? 'Xác nhận cập nhật hội đồng'
+							: confirmDialog.type === 'cancel'
+								? 'Xác nhận hủy thay đổi'
+								: ''
+					}
+					description={
+						confirmDialog.type === 'save'
+							? 'Bạn có chắc chắn muốn cập nhật hội đồng chấm cho đề tài này không?'
+							: confirmDialog.type === 'cancel'
+								? 'Các thay đổi sẽ không được lưu. Bạn có chắc chắn muốn hủy không?'
+								: ''
+					}
+					onConfirm={handleConfirmAction}
+					isLoading={isLoading}
+					confirmText={confirmDialog.type === 'save' ? 'Cập nhật' : 'Xác nhận hủy'}
+				/>
+
 				<DialogFooter>
-					<Button variant='outline' onClick={() => onOpenChange(false)} disabled={isLoading}>
+					<Button
+						variant='outline'
+						onClick={() => {
+							setConfirmDialog({
+								open: true,
+								type: 'cancel'
+							})
+						}}
+						disabled={isLoading}
+					>
 						Hủy
 					</Button>
-					<Button onClick={handleSave} disabled={isLoading}>
-						{isLoading ? 'Đang lưu...' : 'Lưu'}
+					<Button
+						onClick={() => {
+							setConfirmDialog({
+								open: true,
+								type: 'save'
+							})
+						}}
+						disabled={isLoading}
+					>
+						{isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

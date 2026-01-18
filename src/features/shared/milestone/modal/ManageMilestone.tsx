@@ -298,10 +298,17 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 											{milestoneData?.map((m, index) => (
 												<tr
 													key={index}
-													className='cursor-pointer border-b last:border-b-0 hover:bg-gray-50'
+													className={cn(
+														m.type !== MilestoneType.DEFENSE && 'cursor-pointer',
+														'border-b last:border-b-0 hover:bg-gray-50'
+													)}
 													onClick={() => {
-														setIsMilestoneScreen(false)
-														setSelectedParent(m)
+														{
+															if (m.type !== MilestoneType.DEFENSE) {
+																setIsMilestoneScreen(false)
+																setSelectedParent(m)
+															}
+														}
 													}}
 												>
 													<td className='px-3 py-2'>
@@ -361,25 +368,27 @@ const ManageMilestone = ({ open, onOpenChange, periodId, currentPhaseDetail, onS
 																	<Download className='h-4 w-4' />
 																)}
 															</Button>
-															<Button
-																variant='ghost'
-																size='icon'
-																className='h-8 w-8 text-gray-500 hover:text-blue-600'
-																onClick={(e) => {
-																	e.stopPropagation()
-																	setIsMilestoneScreen(false)
-																	setSelectedParent(m)
-																}}
-															>
-																<Eye className='h-4 w-4' />
-															</Button>
+															{m.type !== MilestoneType.DEFENSE && (
+																<Button
+																	variant='ghost'
+																	size='icon'
+																	className='h-8 w-8 text-gray-500 hover:text-blue-600'
+																	onClick={(e) => {
+																		e.stopPropagation()
+																		setIsMilestoneScreen(false)
+																		setSelectedParent(m)
+																	}}
+																>
+																	<Eye className='h-4 w-4' />
+																</Button>
+															)}
 															{m.type === MilestoneType.DEFENSE && (
 																<button
 																	className='rounded-full p-2 transition-colors hover:bg-gray-100'
 																	onClick={(e) => {
 																		e.stopPropagation()
 																		navigate(
-																			`/period/${periodId}/defense-milestones-in-perioddefense-milestones-in-period`,
+																			`/period/${periodId}/defense-milestones-in-period/${m._id}`,
 																			{
 																				state: {
 																					milestoneId: m._id

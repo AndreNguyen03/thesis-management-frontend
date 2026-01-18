@@ -78,7 +78,6 @@ export const TopicDetailContainer = () => {
 
 	// Call the query hook unconditionally but skip fetching when no id is present
 	const { data: topic, isLoading, refetch } = useGetTopicByIdQuery({ id: id! }, { skip: !id })
-	console.log('detail topic :::', topic)
 	// lấy danh sách các major cùng thuộc một khoa với đề tài
 	const { data: majorsOptions } = useGetMajorsBySameFacultyIdQuery(
 		{ facultyId: topic?.major.facultyId || '', queries: { page: 1, limit: 0 } },
@@ -110,7 +109,15 @@ export const TopicDetailContainer = () => {
 
 	//Modal thêm sinh viên
 	const [openAddStudentModal, setOpenAddStudentModal] = useState(false)
-
+	const handleComeBack = () => {
+		const params = new URLSearchParams(location.search)
+		const from = params.get('from')
+		if (from) {
+			navigate(from)
+		} else {
+			navigate(-1)
+		}
+	}
 	if (!id) {
 		return <div>Invalid topic id</div>
 	}
@@ -130,7 +137,23 @@ export const TopicDetailContainer = () => {
 		)
 	}
 	if (topic == null) {
-		return <div>Topic not found</div>
+		return (
+			<Dialog open={true}>
+				<DialogContent hideClose={true} className='h-screen w- rounded-xl bg-[#F2F4FF] p-8'>
+					<div className='flex flex-col items-center justify-center gap-4 w-full'>
+						<div>Không tìm thấy đề tài</div>
+						<Button
+							variant='back'
+							className='w-fit border border-gray-300'
+							onClick={() => handleComeBack()}
+						>
+							<ChevronLeft className='size-6' />
+							<p>Quay lại</p>
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+		)
 	}
 	if (isSuccessDelete) {
 		navigate(-1)
@@ -455,7 +478,11 @@ export const TopicDetailContainer = () => {
 			<DialogContent hideClose={true} className='h-screen rounded-xl bg-[#F2F4FF] p-8 sm:min-w-full'>
 				<div className='flex flex-col gap-4'>
 					<div className='grid grid-cols-3 px-4'>
-						<Button variant='back' className='w-fit border border-gray-300' onClick={() => navigate(-1)}>
+						<Button
+							variant='back'
+							className='w-fit border border-gray-300'
+							onClick={() => handleComeBack()}
+						>
 							<ChevronLeft className='size-6' />
 							<p>Quay lại</p>
 						</Button>
@@ -642,7 +669,7 @@ export const TopicDetailContainer = () => {
 																<div className='mb-1 flex items-center gap-2'>
 																	<PhaseBadge phase={history.phaseName} />
 																	<StatusBadge status={history.status} />
-																	{idx > 0 &&
+																	{/* {idx > 0 &&
 																		history.actor._id ===
 																			topic.phaseHistories[idx - 1].actor._id &&
 																		Math.abs(
@@ -655,7 +682,7 @@ export const TopicDetailContainer = () => {
 																			<span className='ml-2 text-xs text-primary'>
 																				Đã tạo và nộp cùng lúc
 																			</span>
-																		)}
+																		)} */}
 																</div>
 																<div className='flex items-center gap-1'>
 																	<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>
@@ -714,7 +741,7 @@ export const TopicDetailContainer = () => {
 																<div className='mb-1 flex items-center gap-2'>
 																	<PhaseBadge phase={history.phaseName} />
 																	<StatusBadge status={history.status} />
-																	{idx > 0 &&
+																	{/* {idx > 0 &&
 																		history.actor._id ===
 																			topic.phaseHistories[idx - 1].actor._id &&
 																		Math.abs(
@@ -729,7 +756,7 @@ export const TopicDetailContainer = () => {
 																			<span className='ml-2 text-xs text-primary'>
 																				Đã tạo và nộp cùng lúc
 																			</span>
-																		)}
+																		)} */}
 																</div>
 																<div className='flex items-center gap-1'>
 																	<div className='flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10'>

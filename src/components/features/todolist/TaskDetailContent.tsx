@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { TaskDetail, TaskPriority } from '@/models/task-detail.model'
 import { Button } from '@/components/ui/Button'
-import { X, User, Tag, Calendar, AlertCircle, Clock, CheckSquare } from 'lucide-react'
+import { X, User, Tag, Calendar, AlertCircle, Clock, CheckSquare, Check } from 'lucide-react'
 import { vi as viLocale } from 'date-fns/locale'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -19,6 +19,9 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { SubtaskDetailModal } from './SubtaskDetailModal'
 import { Avatar } from '@/features/shared/workspace/components/Avatar'
 import type { SubTaskUser } from '@/models/todolist.model'
+import { toast } from 'sonner'
+import { useUpdateTaskInfoMutation } from '@/services/todolistApi'
+import { Input } from '@/components/ui/input'
 
 interface TaskDetailContentProps {
 	task: TaskDetail
@@ -27,9 +30,31 @@ interface TaskDetailContentProps {
 
 export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => {
 	const [activeTab, setActiveTab] = useState('comments')
+	const [isEditting, setIsEditting] = useState(false)
+	const [newTitle, setNewTitle] = useState(task.title)
+	//gọi endpoint chỉnh sửa tiêu đề
+	const [updateTaskInfo, { isLoading: isUpdating }] = useUpdateTaskInfoMutation()
 	const [selectedSubtaskId, setSelectedSubtaskId] = useState<string | null>(null)
 	const [selectedColumnId, setSelectedColumnId] = useState<string>('')
-
+	const saveNewTitle = async () => {
+		try {
+			await updateTaskInfo({
+				taskId: task._id,
+				groupId: undefined,
+				updates: { title: newTitle }
+			})
+			toast.success('Cập nhật tiêu đề thành công', {
+				richColors: true,
+				description: 'Tiêu đề công việc đã được cập nhật'
+			})
+			setIsEditting(false)
+		} catch (error) {
+			toast.error('Cập nhật tiêu đề thất bại' + error, {
+				richColors: true,
+				description: 'Không thể cập nhật tiêu đề công việc'
+			})
+		}
+	}
 	const getStatusColor = (status: string) => {
 		switch (status) {
 			case 'Todo':
@@ -61,7 +86,38 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 			<div className='flex items-center justify-between border-b p-6'>
 				<div className='flex flex-1 items-center gap-3'>
 					<Badge className={`${getStatusColor(task.status)} text-white`}>{task.status}</Badge>
-					<h2 className='truncate text-xl font-semibold'>{task.title}</h2>
+
+					{isEditting ? (
+						<div className='flex items-center gap-2'>
+							<Input
+								className='min-w-96'
+								value={newTitle}
+								onChange={(e) => setNewTitle(e.target.value)}
+							/>
+							<Button
+								className='h-fit cursor-pointer border bg-white text-black hover:border-green-500 hover:text-green-500'
+								onClick={() => saveNewTitle()}
+							>
+								<Check className='h-4 w-4' />
+							</Button>
+							<Button
+								className='h-fit cursor-pointer border bg-white text-black hover:border-red-400 hover:text-red-400'
+								onClick={() => {
+									setIsEditting(false)
+									setNewTitle(task.title)
+								}}
+							>
+								<X className='h-4 w-4' />
+							</Button>
+						</div>
+					) : (
+						<h2
+							className='cursor-pointer truncate px-2 py-1 text-xl font-semibold hover:bg-gray-100'
+							onClick={() => setIsEditting(true)}
+						>
+							{task.title}
+						</h2>
+					)}
 				</div>
 				<Button variant='ghost' size='icon' className='hover:text-red-400' onClick={onClose}>
 					<X className='!h-6 !w-6' />
@@ -199,10 +255,7 @@ export const TaskDetailContent = ({ task, onClose }: TaskDetailContentProps) => 
 								<span className='text-sm font-medium text-muted-foreground'>Người báo cáo</span>
 							</div>
 							<div className='flex items-center gap-2'>
-								<Avatar
-									fullName={task.reporter?.fullName}
-									avatarUrl={task.reporter?.avatarUrl}
-								/>
+								<Avatar fullName={task.reporter?.fullName} avatarUrl={task.reporter?.avatarUrl} />
 								<div className='text-sm'>
 									<div className='font-medium'>{task.reporter?.fullName || 'Unknown'}</div>
 									<div className='text-xs text-muted-foreground'>{task.reporter?.email}</div>

@@ -54,8 +54,6 @@ export const WorkPanel = ({ groupName, participants }: WorkPanelProps) => {
 		if (milestonesData) setMilestones(milestonesData)
 	}, [milestonesData])
 
-	console.log('milestones in workpanel', milestones)
-
 	const totalProgress = useMemo(() => {
 		if (milestones.length === 0) return 0
 		const completedProgress = milestones.reduce((sum, m) => sum + m.progress, 0)
@@ -85,13 +83,7 @@ export const WorkPanel = ({ groupName, participants }: WorkPanelProps) => {
 
 			{/* Tab Content */}
 			<div className='h-[calc(100dvh-2rem)] flex-1 overflow-y-auto'>
-				{activeTab === 'milestone' && (
-					<MilestonePanel
-						setMilestones={setMilestones}
-						milestones={milestones}
-					
-					/>
-				)}
+				{activeTab === 'milestone' && <MilestonePanel setMilestones={setMilestones} milestones={milestones} />}
 				{activeTab === 'progress' && (
 					<ProgressPanel
 						milestones={milestones}

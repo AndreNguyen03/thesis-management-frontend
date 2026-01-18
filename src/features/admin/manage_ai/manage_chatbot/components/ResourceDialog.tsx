@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -18,7 +18,12 @@ import {
 } from '@/components/ui/Dialog'
 import { Textarea } from '@/components/ui/textarea'
 
-import { useCreateResourceMutation, useUpdateResourceMutation } from '@/services/chatbotApi'
+import {
+	useCreateResourceMutation,
+	useUpdateResourceMutation,
+	useUploadResourceFileMutation
+} from '@/services/chatbotApi'
+import { useCrawlUrlMutation } from '@/services/knowledgeSourceApi'
 import type { ChatbotResource, ResourceType } from '@/models/chatbot-resource.model'
 
 const formSchema = z.object({
@@ -46,6 +51,9 @@ const ResourceDialog = ({ resource, open, onClose }: ResourceDialogProps) => {
 
 	const [createResource, { isLoading: isCreating }] = useCreateResourceMutation()
 	const [updateResource, { isLoading: isUpdating }] = useUpdateResourceMutation()
+	const [crawlUrl, { isLoading: isCrawling }] = useCrawlUrlMutation()
+	const [uploadResourceFile, { isLoading: isUploading }] = useUploadResourceFileMutation()
+	const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -81,8 +89,38 @@ const ResourceDialog = ({ resource, open, onClose }: ResourceDialogProps) => {
 				await updateResource({ id: resource._id, data: values }).unwrap()
 				toast.success('Cập nhật tài nguyên thành công')
 			} else {
-				await createResource(values).unwrap()
-				toast.success('Thêm tài nguyên thành công. Hệ thống đang xử lý...')
+				// Create new resource
+				if (values.type === 'url') {
+					// Use crawl URL API
+					if (!values.url) {
+						toast.error('Vui lòng nhập URL')
+						return
+					}
+					await crawlUrl({
+						url: values.url,
+						name: values.title,
+						description: values.content || undefined
+					}).unwrap()
+					toast.success('Bắt đầu crawl URL! Vui lòng đợi xử lý...')
+				} else if (values.type === 'file') {
+					// Use upload file API
+					if (!selectedFile) {
+						toast.error('Vui lòng chọn file PDF')
+						return
+					}
+					const formData = new FormData()
+					formData.append('file', selectedFile)
+					formData.append('title', values.title)
+					if (values.content) {
+						formData.append('description', values.content)
+					}
+					await uploadResourceFile(formData).unwrap()
+					toast.success('Upload file thành công! Hệ thống đang xử lý...')
+				} else {
+					// Use old create API for text type
+					await createResource(values).unwrap()
+					toast.success('Thêm tài nguyên thành công. Hệ thống đang xử lý...')
+				}
 			}
 			onClose()
 		} catch (error: any) {
@@ -136,14 +174,15 @@ const ResourceDialog = ({ resource, open, onClose }: ResourceDialogProps) => {
 										</FormControl>
 										<SelectContent>
 											<SelectItem value='url'>URL (Website)</SelectItem>
+											<SelectItem value='file'>File (PDF)</SelectItem>
 											<SelectItem value='text'>Văn bản</SelectItem>
-											<SelectItem value='file'>File (Coming soon)</SelectItem>
 										</SelectContent>
 									</Select>
 									<FormDescription>
 										{watchType === 'url' && 'Hệ thống sẽ tự động crawl nội dung từ URL'}
 										{watchType === 'text' && 'Nhập trực tiếp nội dung văn bản'}
-										{watchType === 'file' && 'Upload file PDF, DOCX, TXT (Sắp ra mắt)'}
+										{watchType === 'file' &&
+											'Upload file PDF (tối đa 10MB). Hệ thống sẽ tự động trích xuất nội dung'}
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
@@ -191,35 +230,84 @@ const ResourceDialog = ({ resource, open, onClose }: ResourceDialogProps) => {
 						)}
 
 						{watchType === 'file' && (
-							<FormField
-								control={form.control}
-								name='content'
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Mô tả (Tùy chọn)</FormLabel>
-										<FormControl>
-											<Textarea placeholder='Mô tả ngắn về file...' {...field} />
-										</FormControl>
-										<FormDescription>
-											Thêm mô tả về nội dung file để dễ quản lý. (Tính năng upload file sẽ sớm ra
-											mắt)
-										</FormDescription>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+							<>
+								<FormField
+									control={form.control}
+									name='content'
+									render={() => (
+										<FormItem>
+											<FormLabel>File PDF</FormLabel>
+											<FormControl>
+												<Input
+													type='file'
+													accept='application/pdf'
+													onChange={(e) => {
+														const file = e.target.files?.[0]
+														if (file) {
+															// Validate file type
+															if (file.type !== 'application/pdf') {
+																toast.error('Chỉ chấp nhận file PDF')
+																e.target.value = ''
+																return
+															}
+															// Validate file size (max 10MB)
+															const maxSize = 10 * 1024 * 1024
+															if (file.size > maxSize) {
+																toast.error('File không được vượt quá 10MB')
+																e.target.value = ''
+																return
+															}
+															setSelectedFile(file)
+														}
+													}}
+													disabled={isEdit}
+												/>
+											</FormControl>
+											<FormDescription>
+												Chọn file PDF để upload. Tối đa 10MB. Hệ thống sẽ tự động trích xuất và
+												xử lý nội dung.
+											</FormDescription>
+											{selectedFile && (
+												<p className='mt-2 text-sm text-muted-foreground'>
+													Đã chọn: <strong>{selectedFile.name}</strong> (
+													{(selectedFile.size / 1024 / 1024).toFixed(2)}MB)
+												</p>
+											)}
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name='content'
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Mô tả (Tùy chọn)</FormLabel>
+											<FormControl>
+												<Textarea placeholder='Mô tả ngắn về nội dung file...' {...field} />
+											</FormControl>
+											<FormDescription>Thêm mô tả về nội dung file để dễ quản lý</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</>
 						)}
 						<DialogFooter>
 							<Button
 								type='button'
 								variant='outline'
 								onClick={onClose}
-								disabled={isCreating || isUpdating}
+								disabled={isCreating || isUpdating || isCrawling || isUploading}
 							>
 								Hủy
 							</Button>
-							<Button type='submit' disabled={isCreating || isUpdating}>
-								{isCreating || isUpdating ? 'Đang xử lý...' : isEdit ? 'Cập nhật' : 'Thêm mới'}
+							<Button type='submit' disabled={isCreating || isUpdating || isCrawling || isUploading}>
+								{isCreating || isUpdating || isCrawling || isUploading
+									? 'Đang xử lý...'
+									: isEdit
+										? 'Cập nhật'
+										: 'Thêm mới'}
 							</Button>
 						</DialogFooter>
 					</form>

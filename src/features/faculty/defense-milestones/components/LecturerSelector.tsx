@@ -3,9 +3,10 @@ import { Input } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
 import { Search, Loader2 } from 'lucide-react'
-import { CouncilMemberRoleOptions, type CouncilMemberRole } from '@/models/milestone.model'
+import { } from '@/models/milestone.model'
 import type { PaginationQueryParamsDto } from '@/models/query-params'
 import { useGetAllLecturersComboboxQuery } from '@/services/lecturerApi'
+import { CouncilMemberRoleOptions, type CouncilMemberRole } from '@/models/defenseCouncil.model'
 
 interface LecturerSelectorProps {
 	onSelect: (lecturer: any, role: CouncilMemberRole) => void

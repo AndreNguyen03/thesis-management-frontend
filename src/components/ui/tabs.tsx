@@ -29,7 +29,7 @@ const TabsList = React.forwardRef<React.ElementRef<typeof TabsPrimitive.List>, T
 TabsList.displayName = TabsPrimitive.List.displayName
 
 interface TabsTriggerProps extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> {
-	variant?: 'default' | 'pills' | 'underline' | 'divided'
+	variant?: 'default' | 'pills' | 'underline' | 'divided' | 'standard'
 }
 
 const TabsTrigger = React.forwardRef<React.ElementRef<typeof TabsPrimitive.Trigger>, TabsTriggerProps>(
@@ -44,7 +44,8 @@ const TabsTrigger = React.forwardRef<React.ElementRef<typeof TabsPrimitive.Trigg
 					'border-b-2 border-transparent px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-[#2D66C5]':
 						variant === 'underline',
 
-					'rounded-md px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow': variant === 'pills'
+					'rounded-md px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow': variant === 'pills',
+					'px-4 py-2 rounded-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow': variant === 'standard'
 				},
 				className
 			)}

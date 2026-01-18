@@ -54,7 +54,8 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 			})
 			setMilestones((prev) => prev.map((m) => (m._id === id ? { ...m, ...updates } : m)))
 			setSelectedId(null)
-            
+
+
 			toast.success('Cập nhật milestone thành công', { richColors: true })
 		} catch (error) {
 			console.error('Lỗi cập nhật milestone:', error)
@@ -96,6 +97,10 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 		return <MilestonePanelSkeleton />
 	}
 
+	// Phân loại milestones theo nguồn
+	const lecturerMilestones = milestones.filter((m) => m.source === 'lecturer_individual')
+	const facultyMilestones = milestones.filter((m) => m.source === 'faculty_batch' || m.source === 'faculty_defense')
+
 	return (
 		<div
 			className={`min-h-screen overflow-auto font-sans transition-colors duration-300 ${user.user?.role === ROLES.STUDENT ? 'bg-slate-50' : 'bg-orange-50/30'}`}
@@ -125,13 +130,13 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 									{groupDetail?.isAbleGoToDefense && user.user?.role === ROLES.LECTURER && (
 										<div className='flex items-center overflow-hidden rounded'>
 											<span className='bg-green-600 px-2 py-0.5 text-xs font-semibold text-white'>
-												Đủ điều kiện bảo vệ
+												Hoàn thành yêu cầu
 											</span>
 											<span
 												className='cursor-pointer bg-yellow-200 px-2 py-0.5 text-xs font-semibold text-gray-700 hover:bg-yellow-300'
 												onClick={() => setIsOpenAskGotoDefense(true)}
 											>
-												Xác nhận
+												Chuyển chờ đánh giá
 											</span>
 										</div>
 									)}
@@ -162,94 +167,187 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 				</div>
 
 				{/* Milestones List */}
-				<div className='space-y-4'>
-					{milestones.length > 0 && (
-						<h2 className='mb-4 flex items-center gap-2 text-lg font-bold text-slate-800'>
-							<LayoutDashboard className='h-5 w-5 text-slate-500' />
-							Danh sách Milestones
-						</h2>
+				<div className='space-y-8'>
+					{/* Milestones do Ban chủ nhiệm tạo */}
+					{facultyMilestones.length > 0 && (
+						<div>
+							<h2 className='mb-4 flex items-center gap-2 text-lg font-bold text-slate-800'>
+								<LayoutDashboard className='h-5 w-5 text-red-500' />
+								Mốc thời gian chung (Ban chủ nhiệm)
+							</h2>
+							<div className='space-y-4'>
+								{facultyMilestones.map((milestone) => {
+									const mProgress = milestone.progress
+									const isSelected = selectedId === milestone._id
+									const themeColor = user.user?.role === ROLES.STUDENT ? 'indigo' : 'orange'
+									const tasksNumber = milestone.totalTasks
+									const tasksCompleted = milestone.tasksCompleted
+									return (
+										<div
+											key={milestone._id}
+											onClick={() => setSelectedId(milestone._id)}
+											className={cn(
+												`group relative cursor-pointer overflow-hidden rounded-xl border-2 bg-white p-5 transition-all hover:shadow-md ${isSelected ? `border-${themeColor}-600 ring-1 ring-${themeColor}-500` : `border-slate-200 hover:border-${themeColor}-300`} `,
+												'rounded-lg border-2 border-dashed border-red-400 p-3'
+											)}
+										>
+											<div className={cn('relative z-20 flex items-start justify-between gap-4')}>
+												<div className='flex-1'>
+													<div className='mb-1 flex items-center gap-3'>
+														<h3
+															className={`font-bold text-slate-800 group-hover:text-${themeColor}-600 transition-colors`}
+														>
+															{milestone.title}
+														</h3>
+														<StatusBadge status={milestone.status as MilestoneStatus} />
+
+														<span className='rounded border-2 border-blue-500 bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600'>
+															{milestoneTypeMap[milestone.type].label}
+														</span>
+														<span
+															className={cn(
+																'rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+																creatorType[milestone.creatorType].color
+															)}
+														>
+															{creatorType[milestone.creatorType].label}
+														</span>
+													</div>
+													<div className='mb-3 flex items-center gap-4 text-sm text-slate-500'>
+														<span className='flex items-center gap-1.5'>
+															<Calendar className='h-3.5 w-3.5' />{' '}
+															{formatDate(milestone.dueDate)}
+														</span>
+														{milestone.tasks?.length ? (
+															<span className='flex items-center gap-1.5'>
+																<CheckSquare className='h-3.5 w-3.5' /> {tasksCompleted}
+																/{tasksNumber} đầu việc
+															</span>
+														) : (
+															<span className='flex items-center gap-1.5'>
+																<CheckSquare className='h-3.5 w-3.5' />
+																{tasksNumber} đầu việc
+															</span>
+														)}
+													</div>
+												</div>
+												<div className='hidden sm:block'>
+													{user.user?.role === ROLES.STUDENT ? (
+														<ChevronRight className='h-5 w-5 text-slate-300 group-hover:text-indigo-400' />
+													) : (
+														<>
+															{!milestone.isAbleEdit ? (
+																<PencilOff className='h-4 w-4 text-slate-500' />
+															) : (
+																<Edit className='h-4 w-4 text-slate-300 group-hover:text-orange-400' />
+															)}
+														</>
+													)}
+												</div>
+											</div>
+
+											<div className='relative z-20 mt-2 flex items-center gap-3'>
+												<ProgressBar progress={mProgress} className='h-1.5' />
+												<span className='w-8 text-right text-xs font-bold text-slate-600'>
+													{mProgress?.toFixed(2)}%
+												</span>
+											</div>
+										</div>
+									)
+								})}
+							</div>
+						</div>
 					)}
 
-					{milestones.map((milestone) => {
-						const mProgress = milestone.progress
-						//calculateProgress(milestone.requirements)
-						const isSelected = selectedId === milestone._id
-						const themeColor = user.user?.role === ROLES.STUDENT ? 'indigo' : 'orange'
-						const tasksNumber = milestone.totalTasks
-						const tasksCompleted = milestone.tasksCompleted
-						return (
-							<div
-								key={milestone._id}
-								onClick={() => setSelectedId(milestone._id)}
-								className={cn(
-									`group relative cursor-pointer overflow-hidden rounded-xl border-2 bg-white p-5 transition-all hover:shadow-md ${isSelected ? `border-${themeColor}-600 ring-1 ring-${themeColor}-500` : `border-slate-200 hover:border-${themeColor}-300`} `,
-									milestone.creatorType === 'faculty_board' &&
-										'rounded-lg border-2 border-dashed border-red-400 p-3'
-								)}
-							>
-								<div className={cn('relative z-20 flex items-start justify-between gap-4')}>
-									<div className='flex-1'>
-										<div className='mb-1 flex items-center gap-3'>
-											<h3
-												className={`font-bold text-slate-800 group-hover:text-${themeColor}-600 transition-colors`}
-											>
-												{milestone.title}
-											</h3>
-											<StatusBadge status={milestone.status as MilestoneStatus} />
-
-											<span className='rounded border-2 border-blue-500 bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600'>
-												{milestoneTypeMap[milestone.type].label}
-											</span>
-											<span
-												className={cn(
-													'rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-													creatorType[milestone.creatorType].color
-												)}
-											>
-												{creatorType[milestone.creatorType].label}
-											</span>
-										</div>
-										<div className='mb-3 flex items-center gap-4 text-sm text-slate-500'>
-											<span className='flex items-center gap-1.5'>
-												<Calendar className='h-3.5 w-3.5' /> {formatDate(milestone.dueDate)}
-											</span>
-											{milestone.tasks?.length ? (
-												<span className='flex items-center gap-1.5'>
-													<CheckSquare className='h-3.5 w-3.5' /> {tasksCompleted}/
-													{tasksNumber} đầu việc
-												</span>
-											) : (
-												<span className='flex items-center gap-1.5'>
-													<CheckSquare className='h-3.5 w-3.5' />
-													{tasksNumber} đầu việc
-												</span>
+					{/* Milestones do Giảng viên tạo */}
+					{lecturerMilestones.length > 0 && (
+						<div>
+							<h2 className='mb-4 flex items-center gap-2 text-lg font-bold text-slate-800'>
+								<LayoutDashboard className='h-5 w-5 text-blue-500' />
+								Mốc thời gian riêng (Giảng viên)
+							</h2>
+							<div className='space-y-4'>
+								{lecturerMilestones.map((milestone) => {
+									const mProgress = milestone.progress
+									const isSelected = selectedId === milestone._id
+									const themeColor = user.user?.role === ROLES.STUDENT ? 'indigo' : 'orange'
+									const tasksNumber = milestone.totalTasks
+									const tasksCompleted = milestone.tasksCompleted
+									return (
+										<div
+											key={milestone._id}
+											onClick={() => setSelectedId(milestone._id)}
+											className={cn(
+												`group relative cursor-pointer overflow-hidden rounded-xl border-2 bg-white p-5 transition-all hover:shadow-md ${isSelected ? `border-${themeColor}-600 ring-1 ring-${themeColor}-500` : `border-slate-200 hover:border-${themeColor}-300`}`
 											)}
-										</div>
-									</div>
-									<div className='hidden sm:block'>
-										{user.user?.role === ROLES.STUDENT ? (
-											<ChevronRight className='h-5 w-5 text-slate-300 group-hover:text-indigo-400' />
-										) : (
-											<>
-												{!milestone.isAbleEdit ? (
-													<PencilOff className='h-4 w-4 text-slate-500' />
-												) : (
-													<Edit className='h-4 w-4 text-slate-300 group-hover:text-orange-400' />
-												)}
-											</>
-										)}
-									</div>
-								</div>
+										>
+											<div className={cn('relative z-20 flex items-start justify-between gap-4')}>
+												<div className='flex-1'>
+													<div className='mb-1 flex items-center gap-3'>
+														<h3
+															className={`font-bold text-slate-800 group-hover:text-${themeColor}-600 transition-colors`}
+														>
+															{milestone.title}
+														</h3>
+														<StatusBadge status={milestone.status as MilestoneStatus} />
 
-								<div className='relative z-20 mt-2 flex items-center gap-3'>
-									<ProgressBar progress={mProgress} className='h-1.5' />
-									<span className='w-8 text-right text-xs font-bold text-slate-600'>
-										{mProgress.toFixed(2)}%
-									</span>
-								</div>
+														<span className='rounded border-2 border-blue-500 bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600'>
+															{milestoneTypeMap[milestone.type].label}
+														</span>
+														<span
+															className={cn(
+																'rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+																creatorType[milestone.creatorType].color
+															)}
+														>
+															{creatorType[milestone.creatorType].label}
+														</span>
+													</div>
+													<div className='mb-3 flex items-center gap-4 text-sm text-slate-500'>
+														<span className='flex items-center gap-1.5'>
+															<Calendar className='h-3.5 w-3.5' />{' '}
+															{formatDate(milestone.dueDate)}
+														</span>
+														{milestone.tasks?.length ? (
+															<span className='flex items-center gap-1.5'>
+																<CheckSquare className='h-3.5 w-3.5' /> {tasksCompleted}
+																/{tasksNumber} đầu việc
+															</span>
+														) : (
+															<span className='flex items-center gap-1.5'>
+																<CheckSquare className='h-3.5 w-3.5' />
+																{tasksNumber} đầu việc
+															</span>
+														)}
+													</div>
+												</div>
+												<div className='hidden sm:block'>
+													{user.user?.role === ROLES.STUDENT ? (
+														<ChevronRight className='h-5 w-5 text-slate-300 group-hover:text-indigo-400' />
+													) : (
+														<>
+															{!milestone.isAbleEdit ? (
+																<PencilOff className='h-4 w-4 text-slate-500' />
+															) : (
+																<Edit className='h-4 w-4 text-slate-300 group-hover:text-orange-400' />
+															)}
+														</>
+													)}
+												</div>
+											</div>
+
+											<div className='relative z-20 mt-2 flex items-center gap-3'>
+												<ProgressBar progress={mProgress} className='h-1.5' />
+												<span className='w-8 text-right text-xs font-bold text-slate-600'>
+													{mProgress?.toFixed(2)}%
+												</span>
+											</div>
+										</div>
+									)
+								})}
 							</div>
-						)
-					})}
+						</div>
+					)}
 				</div>
 				{user.user?.role === ROLES.LECTURER && isShowCreateModal && (
 					<CreateMilestone

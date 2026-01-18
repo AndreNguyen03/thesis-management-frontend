@@ -25,6 +25,7 @@ import type {
 	MonthlyStat,
 	MajorDistribution
 } from '@/models'
+
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
 import type { PaginatedTopicInBatchMilestone } from '@/models/milestone.model'
@@ -137,11 +138,21 @@ export const topicApi = baseApi.injectEndpoints({
 							formData.append(`${key}[]`, item as string)
 							// Hoặc formData.append(key, item); tùy cấu hình ValidationPipe
 						})
+					} else if (typeof value === 'boolean') {
+						// Xử lý boolean - gửi '0' hoặc '1' để backend dễ parse
+						const boolValue = value ? '1' : '0'
+						console.log(`🔍 FormData append boolean - ${key}:`, value, '→', boolValue)
+						formData.append(key, boolValue)
 					} else {
 						// Các trường nguyên thủy (string, number)
 						formData.append(key, value.toString())
 					}
 				})
+
+				console.log('📤 FormData entries:')
+				for (const [key, value] of formData.entries()) {
+					console.log(`  ${key}:`, value)
+				}
 
 				return {
 					url: '/topics', // Đường dẫn tới Controller
@@ -408,7 +419,7 @@ export const topicApi = baseApi.injectEndpoints({
 		}),
 		getTopicsAwaitingEvaluationInPeriod: builder.query<
 			PaginatedTopicInBatchMilestone,
-			{ periodId: string; queryParams: PaginationQueryParamsDto }
+			{ periodId: string; queryParams: PaginationQueryParamsDto; milestoneId?: string }
 		>({
 			query: ({ periodId, queryParams }) => {
 				const queryString = buildQueryString(queryParams)
@@ -418,7 +429,10 @@ export const topicApi = baseApi.injectEndpoints({
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data
+			transformResponse: (response: ApiResponse<PaginatedTopicInBatchMilestone>) => response.data,
+			providesTags: (result, error, { periodId, milestoneId }) => [
+				{ type: 'AwaitingTopicsInDefensemilestone', id: milestoneId }
+			]
 		}),
 		getTopicApprovalRegistration: builder.query<PaginatedTopicApproval, ApprovalTopicQueryParams>({
 			query: (query) => {
@@ -512,7 +526,8 @@ export const topicApi = baseApi.injectEndpoints({
 				body: { hide }
 			}),
 			invalidatesTags: ['TopicInLibrary']
-		})
+		}),
+
 	}),
 	overrideExisting: false
 })
@@ -570,5 +585,6 @@ export const {
 	useGetTrendingKeywordsQuery,
 	useGetSystemOverviewStatsQuery,
 	useGetSystemMonthlyStatsQuery,
-	useGetSystemMajorDistributionQuery
+	useGetSystemMajorDistributionQuery,
+
 } = topicApi

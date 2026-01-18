@@ -1,0 +1,122 @@
+import { type GetTopicsInBatchMilestoneDto } from '@/models/milestone.model'
+import LecturersCombobox from './combobox/LecturerCombobox'
+import {
+	councilMemberRoleMap,
+	type CouncilMemberDto,
+	type CouncilMemberRole,
+	type TopicAssignment
+} from '@/models/defenseCouncil.model'
+import { Badge } from '@/components/ui/badge'
+import { Eye, X } from 'lucide-react'
+import { Button } from '@/components/ui'
+import { useNavigate } from 'react-router-dom'
+
+interface TopicRowProps {
+	topic: TopicAssignment
+	reviewer: CouncilMemberDto | null
+	councilMembers: CouncilMemberDto[]
+	onAddMember: (lecturer: any, role: CouncilMemberRole) => void
+	onRemoveMember: (memberId: string, role: CouncilMemberRole) => void
+}
+
+const EditTopicRow = ({ topic, reviewer, councilMembers, onAddMember, onRemoveMember }: TopicRowProps) => {
+	const navigate = useNavigate()
+	return (
+		<tr key={topic.topicId} className='border-b border-t border-gray-400 last:border-b-0 hover:bg-gray-50'>
+			{/* Tên đề tài */}
+			<td
+				className='border-r border-gray-400 px-4 py-3'
+				style={{ minWidth: '180px', maxWidth: '220px', width: '200px' }}
+			>
+				<div>
+					<p className='text-wrap text-[14px] font-medium text-gray-900'>{topic.titleVN}</p>
+					{topic.titleEng && <p className='text-wrap text-[12px] text-gray-500'>{topic.titleEng}</p>}
+				</div>
+			</td>
+			{/* Tên sinh viên */}
+			<td
+				className='border-r border-gray-400 px-4 py-3'
+				style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}
+			>
+				<div className='space-y-1'>
+					{topic.studentNames && topic.studentNames.length > 0 ? (
+						topic.studentNames.map((student, idx) => (
+							<p key={idx} className='text-sm text-gray-700'>
+								{student}
+							</p>
+						))
+					) : (
+						<span className='text-sm text-gray-400'>Chưa có SV</span>
+					)}
+				</div>
+			</td>
+			{/* Tên giảng viên */}
+			<td
+				className='border-r border-gray-400 px-4 py-3'
+				style={{ minWidth: '150px', maxWidth: '180px', width: '200px' }}
+			>
+				<div className='space-y-1'>
+					{topic.lecturerNames && topic.lecturerNames.length > 0 ? (
+						topic.lecturerNames.map((lecturer, idx) => (
+							<p key={idx} className='text-sm text-gray-700'>
+								{lecturer}
+							</p>
+						))
+					) : (
+						<span className='text-sm text-gray-400'>Chưa có GV</span>
+					)}
+				</div>
+			</td>
+			<td
+				className='border-r border-gray-400 px-4 py-3'
+				style={{ minWidth: '140px', maxWidth: '180px', width: '200px' }}
+			>
+				{reviewer ? (
+					<Badge variant='outline' className='flex items-center gap-1'>
+						<span className='text-xs'>
+							{reviewer.title} {reviewer.fullName}
+						</span>
+						<X
+							className='h-3 w-3 cursor-pointer hover:text-red-500'
+							onClick={() => onRemoveMember(reviewer.memberId, reviewer.role)}
+						/>
+					</Badge>
+				) : (
+					<LecturersCombobox onSelect={(lecturer) => onAddMember(lecturer, 'reviewer')} />
+				)}
+			</td>
+			<td className='flex flex-col gap-2 border-r border-gray-400 px-4 py-3'>
+				{(['chairperson', 'secretary', 'member'] as CouncilMemberRole[]).map((role) => {
+					const member = councilMembers.find((m) => m.role === role)
+					return (
+						<div key={role} className='flex items-center justify-between px-20'>
+							<span className='block min-w-[60px] text-sm font-semibold text-blue-800'>
+								{councilMemberRoleMap[role]}
+							</span>
+							{member ? (
+								<Badge variant='outline' className='flex items-center gap-1'>
+									<span className='text-xs'>
+										{member.title} {member.fullName}
+									</span>
+									<X
+										className='h-3 w-3 cursor-pointer hover:text-red-500'
+										onClick={() => onRemoveMember(member.memberId, role)}
+									/>
+								</Badge>
+							) : (
+								<LecturersCombobox onSelect={(lecturer) => onAddMember(lecturer, role)} />
+							)}
+						</div>
+					)
+				})}
+			</td>
+			<td className='gap-2 px-4 py-3' style={{ minWidth: '90px', maxWidth: '120px', width: '200px' }}>
+				<Button variant='ghost' onClick={() => navigate(`/detail-topic/${topic.topicId}`)}>
+					<Eye className='h-4 w-4' />
+				</Button>
+			</td>
+		</tr>
+	)
+}
+
+export default EditTopicRow
