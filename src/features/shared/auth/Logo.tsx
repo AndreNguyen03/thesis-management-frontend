@@ -7,7 +7,7 @@ function Logo() {
 			</div>
 
 			{/* Main Title */}
-			<h1 className='text-3xl font-bold text-primary'>UIT Thesis Management</h1>
+			<h1 className='text-3xl font-bold text-primary'>Faculty Thesis Management</h1>
 
 			{/* Subtitle */}
 			<p className='text-muted-foreground'>Hệ thống quản lý đề tài luận văn</p>

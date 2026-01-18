@@ -6,9 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Checkbox } from '@/components/ui/checkbox'
 
-import { DescriptionOptimizer } from './components/DescriptionOptimizer'
 import { toast } from '@/hooks/use-toast'
-import { Save, X, Link, Plus, FileText, Loader2, Upload, Trash2, ChevronLeft } from 'lucide-react'
+import { Save, X, Link, Plus, FileText, Loader2, Upload, Trash2 } from 'lucide-react'
 
 import { usePageBreadcrumb } from '@/hooks'
 import { Button } from '@/components/ui'
@@ -108,6 +107,7 @@ function CreateTopic2({
 			setSelectedMajor(null)
 			setSelectedFiles([])
 			setFileNames([])
+			setAllowManualApproval(false)
 			setErrorMessage(null)
 			toast({ title: 'Thành công', description: 'Đề tài đã được lưu thành công!' })
 		}
@@ -199,6 +199,13 @@ function CreateTopic2({
 			return
 		}
 
+		// Debug log
+		console.log('🔍 DEBUG CreateTopic2 - allowManualApproval:', {
+			topicType,
+			stateValue: allowManualApproval,
+			willSend: topicType === 'scientific_research' ? true : allowManualApproval
+		})
+
 		const newTopic: CreateTopicPayload = {
 			titleVN: titleVN,
 			titleEng: titleEng,
@@ -213,8 +220,10 @@ function CreateTopic2({
 			requirementIds: selectedRequirements.map((req) => req._id),
 			studentIds: selectedStudents.map((stu) => stu._id),
 			lecturerIds: selectedCoSupervisors.map((lec) => lec._id),
-			allowManualApproval: allowManualApproval
+			allowManualApproval: topicType === 'scientific_research' ? true : allowManualApproval
 		}
+
+		console.log('📤 Payload CreateTopic2:', newTopic)
 
 		createTopic({
 			topicData: newTopic,
@@ -240,6 +249,7 @@ function CreateTopic2({
 		setSelectedMajor(null)
 		setSelectedFiles([])
 		setFileNames([])
+		setAllowManualApproval(false)
 		setErrorMessage(null)
 		toast({
 			title: 'Đã hủy',
@@ -447,23 +457,34 @@ function CreateTopic2({
 				...createdReqDtos
 			]
 			setSelectedRequirements(newSelectedReqs)
+
+			// Reset suggestions after successful apply
+			setSuggestions([])
 		} finally {
 			setIsApplying(false)
 		}
 	}
 
-	const handleApplySuggestion = (suggestion: TitleSuggestion & { createMissing?: boolean }) => {
+	const handleApplySuggestion = async (suggestion: TitleSuggestion & { createMissing?: boolean }) => {
 		const hasMissing =
 			(suggestion.missingFields && suggestion.missingFields.length > 0) ||
 			(suggestion.missingRequirements && suggestion.missingRequirements.length > 0)
 		if (suggestion.createMissing && hasMissing) {
+			// Có missing items và cần confirm
 			setPendingSuggestion(suggestion)
 			setConfirmOpen(true)
-			return
+			// Return promise để đợi user xác nhận hoặc hủy
+			// Promise sẽ không resolve cho đến khi dialog đóng
+			return new Promise<void>((resolve, reject) => {
+				// Lưu resolve/reject để gọi sau khi user bấm nút trong dialog
+				// Sử dụng ref hoặc state để lưu
+				// Tạm thời throw error để báo "chưa apply"
+				reject(new Error('Waiting for confirmation'))
+			})
 		}
 
-		// no confirm needed
-		applyConfirmed(suggestion)
+		// no confirm needed - apply ngay
+		await applyConfirmed(suggestion)
 	}
 
 	//
@@ -481,9 +502,6 @@ function CreateTopic2({
 								<p className='text-sm text-muted-foreground'>
 									Điền thông tin cơ bản và chi tiết, sau đó lưu đề tài.
 								</p>
-							</div>
-							<div className='text-sm text-muted-foreground'>
-								<span className='inline-block rounded-md bg-muted/20 px-3 py-1'>Loại: {topicType}</span>
 							</div>
 						</div>
 
@@ -648,10 +666,6 @@ function CreateTopic2({
 												<Label className='text-base font-semibold'>
 													Mô tả đề tài <span className='text-destructive'>*</span>
 												</Label>
-												<DescriptionOptimizer
-													currentDescription={description}
-													onOptimize={setDescription}
-												/>
 											</div>
 											<RichTextEditor
 												value={description}

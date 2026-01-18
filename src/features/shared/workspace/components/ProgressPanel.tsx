@@ -134,28 +134,8 @@ export const ProgressPanel = ({ milestones, totalProgress, refetchMilestones }: 
 			<section className='space-y-4'>
 				<h3 className='text-lg font-semibold'>Tổng quan tiến độ</h3>
 
-				<div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-					<div className='rounded-xl bg-gradient-to-br from-primary to-primary/80 p-5 text-white'>
-						<p className='text-sm opacity-90'>Tiến độ hoàn thành</p>
-
-						<div className='mt-3 flex items-end justify-between'>
-							<span className='text-3xl font-bold'>{totalProgress.toFixed(2)}%</span>
-							<span className='text-xs opacity-80'>
-								{totalProgress === 100 ? 'Hoàn tất' : 'Đang thực hiện'}
-							</span>
-						</div>
-
-						<div className='mt-3'>
-							<ProgressBar progress={totalProgress} status='' />
-						</div>
-
-						<div className='mt-4 space-y-1 text-xs opacity-90'>
-							<p>{milestoneStats.completed} milestone hoàn thành</p>
-							<p>{taskStats.inProgress} công việc đang làm</p>
-							<p>{milestoneStats.overdue} milestone quá hạn</p>
-						</div>
-					</div>
-
+				<div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+    
 					<div className='grid grid-cols-2 gap-4 lg:col-span-2'>
 						<Stat title='Tiến độ dự án' value={`${totalProgress}%`} icon={LayoutDashboard} variant='info' />
 						<Stat

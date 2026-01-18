@@ -19,6 +19,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 
 import { useCreateResourceMutation, useUpdateResourceMutation } from '@/services/chatbotApi'
+import { useCrawlUrlMutation } from '@/services/knowledgeSourceApi'
 import type { ChatbotResource, ResourceType } from '@/models/chatbot-resource.model'
 
 const formSchema = z.object({
@@ -46,6 +47,7 @@ const ResourceDialog = ({ resource, open, onClose }: ResourceDialogProps) => {
 
 	const [createResource, { isLoading: isCreating }] = useCreateResourceMutation()
 	const [updateResource, { isLoading: isUpdating }] = useUpdateResourceMutation()
+	const [crawlUrl, { isLoading: isCrawling }] = useCrawlUrlMutation()
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -81,8 +83,24 @@ const ResourceDialog = ({ resource, open, onClose }: ResourceDialogProps) => {
 				await updateResource({ id: resource._id, data: values }).unwrap()
 				toast.success('Cập nhật tài nguyên thành công')
 			} else {
-				await createResource(values).unwrap()
-				toast.success('Thêm tài nguyên thành công. Hệ thống đang xử lý...')
+				// Create new resource
+				if (values.type === 'url') {
+					// Use crawl URL API
+					if (!values.url) {
+						toast.error('Vui lòng nhập URL')
+						return
+					}
+					await crawlUrl({
+						url: values.url,
+						name: values.title,
+						description: values.content || undefined
+					}).unwrap()
+					toast.success('Bắt đầu crawl URL! Vui lòng đợi xử lý...')
+				} else {
+					// Use old create API for text type
+					await createResource(values).unwrap()
+					toast.success('Thêm tài nguyên thành công. Hệ thống đang xử lý...')
+				}
 			}
 			onClose()
 		} catch (error: any) {
@@ -214,12 +232,16 @@ const ResourceDialog = ({ resource, open, onClose }: ResourceDialogProps) => {
 								type='button'
 								variant='outline'
 								onClick={onClose}
-								disabled={isCreating || isUpdating}
+								disabled={isCreating || isUpdating || isCrawling}
 							>
 								Hủy
 							</Button>
-							<Button type='submit' disabled={isCreating || isUpdating}>
-								{isCreating || isUpdating ? 'Đang xử lý...' : isEdit ? 'Cập nhật' : 'Thêm mới'}
+							<Button type='submit' disabled={isCreating || isUpdating || isCrawling}>
+								{isCreating || isUpdating || isCrawling
+									? 'Đang xử lý...'
+									: isEdit
+										? 'Cập nhật'
+										: 'Thêm mới'}
 							</Button>
 						</DialogFooter>
 					</form>

@@ -2,7 +2,7 @@ import { Check, Bookmark, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface Suggestion {
 	vn: string
@@ -23,10 +23,17 @@ interface SuggestionPanelProps {
 	onClear: () => void
 }
 
-export function SuggestionPanel({ suggestions, onApply,  onClear }: SuggestionPanelProps) {
+export function SuggestionPanel({ suggestions, onApply, onClear }: SuggestionPanelProps) {
 	const [createMissing, setCreateMissing] = useState(false)
 	const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({})
 	const [appliedMap, setAppliedMap] = useState<Record<number, boolean>>({})
+
+	// Reset applied state when suggestions change
+	useEffect(() => {
+		setAppliedMap({})
+		setLoadingMap({})
+	}, [suggestions])
+
 	if (suggestions.length === 0) {
 		return (
 			<div className='flex flex-col items-center justify-center py-8 text-center'>
@@ -146,16 +153,19 @@ export function SuggestionPanel({ suggestions, onApply,  onClear }: SuggestionPa
 							)}
 						</div>
 
-							<div className='mt-3 flex items-center gap-1.5 border-t pt-3'>
+						<div className='mt-3 flex items-center gap-1.5 border-t pt-3'>
 							<Button
 								size='sm'
 								onClick={async () => {
 									setLoadingMap((m) => ({ ...m, [index]: true }))
 									try {
 										await Promise.resolve(onApply({ ...suggestion, createMissing }))
+										// Chỉ set applied khi thành công (không throw error)
 										setAppliedMap((m) => ({ ...m, [index]: true }))
 									} catch (err) {
-										console.error('Apply suggestion failed', err)
+										// Nếu reject (đang chờ confirm) hoặc lỗi thực sự
+										// Không set appliedMap - để user có thể bấm lại
+										console.log('Apply suggestion cancelled or waiting for confirmation')
 									} finally {
 										setLoadingMap((m) => ({ ...m, [index]: false }))
 									}

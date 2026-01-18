@@ -54,7 +54,7 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 			})
 			setMilestones((prev) => prev.map((m) => (m._id === id ? { ...m, ...updates } : m)))
 			setSelectedId(null)
-            
+
 			toast.success('Cập nhật milestone thành công', { richColors: true })
 		} catch (error) {
 			console.error('Lỗi cập nhật milestone:', error)
@@ -171,7 +171,7 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 					)}
 
 					{milestones.map((milestone) => {
-						const mProgress = milestone.progress
+						const mProgress = milestone.progress ?? 0
 						//calculateProgress(milestone.requirements)
 						const isSelected = selectedId === milestone._id
 						const themeColor = user.user?.role === ROLES.STUDENT ? 'indigo' : 'orange'
