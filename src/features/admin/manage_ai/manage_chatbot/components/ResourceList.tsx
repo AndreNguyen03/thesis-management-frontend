@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
-import { Edit, Trash2, ExternalLink, FileText, Plus } from 'lucide-react'
+import { Edit, Trash2, ExternalLink, FileText, Plus, Search, RefreshCw, Users, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { vi } from 'date-fns/locale'
@@ -18,15 +18,20 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle
 } from '@/components/ui/alert-dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
+import { Input } from '@/components/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useDeleteResourceMutation } from '@/services/chatbotApi'
 import type { CrawlProgress } from '@/models/chatbot-resource.model'
 import ResourceDialog from './ResourceDialog'
 import { mapKnowledgeType } from '@/models/knowledge-source.model'
 import { CustomPagination } from '@/components/PaginationBar'
 import type { RequestKnowledgeSourceDto } from '@/models'
-import { useGetKnowledgeSourcesQuery } from '@/services/knowledgeSourceApi'
+import {
+	useGetKnowledgeSourcesQuery,
+	useSyncLecturerProfilesMutation,
+} from '@/services/knowledgeSourceApi'
 import { cn, downloadFileWithURL } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { useChatbotSocket } from '@/hooks/useChatbot'
@@ -60,30 +65,31 @@ const ResourceList = () => {
 	const [deleteId, setDeleteId] = useState<string | null>(null)
 	const [progressMap, setProgressMap] = useState<Map<string, CrawlProgress>>(new Map())
 	const [dialogOpen, setDialogOpen] = useState(false)
+	const [progressDialogOpen, setProgressDialogOpen] = useState(false)
+	const [currentProgress, setCurrentProgress] = useState<CrawlProgress | null>(null)
+	const [searchTerm, setSearchTerm] = useState('')
+	const [filterType, setFilterType] = useState<string>('all')
 	const [queryParams, setQueryParams] = useState<RequestKnowledgeSourceDto>({
 		limit: 15,
 		page: 1,
-		query: ''
+		query: '',
+		source_type: undefined
 	})
 	const { data: resourcesData, isLoading, refetch } = useGetKnowledgeSourcesQuery({ queries: queryParams })
-	console.log('resourcesData', resourcesData)
-	const [deleteResource, { isLoading: isDeleting }] = useDeleteResourceMutation()
-	const navigate = useNavigate()
-	const {
-		isConnected,
-		onCrawlProgress,
-		onCrawlCompleted,
-		onCrawlFailed,
-		onEmbeddingProgress,
-		onEmbeddingCompleted
-	} = useChatbotSocket()
 
+	const [deleteResource, { isLoading: isDeleting }] = useDeleteResourceMutation()
+	const [syncLecturers, { isLoading: isSyncingLecturers }] = useSyncLecturerProfilesMutation()
+	const navigate = useNavigate()
+	const { isConnected, onCrawlProgress, onCrawlCompleted, onCrawlFailed, onEmbeddingProgress, onEmbeddingCompleted } =
+		useChatbotSocket()
 
 	// Socket event listeners
 	useEffect(() => {
 		const unsubscribeCrawl = onCrawlProgress((data: CrawlProgress) => {
 			console.log('📥 Crawl progress:', data)
 			setProgressMap((prev) => new Map(prev).set(data.resourceId, data))
+			setCurrentProgress(data)
+			setProgressDialogOpen(true)
 		})
 
 		const unsubscribeCompleted = onCrawlCompleted((data: CrawlProgress) => {
@@ -93,8 +99,14 @@ const ResourceList = () => {
 				newMap.delete(data.resourceId)
 				return newMap
 			})
+			setCurrentProgress(data)
 			toast.success(`Hoàn thành: ${data.message}`)
 			refetch()
+			// Close dialog after 2 seconds
+			setTimeout(() => {
+				setProgressDialogOpen(false)
+				setCurrentProgress(null)
+			}, 2000)
 		})
 
 		const unsubscribeFailed = onCrawlFailed((data: CrawlProgress) => {
@@ -104,13 +116,21 @@ const ResourceList = () => {
 				newMap.delete(data.resourceId)
 				return newMap
 			})
+			setCurrentProgress(data)
 			toast.error(`Thất bại: ${data.error || 'Lỗi không xác định'}`)
 			refetch()
+			// Close dialog after 2 seconds
+			setTimeout(() => {
+				setProgressDialogOpen(false)
+				setCurrentProgress(null)
+			}, 2000)
 		})
 
 		const unsubscribeEmbedding = onEmbeddingProgress((data: CrawlProgress) => {
 			console.log('🔄 Embedding progress:', data)
 			setProgressMap((prev) => new Map(prev).set(data.resourceId, data))
+			setCurrentProgress(data)
+			setProgressDialogOpen(true)
 		})
 
 		const unsubscribeEmbeddingCompleted = onEmbeddingCompleted((data: CrawlProgress) => {
@@ -120,8 +140,14 @@ const ResourceList = () => {
 				newMap.delete(data.resourceId)
 				return newMap
 			})
+			setCurrentProgress(data)
 			toast.success(`Hoàn thành embedding: ${data.message}`)
 			refetch()
+			// Close dialog after 2 seconds
+			setTimeout(() => {
+				setProgressDialogOpen(false)
+				setCurrentProgress(null)
+			}, 2000)
 		})
 
 		return () => {
@@ -132,6 +158,38 @@ const ResourceList = () => {
 			unsubscribeEmbeddingCompleted()
 		}
 	}, [onCrawlProgress, onCrawlCompleted, onCrawlFailed, onEmbeddingProgress, onEmbeddingCompleted, refetch])
+
+	// Debounce search
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setQueryParams((prev) => ({
+				...prev,
+				query: searchTerm,
+				page: 1
+			}))
+		}, 300)
+		return () => clearTimeout(timer)
+	}, [searchTerm])
+
+	// Update filter type in query params (server-side filter)
+	useEffect(() => {
+		setQueryParams((prev) => ({
+			...prev,
+			source_type: filterType === 'all' ? undefined : filterType,
+			page: 1
+		}))
+	}, [filterType])
+
+	const handleSyncLecturers = async () => {
+		try {
+			const result = await syncLecturers().unwrap()
+			toast.success(result.message || 'Đồng bộ giảng viên thành công!')
+			refetch()
+		} catch (error: any) {
+			toast.error(error?.data?.message || 'Đồng bộ giảng viên thất bại!')
+		}
+	}
+
 
 	const handleDelete = async () => {
 		if (!deleteId) return
@@ -197,15 +255,67 @@ const ResourceList = () => {
 		<>
 			<Card className='p-0'>
 				<CardHeader>
-					<div className='flex items-center justify-between gap-1'>
+					<div className='flex items-center justify-between gap-4'>
 						<div className='flex flex-col gap-1'>
 							<CardTitle>Danh sách tài nguyên</CardTitle>
 							<CardDescription>Quản lý tài nguyên cho chatbot RAG</CardDescription>
 						</div>
-						<Button onClick={() => handleOpenDialog()}>
-							<Plus className='mr-2 h-4 w-4' />
-							Thêm tài nguyên
-						</Button>
+						<div className='flex gap-2'>
+							<Button
+								variant='outline'
+								size='sm'
+								onClick={handleSyncLecturers}
+								disabled={isSyncingLecturers}
+							>
+								{isSyncingLecturers ? (
+									<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+								) : (
+									<Users className='mr-2 h-4 w-4' />
+								)}
+								Đồng bộ GV
+							</Button>
+							
+							<Button variant='outline' size='sm' onClick={() => refetch()}>
+								{isLoading ? (
+									<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+								) : (
+									<RefreshCw className='h-4 w-4' />
+								)}
+							</Button>
+							<Button onClick={() => handleOpenDialog()}>
+								<Plus className='mr-2 h-4 w-4' />
+								Thêm tài nguyên
+							</Button>
+						</div>
+					</div>
+
+					{/* Search and Filter */}
+					<div className='mt-4 flex gap-4'>
+						{/* Search */}
+						<div className='relative flex-1'>
+							<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+							<Input
+								placeholder='Tìm kiếm theo tiêu đề...'
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								className='pl-10'
+							/>
+						</div>
+
+						{/* Filter by Type */}
+						<Select value={filterType} onValueChange={setFilterType}>
+							<SelectTrigger className='w-[200px]'>
+								<SelectValue placeholder='Loại tài nguyên' />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value='all'>Tất cả loại</SelectItem>
+								<SelectItem value='URL'>URL</SelectItem>
+								<SelectItem value='FILE'>File</SelectItem>
+								<SelectItem value='TOPIC-REGISTERING'>Đề tài đăng ký</SelectItem>
+								<SelectItem value='TOPIC-LIBRARY'>Thư viện</SelectItem>
+								<SelectItem value='LECTURER-PROFILE'>Hồ sơ GV</SelectItem>
+							</SelectContent>
+						</Select>
 					</div>
 				</CardHeader>
 				<CardContent>
@@ -246,7 +356,11 @@ const ResourceList = () => {
 										<TableCell colSpan={6} className='py-8 text-center'>
 											<div className='flex flex-col items-center gap-2'>
 												<FileText className='h-12 w-12 text-muted-foreground' />
-												<p className='text-sm text-muted-foreground'>Chưa có tài nguyên nào</p>
+												<p className='text-sm text-muted-foreground'>
+													{filterType !== 'all' || searchTerm
+														? 'Không tìm thấy tài nguyên phù hợp'
+														: 'Chưa có tài nguyên nào'}
+												</p>
 												<Button variant='outline' size='sm' onClick={() => handleOpenDialog()}>
 													<Plus className='mr-2 h-4 w-4' />
 													Thêm tài nguyên đầu tiên
@@ -363,6 +477,35 @@ const ResourceList = () => {
 
 			{/* Resource Dialog */}
 			<ResourceDialog resource={selectedResource} open={dialogOpen} onClose={handleCloseDialog} />
+
+			{/* Progress Dialog */}
+			<Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
+				<DialogContent className='sm:max-w-[500px]'>
+					<DialogHeader>
+						<DialogTitle>
+							{currentProgress?.status === 'crawling' && 'Đang crawl nội dung...'}
+							{currentProgress?.status === 'embedding' && 'Đang tạo embedding...'}
+							{currentProgress?.status === 'completed' && 'Hoàn thành!'}
+							{currentProgress?.status === 'failed' && 'Thất bại'}
+						</DialogTitle>
+						<DialogDescription>{currentProgress?.message || 'Đang xử lý tài nguyên...'}</DialogDescription>
+					</DialogHeader>
+					<div className='space-y-4 py-4'>
+						<div className='space-y-2'>
+							<div className='flex justify-between text-sm'>
+								<span>Tiến độ</span>
+								<span className='font-medium'>{currentProgress?.progress || 0}%</span>
+							</div>
+							<Progress value={currentProgress?.progress || 0} className='h-3' />
+						</div>
+						{currentProgress?.error && (
+							<div className='rounded-md bg-red-50 p-3 text-sm text-red-800'>
+								<strong>Lỗi:</strong> {currentProgress.error}
+							</div>
+						)}
+					</div>
+				</DialogContent>
+			</Dialog>
 
 			{/* Delete Confirmation */}
 			<AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

@@ -55,6 +55,7 @@ export const MilestonePanel = ({ milestones, setMilestones }: MilestonePanelProp
 			setMilestones((prev) => prev.map((m) => (m._id === id ? { ...m, ...updates } : m)))
 			setSelectedId(null)
 
+
 			toast.success('Cập nhật milestone thành công', { richColors: true })
 		} catch (error) {
 			console.error('Lỗi cập nhật milestone:', error)

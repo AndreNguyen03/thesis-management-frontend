@@ -80,6 +80,7 @@ function CreateTopic({
 			setMaxStudents(1)
 			setSelectedMajor(null)
 			setSelectedFiles([])
+			setAllowManualApproval(false)
 		}
 	}, [successCreateTopic])
 
@@ -161,6 +162,13 @@ function CreateTopic({
 			return
 		}
 
+		// Debug log
+		console.log('🔍 DEBUG CreateTopic (OLD) - allowManualApproval:', {
+			topicType,
+			stateValue: allowManualApproval,
+			willSend: topicType === 'scientific_research' ? true : allowManualApproval
+		})
+
 		const newTopic: CreateTopicPayload = {
 			titleVN: titleVN,
 			titleEng: titleEng,
@@ -175,8 +183,10 @@ function CreateTopic({
 			requirementIds: selectedRequirements.map((req) => req._id),
 			studentIds: selectedStudents.map((stu) => stu._id),
 			lecturerIds: selectedCoSupervisors.map((lec) => lec._id),
-			allowManualApproval: allowManualApproval
+			allowManualApproval: topicType === 'scientific_research' ? true : allowManualApproval
 		}
+
+		console.log('📤 Payload CreateTopic (OLD):', newTopic)
 
 		createTopic({
 			topicData: newTopic,

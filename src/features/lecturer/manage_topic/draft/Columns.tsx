@@ -160,7 +160,7 @@ export const getColumns = ({
 	{
 		accessorKey: 'allowManualApproval',
 		size: 50,
-		header: () => <div className='text-center'>Duyệt tự động</div>,
+		header: () => <div className='text-center'>Xét duyệt</div>,
 		cell: ({ row }) => (
 			<div className='flex justify-center capitalize'>
 				<div className='flex items-center space-x-2'>
@@ -169,7 +169,9 @@ export const getColumns = ({
 						disabled={pendingId === row.original._id}
 						checked={row.getValue('allowManualApproval')}
 						onCheckedChange={(checked) => {
-							onManualApprovalChange && onManualApprovalChange(checked, row.original._id)
+							if (onManualApprovalChange) {
+								onManualApprovalChange(checked, row.original._id)
+							}
 						}}
 					/>
 				</div>

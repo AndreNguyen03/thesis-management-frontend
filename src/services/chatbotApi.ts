@@ -32,8 +32,6 @@ export const chatbotApi = baseApi.injectEndpoints({
 			invalidatesTags: ['ChatbotConfig']
 		}),
 
-
-		
 		// ========== Resources Management (New) ==========
 		getResources: builder.query<
 			GetPaginatedResourcesDto,
@@ -89,7 +87,7 @@ export const chatbotApi = baseApi.injectEndpoints({
 
 		deleteResource: builder.mutation<void, string>({
 			query: (id) => ({
-				url: `/chatbot/resources/${id}`,
+				url: `/knowledge-sources/${id}`,
 				method: 'DELETE'
 			}),
 			invalidatesTags: (_result, _error, id) => [
@@ -107,6 +105,16 @@ export const chatbotApi = baseApi.injectEndpoints({
 				{ type: 'ChatbotResources', id },
 				{ type: 'ChatbotResources', id: 'LIST' }
 			]
+		}),
+
+		uploadResourceFile: builder.mutation<ChatbotResource, FormData>({
+			query: (formData) => ({
+				url: `/chatbots/resources/upload-file`,
+				method: 'POST',
+				body: formData
+			}),
+			transformResponse: (response: ApiResponse<ChatbotResource>) => response.data,
+			invalidatesTags: [{ type: 'ChatbotResources', id: 'LIST' }]
 		}),
 
 		// ========== Query Suggestions ==========
@@ -188,6 +196,7 @@ export const {
 	useUpdateResourceMutation,
 	useDeleteResourceMutation,
 	useRetryResourceMutation,
+	useUploadResourceFileMutation,
 	useCreateQuerySuggestionMutation,
 	useUpdateQuerySuggestionMutation,
 	useDeleteQuerySuggestionsMutation,

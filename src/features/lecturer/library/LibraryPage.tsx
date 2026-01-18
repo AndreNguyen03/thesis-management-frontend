@@ -495,17 +495,6 @@ export const LibraryPage = () => {
 					</div>
 
 					{/* Keywords */}
-					<div className='flex flex-wrap justify-center gap-2 text-xs text-slate-400 sm:text-sm'>
-						<span>Từ khóa phổ biến:</span>
-						{['Machine Learning', 'Blockchain', 'IoT', 'Mobile App', 'E-commerce'].map((k) => (
-							<span
-								key={k}
-								className='cursor-pointer text-blue-300 underline decoration-dotted underline-offset-4 transition-colors hover:text-white'
-							>
-								{k}
-							</span>
-						))}
-					</div>
 				</div>
 			</div>
 

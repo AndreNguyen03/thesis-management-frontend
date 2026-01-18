@@ -13,6 +13,7 @@ import { LoadingOverlay } from '../ui'
 import { FlashBanner } from '../banner/flash-banner'
 import { useBreadcrumb } from '@/hooks'
 import { cn } from '@/lib/utils'
+import { AIAssistant } from '../ai-assistant/AIAssistant'
 
 interface LayoutProps {
 	children: ReactNode
@@ -108,7 +109,7 @@ function LayoutContent({ user, children }: { user: AppUser; children: ReactNode 
 						<FlashBanner />
 					</main>
 				</div>
-		
+                    {/* <AIAssistant open={openAI} onClose={() => setOpenAI(false)} /> */}
 			</div>
 		</>
 	)

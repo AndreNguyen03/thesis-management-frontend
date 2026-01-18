@@ -138,11 +138,21 @@ export const topicApi = baseApi.injectEndpoints({
 							formData.append(`${key}[]`, item as string)
 							// Hoặc formData.append(key, item); tùy cấu hình ValidationPipe
 						})
+					} else if (typeof value === 'boolean') {
+						// Xử lý boolean - gửi '0' hoặc '1' để backend dễ parse
+						const boolValue = value ? '1' : '0'
+						console.log(`🔍 FormData append boolean - ${key}:`, value, '→', boolValue)
+						formData.append(key, boolValue)
 					} else {
 						// Các trường nguyên thủy (string, number)
 						formData.append(key, value.toString())
 					}
 				})
+
+				console.log('📤 FormData entries:')
+				for (const [key, value] of formData.entries()) {
+					console.log(`  ${key}:`, value)
+				}
 
 				return {
 					url: '/topics', // Đường dẫn tới Controller

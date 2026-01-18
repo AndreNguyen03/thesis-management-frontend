@@ -101,6 +101,18 @@ export const knowledgeSourceApi = baseApi.injectEndpoints({
 				method: 'POST'
 			}),
 			invalidatesTags: [{ type: 'KnowledgeSources', id: 'LIST' }]
+		}),
+
+		crawlUrl: builder.mutation<
+			{ message: string; knowledgeSourceId: string },
+			{ url: string; name: string; description?: string }
+		>({
+			query: (body) => ({
+				url: `/knowledge-sources/crawl-url`,
+				method: 'POST',
+				body
+			}),
+			invalidatesTags: [{ type: 'KnowledgeSources', id: 'LIST' }]
 		})
 	}),
 	overrideExisting: false
@@ -114,6 +126,8 @@ export const {
 	useUpdateKnowledgeSourceMutation,
 	useDeleteKnowledgeSourceMutation,
 	useLazySemanticSearchKnowledgeSourcesQuery,
-	useSyncTopicsToKnowledgeSourceMutation,
-	useSyncLecturerProfilesMutation
+	useSyncRegisteringTopicsToKnowledgeSourceMutation,
+    useSyncTopicsInLibraryToKnowledgeSourceMutation,
+	useSyncLecturerProfilesMutation,
+	useCrawlUrlMutation
 } = knowledgeSourceApi
