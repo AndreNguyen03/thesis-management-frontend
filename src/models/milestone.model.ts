@@ -1,5 +1,5 @@
 import type { CouncilMemberRole } from './defenseCouncil.model'
-import type { GetPaginatedObject } from './paginated-object.model'
+import type { GetPaginatedObject, MetaDto } from './paginated-object.model'
 import type { PeriodPhaseName } from './period-phase.models'
 import type { MiniPeriod } from './period.model'
 import { PaginationQueryParamsDto } from './query-params'
@@ -71,6 +71,7 @@ export interface ResponseMilestone {
 	creatorType: string
 	totalTasks: number
 	tasksCompleted: number
+	source?: 'lecturer_individual' | 'faculty_batch' | 'faculty_defense' // Nguồn milestone
 	//isCompleted: boolean
 }
 export interface TopicSnaps {
@@ -236,4 +237,64 @@ export interface DefenseMilestoneDetail {
 	isBlock: boolean // Đã khóa (không cho chỉnh sửa)
 	createdBy: string
 	periodInfo: MiniPeriod
+}
+
+// Archive topics types
+export interface TopicForArchive {
+	topicId: string
+	titleVN: string
+	titleEng?: string
+	description: string
+	currentStatus: string
+	major: {
+		_id: string
+		name: string
+		code: string
+	}
+	students: Array<{
+		userId: string
+		fullName: string
+		studentCode?: string
+		email: string
+	}>
+	lecturers: Array<{
+		userId: string
+		fullName: string
+		title?: string
+		email: string
+	}>
+	finalScore?: number
+	gradeText?: string
+	councilName?: string
+	scheduledDate?: Date
+	isLocked: boolean
+	isPublished: boolean
+	isPublishedToLibrary: boolean
+	isHiddenInLibrary: boolean
+	hasFinalProduct: boolean
+	canArchive: boolean
+	archiveBlockers: string[]
+	defenseResult?: any
+}
+
+export interface PaginatedTopicsForArchive {
+	data: TopicForArchive[]
+	meta: MetaDto
+}
+
+export interface GetTopicsForArchiveQuery {
+	page: number
+	limit: number
+	query?: string
+	status?: 'all' | 'graded' | 'assigned' | 'archived' | 'locked'
+}
+
+export interface ArchiveResult {
+	successCount: number
+	failedCount: number
+	failedTopics: Array<{
+		topicId: string
+		topicTitle: string
+		reason: string
+	}>
 }

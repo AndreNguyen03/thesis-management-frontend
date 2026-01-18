@@ -43,6 +43,8 @@ import DetailAssignmentCouncilPage from '@/features/faculty/defense-milestones/D
 import LecturerDefenseCouncilsPage from '@/features/lecturer/defense-councils/LecturerDefenseCouncilsPage'
 import LecturerDetailConcilsPage from '@/features/lecturer/defense-councils/DetailConcilsPage'
 import { ManageLibraryPage } from '@/features/admin/manage_library'
+import { ManageTopicsInDefenseMilestone } from '@/features/faculty/manage_period/components/ManageTopicsInDefenseMilestone'
+import { PeriodArchiveTopicsPage } from '@/features/faculty/manage_period/components/PeriodArchiveTopicsPage'
 // Mock user data
 
 export const router = createBrowserRouter([
@@ -113,11 +115,11 @@ export const router = createBrowserRouter([
 				path: 'manage-lecturers',
 				element: <ManageLecturerPage />
 			},
-            {
+			{
 				path: 'manage-library',
 				element: <ManageLibraryPage />
 			},
-           
+
 			{
 				path: 'manage-students',
 				element: <ManageStudentPage />
@@ -157,6 +159,14 @@ export const router = createBrowserRouter([
 				element: <DefenseMilestonesInPeriodRegistration />
 			},
 			{ path: 'period/:periodId/defense-milestones-in-period/:templateId', element: <DefenseCouncils /> },
+			{
+				path: 'period/:periodId/defense-milestones-in-period/:milestoneTemplateId/archive-topics',
+				element: <ManageTopicsInDefenseMilestone />
+			},
+			{
+				path: 'period/:periodId/archive-topics',
+				element: <PeriodArchiveTopicsPage />
+			},
 			{
 				path: 'period/:periodId/defense-milestones-in-period/:templateId/manage-council-assignment/:councilId',
 				element: <DetailAssignmentCouncilPage />

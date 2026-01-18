@@ -25,6 +25,7 @@ import type {
 	MonthlyStat,
 	MajorDistribution
 } from '@/models'
+
 import type { GetUploadedFileDto } from '@/models/file.model'
 import type { GetMajorLibraryCombox } from '@/models/major.model'
 import type { PaginatedTopicInBatchMilestone } from '@/models/milestone.model'
@@ -515,7 +516,8 @@ export const topicApi = baseApi.injectEndpoints({
 				body: { hide }
 			}),
 			invalidatesTags: ['TopicInLibrary']
-		})
+		}),
+
 	}),
 	overrideExisting: false
 })
@@ -573,5 +575,6 @@ export const {
 	useGetTrendingKeywordsQuery,
 	useGetSystemOverviewStatsQuery,
 	useGetSystemMonthlyStatsQuery,
-	useGetSystemMajorDistributionQuery
+	useGetSystemMajorDistributionQuery,
+
 } = topicApi

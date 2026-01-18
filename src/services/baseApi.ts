@@ -132,7 +132,10 @@ export const baseApi = createApi({
 		'LibraryStats',
 		'TopicInLibrary',
 		'EvaluationTemplate',
-		'DraftScore'
+		'DraftScore',
+		'DefenseMilestones',
+		'LibraryTopics',
+		'PeriodTopicsForArchive'
 	],
 	endpoints: () => ({})
 })

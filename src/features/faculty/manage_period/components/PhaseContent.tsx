@@ -95,7 +95,7 @@ export function PhaseContent({
 
 		const cleanupFunc = socketService.on('/period', 'periodDetail:update', () => {
             console.log(' ReceiInfo change dashboard ')
-            refetch()
+            refetch()	
             refetchPeriod()
         }) 
 

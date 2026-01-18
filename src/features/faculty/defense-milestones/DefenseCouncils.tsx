@@ -29,8 +29,8 @@ export default function DefenseCouncils() {
 		search_by: ['title', 'location', 'periodInfo.year'],
 		query: '',
 		milestoneTemplateId: templateId,
-		sort_by: 'dueDate',
-		sort_order: 'desc'
+		sort_by: 'scheduledDate',
+		sort_order: 'asc'
 	})
 	//endpoint lấy các hội dồng trong đợt bảo vệ
 	const { data: defenseCouncils, isLoading } = useGetCouncilsQuery(queryParams)
@@ -116,12 +116,20 @@ export default function DefenseCouncils() {
 
 			{/* Filters & Search */}
 			<div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-				<Input
-					placeholder='Tìm kiếm theo tên đợt bảo vệ, địa điểm...'
-					value={searchTerm}
-					onChange={(e) => handleSearch(e.target.value)}
-					className='max-w-md'
-				/>
+				<div className='flex gap-44'>
+					<Input
+						placeholder='Tìm kiếm theo tên đợt bảo vệ, địa điểm...'
+						value={searchTerm}
+						onChange={(e) => handleSearch(e.target.value)}
+						className='max-w-md'
+					/>
+					<Button
+						className='cursor-pointer text-white hover:font-semibold hover:underline'
+						onClick={() => setIsNewDefenseCouncil(true)}
+					>
+						Tạo hội đồng
+					</Button>
+				</div>
 
 				<div className='flex items-center gap-4'>
 					<Filter className='h-4 w-4 text-muted-foreground' />
@@ -215,8 +223,7 @@ export default function DefenseCouncils() {
 					{defenseCouncils.data
 						.filter((council: ResDefenseCouncil) => {
 							if (statusFilter === 'all') return true
-							if (statusFilter === 'pending')
-								return !council.isPublished && !council.isLocked 
+							if (statusFilter === 'pending') return !council.isPublished && !council.isLocked
 							if (statusFilter === 'published') return council.isPublished
 							if (statusFilter === 'blocked') return council.isLocked
 							return true
@@ -280,18 +287,16 @@ export default function DefenseCouncils() {
 										<span>{council.createdBy.fullName}</span>
 									</div>
 									<div className='flex flex-col justify-center gap-2'>
-										
 										<Button
 											className='mt-2'
 											variant='outline'
-											onClick={() =>{
+											onClick={() => {
 												navigate(
 													`/period/${periodId}/defense-milestones-in-period/${templateId}/manage-council-assignment/${council._id}`
 												)
-											}
-											}
+											}}
 										>
-											Phân công hội đồng
+											Phân công hội đồng và chấm điểm
 											<ChevronRight className='ml-2 h-4 w-4' />
 										</Button>
 									</div>
@@ -314,16 +319,12 @@ export default function DefenseCouncils() {
 									? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm'
 									: 'Chưa có hội đồng nào được tạo trong hệ thống.'}
 							</p>
-							{searchTerm || statusFilter !== 'all' ? (
-								''
-							) : (
-								<span
-									className='cursor-pointer text-blue-700 hover:font-semibold hover:underline'
-									onClick={() => setIsNewDefenseCouncil(true)}
-								>
-									Tạo hội đồng
-								</span>
-							)}
+							<span
+								className='cursor-pointer text-blue-700 hover:font-semibold hover:underline'
+								onClick={() => setIsNewDefenseCouncil(true)}
+							>
+								Tạo hội đồng
+							</span>
 						</div>
 					</Card>
 				)

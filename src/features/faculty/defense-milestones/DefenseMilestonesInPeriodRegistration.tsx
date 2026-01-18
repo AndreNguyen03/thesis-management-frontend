@@ -11,14 +11,14 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { formatPeriodInfo2, formatPeriodInfoMiniPeriod } from '@/utils/utils'
 import { type PaginationAllDefenseMilestonesQuery } from '@/models/milestone.model'
 import { useGetPeriodDetailQuery } from '@/services/periodApi'
+import CreateDefenseMilestoneForm from '@/features/shared/milestone/modal/CreateDefenseMilestoneForm'
 
 export default function DefenseMilestonesInPeriodRegistration() {
 	const user = useAppSelector((state) => state.auth.user)
 	const { periodId } = useParams()
-	console.log('periodId', periodId)
 	const navigate = useNavigate()
 	const [searchTerm, setSearchTerm] = useState('')
-
+	const [isCreateDefenseMilestoneModalOpen, setIsCreateDefenseMilestoneModalOpen] = useState(false)
 	const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'blocked' | 'pending'>('all')
 	//query params
 	const [queryParams, setQueryParams] = useState<PaginationAllDefenseMilestonesQuery>({
@@ -28,7 +28,7 @@ export default function DefenseMilestonesInPeriodRegistration() {
 		query: '',
 		year: undefined,
 		sort_by: 'dueDate',
-		sort_order: 'desc',
+		sort_order: 'asc',
 		periodId: periodId
 	})
 	//endpoint lấy các mốc bảo vệ
@@ -112,12 +112,15 @@ export default function DefenseMilestonesInPeriodRegistration() {
 
 			{/* Filters & Search */}
 			<div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-				<Input
-					placeholder='Tìm kiếm theo tên đợt bảo vệ, địa điểm...'
-					value={searchTerm}
-					onChange={(e) => handleSearch(e.target.value)}
-					className='max-w-md'
-				/>
+				<div className='flex w-fit gap-5'>
+					<Input
+						placeholder='Tìm kiếm theo tên đợt bảo vệ, địa điểm...'
+						value={searchTerm}
+						onChange={(e) => handleSearch(e.target.value)}
+						className='min-w-full'
+					/>
+					<Button onClick={() => setIsCreateDefenseMilestoneModalOpen(true)}>Tạo đợt bảo vệ mới</Button>
+				</div>
 
 				<div className='flex items-center gap-4'>
 					<Filter className='h-4 w-4 text-muted-foreground' />
@@ -298,16 +301,7 @@ export default function DefenseMilestonesInPeriodRegistration() {
 									<div className='flex flex-col gap-2'>
 										{/* Action Button */}
 										<Button
-											className='mt-2 w-full'
-											variant='outline'
-											onClick={() => navigate(`/defense-councils/`)}
-										>
-											Quản lý chấm điểm
-											<ChevronRight className='ml-2 h-4 w-4' />
-										</Button>
-										{/* Action Button */}
-										<Button
-											className='mt-2 w-full'
+											className='w-full'
 											variant='outline'
 											onClick={() =>
 												navigate(
@@ -316,6 +310,18 @@ export default function DefenseMilestonesInPeriodRegistration() {
 											}
 										>
 											Quản lý DS hội đồng
+											<ChevronRight className='ml-2 h-4 w-4' />
+										</Button>
+										<Button
+											className='w-full'
+											variant='outline'
+											onClick={() =>
+												navigate(
+													`/period/${periodId}/defense-milestones-in-period/${milestone._id}/archive-topics`
+												)
+											}
+										>
+											Quản lý lưu trữ đề tài
 											<ChevronRight className='ml-2 h-4 w-4' />
 										</Button>
 									</div>
@@ -340,6 +346,11 @@ export default function DefenseMilestonesInPeriodRegistration() {
 					</div>
 				</Card>
 			)}
+			<CreateDefenseMilestoneForm
+				periodId={periodId!}
+				open={isCreateDefenseMilestoneModalOpen}
+				setIsOpen={setIsCreateDefenseMilestoneModalOpen}
+			/>
 		</div>
 	)
 }

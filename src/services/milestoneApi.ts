@@ -11,7 +11,10 @@ import type {
 	ResponseFacultyMilestone,
 	ResponseMilestone,
 	TopicSnaps,
-	DefenseMilestoneDetail
+	DefenseMilestoneDetail,
+	PaginatedTopicsForArchive,
+	GetTopicsForArchiveQuery,
+	ArchiveResult
 } from '@/models/milestone.model'
 import { baseApi, type ApiResponse } from './baseApi'
 import type { CreateTaskPayload, Task } from '@/models/todolist.model'
@@ -42,7 +45,7 @@ export const milestoneApi = baseApi.injectEndpoints({
 				body
 			}),
 			transformResponse: (response: ApiResponse<ResponseMilestone>) => response.data,
-			invalidatesTags: (_result, _error, arg) => [{ type: 'Milestone-Faculty', id: arg.periodId }]
+			invalidatesTags: (_result, _error, arg) => [{ type: 'DefenseMilestones', id: arg.periodId }]
 		}),
 		updateMilestone: builder.mutation<any, { milestoneId: string; groupId: string; body: any; files?: File[] }>({
 			query: ({ milestoneId, body, files }) => {
@@ -221,7 +224,8 @@ export const milestoneApi = baseApi.injectEndpoints({
 					method: 'GET'
 				}
 			},
-			transformResponse: (response: ApiResponse<PaginatedFacultyMilestones>) => response.data
+			transformResponse: (response: ApiResponse<PaginatedFacultyMilestones>) => response.data,
+			providesTags: (_result, _error, arg) => [{ type: 'DefenseMilestones', id: arg.periodId }]
 		}),
 		// Giảng viên: Lấy đợt bảo vệ được phân công
 		getAssignedDefenseMilestones: builder.query<any[], { search?: string }>({
@@ -244,6 +248,74 @@ export const milestoneApi = baseApi.injectEndpoints({
 				method: 'GET'
 			}),
 			transformResponse: (response: ApiResponse<DefenseMilestoneDetail>) => response.data
+		}),
+		// Lấy danh sách đề tài trong defense milestone để quản lý lưu trữ
+		getTopicsInDefenseMilestoneForArchive: builder.query<any, { milestoneTemplateId: string; query?: any }>({
+			query: ({ milestoneTemplateId, query }) => {
+				const queryString = query ? `?${buildQueryString(query)}` : ''
+				return {
+					url: `/milestones/${milestoneTemplateId}/topics-for-archive${queryString}`,
+					method: 'GET'
+				}
+			},
+			transformResponse: (response: ApiResponse<any>) => response.data,
+			providesTags: (_result, _error, { milestoneTemplateId }) => [
+				{ type: 'DefenseMilestones', id: milestoneTemplateId },
+				'LibraryTopics'
+			]
+		}),
+		// Bulk lưu đề tài vào thư viện
+		bulkArchiveTopics: builder.mutation<any, { topicIds: string[] }>({
+			query: (body) => ({
+				url: `/milestones/topics/bulk-archive`,
+				method: 'POST',
+				body
+			}),
+			transformResponse: (response: ApiResponse<any>) => response.data,
+			invalidatesTags: ['DefenseMilestones', 'LibraryTopics']
+		}),
+		// Bulk ẩn/hiện đề tài trong thư viện
+		bulkHideTopics: builder.mutation<any, { topicIds: string[]; isHidden: boolean }>({
+			query: (body) => ({
+				url: `/milestones/topics/bulk-hide`,
+				method: 'PATCH',
+				body
+			}),
+			transformResponse: (response: ApiResponse<any>) => response.data,
+			invalidatesTags: ['DefenseMilestones', 'LibraryTopics']
+		}),
+
+		// Lấy danh sách đề tài có thể lưu trữ trong kỳ
+		getTopicsForArchiveInPeriod: builder.query<
+			PaginatedTopicsForArchive,
+			{ periodId: string; query: GetTopicsForArchiveQuery }
+		>({
+			query: ({ periodId, query }) => {
+				const params = new URLSearchParams()
+				params.append('page', query.page.toString())
+				params.append('limit', query.limit.toString())
+				if (query.query) params.append('query', query.query)
+				if (query.status) params.append('status', query.status)
+
+				return `/milestones/period/${periodId}/topics-for-archive?${params.toString()}`
+			},
+			transformResponse: (response: ApiResponse<PaginatedTopicsForArchive>) => response.data,
+			providesTags: (_result, _error, { periodId }) => [{ type: 'PeriodTopicsForArchive', id: periodId }]
+		}),
+
+		// Bulk lưu đề tài vào thư viện từ kỳ
+		bulkArchiveTopicsInPeriod: builder.mutation<ArchiveResult, { periodId: string; topicIds: string[] }>({
+			query: ({ periodId, topicIds }) => ({
+				url: `/milestones/period/${periodId}/bulk-archive-topics`,
+				method: 'POST',
+				body: { topicIds }
+			}),
+			transformResponse: (response: ApiResponse<ArchiveResult>) => response.data,
+			invalidatesTags: (_result, _error, { periodId }) => [
+				{ type: 'PeriodTopicsForArchive', id: periodId },
+				'LibraryTopics',
+				'DefenseMilestones'
+			]
 		})
 	}),
 	overrideExisting: false
@@ -269,5 +341,10 @@ export const {
 	useGetAllDefenseMilestonesQuery,
 	useGetAssignedDefenseMilestonesQuery,
 	useGetDefenseMilestoneYearsQuery,
-	useGetDefenseMilestoneDetailByIdQuery
+	useGetDefenseMilestoneDetailByIdQuery,
+	useGetTopicsInDefenseMilestoneForArchiveQuery,
+	useBulkArchiveTopicsMutation,
+	useBulkHideTopicsMutation,
+	useGetTopicsForArchiveInPeriodQuery,
+	useBulkArchiveTopicsInPeriodMutation
 } = milestoneApi

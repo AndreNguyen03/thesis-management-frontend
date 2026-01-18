@@ -71,7 +71,7 @@ export function Phase1Handler({
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(sentActions)))
 	}, [sentActions])
 	const { isEnough, totalNeededTopics, currentTopicsNumber } = useMemo(() => {
-		const totalNeededTopics = phase.minTopicsPerLecturer * (phase.requiredLecturers?.length || 0)
+		const totalNeededTopics = phase.minTopicsPerLecturer! * (phase.requiredLecturers?.length || 0)
 		const currentTopicsNumber = data.currentApprovedTopics
 		return {
 			isEnough: totalNeededTopics <= currentTopicsNumber,

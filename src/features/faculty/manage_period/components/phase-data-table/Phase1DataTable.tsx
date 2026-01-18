@@ -2,7 +2,7 @@ import { CustomPagination } from '@/components/PaginationBar'
 import { Button } from '@/components/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { type ApiError, type GeneralTopic, type PaginatedGeneralTopics } from '@/models'
+import { TopicStatus, type ApiError, type GeneralTopic, type PaginatedGeneralTopics } from '@/models'
 import { PeriodPhaseName, type PaginatedTopicsInPeriod, type PhaseType } from '@/models/period.model'
 import {
 	useFacuBoardApproveTopicMutation,
@@ -75,7 +75,7 @@ const Phase1DataTable = ({
 	const [rejectTopic, { isLoading: isLoadingReject }] = useFacuBoardRejectTopicMutation()
 
 	const handleConfirmEditRequest = async (content: string) => {
-        console.log('editTopic   ', editTopic, content)
+		console.log('editTopic   ', editTopic, content)
 		if (!editTopic) return
 
 		try {
@@ -204,7 +204,7 @@ const Phase1DataTable = ({
 							const pendingStudentsCount = hic.students?.pendingStudents?.length || 0
 							return (
 								<tr key={hic._id} className='border-b last:border-b-0 hover:bg-gray-50'>
-									{isChoosingMany && (
+									{isChoosingMany && hic.currentStatus === TopicStatus.SUBMITTED && (
 										<td className='px-3 py-2'>
 											<Checkbox
 												checked={selectedTopics.includes(hic._id)}
